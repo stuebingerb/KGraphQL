@@ -222,7 +222,12 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         if (include) {
             if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
                 if (expectedType.isInstance(value)) {
-                    return container.elements.map { handleProperty(ctx, value, it, expectedType) }.toMap()
+                    return container.elements.flatMap { child ->
+                        when (child) {
+                            is Execution.Fragment -> handleFragment(ctx, value, child).toList()
+                            else -> listOf(handleProperty(ctx, value, child, expectedType))
+                        }
+                    }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
                 }
             } else {
                 throw IllegalStateException("fragments can be specified on object types, interfaces, and unions")

@@ -24,7 +24,7 @@ sealed class Execution {
 
     class Fragment(
             val condition: TypeCondition,
-            val elements : List<Execution.Node>,
+            val elements : List<Execution>,
             val directives: Map<Directive, Arguments?>?
     ) : Execution()
 

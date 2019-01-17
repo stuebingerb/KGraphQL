@@ -172,7 +172,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with nested external fragment`(){
+    fun `query with nested external fragment`() {
         val map = execute("""
             {
                 film {
@@ -185,6 +185,10 @@ class QueryTest : BaseSchemaTest() {
                 director {
                     name
                 }
+                ...dirAge
+            }
+
+            fragment dirIntermediate on Film {
                 ...dirAge
             }
 
