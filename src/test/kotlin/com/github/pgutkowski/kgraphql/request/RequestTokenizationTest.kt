@@ -58,4 +58,12 @@ class RequestTokenizationTest {
                 expected = listOf("{", "hello", "(", "name", ":", "\"Ted\\\" Mosby\"", ")", "}")
         )
     }
+
+    @Test
+    fun `tokenize input with new lines`() {
+        testTokenization(
+                input = "{lists{\r\ntotalCount\r\nnodes{\r\ntitle\r\n }\r\n}\r\n}",
+                expected = listOf("{", "lists", "{", "totalCount", "nodes", "{", "title", "}", "}", "}")
+        )
+    }
 }

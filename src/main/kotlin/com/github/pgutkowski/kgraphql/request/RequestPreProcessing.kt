@@ -5,7 +5,7 @@ import com.github.pgutkowski.kgraphql.not
 
 val OPERANDS = "{}():[]"
 
-val IGNORED_CHARACTERS = "\n\t, "
+val IGNORED_CHARACTERS = "\n\t\r, "
 
 val DELIMITERS = OPERANDS + IGNORED_CHARACTERS
 
