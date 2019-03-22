@@ -181,11 +181,11 @@ class SchemaBuilderTest {
 
         val tested = defaultSchema {
             query("mainActor") {
-                resolverKF(actorService::getMainActor)
+                actorService::getMainActor.toResolver()
             }
 
             query("actorById") {
-                resolverKF(actorService::getActor)
+                actorService::getActor.toResolver()
             }
 
             type<Actor> {

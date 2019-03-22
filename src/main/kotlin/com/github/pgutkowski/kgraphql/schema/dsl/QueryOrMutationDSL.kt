@@ -26,7 +26,7 @@ class QueryOrMutationDSL(
         return ResolverDSL(this)
     }
 
-    fun <T>resolverKF(function: KFunction<T>) = resolver(FunctionWrapper.on(function))
+    fun <T>KFunction<T>.toResolver() = resolver(FunctionWrapper.on(this))
 
     fun <T>resolver(function: () -> T) = resolver(FunctionWrapper.on(function))
 

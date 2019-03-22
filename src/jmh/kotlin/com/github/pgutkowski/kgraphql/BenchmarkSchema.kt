@@ -39,7 +39,7 @@ object BenchmarkSchema {
             resolver(threeResolver)
         }
         query("threeKF"){
-            resolverKF(HasOneResolver::oneResolver)
+            HasOneResolver::oneResolver.toResolver()
         }
     }
 }
