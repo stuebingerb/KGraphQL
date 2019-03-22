@@ -4,10 +4,10 @@ package com.github.pgutkowski.kgraphql.schema.model
 
 import com.github.pgutkowski.kgraphql.schema.SchemaException
 import com.github.pgutkowski.kgraphql.schema.structure2.validateName
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
+import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.reflect
 
@@ -20,6 +20,9 @@ import kotlin.reflect.jvm.reflect
 interface FunctionWrapper <T>{
     //lots of boilerplate here, because kotlin-reflect doesn't support invoking lambdas, local and anonymous functions yet
     companion object {
+        fun <T> on (function : KFunction<T>) : FunctionWrapper<T>
+                = FunctionWrapper.ArityN(function)
+
         fun <T> on (function : () -> T) : FunctionWrapper<T>
                 = FunctionWrapper.ArityZero(function)
 
@@ -116,6 +119,17 @@ interface FunctionWrapper <T>{
     fun valueParameters(): List<kotlin.reflect.KParameter> {
         return kFunction.valueParameters.let {
             if(hasReceiver) it.drop(1) else it
+        }
+    }
+
+    class ArityN<T>(override val kFunction: KFunction<T>): Base<T>() {
+        override fun arity() = kFunction.parameters.size
+
+        override val hasReceiver: Boolean
+            get() = kFunction.extensionReceiverParameter != null
+
+        override fun invoke(vararg args: Any?): T? {
+            return kFunction.call(*args)
         }
     }
 
