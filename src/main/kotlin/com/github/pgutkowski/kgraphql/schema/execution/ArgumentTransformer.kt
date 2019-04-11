@@ -16,11 +16,12 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
 
     fun transformValue(type: Type, value: String, variables: Variables) : Any? {
         val kType = type.toKType()
+        val typeName = type.unwrapped().name
 
         return when {
             value.startsWith("$") -> {
                 variables.get (
-                        kType.jvmErasure, kType, value, { subValue -> transformValue(type, subValue, variables) }
+                        kType.jvmErasure, kType, typeName, value, { subValue -> transformValue(type, subValue, variables) }
                 )
             }
             value == "null" && type.isNullable() -> null
