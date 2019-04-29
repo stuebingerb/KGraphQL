@@ -52,6 +52,43 @@ class RequestTokenizationTest {
     }
 
     @Test
+    fun `Tokenize required list argument`() {
+        val d = "$"
+        testTokenization(
+            input = "mutation create(${d}agesName1: String!, ${d}ages: [String!]!){ createActorWithAges(name: ${d}agesName1, ages: ${d}ages1) { name, age } }",
+            expected = listOf(
+                "mutation",
+                "create",
+                "(",
+                "${d}agesName1",
+                ":",
+                "String!",
+                "${d}ages",
+                ":",
+                "[",
+                "String!",
+                "]!",
+                ")",
+                "{",
+                "createActorWithAges",
+                "(",
+                "name",
+                ":",
+                "${d}agesName1",
+                "ages",
+                ":",
+                "${d}ages1",
+                ")",
+                "{",
+                "name",
+                "age",
+                "}",
+                "}"
+            )
+        )
+    }
+
+    @Test
     fun `tokenize input with quotes`(){
         testTokenization(
                 input = "{hello(name : \"Ted\\\" Mosby\")}",

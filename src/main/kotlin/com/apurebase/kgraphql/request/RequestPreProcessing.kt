@@ -17,8 +17,13 @@ fun tokenizeRequest(input : String) : List<String> {
         when(input[i]){
             in IGNORED_CHARACTERS -> { i++ }
             in OPERANDS -> {
-                tokens.add(input[i].toString())
-                i++
+                if (input.length > i+1 && input.substring(i, i+2) == "]!") {
+                    tokens.add("]!")
+                    i += 2
+                } else {
+                    tokens.add(input[i].toString())
+                    i++
+                }
             }
             '\"' -> {
                 val substring = input.substring(i + 1)
@@ -167,8 +172,8 @@ private fun parseOperationVariables(variablesTokens: List<String>): MutableList<
             }
             variableName == null -> variableName = variableToken
             variableType == null -> variableType = variableToken
-            variableType.startsWith("[") && variableType == "]" -> variableType += variableToken
-            variableType.startsWith("[")  -> variableType += variableToken
+            variableType.startsWith(("[")) && variableToken.startsWith("]") -> variableType += variableToken
+            variableType.startsWith("[") && !variableType.contains("]") -> variableType += variableToken
             defaultTypeStarted && variableDefaultValue == null -> variableDefaultValue = variableToken
             else -> {
                 //if variableName of variableType would be null, it would already be matched
