@@ -1,10 +1,5 @@
 # KGraphQL
-
-[![Build Status](https://travis-ci.org/pgutkowski/KGraphQL.svg?branch=master)](https://travis-ci.org/pgutkowski/KGraphQL)
-[![codebeat badge](https://codebeat.co/badges/b26d3c87-7cd1-4358-93cd-45d395669bdc)](https://codebeat.co/projects/github-com-pgutkowski-kgraphql-master)
-[![Coverage Status](https://coveralls.io/repos/github/pgutkowski/KGraphQL/badge.svg?branch=master)](https://coveralls.io/github/pgutkowski/KGraphQL?branch=master)
-[![Download](https://api.bintray.com/packages/pgutkowski/Maven/KGraphQL/images/download.svg) ](https://bintray.com/pgutkowski/Maven/KGraphQL/_latestVersion)
-[![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
+[![Bintray](https://api.bintray.com/packages/apurebase/apurebase/kgraphql/images/download.svg)](https://bintray.com/apurebase/apurebase/kgraphql)
 
 KGraphQL is [Kotlin](https://kotlinlang.org/) implementation of [GraphQL](http://graphql.org/). It provides rich DSL to setup GraphQL schema. 
 
@@ -84,13 +79,13 @@ val schema = KGraphQL.schema {
 Now, we can query our schema:
 ```kotlin
 //query for hero from episode JEDI and take id, name for any Character, and primaryFunction for Droid or height for Human
-schema.execute("{hero(episode: JEDI){
+schema.execute("""{hero(episode: JEDI){
                     id
                     name 
                     ... on Droid{primaryFunction} 
                     ... on Human{height}
                     }
-                }")
+                }""")
 ```
 Returns:
 ```json
@@ -107,13 +102,13 @@ Returns:
 Query for all heroes:
 ```kotlin
 //query for all heroes and take id, name for any Character, and primaryFunction for Droid or height for Human
-schema.execute("{heroes {
+schema.execute("""{heroes {
                     id 
                     name 
                     ... on Droid{primaryFunction} 
                     ... on Human{height}
                     }
-                }")
+                }""")
 ```
 Returns:
 ```json
@@ -145,17 +140,19 @@ KGraphQL is pushed to bintray repository and also linked to JCenter. It requires
 Add Bintray JCenter repository to <repositories> section:
 
 ```
-<repository>
-    <id>central</id>
-    <url>https://dl.bintray.com/pgutkowski/Maven</url>
-</repository>
+<repositories>
+    <repository>
+        <id>jcenter</id>
+        <url>https://jcenter.bintray.com/</url>
+    </repository>
+</repositories>
 ```
 
 Add dependency:
 
 ```
 <dependency>
-  <groupId>com.github.pgutkowski</groupId>
+  <groupId>com.apurebase</groupId>
   <artifactId>kgraphql</artifactId>
   <version>${KGraphQLVersion}</version>
 </dependency>
@@ -175,16 +172,14 @@ Add Bintray JCenter repository:
 
 ```
 repositories {
-    maven {
-        url  "https://dl.bintray.com/pgutkowski/Maven" 
-    }
+    jcenter()
 }
 ```
 
 Add dependencies (you can also add other modules that you need):
 
 ```
-compile 'com.github.pgutkowski:kgraphql:${KGraphQLVersion}'
+compile 'com.apurebase:kgraphql:${KGraphQLVersion}'
 ```
 
 And make sure that you use the right Kotlin version:

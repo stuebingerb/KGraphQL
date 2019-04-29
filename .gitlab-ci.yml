@@ -1,0 +1,41 @@
+image: gradle:alpine
+
+stages:
+  - test
+  - publish
+
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+
+build:
+  stage: test
+  cache:
+    paths:
+      - build
+      - .gradle
+  script:
+    - gradle assemble
+
+test:
+  stage: test
+  cache:
+    paths:
+      - build
+      - .gradle
+  script:
+    - gradle jacocoTestReport coveralls
+
+bintray:publish:
+  stage: publish
+  cache:
+    paths:
+      - build
+      - .gradle
+  script:
+    - ./gradlew bintrayUpload
+  only:
+    - tags
