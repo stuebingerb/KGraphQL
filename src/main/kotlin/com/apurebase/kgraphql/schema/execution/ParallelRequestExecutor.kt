@@ -18,11 +18,8 @@ import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure2.Field
 import com.apurebase.kgraphql.schema.structure2.InputValue
 import com.apurebase.kgraphql.schema.structure2.Type
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KProperty1
 
@@ -51,36 +48,14 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context): String {
         val root = jsonNodeFactory.objectNode()
         val data = root.putObject("data")
-        val channel = Channel<Pair<Execution, JsonNode>>()
-        val jobs = plan
-                .map { execution ->
-                    launch(dispatcher) {
-                        try {
-                            val writeOperation = writeOperation(
-                                    ctx = ExecutionContext(Variables(schema, variables, execution.variables), context),
-                                    node = execution,
-                                    operation = execution.field as Field.Function<*, *>
-                            )
-                            channel.send(execution to writeOperation)
-                        } catch (e: Exception) {
-                            channel.close(e)
-                        }
-                    }
-                }
-                .toList()
 
-        //intermediate data structure necessary to preserve ordering
-        val resultMap = mutableMapOf<Execution, JsonNode>()
-        repeat(plan.size) {
-            try {
-                val (execution, jsonNode) = channel.receive()
-                resultMap.put(execution, jsonNode)
-            } catch (e: Exception) {
-                jobs.forEach { it.cancel() }
-                throw e
-            }
+        val resultMap = plan.toMapAsync {
+            writeOperation(
+                ctx = ExecutionContext(Variables(schema, variables, it.variables), context),
+                node = it,
+                operation = it.field as Field.Function<*, *>
+            )
         }
-        channel.close()
 
         for (operation in plan) {
             data.set(operation.aliasOrKey, resultMap[operation])
@@ -91,6 +66,33 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
     override fun execute(plan: ExecutionPlan, variables: VariablesJson, context: Context): String = runBlocking {
         suspendExecute(plan, variables, context)
+    }
+
+    private suspend fun <T, R> Collection<T>.toMapAsync(block: suspend (T) -> R): Map<T, R> = coroutineScope {
+        val channel = Channel<Pair<T, R>>()
+        val jobs = map { item ->
+            launch(dispatcher) {
+                try {
+                    val res = block(item)
+                    channel.send(item to res)
+                } catch (e: Exception) {
+                    channel.close(e)
+                }
+            }
+        }
+        val resultMap = mutableMapOf<T, R>()
+        repeat(size) {
+            try {
+                val (item, result) = channel.receive()
+                resultMap[item] = result
+            } catch (e: Exception) {
+                jobs.forEach(Job::cancel)
+                throw e
+            }
+        }
+
+        channel.close()
+        resultMap
     }
 
     private suspend fun <T> writeOperation(ctx: ExecutionContext, node: Execution.Node, operation: FunctionWrapper<T>): JsonNode {
@@ -134,9 +136,12 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             //check value, not returnType, because this method can be invoked with element value
             value is Collection<*> -> {
                 if (returnType.isList()) {
-                    val arrayNode = jsonNodeFactory.arrayNode(value.size)
-                    value.forEach { element -> arrayNode.add(createNode(ctx, element, node, returnType.unwrapList())) }
-                    arrayNode
+                    val valuesMap = value.toMapAsync {
+                        createNode(ctx, it, node, returnType.unwrapList())
+                    }
+                    value.fold(jsonNodeFactory.arrayNode(value.size)) { array, v ->
+                        array.add(valuesMap[v])
+                    }
                 } else {
                     throw ExecutionException("Invalid collection value for non collection property")
                 }

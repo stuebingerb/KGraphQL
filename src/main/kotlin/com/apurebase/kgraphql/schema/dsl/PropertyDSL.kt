@@ -40,6 +40,24 @@ class PropertyDSL<T : Any, R>(val name : String, block : PropertyDSL<T, R>.() ->
     fun <E, W, Q, A, S>resolver(function: (T, E, W, Q, A, S) -> R)
             = resolver(FunctionWrapper.on(function, true))
 
+    fun suspendResolver(function: suspend (T) -> R)
+            = resolver(FunctionWrapper.onSuspend(function, true))
+
+    fun <E>suspendResolver(function: suspend (T, E) -> R)
+            = resolver(FunctionWrapper.onSuspend(function, true))
+
+    fun <E, W>suspendResolver(function: suspend (T, E, W) -> R)
+            = resolver(FunctionWrapper.onSuspend(function, true))
+
+    fun <E, W, Q>suspendResolver(function: suspend (T, E, W, Q) -> R)
+            = resolver(FunctionWrapper.onSuspend(function, true))
+
+    fun <E, W, Q, A>suspendResolver(function: suspend (T, E, W, Q, A) -> R)
+            = resolver(FunctionWrapper.onSuspend(function, true))
+
+    fun <E, W, Q, A, S>suspendResolver(function: suspend (T, E, W, Q, A, S) -> R)
+            = resolver(FunctionWrapper.onSuspend(function, true))
+
     fun accessRule(rule: (T, Context) -> Exception?){
 
         val accessRuleAdapter: (T?, Context) -> Exception? = { parent, ctx ->

@@ -30,6 +30,30 @@ class ArgumentsSpecificationTest {
                     }.take(size)
                 }
             }
+            property<Int>("none") {
+                suspendResolver { actor -> actor.age }
+            }
+            property<Int>("one") {
+                suspendResolver {actor, one: Int -> actor.age + one }
+            }
+            property<Int>("two") {
+                suspendResolver { actor, one: Int, two: Int -> actor.age + one + two }
+            }
+            property<Int>("three") {
+                suspendResolver { actor, one: Int, two: Int, three: Int ->
+                    actor.age + one + two + three
+                }
+            }
+            property<Int>("four") {
+                suspendResolver { actor, one: Int, two: Int, three: Int, four: Int ->
+                    actor.age + one + two + three + four
+                }
+            }
+            property<Int>("five") {
+                suspendResolver { actor, one: Int, two: Int, three: Int, four: Int, five: Int ->
+                    actor.age + one + two + three + four + five
+                }
+            }
         }
     }
 
@@ -50,5 +74,31 @@ class ArgumentsSpecificationTest {
         )
     }
 
+    @Test
+    fun `all arguments to suspendResolvers`() {
+        val request = """
+            {
+                actor {
+                    none
+                    one(one: 1)
+                    two(one: 2, two: 3)
+                    three(one: 4, two: 5, three: 6)
+                    four(one: 7, two: 8, three: 9, four: 10)
+                    five(one: 11, two: 12, three: 13, four: 14, five: 15)
+                }
+            }
+        """.trimIndent()
+        val response = deserialize(schema.execute(request)) as Map<String, Any>
+        assertThat(response, equalTo(mapOf<String, Any>(
+            "data" to mapOf("actor" to mapOf(
+                "none" to age,
+                "one" to age + 1,
+                "two" to age + 2 + 3,
+                "three" to age + 4 + 5 + 6,
+                "four" to age + 7 + 8 + 9 + 10,
+                "five" to age + 11 + 12 + 13 + 14 + 15
+            ))
+        )))
+    }
 
 }
