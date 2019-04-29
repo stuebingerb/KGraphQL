@@ -35,7 +35,7 @@ open class SimpleExecutionOverheadBenchmark {
     @Setup
     fun setup(){
         if(withKGraphQL){
-            schema = com.apurebase.kgraphql.BenchmarkSchema.create {}
+            schema = BenchmarkSchema.create {}
         } else {
             objectMapper = jacksonObjectMapper()
         }

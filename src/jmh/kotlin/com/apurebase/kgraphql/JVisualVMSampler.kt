@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql
 
 
-val schema = com.apurebase.kgraphql.BenchmarkSchema.create {  }
+val schema = BenchmarkSchema.create {  }
 
 fun main(vararg args: String){
     while(true){

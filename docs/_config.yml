@@ -1,0 +1,32 @@
+title: KGraphQL
+description: >-
+  Pure Kotlin GraphQL implementation
+baseurl: "/kgraphql/"
+url: "https://apurebase.github.io/KGraphQL/"
+
+# Build settings
+markdown: kramdown
+theme: "just-the-docs"
+
+permalink: pretty
+
+
+# Just the Docs
+search_enabled: true
+color_scheme: test
+sass:
+  load_paths:
+    - _sass
+aux_links:
+  "KGraphQL on GitLab":
+    - "//gitlab.com/apurebase/kgraphql"
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - any_additional_item # any user-specific listing goes at the end

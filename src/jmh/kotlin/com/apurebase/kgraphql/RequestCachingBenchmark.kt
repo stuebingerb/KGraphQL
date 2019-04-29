@@ -27,7 +27,7 @@ open class RequestCachingBenchmark {
 
     @Setup
     fun setup(){
-        schema = com.apurebase.kgraphql.BenchmarkSchema.create {
+        schema = BenchmarkSchema.create {
             configure {
                 useCachingDocumentParser = caching
             }
