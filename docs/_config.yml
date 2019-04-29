@@ -2,7 +2,7 @@ title: KGraphQL
 description: >-
   Pure Kotlin GraphQL implementation
 baseurl: "/kgraphql/"
-url: "https://apurebase.github.io/KGraphQL/"
+url: "https://apurebase.gitlab.io"
 
 # Build settings
 markdown: kramdown
@@ -18,8 +18,8 @@ sass:
   load_paths:
     - _sass
 aux_links:
-  "KGraphQL on GitLab":
-    - "//gitlab.com/apurebase/kgraphql"
+  "KGraphQL on GitHub":
+    - "//github.com/apurebase/kgraphql"
 
 exclude:
   - Gemfile
