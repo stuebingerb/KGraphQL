@@ -9,6 +9,9 @@ abstract class Person(val name: String, val age: Int)
 
 class Director(name : String, age: Int, val favActors: List<Actor>) : Person(name, age)
 
+class ActorInput(val name: String, val age: Int)
+class ActorCalculateAgeInput(val name: String, val ages: List<Int>)
+
 class Actor(name : String, age: Int) : Person(name, age)
 
 class Id(val literal: String, val numeric: Int)

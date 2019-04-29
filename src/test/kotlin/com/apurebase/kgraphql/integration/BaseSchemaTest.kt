@@ -1,17 +1,6 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.Director
-import com.apurebase.kgraphql.Film
-import com.apurebase.kgraphql.FilmType
-import com.apurebase.kgraphql.Id
-import com.apurebase.kgraphql.IdScalarSupport
-import com.apurebase.kgraphql.Person
-import com.apurebase.kgraphql.Scenario
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.schema.DefaultSchema
-import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
+import com.apurebase.kgraphql.*
 import org.junit.After
 
 
@@ -180,6 +169,30 @@ abstract class BaseSchemaTest {
             description = "create new actor"
             resolver { name : String, age : Int ->
                 val actor = Actor(name, age)
+                createdActors.add(actor)
+                actor
+            }
+        }
+        mutation("createActorWithInput") {
+            description = "create new actor"
+            resolver { input: ActorInput ->
+                val actor = Actor(input.name, input.age)
+                createdActors.add(actor)
+                actor
+            }
+        }
+        mutation("createActorWithAges") {
+            description = "create new actor"
+            resolver { name: String, ages: List<Int> ->
+                val actor = Actor(name, ages.reduce { sum, age -> sum + age })
+                createdActors.add(actor)
+                actor
+            }
+        }
+        mutation("createActorWithAgesInput") {
+            description = "create new actor"
+            resolver { input: ActorCalculateAgeInput ->
+                val actor = Actor(input.name, input.ages.reduce { sum, age -> sum + age })
                 createdActors.add(actor)
                 actor
             }

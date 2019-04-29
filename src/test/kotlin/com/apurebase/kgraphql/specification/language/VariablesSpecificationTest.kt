@@ -89,4 +89,94 @@ class VariablesSpecificationTest : BaseSchemaTest() {
             )
         }
     }
+
+    @Test
+    fun `Advanced variables`() {
+        val d = "$"
+        val request = """
+            mutation MultipleCreate(
+                ${d}name1: String!,
+                ${d}age1: Int!,
+                ${d}name2: String!,
+                ${d}age2: Int!,
+                ${d}input1: ActorInput!,
+                ${d}input2: ActorInput!,
+                ${d}agesName1: String!,
+                ${d}ages1: [Int!]!,
+                ${d}agesName2: String!,
+                ${d}ages2: [Int!]!,
+                ${d}agesInput1: ActorCalculateAgeInput!,
+                ${d}agesInput2: ActorCalculateAgeInput!
+            ) {
+                createFirst: createActor(name: ${d}name1, age: ${d}age1) { name, age }
+                createSecond: createActor(name: ${d}name2, age: ${d}age2) { name, age }
+                inputFirst: createActorWithInput(input: ${d}input1) { name, age }
+                inputSecond: createActorWithInput(input: ${d}input2) { name, age }
+                agesFirst: createActorWithAges(name: ${d}agesName1, ages: ${d}ages1) { name, age }
+                agesSecond: createActorWithAges(name: ${d}agesName2, ages: ${d}ages2) { name, age }
+                inputAgesFirst: createActorWithAgesInput(input: ${d}agesInput1) { name, age }
+                inputAgesSecond: createActorWithAgesInput(input: ${d}agesInput2) { name, age }
+            }
+        """.trimEnd()
+        val variables = """
+            {
+                "name1": "Jógvan",
+                "age1": 1,
+                "name2": "Paweł",
+                "age2": 2,
+                "input1": {"name": "Olsen", "age": 3},
+                "input2": {"name": "Gutkowski", "age": 4},
+                "agesName1": "Someone",
+                "ages1": [10,50],
+                "agesName2": "Some other",
+                "ages2": [5, 10],
+                "agesInput1": {"name": "Jógvan Olsen", "ages": [3]},
+                "agesInput2": {"name": "Paweł Gutkowski", "ages": [4,5,6,7]}
+            }
+        """.trimIndent()
+
+        val result = execute(request, variables)
+
+
+        assertNoErrors(result)
+        assertThat(result.extract("data/createFirst/name"), equalTo("Jógvan"))
+        assertThat(result.extract("data/createSecond/age"), equalTo(2))
+        assertThat(result.extract("data/inputFirst/name"), equalTo("Olsen"))
+        assertThat(result.extract("data/inputSecond/age"), equalTo(4))
+        assertThat(result.extract("data/agesFirst/name"), equalTo("Someone"))
+        assertThat(result.extract("data/agesSecond/age"), equalTo(15))
+        assertThat(result.extract("data/inputAgesFirst/name"), equalTo("Jógvan Olsen"))
+        assertThat(result.extract("data/inputAgesSecond/age"), equalTo(22))
+    }
+
+    @Test
+    fun `required variable arrays`() {
+        val d = "$"
+        val request = """
+            mutation MultipleCreate(
+                ${d}agesName1: String!,
+                ${d}ages1: [Int!]!,
+                ${d}agesName2: String!,
+                ${d}ages2: [Int!]!
+            ) {
+                agesFirst: createActorWithAges(name: ${d}agesName1, ages: ${d}ages1) { name, age }
+                agesSecond: createActorWithAges(name: ${d}agesName2, ages: ${d}ages2) { name, age }
+            }
+        """.trimIndent()
+        val variables = """
+            {
+                "agesName1": "Someone",
+                "ages1": [10,50],
+                "agesName2": "Some other",
+                "ages2": [5, 10]
+            }
+        """.trimIndent()
+
+        val result = execute(request, variables)
+
+
+        assertNoErrors(result)
+        assertThat(result.extract("data/agesFirst/name"), equalTo("Someone"))
+        assertThat(result.extract("data/agesSecond/age"), equalTo(15))
+    }
 }
