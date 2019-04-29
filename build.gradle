@@ -67,6 +67,15 @@ jacoco {
     toolVersion = "0.8.2"
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
 task sourceJar(type: Jar) {
     from sourceSets.main.allSource
 }
