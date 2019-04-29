@@ -1,10 +1,6 @@
 package com.apurebase.kgraphql.access
 
-import com.apurebase.kgraphql.context
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -24,10 +20,15 @@ class AccessRulesTest {
         }
 
         type<Player>{
+            val accessRuleBlock = { player: Player, _: Context ->
+                if (player.name != "BONNER") IllegalAccessException("ILLEGAL ACCESS") else null
+            }
             property(Player::id){
-                accessRule { player, _ ->
-                    if(player.name != "BONNER") IllegalAccessException("ILLEGAL ACCESS") else null
-                }
+                accessRule(accessRuleBlock)
+            }
+            property<String>("item") {
+                accessRule(accessRuleBlock)
+                resolver { "item" }
             }
         }
     }
@@ -44,10 +45,25 @@ class AccessRulesTest {
 
     @Test
     fun `reject when not matching`(){
-        expect<IllegalAccessException> {
+        expect<IllegalAccessException>("") {
             deserialize (
                     schema.execute("{ black_mamba {id} }", context { +"LAKERS" })
             ).extract<String>("data/black_mamba/id")
+        }
+    }
+
+    @Test
+    fun `allow property resolver access rule`() {
+        assertThat(
+            deserialize(schema.execute("{white_mamba {item}}")).extract<String>("data/white_mamba/item"),
+            equalTo("item")
+        )
+    }
+
+    @Test
+    fun `reject property resolver access rule`() {
+        expect<IllegalAccessException>("ILLEGAL ACCESS") {
+            schema.execute("{black_mamba {item}}", context { +"LAKERS" })
         }
     }
 
