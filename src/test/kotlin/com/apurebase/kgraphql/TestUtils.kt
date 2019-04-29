@@ -25,15 +25,15 @@ fun getMap(map : Map<*,*>, key : String) : Map<*,*>{
 fun <T> Map<*, *>.extract(path: String) : T {
     val tokens = path.trim().split('/').filter(String::isNotBlank)
     try {
-        return tokens.fold(this as Any?, { workingMap, token ->
+        return tokens.fold(this as Any?) { workingMap, token ->
             if(token.contains('[')){
                 val list = (workingMap as Map<*,*>)[token.substringBefore('[')]
-                val index = token[token.indexOf('[')+1].toString().toInt()
+                val index = token.substring(token.indexOf('[')+1, token.length -1).toInt()
                 (list as List<*>)[index]
             } else {
                 (workingMap as Map<*,*>)[token]
             }
-        }) as T
+        } as T
     } catch (e : Exception){
         throw IllegalArgumentException("Path: $path does not exist in map: ${this}", e)
     }
@@ -61,8 +61,8 @@ fun assertError(map : Map<*,*>, vararg messageElements : String) {
     MatcherAssert.assertThat(errorMessage, CoreMatchers.notNullValue())
 
     messageElements
-            .filterNot { errorMessage.contains(it) }
-            .forEach { throw AssertionError("Expected error message to contain $it, but was: $errorMessage") }
+        .filterNot { errorMessage.contains(it) }
+        .forEach { throw AssertionError("Expected error message to contain $it, but was: $errorMessage") }
 }
 
 inline fun <reified T: Exception> expect(message: String? = null, block: () -> Unit){
