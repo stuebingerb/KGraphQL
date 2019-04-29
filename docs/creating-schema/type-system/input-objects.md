@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Input Objects
-parent: Type System
+parent: Creating Schema/Type System
 nav_order: 4
 ---
 

@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Objects and Interfaces
-parent: Type System
+parent: Creating Schema/Type System
 has_children: true
 nav_order: 5
 ---
