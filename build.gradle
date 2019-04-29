@@ -112,7 +112,7 @@ bintray {
         publications {
             MyPublication(MavenPublication) {
                 from components.java
-                groupId 'com.apurebase'
+                groupId project.group
                 artifactId 'kgraphql'
                 artifact sourcesJar
                 version version
