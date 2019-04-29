@@ -1,7 +1,8 @@
 ---
 layout: default
 title: Enums
-parent: Creating Schema/Type System
+grand_parent: Creating Schema
+parent: Type System
 nav_order: 2
 ---
 

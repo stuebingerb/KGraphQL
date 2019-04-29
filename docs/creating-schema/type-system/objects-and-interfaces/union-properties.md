@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Union Properties
+grand_parent: Type System
 parent: Objects and Interfaces
 nav_order: 3
 ---
