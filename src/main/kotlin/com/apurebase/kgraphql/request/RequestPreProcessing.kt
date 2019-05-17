@@ -3,21 +3,21 @@ package com.apurebase.kgraphql.request
 import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.not
 
-val OPERANDS = "{}():[]"
+internal const val OPERANDS = "{}():[]"
 
-val IGNORED_CHARACTERS = "\n\t, "
+private const val IGNORED_CHARACTERS = "\n\t\r, "
 
-val DELIMITERS = OPERANDS + IGNORED_CHARACTERS
+private const val DELIMITERS = OPERANDS + IGNORED_CHARACTERS
 
-fun tokenizeRequest(input : String) : List<String> {
+internal fun tokenizeRequest(input : String) : List<String> {
     var i = 0
     val tokens : MutableList<String> = mutableListOf()
 
-    while(i < input.length){
-        when(input[i]){
-            in IGNORED_CHARACTERS -> { i++ }
+    while (i < input.length) {
+        when (input[i]) {
+            in IGNORED_CHARACTERS -> i++
             in OPERANDS -> {
-                if (input.length > i+1 && input.substring(i, i+2) == "]!") {
+                if (input.length > i + 1 && input.substring(i, i + 2) == "]!") {
                     tokens.add("]!")
                     i += 2
                 } else {
@@ -70,7 +70,7 @@ private fun extractValueToken(substring: String): String {
     return tokenBuilder.toString()
 }
 
-fun createDocumentTokens(tokens : List<String>) : Document {
+internal fun createDocumentTokens(tokens : List<String>) : Document {
     val operations : MutableList<Document.OperationTokens> = mutableListOf()
     val fragments : MutableList<Document.FragmentTokens> = mutableListOf()
 
@@ -92,13 +92,12 @@ fun createDocumentTokens(tokens : List<String>) : Document {
     return Document(fragments, operations)
 }
 
-fun createFragmentTokens(tokens : List<String>, startIndex: Int) : Pair<Int, Document.FragmentTokens>{
+private fun createFragmentTokens(tokens : List<String>, startIndex: Int) : Pair<Int, Document.FragmentTokens>{
     var index = startIndex
     var name : String? = null
     var typeCondition : String? = null
     while(index < tokens.size){
-        val token = tokens[index]
-        when(token) {
+        when(val token = tokens[index]) {
             "fragment" -> {
                 name = tokens[index + 1]
                 index++
@@ -120,7 +119,7 @@ fun createFragmentTokens(tokens : List<String>, startIndex: Int) : Pair<Int, Doc
     throw RequestException("Invalid fragment $name declaration without selection set")
 }
 
-fun createOperationTokens(tokens : List<String>, startIndex: Int) : Pair<Int, Document.OperationTokens>{
+private fun createOperationTokens(tokens : List<String>, startIndex: Int) : Pair<Int, Document.OperationTokens>{
     var index = startIndex
     var name : String? = null
     var type : String? = null
@@ -191,9 +190,9 @@ private fun parseOperationVariables(variablesTokens: List<String>): MutableList<
     return operationVariables
 }
 
-val TYPE_WRAPPERS = arrayOf('!', '[', ']')
+private val TYPE_WRAPPERS = arrayOf('!', '[', ']')
 
-fun String.toTypeReference() : TypeReference {
+private fun String.toTypeReference() : TypeReference {
     val isNullable = not(endsWith("!"))
     val isList = startsWith("[") && (endsWith("]") || endsWith("]!"))
     val isElementNullable = isList && not(endsWith("!]") || endsWith("!]!"))
@@ -201,15 +200,15 @@ fun String.toTypeReference() : TypeReference {
     return TypeReference(name, isNullable, isList, isElementNullable)
 }
 
-fun indexOfClosingBracket(tokens: List<String>, startIndex: Int) : Int {
+private fun indexOfClosingBracket(tokens: List<String>, startIndex: Int) : Int {
     var nestedBrackets = 0
     val subList = tokens.subList(startIndex, tokens.size)
     subList.forEachIndexed { index, token ->
-        when(token){
+        when (token) {
             "{" -> nestedBrackets++
             "}" -> nestedBrackets--
         }
-        if(nestedBrackets == 0) return index + startIndex + 1
+        if (nestedBrackets == 0) return index + startIndex + 1
     }
     val indexOfTokenInString = getIndexOfTokenInString(tokens.subList(0, startIndex))
     throw RequestException("Missing closing bracket for opening bracket at $indexOfTokenInString")
