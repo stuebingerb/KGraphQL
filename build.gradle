@@ -1,5 +1,5 @@
-group 'com.github.pgutkowski'
-version '0.3.0'
+group 'com.apurebase'
+version '0.4.1'
 
 buildscript {
     ext.kotlin_version = '1.3.10'
@@ -67,6 +67,15 @@ jacoco {
     toolVersion = "0.8.2"
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
 task sourceJar(type: Jar) {
     from sourceSets.main.allSource
 }
@@ -79,47 +88,40 @@ jacocoTestReport {
     }
 }
 
-publishing {
-    publications {
-        MyPublication(MavenPublication) {
-            from components.java
-
-            artifact sourceJar {
-                classifier "sources"
-            }
-
-            pom.withXml {
-                asNode().dependencies.'*'.findAll() {
-                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
-                        dep.name == it.artifactId.text()
-                    }
-                }.each() {
-                    it.scope*.value = 'compile'
-                }
-            }
-        }
-    }
-}
-
 bintray {
-    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
 
+    publish = true
+    publications = ['MyPublication']
+    configurations = ['archives']
     pkg {
-        repo = 'Maven'
-        name = 'KGraphQL'
+        repo = 'apurebase'
+        name = 'kgraphql'
         licenses = ['MIT']
-        vcsUrl = 'https://github.com/pgutkowski/KGraphQL.git'
-        publications = ['MyPublication']
-
+        vcsUrl = 'git@github.com:aPureBase/KGraphQL.git'
+        websiteUrl = 'https://github.com/aPureBase/KGraphQL'
+        issueTrackerUrl = 'https://github.com/aPureBase/KGraphQL/issues'
         version {
-            name = '0.3.0'
-            desc = 'KGraphQL beta release'
-            released  = new Date()
-            vcsTag = '0.3.0'
+            name = project.version
+            released = new Date()
+        }
+    }
+
+    publishing {
+        publications {
+            MyPublication(MavenPublication) {
+                from components.java
+                groupId project.group
+                artifactId 'kgraphql'
+                artifact sourcesJar
+                version version
+            }
         }
     }
 }
+
+
 
 wrapper {
     gradleVersion = '4.10' //version required

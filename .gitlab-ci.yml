@@ -1,0 +1,65 @@
+image: gradle:alpine
+
+stages:
+  - test
+  - publish
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+
+
+
+##############
+#    JOBS    #
+##############
+
+build:
+  stage: test
+  cache:
+    paths:
+      - build
+      - .gradle
+  script:
+    - gradle assemble
+
+test:
+  stage: test
+  cache:
+    paths:
+      - build
+      - .gradle
+  script:
+    - gradle jacocoTestReport coveralls
+
+bintray:publish:
+  stage: publish
+  cache:
+    paths:
+      - build
+      - .gradle
+  script:
+    - ./gradlew bintrayUpload
+  only:
+    - tags
+
+pages:
+  image: alpine/bundle:2.6.1
+  stage: publish
+  artifacts:
+    paths:
+      - public
+  cache:
+    paths:
+      - docs/vendor
+  variables:
+    JEKYLL_ENV: production
+    LC_ALL: C.UTF-8
+  script:
+    - cd docs
+    - bundle install --path vendor/bundle
+    - bundle exec jekyll build -d ../public
+  only:
+    - master
