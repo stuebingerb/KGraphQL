@@ -162,11 +162,48 @@ class SchemaBuilderTest {
         }
 
         val actorType = tested.model.queryTypes[Actor::class]
-                ?: throw Exception("Scenario type should be present in schema")
+                ?: throw Exception("Actor type should be present in schema")
         assertThat(actorType.kind, equalTo(TypeKind.OBJECT))
         val property = actorType["linked"] ?: throw Exception("Actor should have ext property 'linked'")
         assertThat(property, notNullValue())
         assertThat(property.returnType.unwrapped().name, equalTo("Actor"))
+    }
+
+    @Test
+    fun `KFunction resolver`(){
+        val actorService = object {
+            fun getMainActor() = Actor("Little John", 44)
+            fun getActor(id: Int) = when(id) {
+                1 -> Actor("Joey", 4)
+                else -> Actor("Bobby", 5)
+            }
+        }
+
+        val tested = defaultSchema {
+            query("mainActor") {
+                actorService::getMainActor.toResolver()
+            }
+
+            query("actorById") {
+                actorService::getActor.toResolver()
+            }
+
+            type<Actor> {
+                property<Actor>("linked") {
+                    resolver { _ -> Actor("BIG John", 3234) }
+                }
+            }
+        }
+
+        val actorType = tested.model.queryTypes[Actor::class]
+                ?: throw Exception("Actor type should be present in schema")
+        assertThat(actorType.kind, equalTo(TypeKind.OBJECT))
+        val property = actorType["linked"] ?: throw Exception("Actor should have ext property 'linked'")
+        assertThat(property, notNullValue())
+        assertThat(property.returnType.unwrapped().name, equalTo("Actor"))
+
+        deserialize(tested.execute("{mainActor{name}}"))
+        deserialize(tested.execute("{actorById(id: 1){name}}"))
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import com.apurebase.kgraphql.schema.model.MutationDef
 import com.apurebase.kgraphql.schema.model.QueryDef
+import kotlin.reflect.KFunction
 
 
 class QueryOrMutationDSL(
@@ -24,6 +25,8 @@ class QueryOrMutationDSL(
         functionWrapper = function
         return ResolverDSL(this)
     }
+
+    fun <T> KFunction<T>.toResolver() = resolver(FunctionWrapper.on(this))
 
     fun <T>resolver(function: () -> T) = resolver(FunctionWrapper.on(function))
 

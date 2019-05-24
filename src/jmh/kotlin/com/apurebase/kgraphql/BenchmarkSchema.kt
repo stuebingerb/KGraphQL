@@ -11,40 +11,35 @@ data class ModelTwo(val one : ModelOne, val range: IntRange)
 data class ModelThree(val id : String, val twos : List<ModelTwo>)
 
 object BenchmarkSchema {
-    val ones = listOf(
-        ModelOne("DUDE"),
-        ModelOne("GUY"),
-        ModelOne("PAL"),
-        ModelOne("FELLA")
-    )
+    val ones = listOf(ModelOne("DUDE"),ModelOne("GUY"),ModelOne("PAL"),ModelOne("FELLA"))
 
     val oneResolver : ()->List<ModelOne> = { ones }
 
     val twoResolver : (name : String)-> ModelTwo? = { name ->
-        ones.find { it.name == name }?.let {
-            ModelTwo(
-                it,
-                it.quantity..12
-            )
-        }
+        ones.find { it.name == name }?.let { ModelTwo(it, it.quantity..12) }
     }
 
-    val threeResolver : ()-> ModelThree = {
-        ModelThree(
-            "",
-            ones.map { ModelTwo(it, it.quantity..10) })
+    val threeResolver : ()-> ModelThree = { ModelThree("", ones.map { ModelTwo(it, it.quantity..10) }) }
+
+    object HasOneResolver {
+        fun oneResolver(): List<ModelOne> {
+            return ones
+        }
     }
 
     fun create(block : SchemaBuilder<Unit>.()-> Unit): Schema = KGraphQL.schema {
         block()
-        query("one") {
+        query("one"){
             resolver(oneResolver)
         }
-        query("two") {
+        query("two"){
             resolver(twoResolver)
         }
-        query("three") {
+        query("three"){
             resolver(threeResolver)
+        }
+        query("threeKF"){
+            HasOneResolver::oneResolver.toResolver()
         }
     }
 }
