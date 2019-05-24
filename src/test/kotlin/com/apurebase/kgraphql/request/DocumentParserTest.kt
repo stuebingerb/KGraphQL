@@ -226,4 +226,39 @@ class DocumentParserTest {
         )
         assertThat(map.first().selectionTree, equalTo(expected))
     }
+
+    @Test
+    fun `nested fragment parsing`() {
+        val map = graphParser.parseDocument("""
+            {
+                hero {
+                    id
+                    ...heroName
+                }
+            }
+
+            fragment heroName on Hero {
+                name {
+                    real
+                }
+                ...heroNameDetails
+            }
+
+            fragment heroNameDetails on Hero {
+                name {
+                    asHero
+                }
+            }
+            """.trimIndent())
+        val expected = SelectionTree(
+                branch("hero",
+                        leaf("id"),
+                        extFragment("...heroName", "Hero",
+                                branch("name", *leafs("real")),
+                                extFragment("...heroNameDetails", "Hero", branch("name", *leafs("asHero")))
+                        )
+                )
+        )
+        assertThat(map.first().selectionTree, equalTo(expected))
+    }
 }

@@ -172,6 +172,39 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `query with nested external fragment`() {
+        val map = execute("""
+            {
+                film {
+                    title
+                    ...dir
+                }
+            }
+
+            fragment dir on Film {
+                director {
+                    name
+                }
+                ...dirAge
+            }
+
+            fragment dirIntermediate on Film {
+                ...dirAge
+            }
+
+            fragment dirAge on Film {
+                director {
+                    age
+                }
+            }
+            """.trimIndent())
+        assertNoErrors(map)
+        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
+        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
+        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+    }
+
+    @Test
     fun `query with missing selection set`(){
         expect<RequestException>("Missing selection set on property film of type Film"){
             execute("{film}")

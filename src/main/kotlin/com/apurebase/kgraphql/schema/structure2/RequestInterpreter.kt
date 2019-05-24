@@ -59,21 +59,8 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         return children
     }
 
-    private fun handleReturnTypeChildOrFragment(node: SelectionNode, returnType: Type): Execution {
-        val unwrappedType = returnType.unwrapped()
-
-        return when(node){
-            is Fragment -> {
-                val conditionType = findFragmentType(node, unwrappedType)
-                val condition = TypeCondition(conditionType)
-                val elements = node.fragmentGraph.map { conditionType.handleSelection(it) }
-                Execution.Fragment(condition, elements, node.directives?.lookup())
-            }
-            else -> {
-                unwrappedType.handleSelection(node)
-            }
-        }
-    }
+    private fun handleReturnTypeChildOrFragment(node: SelectionNode, returnType: Type) =
+            returnType.unwrapped().handleSelectionFieldOrFragment(node)
 
     private fun findFragmentType(fragment: Fragment, enclosingType: Type) : Type {
         when(fragment){
@@ -88,6 +75,18 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
                 }
             }
             else -> throw ExecutionException("Unexpected fragment type: ${fragment.javaClass}")
+        }
+    }
+
+    private fun Type.handleSelectionFieldOrFragment(node: SelectionNode): Execution = when(node) {
+        is Fragment -> {
+            val conditionType = findFragmentType(node, this)
+            val condition = TypeCondition(conditionType)
+            val elements = node.fragmentGraph.map { conditionType.handleSelectionFieldOrFragment(it) }
+            Execution.Fragment(condition, elements, node.directives?.lookup())
+        }
+        else -> {
+            this.handleSelection(node)
         }
     }
 
