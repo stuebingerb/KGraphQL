@@ -18,13 +18,13 @@ data class Variables(
     /**
      * map and return object of requested class
      */
-    fun <T : Any> get(kClass: KClass<T>, kType: KType, key: String, transform: (value: String) -> Any?): T? {
+    fun <T : Any> get(kClass: KClass<T>, kType: KType, typeName: String?, key: String, transform: (value: String) -> Any?): T? {
         val variable = variables?.find { key == it.name }
                 ?: throw IllegalArgumentException("Variable '$key' was not declared for this operation")
 
         val isIterable = kClass.isIterable()
 
-        validateVariable(typeDefinitionProvider.typeReference(kType), variable)
+        validateVariable(typeDefinitionProvider.typeReference(kType), typeName, variable)
 
         var value = variablesJson.get(kClass, kType, key.substring(1))
         if(value == null && variable.defaultValue != null){
@@ -57,9 +57,9 @@ data class Variables(
         }
     }
 
-    fun validateVariable(expectedType: TypeReference, variable: OperationVariable){
+    fun validateVariable(expectedType: TypeReference, expectedTypeName: String?, variable: OperationVariable){
         val variableType = variable.type
-        val invalidName =  expectedType.name != variableType.name
+        val invalidName =  (expectedTypeName ?: expectedType.name) != variableType.name
         val invalidIsList = expectedType.isList != variableType.isList
         val invalidNullability = !expectedType.isNullable && variableType.isNullable && variable.defaultValue == null
         val invalidElementNullability = !expectedType.isElementNullable && variableType.isElementNullable
