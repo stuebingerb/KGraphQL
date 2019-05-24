@@ -69,4 +69,12 @@ class MutationTest : BaseSchemaTest() {
         assertNoErrors(map)
         assertThat(map.extract<Map<String, Any>>("data/createActor"), equalTo(mapOf<String, Any>("howOld" to testActor.age)))
     }
+
+    @Test
+    fun `simple mutation with aliased input type`(){
+        val map = execute("mutation(\$newActor: ActorInput!) { createActorWithAliasedInputType(newActor: \$newActor) {name}}",
+            variables = "{\"newActor\": {\"name\": \"${testActor.name}\", \"age\": ${testActor.age}}}")
+        assertNoErrors(map)
+        assertThat(map.extract<Map<String, Any>>("data/createActorWithAliasedInputType"), equalTo(mapOf<String, Any>("name" to testActor.name)))
+    }
 }

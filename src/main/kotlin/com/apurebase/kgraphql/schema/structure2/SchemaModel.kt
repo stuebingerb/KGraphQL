@@ -14,19 +14,19 @@ data class SchemaModel (
         val enums: Map<KClass<out Enum<*>>, Type.Enum<out Enum<*>>>,
         val scalars : Map<KClass<*>, Type.Scalar<*>>,
         val unions : List<Type.Union>,
-        val allTypes : Map<KClass<*>, Type>,
+        val allTypes : List<Type>,
         val queryTypes: Map<KClass<*>, Type>,
         val inputTypes: Map<KClass<*>, Type>,
         override val directives: List<Directive>
 ) : __Schema {
 
-    val allTypesByName = allTypes.values.associate { it.name to it }
+    val allTypesByName = allTypes.associate { it.name to it }
 
     val queryTypesByName = queryTypes.values.associate { it.name to it }
 
     val inputTypesByName = inputTypes.values.associate { it.name to it }
 
-    override val types: List<__Type> = allTypes.values.toList()
+    override val types: List<__Type> = allTypes.toList()
             //workaround on the fact that Double and Float are treated as GraphQL Float
             .filterNot { it is Type.Scalar<*> && it.kClass == Float::class }
             .filterNot { it.kClass?.findAnnotation<NotIntrospected>() != null }

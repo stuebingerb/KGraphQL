@@ -245,6 +245,18 @@ abstract class BaseSchemaTest {
                 }}
             }
         }
+
+        inputType<Actor>() {
+            name = "ActorInput"
+        }
+
+        mutation("createActorWithAliasedInputType") {
+            description = "create new actor from full fledged ActorInput as input type"
+            resolver { newActor: Actor ->
+                createdActors.add(newActor)
+                newActor
+            }
+        }
     }
 
     @After

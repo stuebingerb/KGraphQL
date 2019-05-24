@@ -21,6 +21,7 @@ import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
+import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -545,5 +546,26 @@ class SchemaBuilderTest {
                 resolver { -> "test"}
             }
         }
+    }
+
+    @Test
+    fun `Schema can have same type and input type with different names`(){
+        val schema = defaultSchema {
+            inputType<InputOne>() {
+                name="TypeAsInput"
+            }
+            type<InputOne>() {
+                name="TypeAsObject"
+            }
+        }
+
+        assertThat(schema.typeByKClass(InputOne::class), notNullValue())
+        assertThat(schema.inputTypeByKClass(InputOne::class), notNullValue())
+
+        val introspection = deserialize(schema.execute("{__schema{types{name}}}"))
+        val types = introspection.extract<List<Map<String,String>>>("data/__schema/types")
+        val names = types.map {it["name"]}
+        assertThat(names, hasItem("TypeAsInput"))
+        assertThat(names, hasItem("TypeAsObject"))
     }
 }
