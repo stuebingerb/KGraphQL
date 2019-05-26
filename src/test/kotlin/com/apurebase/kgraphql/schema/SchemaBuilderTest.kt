@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.FilmType
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.Account
 import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.context
 import com.apurebase.kgraphql.defaultSchema
@@ -67,6 +68,27 @@ class SchemaBuilderTest {
                 ?: throw Exception("Scenario type should be present in schema")
         assertThat(scenarioType["author"], nullValue())
         assertThat(scenarioType["content"], notNullValue())
+    }
+
+    @Test
+    fun `ignored invisible properties`() {
+        val testedSchema = defaultSchema {
+            query("account") {
+                resolver { -> Account(42, "AzureDiamond", "hunter2") }
+            }
+        }
+
+        val scenarioType = testedSchema.model.queryTypes[Account::class]
+                ?: throw Exception("Account type should be present in schema")
+
+        // id should exist because it is public
+        assertThat(scenarioType["id"], notNullValue())
+
+        // username should exist because it is public
+        assertThat(scenarioType["username"], notNullValue())
+
+        // password shouldn't exist because it's private
+        assertThat(scenarioType["password"], nullValue())
     }
 
     @Test

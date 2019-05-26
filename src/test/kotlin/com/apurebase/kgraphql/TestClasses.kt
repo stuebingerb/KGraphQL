@@ -25,3 +25,5 @@ class IdScalarSupport : StringScalarCoercion<Id> {
 enum class FilmType { FULL_LENGTH, SHORT_LENGTH }
 
 class Scenario(val id : Id, val author : String, val content : String)
+
+class Account(val id : Int, val username : String, private val password: String)

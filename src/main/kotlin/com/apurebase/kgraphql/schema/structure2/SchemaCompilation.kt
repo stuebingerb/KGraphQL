@@ -22,6 +22,7 @@ import com.apurebase.kgraphql.schema.model.TypeDef
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
+import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.memberProperties
@@ -207,6 +208,7 @@ class SchemaCompilation(
                 { acc, def -> acc + def.transformations.mapKeys { entry -> entry.key.name } })
 
         val kotlinFields = kClass.memberProperties
+                .filter { field -> field.visibility == KVisibility.PUBLIC }
                 .filterNot { field ->  objectDefs.any { it.isIgnored(field.name) } }
                 .map { property -> handleKotlinProperty (
                         kProperty = property,
