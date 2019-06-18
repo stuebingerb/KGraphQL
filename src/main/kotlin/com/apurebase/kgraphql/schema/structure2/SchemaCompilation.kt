@@ -73,7 +73,7 @@ class SchemaCompilation(
 
                 queryTypes = queryTypeProxies + enums + scalars,
                 inputTypes = inputTypeProxies + enums + scalars,
-                allTypes = queryTypeProxies.values + inputTypeProxies.values + enums.values + scalars.values,
+                allTypes = queryTypeProxies.values + inputTypeProxies.values + enums.values + scalars.values + unions,
                 directives = definition.directives.map { handlePartialDirective(it) }
         )
         val schema = DefaultSchema(configuration, model)
