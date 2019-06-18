@@ -119,7 +119,7 @@ class SchemaCompilation(
     }
 
     private fun introspectionSchemaQuery() = handleOperation(
-            QueryDef("__schema", FunctionWrapper.on<__Schema> { schemaProxy as __Schema })
+            QueryDef("__schema", FunctionWrapper.on<__Schema> { schemaProxy })
     )
 
     private fun introspectionTypeQuery() = handleOperation(
@@ -220,7 +220,7 @@ class SchemaCompilation(
 
         val unionFields = objectDefs.flatMap(TypeDef.Object<*>::unionProperties).map { property -> handleUnionProperty(property) }
 
-        val typenameResolver = { value: Any ->
+        val typenameResolver: suspend (Any) -> String? = { value: Any ->
             schemaProxy.typeByKClass(value.javaClass.kotlin)?.name ?: typeProxy.name
         }
 

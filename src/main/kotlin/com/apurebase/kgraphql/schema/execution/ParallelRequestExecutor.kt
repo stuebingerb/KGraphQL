@@ -312,9 +312,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
         //exceptions are not caught on purpose to pass up business logic errors
         return if (hasReceiver) {
-            suspendInvoke(receiver, *transformedArgs.toTypedArray())
+            invoke(receiver, *transformedArgs.toTypedArray())
         } else {
-            suspendInvoke(*transformedArgs.toTypedArray())
+            invoke(*transformedArgs.toTypedArray())
         }
     }
 

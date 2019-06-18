@@ -22,41 +22,23 @@ class PropertyDSL<T : Any, R>(val name : String, block : PropertyDSL<T, R>.() ->
         return ResolverDSL(this)
     }
 
-    fun resolver(function: (T) -> R)
+    fun resolver(function: suspend (T) -> R)
             = resolver(FunctionWrapper.on(function, true))
 
-    fun <E>resolver(function: (T, E) -> R)
+    fun <E> resolver(function: suspend (T, E) -> R)
             = resolver(FunctionWrapper.on(function, true))
 
-    fun <E, W>resolver(function: (T, E, W) -> R)
+    fun <E, W> resolver(function: suspend (T, E, W) -> R)
             = resolver(FunctionWrapper.on(function, true))
 
-    fun <E, W, Q>resolver(function: (T, E, W, Q) -> R)
+    fun <E, W, Q> resolver(function: suspend (T, E, W, Q) -> R)
             = resolver(FunctionWrapper.on(function, true))
 
-    fun <E, W, Q, A>resolver(function: (T, E, W, Q, A) -> R)
+    fun <E, W, Q, A> resolver(function: suspend (T, E, W, Q, A) -> R)
             = resolver(FunctionWrapper.on(function, true))
 
-    fun <E, W, Q, A, S>resolver(function: (T, E, W, Q, A, S) -> R)
+    fun <E, W, Q, A, S> resolver(function: suspend (T, E, W, Q, A, S) -> R)
             = resolver(FunctionWrapper.on(function, true))
-
-    fun suspendResolver(function: suspend (T) -> R)
-            = resolver(FunctionWrapper.onSuspend(function, true))
-
-    fun <E>suspendResolver(function: suspend (T, E) -> R)
-            = resolver(FunctionWrapper.onSuspend(function, true))
-
-    fun <E, W>suspendResolver(function: suspend (T, E, W) -> R)
-            = resolver(FunctionWrapper.onSuspend(function, true))
-
-    fun <E, W, Q>suspendResolver(function: suspend (T, E, W, Q) -> R)
-            = resolver(FunctionWrapper.onSuspend(function, true))
-
-    fun <E, W, Q, A>suspendResolver(function: suspend (T, E, W, Q, A) -> R)
-            = resolver(FunctionWrapper.onSuspend(function, true))
-
-    fun <E, W, Q, A, S>suspendResolver(function: suspend (T, E, W, Q, A, S) -> R)
-            = resolver(FunctionWrapper.onSuspend(function, true))
 
     fun accessRule(rule: (T, Context) -> Exception?){
 

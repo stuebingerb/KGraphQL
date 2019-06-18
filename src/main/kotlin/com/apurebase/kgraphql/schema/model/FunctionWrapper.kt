@@ -4,10 +4,9 @@ package com.apurebase.kgraphql.schema.model
 
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.structure2.validateName
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
+import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.reflect
@@ -15,70 +14,53 @@ import kotlin.reflect.jvm.reflect
 
 /**
  * FunctionWrapper is common interface for classes storing functions registered in schema by server code.
- * Only up to 4 arguments are supported, because kotlin-reflect doesn't support
+ * Only up to 9 arguments are supported, because kotlin-reflect doesn't support
  * invoking lambdas, local and anonymous functions yet, making implementation severely limited.
  */
 interface FunctionWrapper <T>{
     //lots of boilerplate here, because kotlin-reflect doesn't support invoking lambdas, local and anonymous functions yet
     companion object {
         fun <T> on (function : KFunction<T>) : FunctionWrapper<T>
-                = FunctionWrapper.ArityN(function)
+                = ArityN(function)
 
-        fun <T> on (function : () -> T) : FunctionWrapper<T>
-                = FunctionWrapper.ArityZero(function)
+        fun <T> on (function : suspend () -> T) : FunctionWrapper<T>
+            = ArityZero(function)
 
-        fun <T, R> on (function : (R) -> T)
-                = FunctionWrapper.ArityOne(function, false)
+        fun <T, R> on (function : suspend (R) -> T)
+            = ArityOne(function, false)
 
-        fun <T, R> on (function : (R) -> T, hasReceiver: Boolean = false)
-                = FunctionWrapper.ArityOne(function, hasReceiver)
+        fun <T, R> on (function : suspend (R) -> T, hasReceiver: Boolean = false)
+            = ArityOne(function, hasReceiver)
 
-        fun <T, R, E> on (function : (R, E) -> T, hasReceiver: Boolean = false)
-                = FunctionWrapper.ArityTwo(function, hasReceiver)
+        fun <T, R, E> on (function : suspend (R, E) -> T, hasReceiver: Boolean = false)
+            = ArityTwo(function, hasReceiver)
 
-        fun <T, R, E, W> on (function : (R, E, W) -> T, hasReceiver: Boolean = false)
-                = FunctionWrapper.ArityThree(function, hasReceiver)
+        fun <T, R, E, W> on (function : suspend (R, E, W) -> T, hasReceiver: Boolean = false)
+            = ArityThree(function, hasReceiver)
 
-        fun <T, R, E, W, Q> on (function : (R, E, W, Q) -> T, hasReceiver: Boolean = false)
-                = FunctionWrapper.ArityFour(function, hasReceiver)
+        fun <T, R, E, W, Q> on (function : suspend (R, E, W, Q) -> T, hasReceiver: Boolean = false)
+            = ArityFour(function, hasReceiver)
 
-        fun <T, R, E, W, Q, A> on (function : (R, E, W, Q, A) -> T, hasReceiver: Boolean = false)
-                = FunctionWrapper.ArityFive(function, hasReceiver)
+        fun <T, R, E, W, Q, A> on (function : suspend (R, E, W, Q, A) -> T, hasReceiver: Boolean = false)
+            = ArityFive(function, hasReceiver)
 
-        fun <T, R, E, W, Q, A, S> on (function : (R, E, W, Q, A, S) -> T, hasReceiver: Boolean = false)
-                = FunctionWrapper.AritySix(function, hasReceiver)
+        fun <T, R, E, W, Q, A, S> on (function : suspend (R, E, W, Q, A, S) -> T, hasReceiver: Boolean = false)
+            = AritySix(function, hasReceiver)
 
-        fun <T> onSuspend (function : suspend () -> T) : FunctionWrapper<T>
-            = FunctionWrapper.ArityZeroSuspend(function)
+        fun <T, R, E, W, Q, A, S, G> on (function : suspend (R, E, W, Q, A, S, G) -> T, hasReceiver: Boolean = false)
+            = AritySeven(function, hasReceiver)
 
-        fun <T, R> onSuspend (function : suspend (R) -> T)
-            = FunctionWrapper.ArityOneSuspend(function, false)
+        fun <T, R, E, W, Q, A, S, G, H> on (function : suspend (R, E, W, Q, A, S, G, H) -> T, hasReceiver: Boolean = false)
+            = ArityEight(function, hasReceiver)
 
-        fun <T, R> onSuspend (function : suspend (R) -> T, hasReceiver: Boolean = false)
-            = FunctionWrapper.ArityOneSuspend(function, hasReceiver)
-
-        fun <T, R, E> onSuspend (function : suspend (R, E) -> T, hasReceiver: Boolean = false)
-            = FunctionWrapper.ArityTwoSuspend(function, hasReceiver)
-
-        fun <T, R, E, W> onSuspend (function : suspend (R, E, W) -> T, hasReceiver: Boolean = false)
-            = FunctionWrapper.ArityThreeSuspend(function, hasReceiver)
-
-        fun <T, R, E, W, Q> onSuspend (function : suspend (R, E, W, Q) -> T, hasReceiver: Boolean = false)
-            = FunctionWrapper.ArityFourSuspend(function, hasReceiver)
-
-        fun <T, R, E, W, Q, A> onSuspend (function : suspend (R, E, W, Q, A) -> T, hasReceiver: Boolean = false)
-            = FunctionWrapper.ArityFiveSuspend(function, hasReceiver)
-
-        fun <T, R, E, W, Q, A, S> onSuspend (function : suspend (R, E, W, Q, A, S) -> T, hasReceiver: Boolean = false)
-            = FunctionWrapper.AritySixSuspend(function, hasReceiver)
+        fun <T, R, E, W, Q, A, S, G, H, J> on (function : suspend (R, E, W, Q, A, S, G, H, J) -> T, hasReceiver: Boolean = false)
+            = ArityNine(function, hasReceiver)
 
     }
 
     val kFunction: KFunction<T>
 
-    suspend fun suspendInvoke(vararg args: Any?) : T?
-
-    fun invoke(vararg args: Any?) : T?
+    suspend fun invoke(vararg args: Any?) : T?
 
     fun arity() : Int
 
@@ -105,11 +87,7 @@ interface FunctionWrapper <T>{
 
         override val argumentsDescriptor: Map<String, KType> by lazy { createArgumentsDescriptor() }
 
-        override fun invoke(vararg args: Any?) : T? = runBlocking {
-            suspendInvoke(*args)
-        }
-
-        override suspend fun suspendInvoke(vararg args: Any?) : T? {
+        override suspend fun invoke(vararg args: Any?) : T? {
             return invoke(*args)
         }
     }
@@ -129,29 +107,16 @@ interface FunctionWrapper <T>{
         override val hasReceiver: Boolean
             get() = kFunction.extensionReceiverParameter != null
 
-        override fun invoke(vararg args: Any?): T? {
-            return kFunction.call(*args)
+        override suspend fun invoke(vararg args: Any?): T? {
+            return kFunction.callSuspend(*args)
         }
     }
 
-    class ArityZero<T>(val implementation : ()-> T, override val hasReceiver: Boolean = false ) : Base<T>() {
+    class ArityZero<T>(val implementation : suspend ()-> T, override val hasReceiver: Boolean = false ) : Base<T>() {
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
         override fun arity(): Int = 0
 
-        override fun invoke(vararg args: Any?): T? {
-            if(args.isNotEmpty()){
-                throw IllegalArgumentException("This function does not accept arguments")
-            } else {
-                return implementation()
-            }
-        }
-    }
-
-    class ArityZeroSuspend<T>(val implementation : suspend ()-> T, override val hasReceiver: Boolean = false ) : Base<T>() {
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
-        override fun arity(): Int = 0
-
-        override suspend fun suspendInvoke(vararg args: Any?): T? {
+        override suspend fun invoke(vararg args: Any?): T? {
             if(args.isNotEmpty()){
                 throw IllegalArgumentException("This function does not accept arguments")
             } else {
@@ -161,23 +126,6 @@ interface FunctionWrapper <T>{
     }
 
     class ArityOne<T, R>(
-            val implementation : (R)-> T, override val hasReceiver: Boolean
-    ) : Base<T>() {
-
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
-
-        override fun arity(): Int = 1
-
-        override fun invoke(vararg args: Any?): T? {
-            if(args.size == arity()){
-                return implementation(args[0] as R)
-            } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
-            }
-        }
-    }
-
-    class ArityOneSuspend<T, R>(
         val implementation : suspend (R)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
 
@@ -185,7 +133,7 @@ interface FunctionWrapper <T>{
 
         override fun arity(): Int = 1
 
-        override suspend fun suspendInvoke(vararg args: Any?): T? {
+        override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
                 return implementation(args[0] as R)
             } else {
@@ -195,24 +143,6 @@ interface FunctionWrapper <T>{
     }
 
     class ArityTwo<T, R, E>(
-            val implementation : (R, E)-> T,
-            override val hasReceiver: Boolean
-    ) : Base<T>() {
-
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
-
-        override fun arity(): Int = 2
-
-        override fun invoke(vararg args: Any?): T? {
-            if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E)
-            } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
-            }
-        }
-    }
-
-    class ArityTwoSuspend<T, R, E>(
         val implementation : suspend (R, E)-> T,
         override val hasReceiver: Boolean
     ) : Base<T>() {
@@ -221,7 +151,7 @@ interface FunctionWrapper <T>{
 
         override fun arity(): Int = 2
 
-        override suspend fun suspendInvoke(vararg args: Any?): T? {
+        override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
                 return implementation(args[0] as R, args[1] as E)
             } else {
@@ -231,23 +161,6 @@ interface FunctionWrapper <T>{
     }
 
     class ArityThree<T, R, E, W>(
-            val implementation : (R, E, W)-> T, override val hasReceiver: Boolean
-    ) : Base<T>() {
-
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
-
-        override fun arity(): Int = 3
-
-        override fun invoke(vararg args: Any?): T? {
-            if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W)
-            } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
-            }
-        }
-    }
-
-    class ArityThreeSuspend<T, R, E, W>(
         val implementation : suspend (R, E, W)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
 
@@ -255,7 +168,7 @@ interface FunctionWrapper <T>{
 
         override fun arity(): Int = 3
 
-        override suspend fun suspendInvoke(vararg args: Any?): T? {
+        override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
                 return implementation(args[0] as R, args[1] as E, args[2] as W)
             } else {
@@ -265,23 +178,6 @@ interface FunctionWrapper <T>{
     }
 
     class ArityFour<T, R, E, W, Q>(
-            val implementation : (R, E, W, Q)-> T, override val hasReceiver: Boolean
-    ) : Base<T>() {
-
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
-
-        override fun arity(): Int = 4
-
-        override fun invoke(vararg args: Any?): T? {
-            if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q)
-            } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
-            }
-        }
-    }
-
-    class ArityFourSuspend<T, R, E, W, Q>(
         val implementation : suspend (R, E, W, Q)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
 
@@ -289,7 +185,7 @@ interface FunctionWrapper <T>{
 
         override fun arity(): Int = 4
 
-        override suspend fun suspendInvoke(vararg args: Any?): T? {
+        override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
                 return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q)
             } else {
@@ -299,23 +195,6 @@ interface FunctionWrapper <T>{
     }
 
     class ArityFive<T, R, E, W, Q, A>(
-            val implementation : (R, E, W, Q, A)-> T, override val hasReceiver: Boolean
-    ) : Base<T>() {
-
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
-
-        override fun arity(): Int = 5
-
-        override fun invoke(vararg args: Any?): T? {
-            if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A)
-            } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
-            }
-        }
-    }
-
-    class ArityFiveSuspend<T, R, E, W, Q, A>(
         val implementation : suspend (R, E, W, Q, A)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
 
@@ -323,7 +202,7 @@ interface FunctionWrapper <T>{
 
         override fun arity(): Int = 5
 
-        override suspend fun suspendInvoke(vararg args: Any?): T? {
+        override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
                 return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A)
             } else {
@@ -333,14 +212,13 @@ interface FunctionWrapper <T>{
     }
 
     class AritySix<T, R, E, W, Q, A, S>(
-            val implementation : (R, E, W, Q, A, S)-> T, override val hasReceiver: Boolean
+        val implementation : suspend (R, E, W, Q, A, S)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
-
         override fun arity(): Int = 6
 
-        override fun invoke(vararg args: Any?): T? {
+        override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
                 return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S)
             } else {
@@ -349,16 +227,48 @@ interface FunctionWrapper <T>{
         }
     }
 
-    class AritySixSuspend<T, R, E, W, Q, A, S>(
-        val implementation : suspend (R, E, W, Q, A, S)-> T, override val hasReceiver: Boolean
+    class AritySeven<T, R, E, W, Q, A, S, D>(
+        val implementation : suspend (R, E, W, Q, A, S, D)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
-        override fun arity(): Int = 6
+        override fun arity(): Int = 7
 
-        override suspend fun suspendInvoke(vararg args: Any?): T? {
+        override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S)
+                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D)
+            } else {
+                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+            }
+        }
+    }
+
+    class ArityEight<T, R, E, W, Q, A, S, D, F>(
+        val implementation : suspend (R, E, W, Q, A, S, D, F)-> T, override val hasReceiver: Boolean
+    ) : Base<T>() {
+
+        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override fun arity(): Int = 8
+
+        override suspend fun invoke(vararg args: Any?): T? {
+            if(args.size == arity()){
+                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D, args[7] as F)
+            } else {
+                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+            }
+        }
+    }
+
+    class ArityNine<T, R, E, W, Q, A, S, D, F, G>(
+        val implementation : suspend (R, E, W, Q, A, S, D, F, G)-> T, override val hasReceiver: Boolean
+    ) : Base<T>() {
+
+        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override fun arity(): Int = 9
+
+        override suspend fun invoke(vararg args: Any?): T? {
+            if(args.size == arity()){
+                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D, args[7] as F, args[8] as G)
             } else {
                 throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
             }

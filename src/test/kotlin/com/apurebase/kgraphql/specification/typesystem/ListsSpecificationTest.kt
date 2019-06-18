@@ -129,7 +129,7 @@ class ListsSpecificationTest{
 
         val schema = KGraphQL.schema {
             query("list"){
-                resolver(::getResult)
+                resolver { -> getResult() }
             }
         }
 
