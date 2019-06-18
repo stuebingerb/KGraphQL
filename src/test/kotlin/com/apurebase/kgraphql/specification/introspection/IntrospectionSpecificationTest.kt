@@ -221,28 +221,33 @@ class IntrospectionSpecificationTest {
 
     data class Book(val id: String)
 
-    @Test
-    fun `union types possible types are supported`(){
-        val schema = defaultSchema {
-            query("interface"){
-                resolver { -> Face("~~MOCK~~") }
-            }
-
-            type<Face>{
-                unionProperty("union"){
-                    returnType = unionType("FaceBook"){
-                        type<Face>()
-                        type<Book>()
-                    }
-
-                    resolver { it -> Book(it.value) }
-                }
-            }
+    val unionSchema = defaultSchema {
+        query("interface"){
+            resolver { -> Face("~~MOCK~~") }
         }
 
+        type<Face>{
+            unionProperty("union"){
+                returnType = unionType("FaceBook"){
+                    type<Face>()
+                    type<Book>()
+                }
 
-        val possibleTypes = schema.findTypeByName("FaceBook")?.possibleTypes?.map { it.name }
+                resolver { it -> Book(it.value) }
+            }
+        }
+    }
+
+    @Test
+    fun `union types possible types are supported`(){
+        val possibleTypes = unionSchema.findTypeByName("FaceBook")?.possibleTypes?.map { it.name }
         assertThat(possibleTypes, equalTo(listOf<String?>("Face", "Book")))
+    }
+
+    @Test
+    fun `union types should not be duplicated`() {
+        val facebookCount = unionSchema.model.allTypes.map {it.name }.count { it == "FaceBook" }
+        assertThat(facebookCount, equalTo(1))
     }
 
     @Test
