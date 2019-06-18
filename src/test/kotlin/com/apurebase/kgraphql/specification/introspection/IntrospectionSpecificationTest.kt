@@ -6,10 +6,8 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
-import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import junit.framework.Assert.fail
-import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.not
@@ -17,7 +15,6 @@ import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.collection.IsEmptyCollection.empty
-import org.junit.Ignore
 import org.junit.Test
 
 
@@ -225,7 +222,6 @@ class IntrospectionSpecificationTest {
     data class Book(val id: String)
 
     @Test
-    @Ignore("Union types are not introspected yet")
     fun `union types possible types are supported`(){
         val schema = defaultSchema {
             query("interface"){
