@@ -25,17 +25,17 @@ class UnionPropertyDSL<T : Any>(val name : String, block: UnionPropertyDSL<T>.()
         return ResolverDSL(this)
     }
 
-    fun resolver(function: (T) -> Any?) = resolver(FunctionWrapper.on(function, true))
+    fun resolver(function: suspend (T) -> Any?) = resolver(FunctionWrapper.on(function, true))
 
-    fun <E>resolver(function: (T, E) -> Any?) = resolver(FunctionWrapper.on(function, true))
+    fun <E>resolver(function: suspend (T, E) -> Any?) = resolver(FunctionWrapper.on(function, true))
 
-    fun <E, W>resolver(function: (T, E, W) -> Any?) = resolver(FunctionWrapper.on(function, true))
+    fun <E, W>resolver(function: suspend (T, E, W) -> Any?) = resolver(FunctionWrapper.on(function, true))
 
-    fun <E, W, Q>resolver(function: (T, E, W, Q) -> Any?) = resolver(FunctionWrapper.on(function, true))
+    fun <E, W, Q>resolver(function: suspend (T, E, W, Q) -> Any?) = resolver(FunctionWrapper.on(function, true))
 
-    fun <E, W, Q, A>resolver(function: (T, E, W, Q, A) -> Any?) = resolver(FunctionWrapper.on(function, true))
+    fun <E, W, Q, A>resolver(function: suspend (T, E, W, Q, A) -> Any?) = resolver(FunctionWrapper.on(function, true))
 
-    fun <E, W, Q, A, S>resolver(function: (T, E, W, Q, A, S) -> Any?) = resolver(FunctionWrapper.on(function, true))
+    fun <E, W, Q, A, S>resolver(function: suspend (T, E, W, Q, A, S) -> Any?) = resolver(FunctionWrapper.on(function, true))
 
     fun accessRule(rule: (T, Context) -> Exception?){
 

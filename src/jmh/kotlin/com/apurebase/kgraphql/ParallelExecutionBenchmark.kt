@@ -25,18 +25,18 @@ open class ParallelExecutionBenchmark {
 
             if (withSuspendResolvers == false)
                 repeat(1000) {
-                    query("automated-${it}") {
+                    query("automated-$it") {
                         resolver { ->
                             Thread.sleep(3)
-                            "${it}"
+                            "$it"
                         }
                     }
                 } else {
                 repeat(1000) {
-                    query("automated-${it}") {
-                        suspendResolver { ->
+                    query("automated-$it") {
+                        resolver { ->
                             delay(3)
-                            "${it}"
+                            "$it"
                         }
                     }
                 }

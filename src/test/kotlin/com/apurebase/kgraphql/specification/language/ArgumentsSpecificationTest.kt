@@ -31,26 +31,26 @@ class ArgumentsSpecificationTest {
                 }
             }
             property<Int>("none") {
-                suspendResolver { actor -> actor.age }
+                resolver { actor -> actor.age }
             }
             property<Int>("one") {
-                suspendResolver {actor, one: Int -> actor.age + one }
+                resolver {actor, one: Int -> actor.age + one }
             }
             property<Int>("two") {
-                suspendResolver { actor, one: Int, two: Int -> actor.age + one + two }
+                resolver { actor, one: Int, two: Int -> actor.age + one + two }
             }
             property<Int>("three") {
-                suspendResolver { actor, one: Int, two: Int, three: Int ->
+                resolver { actor, one: Int, two: Int, three: Int ->
                     actor.age + one + two + three
                 }
             }
             property<Int>("four") {
-                suspendResolver { actor, one: Int, two: Int, three: Int, four: Int ->
+                resolver { actor, one: Int, two: Int, three: Int, four: Int ->
                     actor.age + one + two + three + four
                 }
             }
             property<Int>("five") {
-                suspendResolver { actor, one: Int, two: Int, three: Int, four: Int, five: Int ->
+                resolver { actor, one: Int, two: Int, three: Int, four: Int, five: Int ->
                     actor.age + one + two + three + four + five
                 }
             }

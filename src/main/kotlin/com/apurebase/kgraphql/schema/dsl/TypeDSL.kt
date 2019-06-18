@@ -26,23 +26,23 @@ open class TypeDSL<T : Any>(
 
     internal val describedKotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
 
-    fun <R, E> transformation(kProperty: KProperty1<T, R>, function: (R, E) -> R) {
+    fun <R, E> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W> transformation(kProperty: KProperty1<T, R>, function: (R, E, W) -> R) {
+    fun <R, E, W> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q> transformation(kProperty: KProperty1<T, R>, function: (R, E, W, Q) -> R) {
+    fun <R, E, W, Q> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q, A> transformation(kProperty: KProperty1<T, R>, function: (R, E, W, Q, A) -> R) {
+    fun <R, E, W, Q, A> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q, A) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q, A, S> transformation(kProperty: KProperty1<T, R>, function: (R, E, W, Q, A, S) -> R) {
+    fun <R, E, W, Q, A, S> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q, A, S) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 

@@ -512,42 +512,42 @@ class SchemaBuilderTest {
     fun `Schema can contain suspend resolvers`() {
         val schema = KGraphQL.schema {
             query("queryWith1Param") {
-                suspendResolver { val1: Int ->
+                resolver { val1: Int ->
                     delay(1)
                     SixValues(val1)
                 }
             }
 
             query("queryWith2Params") {
-                suspendResolver { val1: Int, val2: String ->
+                resolver { val1: Int, val2: String ->
                     delay(1)
                     SixValues(val1, val2)
                 }
             }
 
             query("queryWith3Params") {
-                suspendResolver { val1: Int, val2: String, val3: Int ->
+                resolver { val1: Int, val2: String, val3: Int ->
                     delay(1)
                     SixValues(val1, val2, val3)
                 }
             }
 
             query("queryWith4Params") {
-                suspendResolver { val1: Int, val2: String, val3: Int, val4: String ->
+                resolver { val1: Int, val2: String, val3: Int, val4: String ->
                     delay(1)
                     SixValues(val1, val2, val3, val4)
                 }
             }
 
             query("queryWith5Params") {
-                suspendResolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int ->
+                resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int ->
                     delay(1)
                     SixValues(val1, val2, val3, val4, val5)
                 }
             }
 
             query("queryWith6Params") {
-                suspendResolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String ->
+                resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String ->
                     delay(1)
                     SixValues(val1, val2, val3, val4, val5, val6)
                 }

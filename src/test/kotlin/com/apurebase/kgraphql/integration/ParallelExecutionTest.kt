@@ -27,7 +27,7 @@ class ParallelExecutionTest {
     private val suspendResolverSchema = KGraphQL.schema {
         repeat(1000) {
             query("automated-$it") {
-                suspendResolver { ->
+                resolver { ->
                     delay(3)
                     "$it"
                 }
@@ -41,7 +41,7 @@ class ParallelExecutionTest {
         }
         type<AType> {
             property<List<AType>>("children") {
-                suspendResolver { parent ->
+                resolver { parent ->
                     (0..50).map {
                         delay(Random.nextLong(1, 100))
                         AType((parent.id * 10) + it)
