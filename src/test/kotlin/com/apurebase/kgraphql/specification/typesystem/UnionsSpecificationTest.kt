@@ -54,6 +54,22 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `A Union type should allow requesting __typename`() {
+        val result = execute("""{
+            actors {
+                name
+                favourite {
+                    ... on Actor { name }
+                    ... on Director { name, age }
+                    ... on Scenario { content(uppercase: false) }
+                    __typename
+                }
+            }
+        }""".trimIndent())
+        println(result)
+    }
+
+    @Test
     fun `The member types of a Union type must all be Object base types`(){
         expect<SchemaException>("The member types of a Union type must all be Object base types"){
             KGraphQL.schema {

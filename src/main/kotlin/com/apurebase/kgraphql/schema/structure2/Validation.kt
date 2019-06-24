@@ -49,11 +49,11 @@ fun Field.validateArguments(selectionArgs: Arguments?, parentTypeName : String?)
 
 
 /**
- * validate that only typed fragments are present
+ * validate that only typed fragments or __typename are present
  */
 fun validateUnionRequest(field: Field.Union<*>, selectionNode: SelectionNode) {
     val illegalChildren = selectionNode.children?.filterNot {
-        it is Fragment.Inline || it is Fragment.External
+        it is Fragment.Inline || it is Fragment.External || it.key == "__typename"
     }
 
     if (illegalChildren?.any() ?: false) {
