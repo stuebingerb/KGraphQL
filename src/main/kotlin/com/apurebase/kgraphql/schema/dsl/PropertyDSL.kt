@@ -9,13 +9,13 @@ import java.lang.IllegalArgumentException
 
 class PropertyDSL<T : Any, R>(val name : String, block : PropertyDSL<T, R>.() -> Unit) : LimitedAccessItemDSL<T>(), ResolverDSL.Target {
 
-    init {
-        block()
-    }
-
     internal lateinit var functionWrapper : FunctionWrapper<R>
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
+
+    init {
+        block()
+    }
 
     private fun resolver(function: FunctionWrapper<R>): ResolverDSL {
         functionWrapper = function

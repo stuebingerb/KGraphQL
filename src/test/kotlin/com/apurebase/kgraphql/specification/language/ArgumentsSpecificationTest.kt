@@ -101,4 +101,41 @@ class ArgumentsSpecificationTest {
         )))
     }
 
+    @Test
+    fun `property arguments should accept default values`() {
+        val schema = defaultSchema {
+            query("actor") {
+                resolver {
+                    -> Actor("John Doe", age)
+                }
+            }
+
+            type<Actor> {
+                property<String>("greeting") {
+                    resolver { actor: Actor, suffix: String ->
+                        "$suffix, ${actor.name}!"
+                    }.withArgs {
+                        arg<String> { name = "suffix"; defaultValue = "Hello" }
+                    }
+                }
+            }
+        }
+
+        val request = """
+            {
+                actor {
+                    greeting
+                }
+            }
+        """.trimIndent()
+
+        val response = deserialize(schema.execute(request)) as Map<String, Any>
+        assertThat(response, equalTo(mapOf<String, Any>(
+                "data" to mapOf<String, Any>(
+                        "actor" to mapOf<String, Any>(
+                                "greeting" to "Hello, John Doe!"
+                        )
+                )
+        )))
+    }
 }
