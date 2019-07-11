@@ -151,7 +151,8 @@ Returns:
 
 As stated by GraphQL specification, client receives only what is requested. No more, no less.
 
-Detailed documentation can be found in [wiki](https://github.com/pgutkowski/KGraphQL/wiki). For more examples, see KGraphQL demo application: [KGraphQL-NBA2012](https://github.com/pgutkowski/KGraphQL-NBA2012)
+See the [documentation](https://apurebase.gitlab.io/kgraphql/) for a more detailed explanation of the library.
+For more examples, see KGraphQL demo application: [KGraphQL-NBA2012](https://github.com/pgutkowski/KGraphQL-NBA2012)
 
 ## Using in your project
 
