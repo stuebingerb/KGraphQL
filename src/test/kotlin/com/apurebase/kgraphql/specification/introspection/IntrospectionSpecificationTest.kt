@@ -6,8 +6,10 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
+import com.apurebase.kgraphql.integration.BaseSchemaTest.Companion.INTROSPECTION_QUERY
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import junit.framework.Assert.fail
+import org.amshove.kluent.shouldNotContain
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.not
@@ -281,6 +283,14 @@ class IntrospectionSpecificationTest {
 
         for(i in typenames.indices){
             if(typenames[i] == typenames.getOrNull(i + 1)) fail()
+        }
+    }
+
+    @Test
+    fun `introspection shouldn't contain LookupSchema nor SchemaProxy`() {
+        unionSchema.execute(INTROSPECTION_QUERY).run {
+            this shouldNotContain "LookupSchema"
+            this shouldNotContain "SchemaProxy"
         }
     }
 
