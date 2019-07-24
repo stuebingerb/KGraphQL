@@ -1,5 +1,6 @@
 # KGraphQL
 [![Bintray](https://api.bintray.com/packages/apurebase/apurebase/kgraphql/images/download.svg)](https://bintray.com/apurebase/apurebase/kgraphql)
+[![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
 
 KGraphQL is [Kotlin](https://kotlinlang.org/) implementation of [GraphQL](http://graphql.org/). It provides rich DSL to setup GraphQL schema.
 
