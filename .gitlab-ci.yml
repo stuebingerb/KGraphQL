@@ -46,20 +46,20 @@ bintray:publish:
     - tags
 
 pages:
-  image: alpine/bundle:2.6.1
+  image: node
   stage: publish
   artifacts:
     paths:
       - public
-  cache:
-    paths:
-      - docs/vendor
-  variables:
-    JEKYLL_ENV: production
-    LC_ALL: C.UTF-8
-  script:
+  before_script:
+    - git submodule update --init
     - cd docs
-    - bundle install --path vendor/bundle
-    - bundle exec jekyll build -d ../public
+    - cd themes/docsy
+    - git submodule update --init
+    - cd ../..
+  script:
+    - yarn
+    - yarn build
   only:
     - master
+
