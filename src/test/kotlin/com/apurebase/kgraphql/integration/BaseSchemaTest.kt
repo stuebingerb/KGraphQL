@@ -114,6 +114,7 @@ abstract class BaseSchemaTest {
     //test film 1
     val tomHardy = Actor("Tom Hardy", 232)
     val christianBale = Actor("Christian Bale", 232)
+    val rickyGervais = Actor("Ricky Gervais", 58)
     val christopherNolan = Director("Christopher Nolan", 43, listOf(tomHardy, christianBale))
     val prestige = Film(Id("Prestige", 2006), 2006, "Prestige", christopherNolan)
 
@@ -142,8 +143,11 @@ abstract class BaseSchemaTest {
         }
         query("actors") {
             description = "all actors"
-            resolver { ->
-                listOf(bradPitt, morganFreeman, kevinSpacey, tomHardy, christianBale) }
+            resolver { all: Boolean? ->
+                mutableListOf(bradPitt, morganFreeman, kevinSpacey, tomHardy, christianBale).also {
+                    if (all == true) it.add(rickyGervais)
+                }
+            }
         }
         query("filmByRank") {
             description = "ranked films"
@@ -241,12 +245,24 @@ abstract class BaseSchemaTest {
                     bradPitt -> tomHardy
                     tomHardy -> christopherNolan
                     morganFreeman -> Scenario(Id("234", 33), "Paulo Coelho", "DUMB")
+                    rickyGervais -> null
+                    else -> christianBale
+                }}
+            }
+            unionProperty("nullableFavourite") {
+                returnType = favouriteID
+                nullable = true
+                resolver { actor -> when(actor){
+                    bradPitt -> tomHardy
+                    tomHardy -> christopherNolan
+                    morganFreeman -> Scenario(Id("234", 33), "Paulo Coelho", "DUMB")
+                    rickyGervais -> null
                     else -> christianBale
                 }}
             }
         }
 
-        inputType<Actor>() {
+        inputType<Actor> {
             name = "ActorInput"
         }
 

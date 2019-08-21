@@ -121,12 +121,12 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
         val returnType = unionProperty.returnType.possibleTypes.find { it.isInstance(operationResult) }
 
-        if (returnType == null) throw ExecutionException(
+        if (returnType == null && !unionProperty.nullable) throw ExecutionException(
                 "Unexpected type of union property value, expected one of : ${unionProperty.type.possibleTypes}." +
                         " value was $operationResult"
         )
 
-        return createNode(ctx, operationResult, node, returnType)
+        return createNode(ctx, operationResult, node, returnType ?: unionProperty.returnType)
     }
 
     private suspend fun <T> createNode(ctx: ExecutionContext, value: T?, node: Execution.Node, returnType: Type): JsonNode {

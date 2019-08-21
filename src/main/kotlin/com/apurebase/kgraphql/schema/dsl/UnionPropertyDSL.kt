@@ -18,6 +18,8 @@ class UnionPropertyDSL<T : Any>(val name : String, block: UnionPropertyDSL<T>.()
 
     lateinit var returnType : TypeID
 
+    var nullable: Boolean = false
+
     private val inputValues = mutableListOf<InputValueDef<*>>()
 
     private fun resolver(function: FunctionWrapper<Any?>): ResolverDSL {
@@ -47,14 +49,15 @@ class UnionPropertyDSL<T : Any>(val name : String, block: UnionPropertyDSL<T>.()
     }
 
     fun toKQLProperty(union : TypeDef.Union) = PropertyDef.Union<T> (
-            name = name,
-            resolver = functionWrapper,
-            union = union,
-            description = description,
-            isDeprecated = isDeprecated,
-            deprecationReason = deprecationReason,
-            inputValues = inputValues,
-            accessRule = accessRuleBlock
+        name = name,
+        resolver = functionWrapper,
+        union = union,
+        description = description,
+        nullable = nullable,
+        isDeprecated = isDeprecated,
+        deprecationReason = deprecationReason,
+        inputValues = inputValues,
+        accessRule = accessRuleBlock
     )
 
     override fun addInputValues(inputValues: Collection<InputValueDef<*>>) {

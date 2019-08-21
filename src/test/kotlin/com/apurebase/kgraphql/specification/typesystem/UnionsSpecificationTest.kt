@@ -1,10 +1,6 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.schema.SchemaException
 import org.hamcrest.CoreMatchers
@@ -67,6 +63,54 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
         }""".trimIndent())
         println(result)
+    }
+
+    @Test
+    fun `Nullable union types should be valid`() {
+        val result = execute(
+            """{
+          actors(all: true) {
+            name
+            nullableFavourite {
+              ... on Actor { name }
+              ... on Director { name, age }
+              ... on Scenario { content(uppercase: false) }
+            }
+          }
+        }""".trimIndent())
+
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[5]/name"),
+            CoreMatchers.equalTo(rickyGervais.name)
+        )
+        MatcherAssert.assertThat(
+            result.extract("data/actors[5]/nullableFavourite"),
+            CoreMatchers.equalTo(null)
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[3]/name"),
+            CoreMatchers.equalTo(tomHardy.name)
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[3]/nullableFavourite/name"),
+            CoreMatchers.equalTo(christopherNolan.name)
+        )
+    }
+
+    @Test
+    fun `Non nullable union types should fail`() {
+        expect<ExecutionException>("value was null") {
+            execute("""{
+                actors(all: true) {
+                    name
+                    favourite {
+                        ... on Actor { name }
+                        ... on Director { name, age }
+                        ... on Scenario { content(uppercase: false) }
+                    }
+                }
+            }""".trimIndent())
+        }
     }
 
     @Test

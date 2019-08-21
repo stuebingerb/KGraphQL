@@ -33,6 +33,7 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
             resolver : FunctionWrapper<Any?>,
             val union : TypeDef.Union,
             description: String?,
+            val nullable: Boolean,
             isDeprecated: Boolean,
             deprecationReason: String?,
             accessRule : ((T?, Context) -> Exception?)? = null,
