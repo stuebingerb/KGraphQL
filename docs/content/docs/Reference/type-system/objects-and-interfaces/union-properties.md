@@ -19,6 +19,7 @@ data class Person(val name: String, val age: Int)
 KGraphQL.schema {
     type<Person>{
         unionProperty("union"){
+            nullable = true // Defaults to false
             returnType = unionType("UnionExample"){
                  type<UnionMember1>()
                  type<UnionMember2>()
