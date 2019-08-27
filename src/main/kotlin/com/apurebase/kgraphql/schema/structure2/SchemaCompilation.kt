@@ -114,7 +114,7 @@ class SchemaCompilation(
 
     private fun handleQueries() : Type {
         return Type.OperationObject("Query", "Query object",
-                fields = definition.queries.map { handleOperation(it) } + introspectionSchemaQuery() + introspectionTypeQuery()
+            fields = definition.queries.map { handleOperation(it) } + introspectionSchemaQuery() + introspectionTypeQuery()
         )
     }
 
@@ -122,14 +122,15 @@ class SchemaCompilation(
         return Type.OperationObject("Mutation", "Mutation object", definition.mutations.map { handleOperation(it) })
     }
 
+    @Suppress("USELESS_CAST") // We are casting as __Schema so we don't get proxied types. https://github.com/aPureBase/KGraphQL/issues/45
     private fun introspectionSchemaQuery() = handleOperation(
-            QueryDef("__schema", FunctionWrapper.on<__Schema> { schemaProxy })
+        QueryDef("__schema", FunctionWrapper.on<__Schema> { schemaProxy as __Schema })
     )
 
     private fun introspectionTypeQuery() = handleOperation(
-            QueryDef("__type", FunctionWrapper.on {
-                name : String -> schemaProxy.findTypeByName(name)
-            })
+        QueryDef("__type", FunctionWrapper.on {
+            name : String -> schemaProxy.findTypeByName(name)
+        })
     )
 
     private fun handleOperation(operation : BaseOperationDef<*, *>) : Field {
