@@ -43,6 +43,7 @@ dependencies {
 
     compile "com.fasterxml.jackson.core:jackson-databind:2.9.7"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.7"
 
     compile "com.github.ben-manes.caffeine:caffeine:1.0.0"
 

@@ -18,7 +18,7 @@ class InputValuesSpecificationTest {
         ENUM1, ENUM2
     }
 
-    data class FakeData (val number : Int, val description : String, val list : List<String> = emptyList())
+    data class FakeData (val number : Int = 0, val description : String = "", val list : List<String> = emptyList())
 
     val schema = defaultSchema {
         enum<FakeEnum>()
@@ -115,29 +115,27 @@ class InputValuesSpecificationTest {
     }
 
     @Test
-    @Ignore("literal object input values are not implemented yet")
     @Specification("2.9.8 Object Value")
     fun `Literal object input value`(){
-        val response = deserialize(schema.execute("{Object(value: {number: 232, description: \"little number\"}){number, description}}"))
+        val response = deserialize(schema.execute("{Object(value: {number: 232, description: \"little number\"})}"))
         assertThat(
-                response.extract<Map<String, Any>>("data/Object"),
-                equalTo(mapOf("number" to 232, "description" to "little number"))
+                response.extract<Int>("data/Object"),
+                equalTo(232)
         )
     }
 
     @Test
-    @Ignore("literal object input values are not implemented yet")
     @Specification("2.9.8 Object Value")
     fun `Literal object input value with list field`(){
         val response = deserialize(schema.execute(
-                "{Object(" +
+                "{ObjectList(" +
                         "value: {number: 232, " +
                         "description: \"little number\", " +
-                        "list: [\"number\",\"description\",\"little number\",]})" +
-                "{number, description}}"
+                        "list: [\"number\",\"description\",\"little number\"]})" +
+                        "}"
         ))
         assertThat(
-                response.extract<List<String>>("data/Object/list"),
+                response.extract<List<String>>("data/ObjectList"),
                 equalTo(listOf("number", "description", "little number"))
         )
     }

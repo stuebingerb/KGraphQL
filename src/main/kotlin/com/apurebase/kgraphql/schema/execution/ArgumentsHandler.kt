@@ -57,7 +57,7 @@ internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(sc
                     }
                 }
                 value is List<*> && parameter.type.isNotList() -> {
-                    throw RequestException("Invalid list value passed to non-list argument")
+                    transformPropertyObjectValue(parameter, value)
                 }
                 else -> throw RequestException("Non string arguments are not supported yet")
             }

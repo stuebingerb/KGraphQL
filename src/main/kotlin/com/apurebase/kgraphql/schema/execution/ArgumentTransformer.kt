@@ -8,6 +8,8 @@ import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.scalar.deserializeScalar
 import com.apurebase.kgraphql.schema.structure2.InputValue
 import com.apurebase.kgraphql.schema.structure2.Type
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
@@ -66,4 +68,36 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
     fun transformPropertyValue(parameter: InputValue<*>, value: String, variables: Variables): Any? {
         return transformValue(parameter.type, value, variables)
     }
+
+    fun transformPropertyObjectValue(parameter: InputValue<*>, value: List<*>): Any? {
+        val mapper = ObjectMapper()
+        mapper.registerModule(JavaTimeModule())
+        return mapper.readValue(value.toJson(), parameter.type.unwrapped().kClass?.java)
+    }
+}
+
+fun List<*>.toJson() : String {
+    val json = StringBuilder()
+    var isSimpleList = false
+    for ((index, value1) in this.withIndex()) {
+        when{
+            value1 == "{" || value1 == "[" || value1 == ":" -> json.append(value1)
+            (json.substring(json.length - 1) == "," && !isSimpleList) // case a new key
+                    || this[index - 1] == "{" -> { // case first key
+                // Keys
+                json.append("\"")
+                json.append(value1)
+                json.append("\"")
+            }
+            else -> {
+                // Values
+                json.append(value1)
+                // if this the last value don't add a coma
+                if (index < this.size - 1 && this[index + 1] != "}" && this[index + 1] != "]") json.append(",")
+                if (this[index - 1] == "[") isSimpleList = true
+                if (isSimpleList && this[index] == "]") isSimpleList = false
+            }
+        }
+    }
+    return json.toString()
 }
