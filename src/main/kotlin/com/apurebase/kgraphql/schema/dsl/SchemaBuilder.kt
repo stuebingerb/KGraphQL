@@ -123,10 +123,10 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
         val kqlEnumValues = enumValues.map { value ->
             type.valueDefinitions[value]?.let { valueDSL ->
                 EnumValueDef (
-                        value = value,
-                        description = valueDSL.description,
-                        isDeprecated = valueDSL.isDeprecated,
-                        deprecationReason = valueDSL.deprecationReason
+                    value = value,
+                    description = valueDSL.description,
+                    isDeprecated = valueDSL.isDeprecated,
+                    deprecationReason = valueDSL.deprecationReason
                 )
             } ?: EnumValueDef(value)
         }
@@ -167,7 +167,7 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     }
 
     inline fun <reified T : Any> inputType() {
-        inputType(T::class, {})
+        inputType(T::class) {}
     }
 }
 

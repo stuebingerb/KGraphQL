@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.isLiteral
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
+import com.apurebase.kgraphql.schema.jol.ast.ValueNode
 import com.apurebase.kgraphql.schema.scalar.deserializeScalar
 import com.apurebase.kgraphql.schema.structure2.InputValue
 import com.apurebase.kgraphql.schema.structure2.Type
@@ -14,19 +15,25 @@ import kotlin.reflect.jvm.jvmErasure
 
 open class ArgumentTransformer(val schema : DefaultSchema) {
 
-    fun transformValue(type: Type, value: String, variables: Variables) : Any? {
+    private fun transformValue(type: Type, value: ValueNode, variables: Variables) : Any? {
         val kType = type.toKType()
         val typeName = type.unwrapped().name
 
         return when {
-            value.startsWith("$") -> {
-                variables.get (
-                        kType.jvmErasure, kType, typeName, value, { subValue -> transformValue(type, subValue, variables) }
-                )
+            value is ValueNode.VariableNode -> {
+                variables.get(kType.jvmErasure, kType, typeName, value) { subValue ->
+                    transformValue(type, subValue, variables)
+                }
             }
-            value == "null" && type.isNullable() -> null
-            value == "null" && type.isNotNullable() -> {
-                throw RequestException("argument '$value' is not valid value of type ${type.unwrapped().name}")
+            value is ValueNode.StringValueNode && value.value.startsWith("$") -> {
+                throw TODO("Delete this case")
+//                variables.get(kType.jvmErasure, kType, typeName, value) { subValue ->
+//                    transformValue(type, subValue, variables)
+//                }
+            }
+            value is ValueNode.NullValueNode && type.isNullable() -> null
+            value is ValueNode.NullValueNode && type.isNotNullable() -> {
+                throw RequestException("argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}")
             }
             else -> {
                 return transformString(value, kType)
@@ -35,7 +42,7 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
 
     }
 
-    private fun transformString(value: String, kType: KType): Any {
+    private fun transformString(value: ValueNode, kType: KType): Any {
 
         val kClass = kType.jvmErasure
 
@@ -46,16 +53,15 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
         }
 
         schema.model.enums[kClass]?.let { enumType ->
-            if(value.isLiteral()) {
-                throw RequestException("String literal '$value' is invalid value for enum type ${enumType.name}")
-            }
-            return enumType.values.find { it.name == value }?.value ?: throwInvalidEnumValue(enumType)
+            return if (value is ValueNode.EnumValueNode) {
+                enumType.values.find { it.name == value.value }?.value ?: throwInvalidEnumValue(enumType)
+            } else throw RequestException("String literal '${value.valueNodeName}' is invalid value for enum type ${enumType.name}")
         } ?: schema.model.scalars[kClass]?.let { scalarType ->
             return deserializeScalar(scalarType, value)
-        } ?: throw RequestException("Invalid argument value '$value' for type ${schema.model.inputTypes[kClass]?.name}")
+        } ?: throw RequestException("Invalid argument value '${value.valueNodeName}' for type ${schema.model.inputTypes[kClass]?.name}")
     }
 
-    fun transformCollectionElementValue(inputValue: InputValue<*>, value: String, variables: Variables): Any? {
+    fun transformCollectionElementValue(inputValue: InputValue<*>, value: ValueNode, variables: Variables): Any? {
         assert(inputValue.type.isList())
         val elementType = inputValue.type.unwrapList().ofType as Type?
                 ?: throw ExecutionException("Unable to handle value of element of collection without type")
@@ -63,7 +69,7 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
         return transformValue(elementType, value, variables)
     }
 
-    fun transformPropertyValue(parameter: InputValue<*>, value: String, variables: Variables): Any? {
+    fun transformPropertyValue(parameter: InputValue<*>, value: ValueNode, variables: Variables): Any? {
         return transformValue(parameter.type, value, variables)
     }
 }

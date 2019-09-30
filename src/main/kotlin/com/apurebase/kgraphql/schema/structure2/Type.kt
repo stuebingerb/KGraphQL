@@ -61,7 +61,7 @@ interface Type : __Type {
     val kClass : KClass<*>?
 
     abstract class ComplexType(val allFields: List<Field>) : Type {
-        val fieldsByName = allFields.associate { it.name to it }
+        val fieldsByName = allFields.associateBy { it.name }
 
         override val fields: List<__Field>? = allFields.filterNot { it.name.startsWith("__") }
 

@@ -9,9 +9,10 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.executeEqualQueries
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Specification("2.1. Source Text")
 class SourceTextSpecificationTest {
@@ -28,15 +29,15 @@ class SourceTextSpecificationTest {
 
     @Test
     fun `invalid unicode character`() {
-        expect<RequestException>("Illegal character: \\u0003"){
-            deserialize(schema.execute("\u0003"))
+        expect<GraphQLError>("Syntax Error: Cannot contain the invalid character \"\\u0003\"."){
+            deserialize(schema.executeBlocking("\u0003"))
         }
     }
 
     @Test
     @Specification("2.1.1 Unicode")
     fun `ignore unicode BOM character`() {
-        val map = deserialize(schema.execute("\uFEFF{fizz}"))
+        val map = deserialize(schema.executeBlocking("\uFEFF{fizz}"))
         assertNoErrors(map)
         assertThat(map.extract<String>("data/fizz"), equalTo("buzz"))
     }
@@ -91,15 +92,15 @@ class SourceTextSpecificationTest {
     @Test
     @Specification("2.1.9 Names")
     fun `names are case sensitive`(){
-        expect<RequestException>("FIZZ is not supported by this schema"){
-            deserialize(schema.execute("{FIZZ}"))
+        expect<RequestException>("Property FIZZ on Query does not exist"){
+            deserialize(schema.executeBlocking("{FIZZ}"))
         }
 
-        expect<RequestException>("Fizz is not supported by this schema"){
-            deserialize(schema.execute("{Fizz}"))
+        expect<RequestException>("Property Fizz on Query does not exist"){
+            deserialize(schema.executeBlocking("{Fizz}"))
         }
 
-        val mapLowerCase = deserialize(schema.execute("{fizz}"))
+        val mapLowerCase = deserialize(schema.executeBlocking("{fizz}"))
         assertNoErrors(mapLowerCase)
         assertThat(mapLowerCase.extract<String>("data/fizz"), equalTo("buzz"))
     }

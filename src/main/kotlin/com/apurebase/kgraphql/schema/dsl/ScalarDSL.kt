@@ -5,7 +5,10 @@ import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
 import kotlin.reflect.KClass
 
 
-abstract class ScalarDSL<T : Any, Raw : Any>(kClass: KClass<T>, block: ScalarDSL<T, Raw>.() -> Unit) : ItemDSL() {
+abstract class ScalarDSL<T : Any, Raw : Any>(
+    kClass: KClass<T>,
+    private val block: ScalarDSL<T, Raw>.() -> Unit
+) : ItemDSL() {
 
     companion object {
         const val PLEASE_SPECIFY_COERCION =
@@ -25,6 +28,7 @@ abstract class ScalarDSL<T : Any, Raw : Any>(kClass: KClass<T>, block: ScalarDSL
     var coercion: ScalarCoercion<T, Raw>? = null
 
     fun createCoercion() : ScalarCoercion<T, Raw> {
+        block()
         return coercion ?: createCoercionFromFunctions()
     }
 

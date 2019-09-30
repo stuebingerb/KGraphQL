@@ -9,7 +9,7 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 
@@ -39,11 +39,11 @@ class ScalarsSpecificationTest {
             }
         }
 
-        val queryResponse = deserialize(testedSchema.execute("{person{uuid}}"))
+        val queryResponse = deserialize(testedSchema.executeBlocking("{person{uuid}}"))
         assertThat(queryResponse.extract<String>("data/person/uuid"), equalTo(uuid.toString()))
 
-        val mutationResponse = deserialize(testedSchema.execute(
-                "{createPerson(uuid: \"$uuid\", name: \"John\"){uuid name}}"
+        val mutationResponse = deserialize(testedSchema.executeBlocking(
+                "mutation{createPerson(uuid: \"$uuid\", name: \"John\"){uuid name}}"
         ))
         assertThat(mutationResponse.extract<String>("data/createPerson/uuid"), equalTo(uuid.toString()))
         assertThat(mutationResponse.extract<String>("data/createPerson/name"), equalTo("John"))
@@ -58,7 +58,7 @@ class ScalarsSpecificationTest {
         }
 
         expect<RequestException>("is not valid value of type Int") {
-            schema.execute("{Int(int: ${Integer.MAX_VALUE.toLong() + 2L})}")
+            schema.executeBlocking("mutation{Int(int: ${Integer.MAX_VALUE.toLong() + 2L})}")
         }
     }
 
@@ -69,7 +69,7 @@ class ScalarsSpecificationTest {
                 resolver { float: Float -> float }
             }
         }
-        val map = deserialize(schema.execute("{float(float: 1)}"))
+        val map = deserialize(schema.executeBlocking("mutation{float(float: 1)}"))
         assertThat(map.extract<Double>("data/float"), equalTo(1.0))
     }
 
@@ -88,7 +88,7 @@ class ScalarsSpecificationTest {
         }
 
         val randomUUID = UUID.randomUUID()
-        val map = deserialize(testedSchema.execute("query(\$id: ID = \"$randomUUID\"){personById(id: \$id){uuid, name}}"))
+        val map = deserialize(testedSchema.executeBlocking("query(\$id: ID = \"$randomUUID\"){personById(id: \$id){uuid, name}}"))
         assertThat(map.extract<String>("data/personById/uuid"), equalTo(randomUUID.toString()))
     }
 
@@ -102,7 +102,7 @@ class ScalarsSpecificationTest {
         }
 
         expect<RequestException>("") {
-            schema.execute("{Int(int: \"223\")}")
+            schema.executeBlocking("{Int(int: \"223\")}")
         }
     }
 
@@ -123,7 +123,7 @@ class ScalarsSpecificationTest {
         }
 
         val value = 3434
-        val response = deserialize(schema.execute("{number(number: $value)}"))
+        val response = deserialize(schema.executeBlocking("{number(number: $value)}"))
         assertThat(response.extract<Int>("data/number"), equalTo(value))
     }
 
@@ -144,7 +144,7 @@ class ScalarsSpecificationTest {
         }
 
         val value = true
-        val response = deserialize(schema.execute("{boolean(boolean: $value)}"))
+        val response = deserialize(schema.executeBlocking("{boolean(boolean: $value)}"))
         assertThat(response.extract<Boolean>("data/boolean"), equalTo(value))
     }
 
@@ -170,7 +170,7 @@ class ScalarsSpecificationTest {
         }
 
         val value = 232.33
-        val response = deserialize(schema.execute("{double(double: $value)}"))
+        val response = deserialize(schema.executeBlocking("{double(double: $value)}"))
         assertThat(response.extract<Double>("data/double"), equalTo(value))
     }
 
@@ -234,7 +234,7 @@ class ScalarsSpecificationTest {
             }
         """.trimIndent()
 
-        val response = deserialize(schema.execute(req, values))
+        val response = deserialize(schema.executeBlocking(req, values))
         assertThat(response.extract<Boolean>("data/boo"), equalTo(booValue))
         assertThat(response.extract<Int>("data/lon"), equalTo(lonValue.toInt()))
         assertThat(response.extract<Double>("data/dob"), equalTo(dobValue))
@@ -271,7 +271,7 @@ class ScalarsSpecificationTest {
 
         val manufacturer = """Joe Bloggs"""
 
-        val response = deserialize(schema.execute(
+        val response = deserialize(schema.executeBlocking(
                 "mutation Mutation(\$newPart : NewPart!){ addPart(newPart: \$newPart) {manufacturer} }",
                 """
                     { "newPart" : {

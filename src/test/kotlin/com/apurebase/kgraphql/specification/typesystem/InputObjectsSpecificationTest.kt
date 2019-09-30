@@ -8,7 +8,7 @@ import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class InputObjectsSpecificationTest {
 
@@ -34,7 +34,7 @@ class InputObjectsSpecificationTest {
             val two = InputTwo(InputOne(MockEnum.M1, "M1"), 3434, listOf("23", "34", "21", "434"))
         }
         val variables = objectMapper.writeValueAsString(two)
-        val response = deserialize(schema.execute("query(\$two: InputTwo!){test(input: \$two)}", variables))
+        val response = deserialize(schema.executeBlocking("query(\$two: InputTwo!){test(input: \$two)}", variables))
         assertThat(response.extract<String>("data/test"), startsWith("success"))
     }
 
@@ -51,7 +51,7 @@ class InputObjectsSpecificationTest {
             val cirNull = Circular(Circular(null))
             val cirSuccess = Circular(Circular(null, "SUCCESS"))
         }
-        val response = deserialize(schema.execute(
+        val response = deserialize(schema.executeBlocking(
                 "query(\$cirNull: Circular!, \$cirSuccess: Circular!){" +
                         "null: circular(cir: \$cirNull)" +
                         "success: circular(cir: \$cirSuccess)}",

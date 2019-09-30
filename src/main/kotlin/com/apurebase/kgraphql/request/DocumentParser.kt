@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.request.graph.Fragment
 import com.apurebase.kgraphql.request.graph.SelectionNode
 import com.apurebase.kgraphql.request.graph.SelectionSetBuilder
 import com.apurebase.kgraphql.request.graph.SelectionTree
+import com.apurebase.kgraphql.schema.jol.Parser
 
 /**
  * Utility for parsing query document and its structures.
@@ -20,10 +21,10 @@ open class DocumentParser {
     open fun parseDocument(input: String) : List<Operation> {
         val request = validateAndFilterRequest(input)
         val documentTokens = createDocumentTokens(tokenizeRequest(request))
-        val fragments = Document.Fragments(documentTokens.fragmentsTokens, { fragments, (name, typeCondition, graphTokens) ->
+        val fragments = Document.Fragments(documentTokens.fragmentsTokens) { fragments, (name, typeCondition, graphTokens) ->
             val fragmentGraph = parseSelectionTree(ParsingContext(input, graphTokens, fragments))
             Fragment.External("...$name", fragmentGraph, typeCondition)
-        })
+        }
 
         return documentTokens.operationTokens.map { (name, type, operationVariables, graphTokens) ->
             Operation (
@@ -35,11 +36,15 @@ open class DocumentParser {
         }
     }
 
+    open fun parseDocument2(input: String) {
+//        return Parser(input).parseDocument()
+    }
+
     internal fun parseSelectionTree(input: String): SelectionTree {
         return parseSelectionTree(ParsingContext(
                 fullString = input,
                 tokens = tokenizeRequest(input),
-                fragments = Document.Fragments(emptyList(), { _, _ ->  throw IllegalStateException() })
+                fragments = Document.Fragments(emptyList()) { _, _ ->  throw IllegalStateException() }
         ))
     }
 

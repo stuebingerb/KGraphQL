@@ -27,4 +27,5 @@ fun KType.getIterableElementType(): KType? {
     return arguments.firstOrNull()?.type ?: throw NoSuchElementException("KType $this has no type arguments")
 }
 
+
 fun not(boolean: Boolean) = !boolean

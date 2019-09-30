@@ -27,7 +27,7 @@ And make sure that you use the right Kotlin version:
 
 ```groovy
 buildscript {
-  ext.kotlin_version = '1.3.0'
+  ext.kotlin_version = '1.3.50'
 }
 ```
 
@@ -55,6 +55,6 @@ Add dependency:
 
 ```xml
 <properties>
-  <kotlin.version>1.3.0</kotlin.version>
+  <kotlin.version>1.3.50</kotlin.version>
 </properties>
 ```

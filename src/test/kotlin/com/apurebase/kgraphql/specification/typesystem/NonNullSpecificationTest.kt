@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Specification("3.1.8 Non-null")
 class NonNullSpecificationTest {
@@ -21,7 +21,7 @@ class NonNullSpecificationTest {
             }
         }
         expect<NullPointerException> {
-            schema.execute("{nonNull}")
+            schema.executeBlocking("{nonNull}")
         }
     }
 
@@ -33,10 +33,10 @@ class NonNullSpecificationTest {
             }
         }
 
-        val responseOmittedInput = deserialize(schema.execute("{nullable}"))
+        val responseOmittedInput = deserialize(schema.executeBlocking("{nullable}"))
         assertThat(responseOmittedInput.extract<Any?>("data/nullable"), nullValue())
 
-        val responseNullInput = deserialize(schema.execute("{nullable(input: null)}"))
+        val responseNullInput = deserialize(schema.executeBlocking("{nullable(input: null)}"))
         assertThat(responseNullInput.extract<Any?>("data/nullable"), nullValue())
     }
 
@@ -49,7 +49,7 @@ class NonNullSpecificationTest {
         }
 
         expect<RequestException>("Missing value for non-nullable argument input"){
-            schema.execute("{nonNull}")
+            schema.executeBlocking("{nonNull}")
         }
     }
 
@@ -61,7 +61,7 @@ class NonNullSpecificationTest {
             }
         }
 
-        schema.execute("query(\$arg: String!){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
+        schema.executeBlocking("query(\$arg: String!){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
     }
 
 }

@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 
 @Specification("3.1.5 Enums")
@@ -34,13 +34,13 @@ class EnumsSpecificationTest {
     @Test
     fun `string literals must not be accepted as an enum input`(){
         expect<RequestException>("String literal '\"COOL\"' is invalid value for enum type Coolness"){
-            schema.execute("{cool(cool : \"COOL\")}")
+            schema.executeBlocking("{cool(cool : \"COOL\")}")
         }
     }
 
     @Test
     fun `string constants are accepted as an enum input`(){
-        val response = deserialize(schema.execute("{cool(cool : COOL)}"))
+        val response = deserialize(schema.executeBlocking("{cool(cool : COOL)}"))
         assertThat(response.extract<String>("data/cool"), equalTo("COOL"))
     }
 

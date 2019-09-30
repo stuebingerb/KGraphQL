@@ -44,7 +44,7 @@ class SchemaProxy(var proxiedSchema : LookupSchema? = null) : LookupSchema {
 
     override fun inputTypeByName(name: String): Type? = inputTypeByName(name)
 
-    override fun execute(request: String, variables: String?, context: Context): String {
+    override suspend fun execute(request: String, variables: String?, context: Context): String {
         return getProxied().execute(request, variables, context)
     }
 }

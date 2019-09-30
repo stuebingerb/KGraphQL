@@ -1,3 +1,5 @@
+@file:Suppress("ClassName")
+
 package com.apurebase.kgraphql.schema.builtin
 
 import com.apurebase.kgraphql.RequestException
@@ -46,11 +48,7 @@ object STRING_COERCION : StringScalarCoercion<String>{
     override fun serialize(instance: String): String = instance
 
     override fun deserialize(raw: String): String {
-        if(raw.isLiteral()) {
-            return raw.dropQuotes()
-        } else {
-            throw RequestException("Cannot coerce string constant $raw, expected string literal")
-        }
+        return raw.dropQuotes()
     }
 }
 

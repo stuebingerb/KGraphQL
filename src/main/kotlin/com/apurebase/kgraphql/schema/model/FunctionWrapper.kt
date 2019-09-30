@@ -117,11 +117,8 @@ interface FunctionWrapper <T>{
         override fun arity(): Int = 0
 
         override suspend fun invoke(vararg args: Any?): T? {
-            if(args.isNotEmpty()){
-                throw IllegalArgumentException("This function does not accept arguments")
-            } else {
-                return implementation()
-            }
+            require(args.isEmpty()) { "This function does not accept arguments" }
+            return implementation()
         }
     }
 

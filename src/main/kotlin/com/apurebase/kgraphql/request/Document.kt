@@ -19,11 +19,11 @@ data class Document(val fragmentsTokens: List<FragmentTokens>, val operationToke
     /**
      * Represents half-structured data of operation declaration in query document
      */
-    data class OperationTokens(val name : String?, val type: String?, val variables: List<OperationVariable>?, val graphTokens :     List<String>)
+    data class OperationTokens(val name : String?, val type: String?, val variables: List<OperationVariable>?, val graphTokens : List<String>)
 
     class Fragments (
-            tokensList: List<FragmentTokens>,
-            private val transformer: (Fragments, FragmentTokens) -> Fragment.External
+        tokensList: List<FragmentTokens>,
+        private val transformer: (Fragments, FragmentTokens) -> Fragment.External
     ) {
         private val tokensMap = tokensList.associate { "...${it.name}" to it }
 

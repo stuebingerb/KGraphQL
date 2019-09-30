@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 
 
@@ -32,12 +32,12 @@ class SchemaInheritanceTest {
             query("c") { resolver { -> C(name, age) } }
         }
 
-        expect<RequestException>("property id on B does not exist") {
-            deserialize(schema.execute("{b{id, name, age}}"))
+        expect<RequestException>("Property id on B does not exist") {
+            deserialize(schema.executeBlocking("{b{id, name, age}}"))
         }
 
-        expect<RequestException>("property id on C does not exist") {
-            deserialize(schema.execute("{c{id, name, age}}"))
+        expect<RequestException>("Property id on C does not exist") {
+            deserialize(schema.executeBlocking("{c{id, name, age}}"))
         }
     }
 

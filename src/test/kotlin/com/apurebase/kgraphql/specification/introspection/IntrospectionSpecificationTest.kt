@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.integration.BaseSchemaTest.Companion.INTROSPECTION_QUERY
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import junit.framework.Assert.fail
 import org.amshove.kluent.shouldNotContain
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.equalTo
@@ -17,7 +16,8 @@ import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.collection.IsEmptyCollection.empty
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 
 
 class IntrospectionSpecificationTest {
@@ -43,7 +43,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.execute("{sample{string, __typename}}"))
+        val response = deserialize(schema.executeBlocking("{sample{string, __typename}}"))
         assertThat(response.extract("data/sample/__typename"), equalTo("Data"))
     }
 
@@ -55,8 +55,8 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        expect<RequestException>("property __typename on String does not exist"){
-            schema.execute("{sample{string{__typename}}}")
+        expect<RequestException>("Property __typename on String does not exist"){
+            schema.executeBlocking("{sample{string{__typename}}}")
         }
     }
 
@@ -83,7 +83,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.execute(
+        val response = deserialize(schema.executeBlocking(
                 "{data(input: \"\"){" +
                         "string, " +
                         "union{" +
@@ -117,7 +117,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.execute("{__schema{queryType{fields{name}}}}"))
+        val response = deserialize(schema.executeBlocking("{__schema{queryType{fields{name}}}}"))
         assertThat(response.extract("data/__schema/queryType/fields[0]/name"), equalTo("data"))
     }
 
@@ -129,7 +129,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.execute("{__type(name: \"String\"){kind, name, description}}"))
+        val response = deserialize(schema.executeBlocking("{__type(name: \"String\"){kind, name, description}}"))
         assertThat(response.extract("data/__type/name"), equalTo("String"))
         assertThat(response.extract("data/__type/kind"), equalTo("SCALAR"))
     }
@@ -192,7 +192,7 @@ class IntrospectionSpecificationTest {
         }
 
 
-        val response = deserialize(schema.execute("{interface{value, __typename ... on Face{value2}}}"))
+        val response = deserialize(schema.executeBlocking("{interface{value, __typename ... on Face{value2}}}"))
         assertThat(response.extract("data/interface/__typename"), equalTo("Face"))
         assertThat(response.extract("data/interface/value2"), equalTo(false))
     }
@@ -260,7 +260,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val map = deserialize(schema.execute(BaseSchemaTest.INTROSPECTION_QUERY))
+        val map = deserialize(schema.executeBlocking(BaseSchemaTest.INTROSPECTION_QUERY))
         val fields = map.extract<List<Map<String,*>>>("data/__schema/types[0]/fields")
 
         fields.forEach { field ->
@@ -276,19 +276,19 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val map = deserialize(schema.execute(BaseSchemaTest.INTROSPECTION_QUERY))
+        val map = deserialize(schema.executeBlocking(BaseSchemaTest.INTROSPECTION_QUERY))
         val types = map.extract<List<Map<Any,*>>>("data/__schema/types")
 
         val typenames = types.map { type -> type["name"] as String }.sorted()
 
         for(i in typenames.indices){
-            if(typenames[i] == typenames.getOrNull(i + 1)) fail()
+            if(typenames[i] == typenames.getOrNull(i + 1)) fail("")
         }
     }
 
     @Test
     fun `introspection shouldn't contain LookupSchema nor SchemaProxy`() {
-        unionSchema.execute(INTROSPECTION_QUERY).run {
+        unionSchema.executeBlocking(INTROSPECTION_QUERY).run {
             this shouldNotContain "LookupSchema"
             this shouldNotContain "SchemaProxy"
         }
@@ -305,7 +305,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.execute("{__schema{queryType{interfaces{name}}}}"))
+        val response = deserialize(schema.executeBlocking("{__schema{queryType{interfaces{name}}}}"))
         assertThat(response.extract<List<*>>("data/__schema/queryType/interfaces"), empty())
     }
 
@@ -320,7 +320,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.execute("{__schema{directives{name, onField, onFragment, onOperation}}}"))
+        val response = deserialize(schema.executeBlocking("{__schema{directives{name, onField, onFragment, onOperation}}}"))
         val directives = response.extract<List<Map<String, *>>>("data/__schema/directives")
         directives.forEach { directive ->
             assertThat(directive["name"] as String, anyOf(equalTo("skip"), equalTo("include")))

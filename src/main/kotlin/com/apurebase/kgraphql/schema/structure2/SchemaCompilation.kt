@@ -23,9 +23,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
 import kotlin.reflect.KVisibility
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.isSuperclassOf
-import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
@@ -64,21 +62,21 @@ class SchemaCompilation(
         }
 
         val model =  SchemaModel (
-                query = queryType,
-                mutation = mutationType,
+            query = queryType,
+            mutation = mutationType,
 
-                enums = enums,
-                scalars = scalars,
-                unions = unions,
+            enums = enums,
+            scalars = scalars,
+            unions = unions,
 
-                queryTypes = queryTypeProxies + enums + scalars,
-                inputTypes = inputTypeProxies + enums + scalars,
-                allTypes = queryTypeProxies.values
-                        + inputTypeProxies.values
-                        + enums.values
-                        + scalars.values
-                        + unions.distinctBy(Type.Union::name),
-                directives = definition.directives.map { handlePartialDirective(it) }
+            queryTypes = queryTypeProxies + enums + scalars,
+            inputTypes = inputTypeProxies + enums + scalars,
+            allTypes = queryTypeProxies.values
+                    + inputTypeProxies.values
+                    + enums.values
+                    + scalars.values
+                    + unions.distinctBy(Type.Union::name),
+            directives = definition.directives.map { handlePartialDirective(it) }
         )
         val schema = DefaultSchema(configuration, model)
         schemaProxy.proxiedSchema = schema
@@ -87,7 +85,7 @@ class SchemaCompilation(
 
     private fun introspectPossibleTypes(kClass: KClass<*>, typeProxy: TypeProxy) {
         val proxied = typeProxy.proxied
-        if(proxied is Type.Interface<*>){
+        if (proxied is Type.Interface<*>) {
             val possibleTypes = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
                 otherTypeProxy.kind == TypeKind.OBJECT && otherKClass != kClass && otherKClass.isSubclassOf(kClass)
             }.values.toList()
@@ -113,8 +111,10 @@ class SchemaCompilation(
     }
 
     private fun handleQueries() : Type {
-        return Type.OperationObject("Query", "Query object",
-            fields = definition.queries.map { handleOperation(it) } + introspectionSchemaQuery() + introspectionTypeQuery()
+        return Type.OperationObject(
+            name = "Query",
+            description = "Query object",
+            fields = definition.queries.map(this::handleOperation) + introspectionSchemaQuery() + introspectionTypeQuery()
         )
     }
 
@@ -139,6 +139,17 @@ class SchemaCompilation(
         return Field.Function(operation, returnType, inputValues)
     }
 
+    private fun <T, K, R> handleDataloadOperation(operation: PropertyDef.DataLoaderDefV2<T, K, R>): Field {
+        val returnType = handlePossiblyWrappedType(operation.returnWrapper.kFunction.returnType, TypeCategory.QUERY)
+        val inputValues = handleInputValues(operation.name, operation.prepare, operation.inputValues)
+
+        return Field.DataLoader(
+            kql = operation,
+            returnType = returnType,
+            arguments = inputValues
+        )
+    }
+
     private fun handleUnionProperty(unionProperty: PropertyDef.Union<*>) : Field {
         val inputValues = handleInputValues(unionProperty.name, unionProperty, unionProperty.inputValues)
         val type = handleUnionType(unionProperty.union)
@@ -150,7 +161,8 @@ class SchemaCompilation(
         kType.isIterable() -> handleCollectionType(kType, typeCategory)
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
-        kType.arguments.isNotEmpty() -> throw SchemaException("Generic types are not supported by GraphQL, found $kType")
+        kType.arguments.isNotEmpty() ->
+            throw SchemaException("Generic types are not supported by GraphQL, found $kType")
         else -> handleSimpleType(kType, typeCategory)
     }
 
@@ -221,9 +233,19 @@ class SchemaCompilation(
                         transformation = allTransformations[property.name]
                 ) }
 
-        val extensionFields = objectDefs.flatMap(TypeDef.Object<*>::extensionProperties).map { property -> handleOperation(property) }
+        val extensionFields = objectDefs
+            .flatMap(TypeDef.Object<*>::extensionProperties)
+            .map { property -> handleOperation(property) }
 
-        val unionFields = objectDefs.flatMap(TypeDef.Object<*>::unionProperties).map { property -> handleUnionProperty(property) }
+        val dataloadExtensionFields = objectDefs
+            .flatMap(TypeDef.Object<*>::dataloadExtensionProperties)
+            .map { property -> handleDataloadOperation(property) }
+
+
+        val unionFields = objectDefs
+            .flatMap(TypeDef.Object<*>::unionProperties)
+            .map { property -> handleUnionProperty(property) }
+
 
         val typenameResolver: suspend (Any) -> String? = { value: Any ->
             schemaProxy.typeByKClass(value.javaClass.kotlin)?.name ?: typeProxy.name
@@ -233,7 +255,7 @@ class SchemaCompilation(
                 PropertyDef.Function<Nothing, String?> ("__typename", FunctionWrapper.on(typenameResolver, true))
         )
 
-        val declaredFields = kotlinFields + extensionFields + unionFields
+        val declaredFields = kotlinFields + extensionFields + unionFields + dataloadExtensionFields
 
         if(declaredFields.isEmpty()){
             throw SchemaException("An Object type must define one or more fields. Found none on type ${objectDef.name}")

@@ -6,12 +6,13 @@ import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionException
-import com.apurebase.kgraphql.request.Arguments
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.jol.DataLoader
+import com.apurebase.kgraphql.schema.jol.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
@@ -19,7 +20,9 @@ import com.apurebase.kgraphql.schema.structure2.Field
 import com.apurebase.kgraphql.schema.structure2.InputValue
 import com.apurebase.kgraphql.schema.structure2.Type
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.sync.*
+import kotlinx.coroutines.channels.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KProperty1
 
@@ -27,7 +30,29 @@ import kotlin.reflect.KProperty1
 @Suppress("UNCHECKED_CAST") // For valid structure there is no risk of ClassCastException
 class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, CoroutineScope {
 
-    data class ExecutionContext(val variables: Variables, val requestContext: Context)
+    inner class ExecutionContext(
+        val variables: Variables,
+        val requestContext: Context,
+        val dataLoaders: Map<Field.DataLoader<*, *, *>, DataLoader<Any, *>>
+    ) {
+        private val dataRoutines = ConcurrentHashMap<DataLoader<Any, *>, DataLoader<Any, *>.DataScope>()
+
+        private val mutex = Mutex()
+
+        suspend fun loadValue(loader: DataLoader<Any, *>, key: Any, deferred: CompletableDeferred<Any?>, total: Int) {
+            mutex.withLock {
+                val scope = dataRoutines[loader]
+                if (scope == null) {
+                    dataRoutines[loader] = loader.begin(
+                        total,
+                        this@ParallelRequestExecutor
+                    )
+                }
+            }
+
+            dataRoutines.getValue(loader).load(key, deferred)
+        }
+    }
 
     override val coroutineContext: CoroutineContext = Job()
 
@@ -36,6 +61,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     private val jsonNodeFactory = JsonNodeFactory.instance
 
     private val dispatcher = schema.configuration.coroutineDispatcher
+
 
     private val objectWriter = schema.configuration.objectMapper.writer().let {
         if (schema.configuration.useDefaultPrettyPrinter) {
@@ -51,7 +77,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
         val resultMap = plan.toMapAsync {
             writeOperation(
-                ctx = ExecutionContext(Variables(schema, variables, it.variables), context),
+                ctx = ExecutionContext(Variables(schema, variables, it.variables), context, plan.dataLoaders),
                 node = it,
                 operation = it.field as Field.Function<*, *>
             )
@@ -86,7 +112,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                 val (item, result) = channel.receive()
                 resultMap[item] = result
             } catch (e: Exception) {
-                jobs.forEach(Job::cancel)
+                jobs.forEach {
+                    it.cancel()
+                }
                 throw e
             }
         }
@@ -187,17 +215,23 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     private suspend fun <T> createObjectNode(ctx: ExecutionContext, value: T, node: Execution.Node, type: Type): ObjectNode {
         val objectNode = jsonNodeFactory.objectNode()
         for (child in node.children) {
-            if (child is Execution.Fragment) {
-                objectNode.setAll(handleFragment(ctx, value, child))
-            } else {
-                val (key, jsonNode) = handleProperty(ctx, value, child, type)
-                objectNode.set(key, jsonNode)
+            when (child) {
+                is Execution.Fragment -> objectNode.setAll(handleFragment(ctx, value, child))
+                else -> {
+                    if (child is Execution.Node) {
+                        val grand = child.children.filter {
+                            it is Execution.Node && it.field is Field.DataLoader<*, *, *>
+                        }
+                    }
+                    val ( key, jsonNode) = handleProperty(ctx, value, child, type, node.children.size)
+                    objectNode.set(key, jsonNode)
+                }
             }
         }
         return objectNode
     }
 
-    private suspend fun <T> handleProperty(ctx: ExecutionContext, value: T, child: Execution, type: Type): Pair<String, JsonNode?> {
+    private suspend fun <T> handleProperty(ctx: ExecutionContext, value: T, child: Execution, type: Type, childrenSize: Int): Pair<String, JsonNode?> {
         when (child) {
             //Union is subclass of Node so check it first
             is Execution.Union -> {
@@ -211,8 +245,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             }
             is Execution.Node -> {
                 val field = type.unwrapped()[child.key]
-                        ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
-                return child.aliasOrKey to createPropertyNode(ctx, value, child, field)
+                    ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
+                return child.aliasOrKey to createPropertyNode(ctx, value, child, field, childrenSize)
+//                }
             }
             else -> {
                 throw UnsupportedOperationException("Handling containers is not implemented yet")
@@ -230,7 +265,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                     return container.elements.flatMap { child ->
                         when (child) {
                             is Execution.Fragment -> handleFragment(ctx, value, child).toList()
-                            else -> listOf(handleProperty(ctx, value, child, expectedType))
+                            // TODO: should not just be 1
+                            else -> listOf(handleProperty(ctx, value, child, expectedType, 1))
                         }
                     }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
                 }
@@ -242,18 +278,17 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         return emptyMap()
     }
 
-    private suspend fun <T> createPropertyNode(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field): JsonNode? {
+    private suspend fun <T> createPropertyNode(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field, parentTimes: Int): JsonNode? {
         val include = determineInclude(ctx, node.directives)
         node.field.checkAccess(parentValue, ctx.requestContext)
 
         if (include) {
             when (field) {
                 is Field.Kotlin<*, *> -> {
-                    field.kProperty as KProperty1<T, *>
-                    val rawValue = field.kProperty.get(parentValue)
+                    val rawValue = (field.kProperty as KProperty1<T, *>).get(parentValue)
                     val value: Any?
                     value = if (field.transformation != null) {
-                        field.transformation.invoke(
+                        field.transformation!!.invoke(
                                 funName = field.name,
                                 receiver = rawValue,
                                 inputValues = field.arguments,
@@ -268,6 +303,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                 is Field.Function<*, *> -> {
                     return handleFunctionProperty(ctx, parentValue, node, field)
                 }
+                is Field.DataLoader<*, *, *> -> {
+                    return handleDataProperty(ctx, parentValue, node, field, parentTimes)
+                }
                 else -> {
                     throw Exception("Unexpected field type: $field, should be Field.Kotlin or Field.Function")
                 }
@@ -277,7 +315,29 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         }
     }
 
-    suspend fun <T> handleFunctionProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.Function<*, *>): JsonNode {
+    private suspend fun <T> handleDataProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.DataLoader<*, *, *>, parentTimes: Int): JsonNode {
+        val preparedValue = field.kql.prepare.invoke(
+            funName = field.name,
+            receiver = parentValue,
+            inputValues = field.arguments,
+            args = node.arguments,
+            ctx = ctx
+        ) ?: TODO("Nullable prepare functions isn't supported")
+
+        val valueDeferred = CompletableDeferred<Any?>()
+        ctx.loadValue(
+            ctx.dataLoaders.getValue(field),
+            preparedValue,
+            valueDeferred,
+            parentTimes
+        )
+        println("Waiting for key: $preparedValue - [parent: $parentValue]")
+        val value = valueDeferred.await()
+        println("Loaded key: $preparedValue | $value - [parent: $parentValue]")
+        return createNode(ctx, value, node, field.returnType)
+    }
+
+    private suspend fun <T> handleFunctionProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.Function<*, *>): JsonNode {
         val result = field.invoke(
                 funName = field.name,
                 receiver = parentValue,
@@ -288,24 +348,25 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         return createNode(ctx, result, node, field.returnType)
     }
 
-    private suspend fun determineInclude(ctx: ExecutionContext, directives: Map<Directive, Arguments?>?): Boolean {
+    private suspend fun determineInclude(ctx: ExecutionContext, directives: Map<Directive, ArgumentNodes?>?): Boolean {
+        if (directives?.isEmpty() == true) return true
         return directives?.map { (directive, arguments) ->
             directive.execution.invoke(
-                    funName = directive.name,
-                    inputValues = directive.arguments,
-                    receiver = null,
-                    args = arguments,
-                    ctx = ctx
+                funName = directive.name,
+                inputValues = directive.arguments,
+                receiver = null,
+                args = arguments,
+                ctx = ctx
             )?.include
                     ?: throw ExecutionException("Illegal directive implementation returning null result")
         }?.reduce { acc, b -> acc && b } ?: true
     }
 
-    private suspend fun <T> FunctionWrapper<T>.invoke(
+    internal suspend fun <T> FunctionWrapper<T>.invoke(
             funName: String,
             receiver: Any?,
             inputValues: List<InputValue<*>>,
-            args: Arguments?,
+            args: ArgumentNodes?,
             ctx: ExecutionContext
     ): T? {
         val transformedArgs = argumentsHandler.transformArguments(funName, inputValues, args, ctx.variables, ctx.requestContext)

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
+import org.amshove.kluent.shouldEqual
 import org.hamcrest.CoreMatchers
 import org.hamcrest.FeatureMatcher
 import org.hamcrest.MatcherAssert
@@ -16,6 +17,8 @@ val objectMapper = jacksonObjectMapper()
 fun deserialize(json: String) : Map<*,*> {
     return objectMapper.readValue(json, HashMap::class.java)
 }
+
+fun String.deserialize(): java.util.HashMap<*, *> = objectMapper.readValue(this, HashMap::class.java)
 
 fun getMap(map : Map<*,*>, key : String) : Map<*,*>{
     return map[key] as Map<*,*>
@@ -77,11 +80,11 @@ inline fun <reified T: Exception> expect(message: String? = null, block: () -> U
     }
 }
 
-fun executeEqualQueries(schema: Schema, expected: Map<*,*>, vararg queries : String){
+fun executeEqualQueries(schema: Schema, expected: Map<*,*>, vararg queries : String) {
     queries.map { request ->
-        deserialize(schema.execute(request))
+        schema.executeBlocking(request).deserialize()
     }.forEach { map ->
-        MatcherAssert.assertThat(map, CoreMatchers.equalTo(expected))
+        map shouldEqual expected
     }
 }
 

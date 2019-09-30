@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Specification("3.1.3 Interfaces")
 class InterfacesSpecificationTest {
@@ -25,20 +25,20 @@ class InterfacesSpecificationTest {
 
     @Test
     fun `Interfaces represent a list of named fields and their arguments`(){
-        val map = deserialize(schema.execute("{simple{exe}}"))
+        val map = deserialize(schema.executeBlocking("{simple{exe}}"))
         assertThat(map.extract("data/simple/exe"), equalTo("EXE"))
     }
 
     @Test
     fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`(){
-        expect<RequestException>("property stuff on SimpleInterface does not exist"){
-            schema.execute("{simple{exe, stuff}}")
+        expect<RequestException>("Property stuff on SimpleInterface does not exist"){
+            schema.executeBlocking("{simple{exe, stuff}}")
         }
     }
 
     @Test
     fun `Query for fields of interface implementation can be done only by fragments`(){
-        val map = deserialize(schema.execute("{simple{exe ... on Simple { stuff }}}"))
+        val map = deserialize(schema.executeBlocking("{simple{exe ... on Simple { stuff }}}"))
         assertThat(map.extract("data/simple/stuff"), equalTo("CMD"))
     }
 }

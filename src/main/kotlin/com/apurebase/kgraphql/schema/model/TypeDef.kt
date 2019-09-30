@@ -22,6 +22,7 @@ interface TypeDef {
             override val kClass: KClass<T>,
             val kotlinProperties: Map<KProperty1<T, *>, PropertyDef.Kotlin<T, *>> = emptyMap(),
             val extensionProperties : List<PropertyDef.Function<T, *>> = emptyList(),
+            val dataloadExtensionProperties: List<PropertyDef.DataLoaderDefV2<T, *, *>> = emptyList(),
             val unionProperties : List<PropertyDef.Union<T>> = emptyList(),
             val transformations : Map<KProperty1<T, *>, Transformation<T, *>> = emptyMap(),
             description : String? = null

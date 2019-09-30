@@ -13,7 +13,7 @@ import kotlin.reflect.KProperty1
 open class TypeDSL<T : Any>(
         private val supportedUnions: Collection<TypeDef.Union>,
         val kClass: KClass<T>,
-        block: TypeDSL<T>.() -> Unit
+        private val block: TypeDSL<T>.() -> Unit
 ) : ItemDSL() {
 
     var name = kClass.defaultKQLTypeName()
@@ -25,6 +25,8 @@ open class TypeDSL<T : Any>(
     internal val unionProperties = mutableSetOf<PropertyDef.Union<T>>()
 
     internal val describedKotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
+
+    internal val dataloadedExtensionProperties = mutableSetOf<PropertyDef.DataLoaderDefV2<T, *, *>>()
 
     fun <R, E> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
@@ -56,6 +58,12 @@ open class TypeDSL<T : Any>(
         extensionProperties.add(dsl.toKQLProperty())
     }
 
+    fun <KEY: Any, TYPE> dataProperty(name: String, block: DataLoaderDSL<T, KEY, TYPE>.() -> Unit) {
+        val dsl = DataLoaderDSL(name, block)
+        dataloadedExtensionProperties.add(dsl.toKQLProperty())
+    }
+
+
     fun <R> KProperty1<T, R>.configure(block : KotlinPropertyDSL<T, R>.() -> Unit){
         property(this, block)
     }
@@ -72,19 +80,18 @@ open class TypeDSL<T : Any>(
         unionProperties.add(property.toKQLProperty(union))
     }
 
-    init {
-        block()
-    }
 
     internal fun toKQLObject() : TypeDef.Object<T> {
+        block()
         return TypeDef.Object(
-                name = name,
-                kClass = kClass,
-                kotlinProperties = describedKotlinProperties.toMap(),
-                extensionProperties = extensionProperties.toList(),
-                unionProperties = unionProperties.toList(),
-                transformations = transformationProperties.associate { it.kProperty to it },
-                description = description
+            name = name,
+            kClass = kClass,
+            kotlinProperties = describedKotlinProperties.toMap(),
+            extensionProperties = extensionProperties.toList(),
+            dataloadExtensionProperties = dataloadedExtensionProperties.toList(),
+            unionProperties = unionProperties.toList(),
+            transformations = transformationProperties.associateBy { it.kProperty },
+            description = description
         )
     }
 }

@@ -5,7 +5,7 @@ import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.schema.SchemaException
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 
 @Specification("3.1.4 Unions")

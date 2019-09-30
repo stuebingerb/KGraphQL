@@ -7,7 +7,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 
 class MutationTest : BaseSchemaTest() {
@@ -37,7 +37,7 @@ class MutationTest : BaseSchemaTest() {
 
     @Test
     fun `invalid mutation name`(){
-        expect<RequestException>("property createBanana on Mutation does not exist"){
+        expect<RequestException>("Property createBanana on Mutation does not exist"){
             execute("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         }
     }
@@ -51,14 +51,14 @@ class MutationTest : BaseSchemaTest() {
 
     @Test
     fun `invalid arguments number`(){
-        expect<RequestException>("createActor does support arguments [name, age]. Found arguments [name, bananan, age]"){
+        expect<RequestException>("createActor does support arguments [name, age]. Found arguments [name, age, bananan]"){
             execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 
     @Test
     fun `mutation with alias`(){
-        val map = execute("{caine : createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
+        val map = execute("mutation {caine : createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         assertNoErrors(map)
         assertThat(map.extract<Map<String, Any>>("data/caine"), equalTo(mapOf<String, Any>("age" to testActor.age)))
     }

@@ -16,7 +16,7 @@ import kotlin.reflect.jvm.jvmErasure
  */
 interface VariablesJson {
 
-    fun <T : Any>get(kClass: KClass<T>, kType: KType, key : String) : T?
+    fun <T : Any> get(kClass: KClass<T>, kType: KType, key : String) : T?
 
     class Empty : VariablesJson {
         override fun <T : Any> get(kClass: KClass<T>, kType: KType, key: String): T? {

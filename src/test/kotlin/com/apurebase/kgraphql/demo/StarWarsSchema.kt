@@ -62,6 +62,6 @@ fun main(args: Array<String>) {
         enum<Episode>()
     }
 
-    println(schema.execute("{hero(episode: JEDI){id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
-    println(schema.execute("{heroes {id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
+    println(schema.executeBlocking("{hero(episode: JEDI){id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
+    println(schema.executeBlocking("{heroes {id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
 }

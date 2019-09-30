@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.schema.SchemaException
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.greaterThan
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Specification("3.1.2 Objects")
 class ObjectsSpecificationTest {
@@ -17,7 +17,11 @@ class ObjectsSpecificationTest {
     @Test
     fun `All fields defined within an Object type must not have a name which begins with __`(){
         expect<SchemaException>("Illegal name '__field'. Names starting with '__' are reserved for introspection system"){
-            KGraphQL.schema { query("underscore"){ resolver { -> Underscore(0) } } }
+            KGraphQL.schema {
+                query("underscore") {
+                    resolver { -> Underscore(0) }
+                }
+            }
         }
     }
 
@@ -40,7 +44,7 @@ class ObjectsSpecificationTest {
             }
         }
 
-        val result = schema.execute("{many{id, id2, value, active, smooth, name}}")
+        val result = schema.executeBlocking("{many{id, id2, value, active, smooth, name}}")
         with(result){
             assertThat(indexOf("\"name\""), greaterThan(indexOf("\"smooth\"")))
             assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"active\"")))
@@ -49,7 +53,7 @@ class ObjectsSpecificationTest {
             assertThat(indexOf("\"id2\""), greaterThan(indexOf("\"id\"")))
         }
 
-        val result2 = schema.execute("{many{name, active, id2, value, smooth, id}}")
+        val result2 = schema.executeBlocking("{many{name, active, id2, value, smooth, id}}")
         with(result2){
             assertThat(indexOf("\"id\""), greaterThan(indexOf("\"smooth\"")))
             assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"value\"")))
@@ -65,7 +69,7 @@ class ObjectsSpecificationTest {
             query("many") { resolver { -> ManyFields() } }
         }
 
-        val result = schema.execute("{many{active, ...Fields , smooth, id}} fragment Fields on ManyFields { id2, value }")
+        val result = schema.executeBlocking("{many{active, ...Fields , smooth, id}} fragment Fields on ManyFields { id2, value }")
         with(result){
             assertThat(indexOf("\"id\""), greaterThan(indexOf("\"smooth\"")))
             assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"value\"")))
@@ -81,7 +85,7 @@ class ObjectsSpecificationTest {
             type<FewFields>()
         }
 
-        val result = schema.execute("{many{active, ...Fields, ...Few , smooth, id}} " +
+        val result = schema.executeBlocking("{many{active, ...Fields, ...Few , smooth, id}} " +
                 "fragment Fields on ManyFields { id2, value }" +
                 "fragment Few on FewFields { name } "
         )
@@ -99,7 +103,7 @@ class ObjectsSpecificationTest {
             query("many") { resolver { -> ManyFields() } }
         }
 
-        val result = schema.execute("{many{id, id2, value, id, active, smooth}}")
+        val result = schema.executeBlocking("{many{id, id2, value, id, active, smooth}}")
         with(result){
             //ensure that "id" appears only once
             assertThat(indexOf("\"id\""), equalTo(lastIndexOf("\"id\"")))
@@ -110,7 +114,7 @@ class ObjectsSpecificationTest {
             assertThat(indexOf("\"id2\""), greaterThan(indexOf("\"id\"")))
         }
 
-        val resultFragment = schema.execute("{many{id, id2, ...Many, active, smooth}} fragment Many on ManyFields{value, id}")
+        val resultFragment = schema.executeBlocking("{many{id, id2, ...Many, active, smooth}} fragment Many on ManyFields{value, id}")
         with(resultFragment){
             //ensure that "id" appears only once
             assertThat(indexOf("\"id\""), equalTo(lastIndexOf("\"id\"")))
@@ -163,12 +167,12 @@ class ObjectsSpecificationTest {
             }
         }
 
-        val responseShortAfterLong = (schema.execute("{actor{long, short}}"))
+        val responseShortAfterLong = (schema.executeBlocking("{actor{long, short}}"))
         with(responseShortAfterLong) {
             assertThat(indexOf("short"), greaterThan(indexOf("long")))
         }
 
-        val responseLongAfterShort = (schema.execute("{actor{short, long}}"))
+        val responseLongAfterShort = (schema.executeBlocking("{actor{short, long}}"))
         with(responseLongAfterShort) {
             assertThat(indexOf("long"), greaterThan(indexOf("short")))
         }
@@ -191,7 +195,7 @@ class ObjectsSpecificationTest {
             }
         }
 
-        val responseShortAfterLong = schema.execute("{long, short}")
+        val responseShortAfterLong = schema.executeBlocking("{long, short}")
         with(responseShortAfterLong) {
             assertThat(indexOf("short"), greaterThan(indexOf("long")))
         }

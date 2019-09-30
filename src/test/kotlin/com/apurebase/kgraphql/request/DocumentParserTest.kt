@@ -11,7 +11,7 @@ import com.apurebase.kgraphql.request.graph.leaf
 import com.apurebase.kgraphql.request.graph.leafs
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 
 class DocumentParserTest {

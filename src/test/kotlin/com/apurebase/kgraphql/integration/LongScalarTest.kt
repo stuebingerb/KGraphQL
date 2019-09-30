@@ -1,15 +1,13 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.specification.typesystem.ScalarsSpecificationTest
+import com.apurebase.kgraphql.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
 
+@Disabled("Long isn't supported by the specification.")
 class LongScalarTest {
 
     @Test
@@ -20,7 +18,7 @@ class LongScalarTest {
             }
         }
 
-        val response = schema.execute("{long}")
+        val response = schema.executeBlocking("{long}")
         val long = deserialize(response).extract<Long>("data/long")
         assertThat(long, equalTo(Long.MAX_VALUE))
     }
@@ -33,13 +31,15 @@ class LongScalarTest {
             }
         }
 
-        val isLong = deserialize(schema.execute("{isLong(long: ${Int.MAX_VALUE.toLong() + 1})}")).extract<String>("data/isLong")
+        val isLong =
+            deserialize(schema.executeBlocking("{isLong(long: ${Int.MAX_VALUE.toLong() + 1})}")).extract<String>("data/isLong")
         assertThat(isLong, equalTo("YES"))
     }
 
     data class VeryLong(val long: Long)
 
     @Test
+    @Disabled("Long should not be natively supported. ")
     fun `Schema may declare custom long scalar type`(){
         val schema = KGraphQL.schema {
             longScalar<VeryLong> {
@@ -53,7 +53,7 @@ class LongScalarTest {
         }
 
         val value = Int.MAX_VALUE.toLong() + 2
-        val response = deserialize(schema.execute("{number(number: $value)}"))
+        val response = deserialize(schema.executeBlocking("{number(number: $value)}"))
         assertThat(response.extract<Long>("data/number"), equalTo(value))
     }
 

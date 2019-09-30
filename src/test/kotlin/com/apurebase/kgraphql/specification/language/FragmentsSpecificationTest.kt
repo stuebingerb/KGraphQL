@@ -20,7 +20,7 @@ import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Specification("2.8 Fragments")
 class FragmentsSpecificationTest {
@@ -73,7 +73,7 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `Inline fragments may also be used to apply a directive to a group of fields`() {
-        val response = deserialize(schema.execute(
+        val response = deserialize(schema.executeBlocking(
                 "query (\$expandedInfo : Boolean!){actor{actualActor{name ... @include(if: \$expandedInfo){ age }}}}",
                 "{\"expandedInfo\":false}"
         ))
