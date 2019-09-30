@@ -9,7 +9,6 @@ import com.apurebase.kgraphql.schema.scalar.deserializeScalar
 import com.apurebase.kgraphql.schema.structure2.InputValue
 import com.apurebase.kgraphql.schema.structure2.Type
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
@@ -70,9 +69,7 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
     }
 
     fun transformPropertyObjectValue(parameter: InputValue<*>, value: List<*>): Any? {
-        val mapper = ObjectMapper()
-        mapper.registerModule(JavaTimeModule())
-        return mapper.readValue(value.toJson(), parameter.type.unwrapped().kClass?.java)
+        return schema.configuration.objectMapper.readValue(value.toJson(), parameter.type.unwrapped().kClass?.java)
     }
 }
 
