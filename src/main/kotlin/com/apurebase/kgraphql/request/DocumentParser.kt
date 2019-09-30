@@ -177,7 +177,22 @@ open class DocumentParser {
                     i += deltaOfClosingBracket + 1
                 }
                 argTokens[i+1] == ":" && argTokens[i + 2] == "{" -> {
-                    throw UnsupportedOperationException("Object literal arguments are not supported yet")
+                    val argumentName = argTokens[i]
+                    i += 2 // effectively 'i' is index of '{'
+                    var count = 1
+                    val list = mutableListOf<String>()
+                    list.add(argTokens[i])
+                    while (count > 0) {
+                        if (i == argTokens.size) throw RequestException("Missing closing '}' in arguments ${argTokens.joinToString(" ")}")
+                        val value = argTokens[++i]
+                        when(value) {
+                            "{" -> count++
+                            "}" -> count--
+                        }
+                        list.add(value)
+                    }
+                    arguments[argumentName] = list
+                    i++
                 }
                 argTokens[i+1] == ":" ->{
                     arguments.put(argTokens[i], argTokens[i + 2])
