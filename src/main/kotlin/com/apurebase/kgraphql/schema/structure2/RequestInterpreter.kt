@@ -28,12 +28,12 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
     private fun getRoot(request: Operation): Type {
         return when (request.action) {
             Operation.Action.QUERY -> schemaModel.query
-            Operation.Action.MUTATION -> schemaModel.mutation
+            Operation.Action.MUTATION -> schemaModel.mutation ?: throw RequestException("Mutations are not supported on this schema")
             else -> {
                 val keys = request.selectionTree.nodes.map { it.key }
                 when {
                     keys.all { schemaModel.query.hasField(it) } -> schemaModel.query
-                    keys.all { schemaModel.mutation.hasField(it) } -> schemaModel.mutation
+                    keys.all { schemaModel.mutation != null && schemaModel.mutation.hasField(it) } -> schemaModel.mutation!!
                     else -> {
                         handleUnsupportedOperations(keys)
                         throw RequestException("Cannot infer operation from fields")
@@ -141,7 +141,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
     private fun handleUnsupportedOperations(keys: List<String>) {
         keys.forEach { key ->
-            if (!schemaModel.query.hasField(key) && !schemaModel.mutation.hasField(key)) {
+            if (!schemaModel.query.hasField(key) && (schemaModel.mutation == null || !schemaModel.mutation.hasField(key))) {
                 throw RequestException("$key is not supported by this schema")
             }
         }
