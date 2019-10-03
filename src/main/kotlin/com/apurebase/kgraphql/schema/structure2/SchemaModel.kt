@@ -10,7 +10,7 @@ import kotlin.reflect.full.findAnnotation
 
 data class SchemaModel (
         val query: Type,
-        val mutation: Type,
+        val mutation: Type?,
         val enums: Map<KClass<out Enum<*>>, Type.Enum<out Enum<*>>>,
         val scalars : Map<KClass<*>, Type.Scalar<*>>,
         val unions : List<Type.Union>,
@@ -26,12 +26,18 @@ data class SchemaModel (
 
     val inputTypesByName = inputTypes.values.associate { it.name to it }
 
-    override val types: List<__Type> = allTypes.toList()
-            //workaround on the fact that Double and Float are treated as GraphQL Float
-            .filterNot { it is Type.Scalar<*> && it.kClass == Float::class }
-            .filterNot { it.kClass?.findAnnotation<NotIntrospected>() != null }
-            //query and mutation must be present in introspection 'types' field for introspection tools
-            .plus(mutation).plus(query)
+    override val types: List<__Type> = toTypeList()
+
+    private fun toTypeList(): List<__Type> {
+        val list = allTypes.toList()
+                //workaround on the fact that Double and Float are treated as GraphQL Float
+                .filterNot { it is Type.Scalar<*> && it.kClass == Float::class }
+                .filterNot { it.kClass?.findAnnotation<NotIntrospected>() != null }
+                //query and mutation must be present in introspection 'types' field for introspection tools
+                .plus(query)
+        mutation ?: list.plus(mutation)
+        return list
+    }
 
     override val queryType: __Type = query
 

@@ -65,7 +65,7 @@ class SchemaCompilation(
 
         val model =  SchemaModel (
                 query = queryType,
-                mutation = mutationType,
+                mutation = if (mutationType.fields!!.isEmpty()) null else mutationType,
 
                 enums = enums,
                 scalars = scalars,
