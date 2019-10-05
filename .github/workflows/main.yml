@@ -1,4 +1,4 @@
-name: CI
+name: Testing
 
 on: [push]
 
@@ -6,6 +6,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: gradle:alpine
+      - uses: docker://gradle:alpine
       - name: Run a one-line script
         run: gradle jacocoTestReport coveralls
