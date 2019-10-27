@@ -55,6 +55,7 @@ class SchemaCompilation(
     fun perform(): DefaultSchema {
         val queryType = handleQueries()
         val mutationType = handleMutations()
+        val subscriptionType = handleSubscriptions()
         definition.objects.forEach { handleObjectType(it.kClass) }
         definition.inputObjects.forEach { handleInputType(it.kClass) }
 
@@ -66,6 +67,7 @@ class SchemaCompilation(
         val model =  SchemaModel (
                 query = queryType,
                 mutation = if (mutationType.fields!!.isEmpty()) null else mutationType,
+                subscription = if (subscriptionType.fields!!.isEmpty()) null else subscriptionType,
 
                 enums = enums,
                 scalars = scalars,
@@ -120,6 +122,10 @@ class SchemaCompilation(
 
     private fun handleMutations() : Type {
         return Type.OperationObject("Mutation", "Mutation object", definition.mutations.map { handleOperation(it) })
+    }
+
+    private fun handleSubscriptions() : Type {
+        return Type.OperationObject("Subscription", "Subscription object", definition.subscriptions.map { handleOperation(it) })
     }
 
     @Suppress("USELESS_CAST") // We are casting as __Schema so we don't get proxied types. https://github.com/aPureBase/KGraphQL/issues/45
