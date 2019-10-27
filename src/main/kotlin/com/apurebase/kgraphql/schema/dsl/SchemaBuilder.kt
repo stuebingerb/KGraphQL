@@ -1,11 +1,10 @@
 package com.apurebase.kgraphql.schema.dsl
 
+import com.apurebase.kgraphql.schema.*
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.apurebase.kgraphql.schema.Schema
-import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.model.EnumValueDef
 import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
@@ -34,12 +33,20 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     // OPERATIONS
     //================================================================================
 
-    fun query(name : String, init: QueryOrMutationDSL.() -> Unit){
-        model.addQuery(QueryOrMutationDSL(name, init).toKQLQuery())
+    fun query(name : String, init: QueryOrMutationDSL.() -> Unit): Publisher {
+        val query = QueryOrMutationDSL(name, init).toKQLQuery()
+        model.addQuery(query)
+        return query
     }
 
-    fun mutation(name : String, init: QueryOrMutationDSL.() -> Unit){
-        model.addMutation(QueryOrMutationDSL(name, init).toKQLMutation())
+    fun mutation(name : String, init: QueryOrMutationDSL.() -> Unit): Publisher {
+        val mutation = QueryOrMutationDSL(name, init).toKQLMutation()
+        model.addMutation(mutation)
+        return mutation
+    }
+
+    fun subscription(name : String, init: SubscriptionDSL.() -> Unit){
+        model.addSubscription(SubscriptionDSL(name, init).toKQLSubscription())
     }
 
     //================================================================================

@@ -4,6 +4,7 @@ import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.introspection.NotIntrospected
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.__Type
+import java.util.concurrent.Flow
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 
@@ -11,6 +12,7 @@ import kotlin.reflect.full.findAnnotation
 data class SchemaModel (
         val query: Type,
         val mutation: Type?,
+        val subscription: Type?,
         val enums: Map<KClass<out Enum<*>>, Type.Enum<out Enum<*>>>,
         val scalars : Map<KClass<*>, Type.Scalar<*>>,
         val unions : List<Type.Union>,
@@ -29,13 +31,14 @@ data class SchemaModel (
     override val types: List<__Type> = toTypeList()
 
     private fun toTypeList(): List<__Type> {
-        val list = allTypes.toList()
+        var list = allTypes.toList()
                 //workaround on the fact that Double and Float are treated as GraphQL Float
                 .filterNot { it is Type.Scalar<*> && it.kClass == Float::class }
                 .filterNot { it.kClass?.findAnnotation<NotIntrospected>() != null }
                 //query and mutation must be present in introspection 'types' field for introspection tools
                 .plus(query)
-        mutation ?: list.plus(mutation)
+        if (mutation != null) list = list.plus(mutation)
+        if (subscription != null) list = list.plus(subscription)
         return list
     }
 
@@ -43,7 +46,7 @@ data class SchemaModel (
 
     override val mutationType: __Type? = mutation
 
-    override val subscriptionType: __Type? = null
+    override val subscriptionType: __Type? = subscription
 
     override fun findTypeByName(name: String): __Type? = allTypesByName[name]
 }

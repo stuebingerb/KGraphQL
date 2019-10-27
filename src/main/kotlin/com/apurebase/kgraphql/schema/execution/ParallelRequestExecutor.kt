@@ -51,6 +51,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
         val resultMap = plan.toMapAsync {
             writeOperation(
+                isSubscription = plan.isSubscription,
                 ctx = ExecutionContext(Variables(schema, variables, it.variables), context),
                 node = it,
                 operation = it.field as Field.Function<*, *>
@@ -95,9 +96,11 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         resultMap
     }
 
-    private suspend fun <T> writeOperation(ctx: ExecutionContext, node: Execution.Node, operation: FunctionWrapper<T>): JsonNode {
+    private suspend fun <T> writeOperation(isSubscription: Boolean, ctx: ExecutionContext, node: Execution.Node, operation: FunctionWrapper<T>): JsonNode {
         node.field.checkAccess(null, ctx.requestContext)
         val operationResult: T? = operation.invoke(
+                isSubscription = isSubscription,
+                children = node.children,
                 funName = node.field.name,
                 receiver = null,
                 inputValues = node.field.arguments,
@@ -302,6 +305,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     }
 
     private suspend fun <T> FunctionWrapper<T>.invoke(
+            isSubscription: Boolean = false,
+            children: Collection<Execution> = emptyList(),
             funName: String,
             receiver: Any?,
             inputValues: List<InputValue<*>>,
@@ -309,12 +314,14 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             ctx: ExecutionContext
     ): T? {
         val transformedArgs = argumentsHandler.transformArguments(funName, inputValues, args, ctx.variables, ctx.requestContext)
-
         //exceptions are not caught on purpose to pass up business logic errors
-        return if (hasReceiver) {
-            invoke(receiver, *transformedArgs.toTypedArray())
-        } else {
-            invoke(*transformedArgs.toTypedArray())
+        return when {
+            hasReceiver -> invoke(receiver, *transformedArgs.toTypedArray())
+            isSubscription -> {
+                val subscriptionArgs = children.map { (it as Execution.Node).aliasOrKey }
+                invoke(transformedArgs, subscriptionArgs, objectWriter)
+            }
+            else -> invoke(*transformedArgs.toTypedArray())
         }
     }
 
