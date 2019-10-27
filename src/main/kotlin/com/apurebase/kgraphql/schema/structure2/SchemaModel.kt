@@ -4,6 +4,7 @@ import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.introspection.NotIntrospected
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.__Type
+import java.util.concurrent.Flow
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 
