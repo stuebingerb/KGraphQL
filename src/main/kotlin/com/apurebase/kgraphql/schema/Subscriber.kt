@@ -1,10 +1,9 @@
 package com.apurebase.kgraphql.schema
 
 import com.fasterxml.jackson.databind.ObjectWriter
-import java.util.concurrent.Flow
 
 interface Subscriber {
-    fun onSubscribe(subscription: Flow.Subscription)
+    fun onSubscribe(subscription: Subscription)
 
     fun onNext(item: Any?)
 
