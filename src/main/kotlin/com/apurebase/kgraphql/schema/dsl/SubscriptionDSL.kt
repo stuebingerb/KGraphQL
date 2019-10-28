@@ -4,14 +4,8 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.*
 import com.apurebase.kgraphql.schema.model.*
 import com.fasterxml.jackson.databind.ObjectWriter
-<<<<<<< HEAD
-import kotlin.reflect.full.isSubtypeOf
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.starProjectedType
-=======
 import java.util.concurrent.Flow
 import kotlin.reflect.full.memberProperties
->>>>>>> #10 Add Subscription support
 
 
 class SubscriptionDSL(
@@ -70,13 +64,7 @@ private fun <T : Any> getFieldValue(clazz: T, field: String): Any? {
     return null
 }
 
-<<<<<<< HEAD
-fun <T : Any> subscribe(subscription: String, publisher: Publisher, output: T, function: (response: String) -> Unit): T {
-    if (!(publisher as FunctionWrapper<*>).kFunction.returnType.isSubtypeOf(output::class.starProjectedType))  
-        throw SchemaException("Subscription return type must be the same as the publisher's")
-=======
 fun <T : Any?> subscribe(subscription: String, publisher: Publisher, output: T?, function: (response: String) -> Unit): T? {
->>>>>>> #10 Add Subscription support
     val subscriber = object : Subscriber {
         override fun setObjectWriter(objectWriter: ObjectWriter) {
             this.objectWriter = objectWriter
@@ -102,11 +90,7 @@ fun <T : Any?> subscribe(subscription: String, publisher: Publisher, output: T?,
             TODO("not needed for now")
         }
 
-<<<<<<< HEAD
-        override fun onSubscribe(subscription: Subscription) {
-=======
         override fun onSubscribe(subscription: Flow.Subscription) {
->>>>>>> #10 Add Subscription support
             TODO("not needed for now")
         }
 
