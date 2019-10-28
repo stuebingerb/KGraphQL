@@ -112,7 +112,7 @@ data class MutableSchemaDefinition (
 
         fun addSubscription(subscription: SubscriptionDef<*>){
                 if(subscription.checkEqualName(subscriptions)){
-                        throw SchemaException("Cannot add mutation with duplicated name ${subscription.name}")
+                        throw SchemaException("Cannot add subscription with duplicated name ${subscription.name}")
                 }
                 subscriptions.add(subscription)
         }
