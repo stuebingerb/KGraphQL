@@ -96,7 +96,7 @@ class OperationsSpecificationTest {
     @Test
     fun `Subscription return type must be the same as the publisher's`(){
         expect<SchemaException>("Subscription return type must be the same as the publisher's"){
-            schema.execute("subscription {subscriptionActress{age}}")
+            schema.execute("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
         }
     }
 }
