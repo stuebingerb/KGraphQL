@@ -4,7 +4,9 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.*
 import com.apurebase.kgraphql.schema.model.*
 import com.fasterxml.jackson.databind.ObjectWriter
+import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.starProjectedType
 
 
 class SubscriptionDSL(
