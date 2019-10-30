@@ -7,6 +7,7 @@ import org.junit.Assert
 import org.junit.Test
 
 data class Actor(var name : String? = "", var age: Int? = 0)
+data class Actress(var name : String? = "", var age: Int? = 0)
 
 @Specification("2.3 Operations")
 class OperationsSpecificationTest {
@@ -35,6 +36,14 @@ class OperationsSpecificationTest {
         subscription("unsubscriptionActor") {
             resolver { subscription: String ->
                 unsubscribe(subscription, publisher, Actor())
+            }
+        }
+
+        subscription("subscriptionActress") {
+            resolver { subscription: String ->
+                subscribe(subscription, publisher, Actress()) {
+                    subscriptionResult = it
+                }
             }
         }
     }
@@ -81,5 +90,12 @@ class OperationsSpecificationTest {
         schema.execute("{createActor(name : \"Kurt Russel\"){name}}")
         Assert.assertEquals(subscriptionResult, "")
 
+    }
+
+    @Test
+    fun `Subscription return type must be the same as the publisher's`(){
+        expect<SchemaException>("Subscription return type must be the same as the publisher's"){
+            schema.execute("subscription {subscriptionActress{age}}")
+        }
     }
 }
