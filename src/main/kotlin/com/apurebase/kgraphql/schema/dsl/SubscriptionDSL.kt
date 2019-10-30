@@ -4,7 +4,6 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.*
 import com.apurebase.kgraphql.schema.model.*
 import com.fasterxml.jackson.databind.ObjectWriter
-import java.util.concurrent.Flow
 import kotlin.reflect.full.memberProperties
 
 
@@ -92,7 +91,7 @@ fun <T : Any> subscribe(subscription: String, publisher: Publisher, output: T, f
             TODO("not needed for now")
         }
 
-        override fun onSubscribe(subscription: Flow.Subscription) {
+        override fun onSubscribe(subscription: Subscription) {
             TODO("not needed for now")
         }
 
