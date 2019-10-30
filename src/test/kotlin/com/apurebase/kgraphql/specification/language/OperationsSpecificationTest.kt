@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.executeEqualQueries
-import org.junit.Assert.fail
+import junit.framework.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
 
