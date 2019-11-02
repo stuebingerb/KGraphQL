@@ -1,22 +1,13 @@
 package com.apurebase.kgraphql.specification.introspection
 
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.integration.BaseSchemaTest
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest.Companion.INTROSPECTION_QUERY
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import junit.framework.Assert.fail
 import org.amshove.kluent.shouldNotContain
-import org.hamcrest.CoreMatchers.anyOf
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.not
-import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.CoreMatchers.startsWith
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.collection.IsEmptyCollection.empty
+import org.junit.Assert.fail
 import org.junit.Test
 
 
@@ -260,7 +251,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val map = deserialize(schema.execute(BaseSchemaTest.INTROSPECTION_QUERY))
+        val map = deserialize(schema.execute(INTROSPECTION_QUERY))
         val fields = map.extract<List<Map<String,*>>>("data/__schema/types[0]/fields")
 
         fields.forEach { field ->
@@ -276,7 +267,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val map = deserialize(schema.execute(BaseSchemaTest.INTROSPECTION_QUERY))
+        val map = deserialize(schema.execute(INTROSPECTION_QUERY))
         val types = map.extract<List<Map<Any,*>>>("data/__schema/types")
 
         val typenames = types.map { type -> type["name"] as String }.sorted()

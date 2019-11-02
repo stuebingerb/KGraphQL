@@ -2,7 +2,30 @@ group 'com.apurebase'
 version '0.7.1'
 
 buildscript {
-    ext.kotlin_version = '1.3.10'
+
+    ext {
+        // Dependencies
+        kotlin_version = '1.3.50'
+        coroutine_version = '1.3.2'
+
+        jackson_version = '2.9.7'
+        caffeine_version = '2.8.0'
+
+        // Test-Dependencies
+        kotlin_html_version = '0.6.12'
+        netty_version = '4.1.42.Final'
+        junit_version = '4.12'
+        kluent_version = '1.56'
+        hamcrest_version = '2.2'
+
+        // Gradle Plugin, ... versions
+        jmhGradlePlugin_version = '0.5.0'
+        jmh_version = '1.21'
+        coverallsGradlePlugin_version = '2.8.4'
+        bintrayGradlePlugin_version = '1.8.4'
+        jacoco_version = '0.8.5'
+
+    }
 
     repositories {
         mavenCentral()
@@ -13,9 +36,9 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "me.champeau.gradle:jmh-gradle-plugin:0.4.7"
-        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.1"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.1'
+        classpath "me.champeau.gradle:jmh-gradle-plugin:$jmhGradlePlugin_version"
+        classpath "gradle.plugin.com.github.kt3k.coveralls:coveralls-gradle-plugin:$coverallsGradlePlugin_version"
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintrayGradlePlugin_version"
     }
 }
 
@@ -39,24 +62,25 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0'
 
-    compile "com.fasterxml.jackson.core:jackson-databind:2.9.7"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
 
-    compile "com.github.ben-manes.caffeine:caffeine:1.0.0"
+    compile "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
 
-    testCompile "org.jetbrains.kotlinx:kotlinx-html-jvm:0.6.3"
-    testCompile "io.netty:netty-all:4.1.9.Final"
+    compile "com.github.ben-manes.caffeine:caffeine:$caffeine_version"
 
-    testCompile 'junit:junit:4.12'
-    testCompile "org.hamcrest:hamcrest-all:1.3"
-    testCompile 'org.amshove.kluent:kluent:1.53'
+    testCompile "org.jetbrains.kotlinx:kotlinx-html-jvm:$kotlin_html_version"
+    testCompile "io.netty:netty-all:$netty_version"
+
+    testCompile "junit:junit:$junit_version"
+    testCompile "org.hamcrest:hamcrest:$hamcrest_version"
+    testCompile "org.amshove.kluent:kluent:$kluent_version"
 }
 
 jmh {
-    jmhVersion = '1.19'
-    duplicateClassesStrategy = 'warn'
+    jmhVersion = jmh_version
+    duplicateClassesStrategy = 'WARN'
 }
 
 
@@ -65,7 +89,7 @@ coveralls {
 }
 
 jacoco {
-    toolVersion = "0.8.2"
+    toolVersion = jacoco_version
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -125,5 +149,5 @@ bintray {
 
 
 wrapper {
-    gradleVersion = '4.10' //version required
+    gradleVersion = '5.6.3' //version required
 }

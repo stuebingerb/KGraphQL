@@ -13,13 +13,13 @@ data class ModelThree(val id : String, val twos : List<ModelTwo>)
 object BenchmarkSchema {
     val ones = listOf(ModelOne("DUDE"),ModelOne("GUY"),ModelOne("PAL"),ModelOne("FELLA"))
 
-    val oneResolver : ()->List<ModelOne> = { ones }
+    val oneResolver: suspend () -> List<ModelOne> = { ones }
 
-    val twoResolver : (name : String)-> ModelTwo? = { name ->
+    val twoResolver: suspend (name: String) -> ModelTwo? = { name ->
         ones.find { it.name == name }?.let { ModelTwo(it, it.quantity..12) }
     }
 
-    val threeResolver : ()-> ModelThree = { ModelThree("", ones.map { ModelTwo(it, it.quantity..10) }) }
+    val threeResolver: suspend () -> ModelThree = { ModelThree("", ones.map { ModelTwo(it, it.quantity..10) }) }
 
     object HasOneResolver {
         fun oneResolver(): List<ModelOne> {

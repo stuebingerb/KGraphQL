@@ -23,7 +23,7 @@ fun KClass<*>.isIterable() = isSubclassOf(Iterable::class)
 fun KType.isIterable() = jvmErasure.isIterable()
 
 fun KType.getIterableElementType(): KType? {
-    if(!jvmErasure.isIterable()) throw IllegalArgumentException("KType $this is not collection type")
+    require(jvmErasure.isIterable()) { "KType $this is not collection type" }
     return arguments.firstOrNull()?.type ?: throw NoSuchElementException("KType $this has no type arguments")
 }
 

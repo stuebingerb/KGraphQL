@@ -1,21 +1,14 @@
 package com.apurebase.kgraphql
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.apurebase.kgraphql.BenchmarkSchema.oneResolver
 import com.apurebase.kgraphql.BenchmarkSchema.threeResolver
 import com.apurebase.kgraphql.BenchmarkSchema.twoResolver
 import com.apurebase.kgraphql.schema.Schema
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import org.openjdk.jmh.annotations.Benchmark
-import org.openjdk.jmh.annotations.Fork
-import org.openjdk.jmh.annotations.Measurement
-import org.openjdk.jmh.annotations.OutputTimeUnit
-import org.openjdk.jmh.annotations.Param
-import org.openjdk.jmh.annotations.Scope
-import org.openjdk.jmh.annotations.Setup
-import org.openjdk.jmh.annotations.State
-import org.openjdk.jmh.annotations.Warmup
+import org.openjdk.jmh.annotations.*
 import java.util.concurrent.TimeUnit
 
 @State(Scope.Benchmark)
@@ -46,9 +39,11 @@ open class SimpleExecutionOverheadBenchmark {
         if(withKGraphQL){
             return schema.execute("{one{name, quantity, active}, two(name : \"FELLA\"){range{start, endInclusive}}, three{id}}")
         } else {
-            return ": ${objectMapper.writeValueAsString(oneResolver())} " +
-                    ": ${objectMapper.writeValueAsString(twoResolver("FELLA"))} " +
-                    ": ${objectMapper.writeValueAsString(threeResolver())}"
+            return runBlocking {
+                ": ${objectMapper.writeValueAsString(oneResolver())} " +
+                        ": ${objectMapper.writeValueAsString(twoResolver("FELLA"))} " +
+                        ": ${objectMapper.writeValueAsString(threeResolver())}"
+            }
         }
     }
 

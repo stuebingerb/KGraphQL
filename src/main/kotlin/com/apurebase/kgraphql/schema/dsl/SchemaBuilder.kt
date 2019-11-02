@@ -1,15 +1,15 @@
 package com.apurebase.kgraphql.schema.dsl
 
+import com.apurebase.kgraphql.schema.Schema
+import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.model.EnumValueDef
+import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
+import com.apurebase.kgraphql.schema.model.TypeDef
+import com.apurebase.kgraphql.schema.structure2.SchemaCompilation
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.apurebase.kgraphql.schema.Schema
-import com.apurebase.kgraphql.schema.SchemaException
-import com.apurebase.kgraphql.schema.model.EnumValueDef
-import com.apurebase.kgraphql.schema.model.TypeDef
-import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
-import com.apurebase.kgraphql.schema.structure2.SchemaCompilation
 import kotlin.reflect.KClass
 
 /**
@@ -110,7 +110,7 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     }
 
     inline fun <reified T : Any> type() {
-        type(T::class, {})
+        type(T::class) {}
     }
 
     //================================================================================
@@ -139,7 +139,7 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
         if(enumValues.isEmpty()){
             throw SchemaException("Enum of type ${T::class} must have at least one value")
         } else {
-            enum(T::class, enumValues<T>(), block)
+            enum(T::class, enumValues(), block)
         }
     }
 
@@ -167,7 +167,7 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     }
 
     inline fun <reified T : Any> inputType() {
-        inputType(T::class, {})
+        inputType(T::class) {}
     }
 }
 
