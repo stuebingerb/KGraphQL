@@ -1,10 +1,6 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.ValidationException
-import com.apurebase.kgraphql.assertNoErrors
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -185,7 +181,7 @@ class QueryTest : BaseSchemaTest() {
                 director {
                     name
                 }
-                ...dirAge
+                ...dirIntermediate
             }
 
             fragment dirIntermediate on Film {
@@ -198,6 +194,45 @@ class QueryTest : BaseSchemaTest() {
                 }
             }
             """.trimIndent())
+        assertNoErrors(map)
+        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
+        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
+        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+    }
+
+    @Test
+    fun `query with two nested external fragments`() {
+        val map = execute(
+            """
+            {
+                film {
+                    ...film_All
+                }
+            }
+            
+            fragment film_All on Film {
+                ...film_title
+                ...film_director
+            }
+            
+            fragment film_All on Film {
+                title
+            }
+
+            fragment film_director on Film {
+                director {
+                    name
+                }
+                ...film_director_age
+            }
+
+            fragment film_director_age on Film {
+                director {
+                    age
+                }
+            }
+            """.trimIndent()
+        )
         assertNoErrors(map)
         assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
         assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
