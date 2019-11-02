@@ -1,9 +1,5 @@
 package com.apurebase.kgraphql.schema.execution
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.request.Arguments
@@ -18,6 +14,10 @@ import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure2.Field
 import com.apurebase.kgraphql.schema.structure2.InputValue
 import com.apurebase.kgraphql.schema.structure2.Type
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlin.coroutines.CoroutineContext
@@ -86,7 +86,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                 val (item, result) = channel.receive()
                 resultMap[item] = result
             } catch (e: Exception) {
-                jobs.forEach(Job::cancel)
+                jobs.forEach { job: Job -> job.cancel() }
                 throw e
             }
         }
