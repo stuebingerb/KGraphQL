@@ -1,29 +1,12 @@
 package com.apurebase.kgraphql.schema
 
-import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.FilmType
-import com.apurebase.kgraphql.Id
-import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.Account
-import com.apurebase.kgraphql.Scenario
-import com.apurebase.kgraphql.context
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import com.apurebase.kgraphql.schema.structure2.Field
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import org.hamcrest.CoreMatchers
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.instanceOf
-import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.CoreMatchers.nullValue
-import org.hamcrest.CoreMatchers.hasItem
-import org.hamcrest.MatcherAssert
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import java.util.*
@@ -45,8 +28,8 @@ class SchemaBuilderTest {
 
         val uuidScalar = testedSchema.model.scalars[UUID::class]!!.coercion as StringScalarCoercion<UUID>
         val testUuid = UUID.randomUUID()
-        MatcherAssert.assertThat(uuidScalar.serialize(testUuid), CoreMatchers.equalTo(testUuid.toString()))
-        MatcherAssert.assertThat(uuidScalar.deserialize(testUuid.toString()), CoreMatchers.equalTo(testUuid))
+        assertThat(uuidScalar.serialize(testUuid), equalTo(testUuid.toString()))
+        assertThat(uuidScalar.deserialize(testUuid.toString()), equalTo(testUuid))
     }
 
     @Test
@@ -292,6 +275,7 @@ class SchemaBuilderTest {
     }
 
     @Test
+    @Suppress("UNUSED_ANONYMOUS_PARAMETER")
     fun `Schema should infer input types from resolver functions`(){
         val schema = defaultSchema {
             query("sample") {
@@ -338,6 +322,7 @@ class SchemaBuilderTest {
     }
 
     @Test
+    @Suppress("UNUSED_ANONYMOUS_PARAMETER")
     fun `arg name must match exactly one of type property`(){
         expect<SchemaException>("Invalid input values on data: [intss]") {
             defaultSchema {
@@ -355,7 +340,7 @@ class SchemaBuilderTest {
         expect<UninitializedPropertyAccessException>("lateinit property name has not been initialized") {
             defaultSchema {
                 query("data"){
-                    resolver { int: Int, string: String? -> int }.withArgs {
+                    resolver { int: Int, _: String? -> int }.withArgs {
                         arg <Int> { defaultValue = 33 }
                     }
                 }
@@ -421,7 +406,7 @@ class SchemaBuilderTest {
     fun `There is clear message when query resolver is not present`(){
         expect<IllegalArgumentException>("resolver has to be specified for query [name]") {
             KGraphQL.schema {
-                query("name") { -> "STUFF" }
+                query("name") { "STUFF" }
             }
         }
     }
@@ -573,10 +558,10 @@ class SchemaBuilderTest {
     @Test
     fun `Schema can have same type and input type with different names`(){
         val schema = defaultSchema {
-            inputType<InputOne>() {
+            inputType<InputOne> {
                 name="TypeAsInput"
             }
-            type<InputOne>() {
+            type<InputOne> {
                 name="TypeAsObject"
             }
         }

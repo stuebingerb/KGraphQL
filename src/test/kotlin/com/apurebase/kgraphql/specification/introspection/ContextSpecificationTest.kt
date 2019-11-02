@@ -9,7 +9,9 @@ import org.hamcrest.MatcherAssert
 import org.junit.Test
 
 class ContextSpecificationTest {
+
   @Test
+  @Suppress("UNUSED_ANONYMOUS_PARAMETER")
   fun `query resolver should not return context param`() {
     val schema = defaultSchema {
       query("sample") {
@@ -23,6 +25,7 @@ class ContextSpecificationTest {
   }
 
   @Test
+  @Suppress("UNUSED_ANONYMOUS_PARAMETER")
   fun `mutation resolver should not return context param`() {
     val schema = defaultSchema {
       mutation("sample") {
