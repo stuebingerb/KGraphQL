@@ -46,6 +46,19 @@ open class TypeDSL<T : Any>(
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
+    fun <R, E, W, Q, A, S, B> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q, A, S, B) -> R) {
+        transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
+    }
+
+    fun <R, E, W, Q, A, S, B, U> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q, A, S, B, U) -> R) {
+        transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
+    }
+
+    fun <R, E, W, Q, A, S, B, U, C> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q, A, S, B, U, C) -> R) {
+        transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
+    }
+
+
     fun <R> property(kProperty: KProperty1<T, R>, block : KotlinPropertyDSL<T, R>.() -> Unit){
         val dsl = KotlinPropertyDSL(kProperty, block)
         describedKotlinProperties[kProperty] = dsl.toKQLProperty()
