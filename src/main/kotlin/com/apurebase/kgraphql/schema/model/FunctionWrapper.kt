@@ -2,8 +2,11 @@
 
 package com.apurebase.kgraphql.schema.model
 
+import com.apurebase.kgraphql.schema.Publisher
 import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.Subscriber
 import com.apurebase.kgraphql.schema.structure2.validateName
+import com.fasterxml.jackson.databind.ObjectWriter
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.callSuspend
@@ -12,12 +15,14 @@ import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.reflect
 
 
+private val subscribers = mutableMapOf<String, Subscriber?>()
+
 /**
  * FunctionWrapper is common interface for classes storing functions registered in schema by server code.
  * Only up to 9 arguments are supported, because kotlin-reflect doesn't support
  * invoking lambdas, local and anonymous functions yet, making implementation severely limited.
  */
-interface FunctionWrapper <T>{
+interface FunctionWrapper <T> : Publisher {
     //lots of boilerplate here, because kotlin-reflect doesn't support invoking lambdas, local and anonymous functions yet
     companion object {
         fun <T> on (function : KFunction<T>) : FunctionWrapper<T>
@@ -61,6 +66,7 @@ interface FunctionWrapper <T>{
     val kFunction: KFunction<T>
 
     suspend fun invoke(vararg args: Any?) : T?
+    suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter) : T?
 
     fun arity() : Int
 
@@ -102,6 +108,17 @@ interface FunctionWrapper <T>{
     }
 
     class ArityN<T>(override val kFunction: KFunction<T>): Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
+
         override fun arity() = kFunction.parameters.size
 
         override val hasReceiver: Boolean
@@ -113,21 +130,60 @@ interface FunctionWrapper <T>{
     }
 
     class ArityZero<T>(val implementation : suspend ()-> T, override val hasReceiver: Boolean = false ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
+
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
         override fun arity(): Int = 0
 
         override suspend fun invoke(vararg args: Any?): T? {
-            if(args.isNotEmpty()){
-                throw IllegalArgumentException("This function does not accept arguments")
-            } else {
-                return implementation()
+            if (args.isNotEmpty()) {
+                val e = IllegalArgumentException("This function does not accept arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
+            val t = implementation()
+            subscribers.forEach{
+                it.value?.onNext(t)
+            }
+            return t
         }
     }
 
     class ArityOne<T, R>(
         val implementation : suspend (R)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            if(args.size == arity()){
+                val t = implementation(args[0] as R)
+                val subscription = args[0] as String
+                subscribers[subscription]?.setArgs(subscriptionArgs.toTypedArray())
+                subscribers[subscription]?.setObjectWriter(objectWriter)
+                return t
+            } else {
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
+            }
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
 
@@ -135,9 +191,17 @@ interface FunctionWrapper <T>{
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R)
+                val t = implementation(args[0] as R)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }
@@ -146,6 +210,15 @@ interface FunctionWrapper <T>{
         val implementation : suspend (R, E)-> T,
         override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
 
@@ -153,9 +226,17 @@ interface FunctionWrapper <T>{
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E)
+                val t = implementation(args[0] as R, args[1] as E)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }
@@ -163,6 +244,15 @@ interface FunctionWrapper <T>{
     class ArityThree<T, R, E, W>(
         val implementation : suspend (R, E, W)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
 
@@ -170,9 +260,17 @@ interface FunctionWrapper <T>{
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W)
+                val t = implementation(args[0] as R, args[1] as E, args[2] as W)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }
@@ -180,6 +278,15 @@ interface FunctionWrapper <T>{
     class ArityFour<T, R, E, W, Q>(
         val implementation : suspend (R, E, W, Q)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
 
@@ -187,9 +294,17 @@ interface FunctionWrapper <T>{
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q)
+                val t = implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }
@@ -197,6 +312,15 @@ interface FunctionWrapper <T>{
     class ArityFive<T, R, E, W, Q, A>(
         val implementation : suspend (R, E, W, Q, A)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
 
@@ -204,9 +328,17 @@ interface FunctionWrapper <T>{
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A)
+                val t = implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }
@@ -214,15 +346,32 @@ interface FunctionWrapper <T>{
     class AritySix<T, R, E, W, Q, A, S>(
         val implementation : suspend (R, E, W, Q, A, S)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
         override fun arity(): Int = 6
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S)
+                val t = implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }
@@ -230,15 +379,32 @@ interface FunctionWrapper <T>{
     class AritySeven<T, R, E, W, Q, A, S, D>(
         val implementation : suspend (R, E, W, Q, A, S, D)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
         override fun arity(): Int = 7
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D)
+                val t = implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }
@@ -246,15 +412,32 @@ interface FunctionWrapper <T>{
     class ArityEight<T, R, E, W, Q, A, S, D, F>(
         val implementation : suspend (R, E, W, Q, A, S, D, F)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
         override fun arity(): Int = 8
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D, args[7] as F)
+                val t = implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D, args[7] as F)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }
@@ -262,15 +445,32 @@ interface FunctionWrapper <T>{
     class ArityNine<T, R, E, W, Q, A, S, D, F, G>(
         val implementation : suspend (R, E, W, Q, A, S, D, F, G)-> T, override val hasReceiver: Boolean
     ) : Base<T>() {
+        override fun unsubscribe(subscription: String) {
+            subscribers.remove(subscription)
+        }
+        override suspend fun invoke(args: List<Any?>, subscriptionArgs: List<String>, objectWriter: ObjectWriter): T? {
+            TODO("not needed")
+        }
+        override fun subscribe(subscription: String, subscriber: Subscriber) {
+            subscribers[subscription] = subscriber
+        }
 
         override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
         override fun arity(): Int = 9
 
         override suspend fun invoke(vararg args: Any?): T? {
             if(args.size == arity()){
-                return implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D, args[7] as F, args[8] as G)
+                val t = implementation(args[0] as R, args[1] as E, args[2] as W, args[3] as Q, args[4] as A, args[5] as S, args[6] as D, args[7] as F, args[8] as G)
+                subscribers.forEach{
+                    it.value?.onNext(t)
+                }
+                return t
             } else {
-                throw IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                val e = IllegalArgumentException("This function needs exactly ${arity()} arguments")
+                subscribers.forEach{
+                    it.value?.onError(e)
+                }
+                throw e
             }
         }
     }

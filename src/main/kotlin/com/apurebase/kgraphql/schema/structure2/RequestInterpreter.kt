@@ -22,18 +22,22 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
         val operations = request.selectionTree.map { root.handleSelection(it, request.variables) }
 
-        return ExecutionPlan(operations)
+        val plan = ExecutionPlan(operations)
+        plan.isSubscription = request.action == Operation.Action.SUBSCRIPTION
+        return plan
     }
 
     private fun getRoot(request: Operation): Type {
         return when (request.action) {
             Operation.Action.QUERY -> schemaModel.query
             Operation.Action.MUTATION -> schemaModel.mutation ?: throw RequestException("Mutations are not supported on this schema")
+            Operation.Action.SUBSCRIPTION -> schemaModel.subscription ?: throw RequestException("Subscriptions are not supported on this schema")
             else -> {
                 val keys = request.selectionTree.nodes.map { it.key }
                 when {
                     keys.all { schemaModel.query.hasField(it) } -> schemaModel.query
                     keys.all { schemaModel.mutation != null && schemaModel.mutation.hasField(it) } -> schemaModel.mutation!!
+                    keys.all { schemaModel.subscription != null && schemaModel.subscription.hasField(it) } -> schemaModel.subscription!!
                     else -> {
                         handleUnsupportedOperations(keys)
                         throw RequestException("Cannot infer operation from fields")
@@ -141,7 +145,9 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
     private fun handleUnsupportedOperations(keys: List<String>) {
         keys.forEach { key ->
-            if (!schemaModel.query.hasField(key) && (schemaModel.mutation == null || !schemaModel.mutation.hasField(key))) {
+            if (!schemaModel.query.hasField(key)
+                    && (schemaModel.mutation == null || !schemaModel.mutation.hasField(key))
+                    && (schemaModel.subscription == null || !schemaModel.subscription.hasField(key))) {
                 throw RequestException("$key is not supported by this schema")
             }
         }
