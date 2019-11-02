@@ -215,7 +215,7 @@ class QueryTest : BaseSchemaTest() {
                 ...film_director
             }
             
-            fragment film_All on Film {
+            fragment film_title on Film {
                 title
             }
 
@@ -228,6 +228,35 @@ class QueryTest : BaseSchemaTest() {
 
             fragment film_director_age on Film {
                 director {
+                    age
+                }
+            }
+            """.trimIndent()
+        )
+        assertNoErrors(map)
+        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
+        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
+        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+    }
+
+    @Test
+    fun `query with two fragments`() {
+        val map = execute(
+            """
+            {
+                film {
+                    ...film_title
+                    ...film_director_All
+                }
+            }
+            
+            fragment film_title on Film {
+                title
+            }
+
+            fragment film_director_All on Film {
+                director {
+                    name
                     age
                 }
             }
