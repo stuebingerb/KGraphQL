@@ -4,11 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.CoroutineDispatcher
 
 data class SchemaConfiguration (
-        /**
-         * document parser caching mechanisms
-         *
-         * TODO: This is only used in [DefaultSchema]
-         */
+        //document parser caching mechanisms
         val useCachingDocumentParser: Boolean,
         val documentParserCacheMaximumSize : Long,
         //jackson features

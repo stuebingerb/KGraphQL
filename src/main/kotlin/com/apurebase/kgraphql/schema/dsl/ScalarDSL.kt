@@ -17,10 +17,6 @@ abstract class ScalarDSL<T : Any, Raw : Any>(
 
     var name = kClass.defaultKQLTypeName()
 
-    init {
-        block()
-    }
-
     var deserialize : ((Raw) -> T)? = null
 
     var serialize : ((T) -> Raw)? = null

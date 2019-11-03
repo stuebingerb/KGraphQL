@@ -11,7 +11,6 @@ import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.jol.DataLoader
 import com.apurebase.kgraphql.schema.jol.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.TypeDef
@@ -20,9 +19,7 @@ import com.apurebase.kgraphql.schema.structure2.Field
 import com.apurebase.kgraphql.schema.structure2.InputValue
 import com.apurebase.kgraphql.schema.structure2.Type
 import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.*
 import kotlinx.coroutines.channels.*
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KProperty1
 
@@ -32,28 +29,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
     inner class ExecutionContext(
         val variables: Variables,
-        val requestContext: Context,
-        val dataLoaders: Map<Field.DataLoader<*, *, *>, DataLoader<Any, *>>
-    ) {
-        private val dataRoutines = ConcurrentHashMap<DataLoader<Any, *>, DataLoader<Any, *>.DataScope>()
-
-        private val mutex = Mutex()
-
-        suspend fun loadValue(loader: DataLoader<Any, *>, key: Any, deferred: CompletableDeferred<Any?>, total: Int) {
-            mutex.withLock {
-                val scope = dataRoutines[loader]
-                if (scope == null) {
-                    dataRoutines[loader] = loader.begin(
-                        total,
-                        this@ParallelRequestExecutor
-                    )
-                }
-            }
-
-            dataRoutines.getValue(loader).load(key, deferred)
-        }
-    }
-
+        val requestContext: Context
+    )
     override val coroutineContext: CoroutineContext = Job()
 
     private val argumentsHandler = ArgumentsHandler(schema)
@@ -77,7 +54,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
         val resultMap = plan.toMapAsync {
             writeOperation(
-                ctx = ExecutionContext(Variables(schema, variables, it.variables), context, plan.dataLoaders),
+                ctx = ExecutionContext(Variables(schema, variables, it.variables), context),
                 node = it,
                 operation = it.field as Field.Function<*, *>
             )
@@ -218,11 +195,6 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             when (child) {
                 is Execution.Fragment -> objectNode.setAll(handleFragment(ctx, value, child))
                 else -> {
-                    if (child is Execution.Node) {
-                        val grand = child.children.filter {
-                            it is Execution.Node && it.field is Field.DataLoader<*, *, *>
-                        }
-                    }
                     val ( key, jsonNode) = handleProperty(ctx, value, child, type, node.children.size)
                     objectNode.set(key, jsonNode)
                 }
@@ -303,9 +275,6 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                 is Field.Function<*, *> -> {
                     return handleFunctionProperty(ctx, parentValue, node, field)
                 }
-                is Field.DataLoader<*, *, *> -> {
-                    return handleDataProperty(ctx, parentValue, node, field, parentTimes)
-                }
                 else -> {
                     throw Exception("Unexpected field type: $field, should be Field.Kotlin or Field.Function")
                 }
@@ -313,28 +282,6 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         } else {
             return null
         }
-    }
-
-    private suspend fun <T> handleDataProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.DataLoader<*, *, *>, parentTimes: Int): JsonNode {
-        val preparedValue = field.kql.prepare.invoke(
-            funName = field.name,
-            receiver = parentValue,
-            inputValues = field.arguments,
-            args = node.arguments,
-            ctx = ctx
-        ) ?: TODO("Nullable prepare functions isn't supported")
-
-        val valueDeferred = CompletableDeferred<Any?>()
-        ctx.loadValue(
-            ctx.dataLoaders.getValue(field),
-            preparedValue,
-            valueDeferred,
-            parentTimes
-        )
-        println("Waiting for key: $preparedValue - [parent: $parentValue]")
-        val value = valueDeferred.await()
-        println("Loaded key: $preparedValue | $value - [parent: $parentValue]")
-        return createNode(ctx, value, node, field.returnType)
     }
 
     private suspend fun <T> handleFunctionProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.Function<*, *>): JsonNode {

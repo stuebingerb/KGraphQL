@@ -30,15 +30,6 @@ class DefaultSchema (
 
      private val requestInterpreter : RequestInterpreter = RequestInterpreter(model)
 
-    /*
-     * objects for request handling
-     */
-    private val documentParser = if(configuration.useCachingDocumentParser){
-        CachingDocumentParser(configuration.documentParserCacheMaximumSize)
-    } else {
-        DocumentParser()
-    }
-
     override suspend fun execute(request: String, variables: String?, context: Context): String {
         val parsedVariables = variables
             ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
@@ -53,42 +44,6 @@ class DefaultSchema (
             context = context
         )
     }
-
-//    override suspend fun execute(request: String, variables: String?, context: Context): String {
-//        val parsedVariables = variables
-//                ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
-//                ?: VariablesJson.Empty()
-//        val operations = documentParser.parseDocument(request)
-//
-//
-//        when(operations.size){
-//            0 -> {
-//                throw RequestException("Must provide any operation")
-//            }
-//            1 -> {
-//                return requestExecutor.execute(
-//                        plan = requestInterpreter.createExecutionPlan(operations.first()),
-//                        variables = parsedVariables,
-//                        context = context
-//                )
-//            }
-//            else -> {
-//                if(operations.any { it.name == null }){
-//                    throw RequestException("anonymous operation must be the only defined operation")
-//                } else {
-//                    val executionPlans = operations.associate { it.name to requestInterpreter.createExecutionPlan(it) }
-//
-//                    val operationName = parsedVariables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
-//                            ?: throw RequestException("Must provide an operation name from: ${executionPlans.keys}")
-//
-//                    val executionPlan = executionPlans[operationName]
-//                            ?: throw RequestException("Must provide an operation name from: ${executionPlans.keys}, found $operationName")
-//
-//                    return requestExecutor.execute(executionPlan, parsedVariables, context)
-//                }
-//            }
-//        }
-//    }
 
     override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
 

@@ -36,10 +36,6 @@ open class DocumentParser {
         }
     }
 
-    open fun parseDocument2(input: String) {
-//        return Parser(input).parseDocument()
-    }
-
     internal fun parseSelectionTree(input: String): SelectionTree {
         return parseSelectionTree(ParsingContext(
                 fullString = input,

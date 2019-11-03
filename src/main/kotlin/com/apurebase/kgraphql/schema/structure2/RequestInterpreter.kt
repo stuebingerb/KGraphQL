@@ -9,7 +9,6 @@ import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.execution.ExecutionPlan
 import com.apurebase.kgraphql.schema.execution.TypeCondition
-import com.apurebase.kgraphql.schema.jol.DataLoader
 import com.apurebase.kgraphql.schema.jol.ast.*
 import com.apurebase.kgraphql.schema.jol.ast.DefinitionNode.*
 import com.apurebase.kgraphql.schema.jol.ast.DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode
@@ -30,8 +29,6 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
     inner class InterpreterContext(
         val fragments: Map<String, Pair<Type, SelectionSetNode>>
     ) {
-        internal val dataLoaders = mutableMapOf<Field.DataLoader<*, *, *>, DataLoader<Any, *>>()
-
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
         fun get(node: FragmentSpreadNode): Execution.Fragment? {
@@ -85,8 +82,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         return ExecutionPlan(
             operation.selectionSet.selections.map {
                 root.handleSelection(it as FieldNode, ctx, operation.variableDefinitions)
-            },
-            ctx.dataLoaders
+            }
         )
     }
 
@@ -139,10 +135,6 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
             is Field.Union<*> -> handleUnion(field, node, ctx)
             else -> {
                 validatePropertyArguments(this, field, node)
-
-                if (field is Field.DataLoader<*, *, *>) {
-                    ctx.dataLoaders.putIfAbsent(field, field.kql.dataLoader as DataLoader<Any, *>)
-                }
 
                 return Execution.Node(
                     field = field,
