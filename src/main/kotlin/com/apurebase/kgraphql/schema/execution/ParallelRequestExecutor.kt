@@ -137,12 +137,16 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             value == null -> createNullNode(node, returnType)
 
             //check value, not returnType, because this method can be invoked with element value
-            value is Collection<*> -> {
+            value is Collection<*> || value is Array<*> -> {
+                val values: Collection<*> = when (value) {
+                    is Array<*> -> value.toList()
+                    else -> value as Collection<*>
+                }
                 if (returnType.isList()) {
-                    val valuesMap = value.toMapAsync {
+                    val valuesMap = values.toMapAsync {
                         createNode(ctx, it, node, returnType.unwrapList())
                     }
-                    value.fold(jsonNodeFactory.arrayNode(value.size)) { array, v ->
+                    values.fold(jsonNodeFactory.arrayNode(values.size)) { array, v ->
                         array.add(valuesMap[v])
                     }
                 } else {
@@ -166,8 +170,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     }
 
     private fun <T> createSimpleValueNode(returnType: Type, value: T): JsonNode {
-        val unwrapped = returnType.unwrapped()
-        return when (unwrapped) {
+        return when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
                 serializeScalar(jsonNodeFactory, unwrapped, value)
             }
@@ -252,20 +255,14 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         if (include) {
             when (field) {
                 is Field.Kotlin<*, *> -> {
-                    field.kProperty as KProperty1<T, *>
-                    val rawValue = field.kProperty.get(parentValue)
-                    val value: Any?
-                    value = if (field.transformation != null) {
-                        field.transformation.invoke(
-                                funName = field.name,
-                                receiver = rawValue,
-                                inputValues = field.arguments,
-                                args = node.arguments,
-                                ctx = ctx
-                        )
-                    } else {
-                        rawValue
-                    }
+                    val rawValue = (field.kProperty as KProperty1<T, *>).get(parentValue)
+                    val value: Any? = field.transformation?.invoke(
+                        funName = field.name,
+                        receiver = rawValue,
+                        inputValues = field.arguments,
+                        args = node.arguments,
+                        ctx = ctx
+                    ) ?: rawValue
                     return createNode(ctx, value, node, field.returnType)
                 }
                 is Field.Function<*, *> -> {

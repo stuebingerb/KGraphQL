@@ -20,10 +20,10 @@ fun KParameter.isNotNullable() = !type.isMarkedNullable
 
 fun KClass<*>.isIterable() = isSubclassOf(Iterable::class)
 
-fun KType.isIterable() = jvmErasure.isIterable()
+fun KType.isIterable() = jvmErasure.isIterable() || toString().startsWith("kotlin.Array")
 
 fun KType.getIterableElementType(): KType? {
-    require(jvmErasure.isIterable()) { "KType $this is not collection type" }
+    require(isIterable()) { "KType $this is not collection type" }
     return arguments.firstOrNull()?.type ?: throw NoSuchElementException("KType $this has no type arguments")
 }
 
