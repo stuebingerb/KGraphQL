@@ -254,10 +254,24 @@ class SchemaBuilderTest {
         expect<SchemaException>("Generic types are not supported by GraphQL, found () -> kotlin.Int"){
             KGraphQL.schema {
                 query("lambda"){
-                    resolver { -> LambdaWrapper({ 1 }) }
+                    resolver { -> LambdaWrapper { 1 } }
                 }
             }
         }
+    }
+
+    @Test
+    fun `java arrays should be supported`() {
+        KGraphQL.schema {
+            query("actors") {
+                resolver { ->
+                    arrayOf(
+                        Actor("Actor1", 1),
+                        Actor("Actor2", 2)
+                    )
+                }
+            }
+        }.execute("{actors { name } }").let(::println)
     }
 
     class InputOne(val string:  String)
