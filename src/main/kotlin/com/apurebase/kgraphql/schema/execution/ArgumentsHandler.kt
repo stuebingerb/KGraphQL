@@ -71,8 +71,8 @@ internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(sc
                         }
                     }
                 }
-                value is ListValueNode && parameter.type.isNotList() -> {
-                    throw RequestException("Invalid list value passed to non-list argument")
+                value is ObjectValueNode && parameter.type.isNotList() -> {
+                    transformPropertyObjectValue(parameter, value, variables)
                 }
                 else -> throw RequestException("Non string arguments are not supported yet")
             }

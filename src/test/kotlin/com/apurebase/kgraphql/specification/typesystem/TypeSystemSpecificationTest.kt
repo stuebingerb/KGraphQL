@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 @Specification("3 Type System")
 class TypeSystemSpecificationTest {

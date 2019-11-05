@@ -68,9 +68,10 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
         val root = when (operation.operation) {
             OperationTypeNode.QUERY -> schemaModel.query
-            OperationTypeNode.MUTATION -> schemaModel.mutation
-            OperationTypeNode.SUBSCRIPTION -> TODO("Not supported")
+            OperationTypeNode.MUTATION -> schemaModel.mutation ?: throw RequestException("Mutations are not supported on this schema")
+            OperationTypeNode.SUBSCRIPTION -> schemaModel.subscription ?: throw RequestException("Subscriptions are not supported on this schema")
         }
+
         val fragmentDefinitions = test.filterIsInstance<FragmentDefinitionNode>().map { fragmentDef ->
             val type = schemaModel.allTypesByName[fragmentDef.typeCondition.name.value] ?: throw TODO("Handle")
 
@@ -83,7 +84,9 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
             operation.selectionSet.selections.map {
                 root.handleSelection(it as FieldNode, ctx, operation.variableDefinitions)
             }
-        )
+        ).also {
+            it.isSubscription = operation.operation == OperationTypeNode.SUBSCRIPTION
+        }
     }
 
     private fun handleReturnType(ctx: InterpreterContext, type: Type, requestNode: FieldNode) =
@@ -192,7 +195,9 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
     private fun handleUnsupportedOperations(keys: List<String>) {
         keys.forEach { key ->
-            if (!schemaModel.query.hasField(key) && !schemaModel.mutation.hasField(key)) {
+            if (!schemaModel.query.hasField(key)
+                    && (schemaModel.mutation == null || !schemaModel.mutation.hasField(key))
+                    && (schemaModel.subscription == null || !schemaModel.subscription.hasField(key))) {
                 throw RequestException("$key is not supported by this schema")
             }
         }

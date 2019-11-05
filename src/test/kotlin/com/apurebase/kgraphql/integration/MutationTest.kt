@@ -7,7 +7,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 
 class MutationTest : BaseSchemaTest() {

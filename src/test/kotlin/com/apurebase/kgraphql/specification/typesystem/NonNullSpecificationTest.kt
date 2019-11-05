@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 @Specification("3.1.8 Non-null")
 class NonNullSpecificationTest {

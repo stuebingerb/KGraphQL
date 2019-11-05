@@ -6,10 +6,12 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 class ContextSpecificationTest {
+
   @Test
+  @Suppress("UNUSED_ANONYMOUS_PARAMETER")
   fun `query resolver should not return context param`() {
     val schema = defaultSchema {
       query("sample") {
@@ -23,6 +25,7 @@ class ContextSpecificationTest {
   }
 
   @Test
+  @Suppress("UNUSED_ANONYMOUS_PARAMETER")
   fun `mutation resolver should not return context param`() {
     val schema = defaultSchema {
       mutation("sample") {

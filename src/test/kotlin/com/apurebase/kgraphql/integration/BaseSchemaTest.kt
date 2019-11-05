@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.*
-import org.junit.jupiter.api.AfterEach
+import org.junit.After
 import java.io.ByteArrayInputStream
 
 
@@ -236,7 +236,7 @@ abstract class BaseSchemaTest {
         type<Actor>{
             description = "An actor is a person who portrays a character in a performance"
             property<Boolean?>("isOld") {
-                resolver { actor -> (actor.age > 500) as Boolean? }
+                resolver { actor -> (actor.age > 500) }
             }
             property<String>("picture") {
                 resolver { actor, big : Boolean? ->
@@ -284,7 +284,7 @@ abstract class BaseSchemaTest {
         }
     }
 
-    @AfterEach
+    @After
     fun cleanup() = createdActors.clear()
 
     fun execute(query: String, variables : String? = null) = deserialize(testedSchema.executeBlocking(query, variables))

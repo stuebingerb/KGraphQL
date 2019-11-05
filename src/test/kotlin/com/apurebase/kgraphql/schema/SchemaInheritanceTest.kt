@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.util.*
 
 

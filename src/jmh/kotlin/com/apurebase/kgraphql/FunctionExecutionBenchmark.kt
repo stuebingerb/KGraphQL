@@ -1,16 +1,9 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import org.openjdk.jmh.annotations.Benchmark
-import org.openjdk.jmh.annotations.Fork
-import org.openjdk.jmh.annotations.Measurement
-import org.openjdk.jmh.annotations.OutputTimeUnit
-import org.openjdk.jmh.annotations.Param
-import org.openjdk.jmh.annotations.Scope
-import org.openjdk.jmh.annotations.Setup
-import org.openjdk.jmh.annotations.State
-import org.openjdk.jmh.annotations.Warmup
+import org.openjdk.jmh.annotations.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 import java.util.function.BiFunction
@@ -45,7 +38,8 @@ open class FunctionExecutionBenchmark {
     @Setup
     fun setup(){
         if(useFunctionWrapper){
-            functionWrapper = FunctionWrapper.ArityTwo(implementation, false)
+            val implSuspend: suspend (Int, String) -> String = { int, string -> implementation(int, string) }
+            functionWrapper = FunctionWrapper.ArityTwo(implSuspend, false)
         } else {
             biFunction = BiFunction(implementation)
         }
@@ -53,10 +47,12 @@ open class FunctionExecutionBenchmark {
 
     @Benchmark
     fun benchmarkFunctionExecution(): String? {
-        if(useFunctionWrapper){
-            return functionWrapper.invoke(arg1, arg2)
+        return if (useFunctionWrapper) {
+            runBlocking {
+                functionWrapper.invoke(arg1, arg2)
+            }
         } else {
-            return biFunction.apply(arg1, arg2)
+            biFunction.apply(arg1, arg2)
         }
     }
 

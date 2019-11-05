@@ -1,11 +1,7 @@
 package com.apurebase.kgraphql.request
 
 import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.request.graph.DirectiveInvocation
-import com.apurebase.kgraphql.request.graph.Fragment
-import com.apurebase.kgraphql.request.graph.SelectionNode
-import com.apurebase.kgraphql.request.graph.SelectionSetBuilder
-import com.apurebase.kgraphql.request.graph.SelectionTree
+import com.apurebase.kgraphql.request.graph.*
 import com.apurebase.kgraphql.schema.jol.Parser
 
 /**
@@ -21,10 +17,11 @@ open class DocumentParser {
     open fun parseDocument(input: String) : List<Operation> {
         val request = validateAndFilterRequest(input)
         val documentTokens = createDocumentTokens(tokenizeRequest(request))
-        val fragments = Document.Fragments(documentTokens.fragmentsTokens) { fragments, (name, typeCondition, graphTokens) ->
+        val fragments =
+            Document.Fragments(documentTokens.fragmentsTokens) { fragments, (name, typeCondition, graphTokens) ->
             val fragmentGraph = parseSelectionTree(ParsingContext(input, graphTokens, fragments))
             Fragment.External("...$name", fragmentGraph, typeCondition)
-        }
+            }
 
         return documentTokens.operationTokens.map { (name, type, operationVariables, graphTokens) ->
             Operation (
@@ -40,7 +37,7 @@ open class DocumentParser {
         return parseSelectionTree(ParsingContext(
                 fullString = input,
                 tokens = tokenizeRequest(input),
-                fragments = Document.Fragments(emptyList()) { _, _ ->  throw IllegalStateException() }
+            fragments = Document.Fragments(emptyList()) { _, _ -> throw IllegalStateException() }
         ))
     }
 
@@ -104,45 +101,45 @@ open class DocumentParser {
     private fun parseDirectives(ctx: ParsingContext) : List<DirectiveInvocation>? {
         val directives = arrayListOf<DirectiveInvocation>()
         var nextDirective : DirectiveInvocation? = parseDirective(ctx, true)
-        if(nextDirective != null){
+        return if (nextDirective != null) {
             while(nextDirective != null){
                 ctx.next()
                 directives.add(nextDirective)
                 nextDirective = parseDirective(ctx)
             }
-            return directives
+            directives
         } else {
-            return null
+            null
         }
     }
 
     private fun parseDirective(ctx: ParsingContext, following : Boolean = false) : DirectiveInvocation? {
         val directiveName = if(following) ctx.peekToken() else ctx.currentTokenOrNull()
-        if(directiveName != null && directiveName.startsWith("@")){
+        return if (directiveName != null && directiveName.startsWith("@")) {
             if(following) ctx.next()
             if(ctx.peekToken() == "("){
                 ctx.next(1)
                 val arguments = parseArguments(ctx)
-                return (DirectiveInvocation(directiveName, arguments))
+                (DirectiveInvocation(directiveName, arguments))
             } else {
-                return (DirectiveInvocation(directiveName))
+                (DirectiveInvocation(directiveName))
             }
         } else {
-            return null
+            null
         }
     }
 
     private fun parseInlineFragment(ctx: ParsingContext, directives: List<DirectiveInvocation>?): Fragment.Inline {
-        when{
+        return when {
             ctx.peekToken() == "on" -> {
                 val typeCondition = ctx.peekToken(2)
                 ctx.next(3)
                 val subGraphTokens = ctx.traverseObject()
-                return Fragment.Inline(parseSelectionTree(ctx.fullString, subGraphTokens, ctx.fragments), typeCondition, null)
+                Fragment.Inline(parseSelectionTree(ctx.fullString, subGraphTokens, ctx.fragments), typeCondition, null)
             }
             ctx.currentToken() == "{" && directives?.isNotEmpty() ?: false -> {
                 val subGraphTokens = ctx.traverseObject()
-                return Fragment.Inline(parseSelectionTree(ctx.fullString, subGraphTokens, ctx.fragments), null, directives)
+                Fragment.Inline(parseSelectionTree(ctx.fullString, subGraphTokens, ctx.fragments), null, directives)
             }
             else -> throw RequestException("expected type condition or directive after '...' in inline fragment")
         }
@@ -174,14 +171,29 @@ open class DocumentParser {
                     if(deltaOfClosingBracket == -1) throw RequestException("Missing closing ']' in arguments ${argTokens.joinToString(" ")}")
                     val indexOfClosingBracket = i + deltaOfClosingBracket
                     //exclude '[' and ']'
-                    arguments.put(argumentName, argTokens.subList(i + 1, indexOfClosingBracket))
+                    arguments[argumentName] = argTokens.subList(i + 1, indexOfClosingBracket)
                     i += deltaOfClosingBracket + 1
                 }
                 argTokens[i+1] == ":" && argTokens[i + 2] == "{" -> {
-                    throw UnsupportedOperationException("Object literal arguments are not supported yet")
+                    val argumentName = argTokens[i]
+                    i += 2 // effectively 'i' is index of '{'
+                    var count = 1
+                    val list = mutableListOf<String>()
+                    list.add(argTokens[i])
+                    while (count > 0) {
+                        if (i == argTokens.size) throw RequestException("Missing closing '}' in arguments ${argTokens.joinToString(" ")}")
+                        val value = argTokens[++i]
+                        when(value) {
+                            "{" -> count++
+                            "}" -> count--
+                        }
+                        list.add(value)
+                    }
+                    arguments[argumentName] = list
+                    i++
                 }
                 argTokens[i+1] == ":" ->{
-                    arguments.put(argTokens[i], argTokens[i + 2])
+                    arguments[argTokens[i]] = argTokens[i + 2]
                     i += 3
                 }
                 else -> {
@@ -214,3 +226,4 @@ open class DocumentParser {
         }
     }
 }
+

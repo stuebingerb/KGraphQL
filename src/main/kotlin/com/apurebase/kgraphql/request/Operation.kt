@@ -11,7 +11,7 @@ data class Operation(
 ) {
 
     enum class Action {
-        QUERY, MUTATION;
+        QUERY, MUTATION, SUBSCRIPTION;
 
         companion object {
             fun parse(input: String?) = input?.let {

@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.schema.jol.dedentBlockStringValue
 import com.apurebase.kgraphql.schema.jol.getBlockStringIndentation
 import com.apurebase.kgraphql.schema.jol.printBlockString
 import org.amshove.kluent.shouldEqual
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 class DedentBlockStringTest {
 

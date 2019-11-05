@@ -9,7 +9,7 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.time.LocalDate
 import java.util.*
 

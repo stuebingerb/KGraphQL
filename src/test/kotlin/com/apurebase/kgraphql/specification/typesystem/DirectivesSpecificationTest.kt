@@ -6,7 +6,7 @@ import com.apurebase.kgraphql.integration.BaseSchemaTest
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 @Specification("3.2 Directives")
 class DirectivesSpecificationTest : BaseSchemaTest() {

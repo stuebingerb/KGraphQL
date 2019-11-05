@@ -137,7 +137,7 @@ private fun createOperationTokens(tokens : List<String>, startIndex: Int) : Pair
                 index += variablesTokens.size +1
             }
             type == null -> {
-                if(token.equals("query", true) || token.equals("mutation", true)){
+                if(token.equals("query", true) || token.equals("mutation", true) || token.equals("subscription", true)){
                     type = token
                 } else {
                     throw RequestException("Unexpected operation type $token")

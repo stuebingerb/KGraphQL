@@ -1,9 +1,5 @@
 package com.apurebase.kgraphql.schema.execution
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.request.Variables
@@ -18,6 +14,10 @@ import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure2.Field
 import com.apurebase.kgraphql.schema.structure2.InputValue
 import com.apurebase.kgraphql.schema.structure2.Type
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.coroutines.CoroutineContext
@@ -54,6 +54,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
         val resultMap = plan.toMapAsync {
             writeOperation(
+                isSubscription = plan.isSubscription,
                 ctx = ExecutionContext(Variables(schema, variables, it.variables), context),
                 node = it,
                 operation = it.field as Field.Function<*, *>
@@ -89,9 +90,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                 val (item, result) = channel.receive()
                 resultMap[item] = result
             } catch (e: Exception) {
-                jobs.forEach {
-                    it.cancel()
-                }
+                jobs.forEach { job: Job -> job.cancel() }
                 throw e
             }
         }
@@ -100,9 +99,11 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         resultMap
     }
 
-    private suspend fun <T> writeOperation(ctx: ExecutionContext, node: Execution.Node, operation: FunctionWrapper<T>): JsonNode {
+    private suspend fun <T> writeOperation(isSubscription: Boolean, ctx: ExecutionContext, node: Execution.Node, operation: FunctionWrapper<T>): JsonNode {
         node.field.checkAccess(null, ctx.requestContext)
         val operationResult: T? = operation.invoke(
+                isSubscription = isSubscription,
+                children = node.children,
                 funName = node.field.name,
                 receiver = null,
                 inputValues = node.field.arguments,
@@ -139,12 +140,16 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             value == null -> createNullNode(node, returnType)
 
             //check value, not returnType, because this method can be invoked with element value
-            value is Collection<*> -> {
+            value is Collection<*> || value is Array<*> -> {
+                val values: Collection<*> = when (value) {
+                    is Array<*> -> value.toList()
+                    else -> value as Collection<*>
+                }
                 if (returnType.isList()) {
-                    val valuesMap = value.toMapAsync {
+                    val valuesMap = values.toMapAsync {
                         createNode(ctx, it, node, returnType.unwrapList())
                     }
-                    value.fold(jsonNodeFactory.arrayNode(value.size)) { array, v ->
+                    values.fold(jsonNodeFactory.arrayNode(values.size)) { array, v ->
                         array.add(valuesMap[v])
                     }
                 } else {
@@ -168,8 +173,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     }
 
     private fun <T> createSimpleValueNode(returnType: Type, value: T): JsonNode {
-        val unwrapped = returnType.unwrapped()
-        return when (unwrapped) {
+        return when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
                 serializeScalar(jsonNodeFactory, unwrapped, value)
             }
@@ -258,18 +262,13 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             when (field) {
                 is Field.Kotlin<*, *> -> {
                     val rawValue = (field.kProperty as KProperty1<T, *>).get(parentValue)
-                    val value: Any?
-                    value = if (field.transformation != null) {
-                        field.transformation!!.invoke(
-                                funName = field.name,
-                                receiver = rawValue,
-                                inputValues = field.arguments,
-                                args = node.arguments,
-                                ctx = ctx
-                        )
-                    } else {
-                        rawValue
-                    }
+                    val value: Any? = field.transformation?.invoke(
+                        funName = field.name,
+                        receiver = rawValue,
+                        inputValues = field.arguments,
+                        args = node.arguments,
+                        ctx = ctx
+                    ) ?: rawValue
                     return createNode(ctx, value, node, field.returnType)
                 }
                 is Field.Function<*, *> -> {
@@ -310,6 +309,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     }
 
     internal suspend fun <T> FunctionWrapper<T>.invoke(
+            isSubscription: Boolean = false,
+            children: Collection<Execution> = emptyList(),
             funName: String,
             receiver: Any?,
             inputValues: List<InputValue<*>>,
@@ -317,12 +318,14 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             ctx: ExecutionContext
     ): T? {
         val transformedArgs = argumentsHandler.transformArguments(funName, inputValues, args, ctx.variables, ctx.requestContext)
-
         //exceptions are not caught on purpose to pass up business logic errors
-        return if (hasReceiver) {
-            invoke(receiver, *transformedArgs.toTypedArray())
-        } else {
-            invoke(*transformedArgs.toTypedArray())
+        return when {
+            hasReceiver -> invoke(receiver, *transformedArgs.toTypedArray())
+            isSubscription -> {
+                val subscriptionArgs = children.map { (it as Execution.Node).aliasOrKey }
+                invoke(transformedArgs, subscriptionArgs, objectWriter)
+            }
+            else -> invoke(*transformedArgs.toTypedArray())
         }
     }
 

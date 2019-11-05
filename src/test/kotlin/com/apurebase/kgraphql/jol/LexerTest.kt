@@ -6,10 +6,8 @@ import com.apurebase.kgraphql.schema.jol.ast.Token
 import com.apurebase.kgraphql.schema.jol.ast.TokenKindEnum.*
 import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import org.amshove.kluent.*
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.Test
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LexerTest {
 
     private fun lexOne(str: String, block: Token.() -> Unit = { }) {

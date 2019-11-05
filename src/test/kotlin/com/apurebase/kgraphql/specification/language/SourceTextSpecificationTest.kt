@@ -12,7 +12,7 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 @Specification("2.1. Source Text")
 class SourceTextSpecificationTest {

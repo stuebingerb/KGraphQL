@@ -14,10 +14,8 @@ import com.apurebase.kgraphql.schema.jol.ast.TypeNode.NamedTypeNode
 import com.apurebase.kgraphql.schema.jol.ast.ValueNode.*
 import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import org.amshove.kluent.*
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.Test
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ParserTest {
 
     private fun parse(source: String, options: Parser.Options? = null) = try {

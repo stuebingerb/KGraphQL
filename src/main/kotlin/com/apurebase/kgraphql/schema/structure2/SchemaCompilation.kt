@@ -53,6 +53,7 @@ class SchemaCompilation(
     fun perform(): DefaultSchema {
         val queryType = handleQueries()
         val mutationType = handleMutations()
+        val subscriptionType = handleSubscriptions()
         definition.objects.forEach { handleObjectType(it.kClass) }
         definition.inputObjects.forEach { handleInputType(it.kClass) }
 
@@ -63,7 +64,8 @@ class SchemaCompilation(
 
         val model =  SchemaModel (
             query = queryType,
-            mutation = mutationType,
+            mutation = if (mutationType.fields!!.isEmpty()) null else mutationType,
+            subscription = if (subscriptionType.fields!!.isEmpty()) null else subscriptionType,
 
             enums = enums,
             scalars = scalars,
@@ -122,6 +124,10 @@ class SchemaCompilation(
         return Type.OperationObject("Mutation", "Mutation object", definition.mutations.map { handleOperation(it) })
     }
 
+    private fun handleSubscriptions() : Type {
+        return Type.OperationObject("Subscription", "Subscription object", definition.subscriptions.map { handleOperation(it) })
+    }
+
     @Suppress("USELESS_CAST") // We are casting as __Schema so we don't get proxied types. https://github.com/aPureBase/KGraphQL/issues/45
     private fun introspectionSchemaQuery() = handleOperation(
         QueryDef("__schema", FunctionWrapper.on<__Schema> { schemaProxy as __Schema })
@@ -150,14 +156,16 @@ class SchemaCompilation(
         kType.isIterable() -> handleCollectionType(kType, typeCategory)
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
-        kType.arguments.isNotEmpty() ->
-            throw SchemaException("Generic types are not supported by GraphQL, found $kType")
+        kType.arguments.isNotEmpty() -> throw SchemaException("Generic types are not supported by GraphQL, found $kType")
         else -> handleSimpleType(kType, typeCategory)
     }
 
     private fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {
-        val type = kType.getIterableElementType()
-                ?: throw SchemaException("Cannot handle collection without element type")
+        val type = when {
+            kType.getIterableElementType() != null -> kType.getIterableElementType()
+            kType.arguments.size == 1 -> kType.arguments.first().type
+            else -> null
+        } ?: throw throw SchemaException("Cannot handle collection without element type")
 
         val nullableListType = Type.AList(handleSimpleType(type, typeCategory))
         return applyNullability(kType, nullableListType)

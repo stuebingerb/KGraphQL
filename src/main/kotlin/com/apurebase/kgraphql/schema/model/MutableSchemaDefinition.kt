@@ -35,7 +35,8 @@ data class MutableSchemaDefinition (
         BUILT_IN_TYPE.LONG
     ),
     private val mutations: ArrayList<MutationDef<*>> = arrayListOf(),
-    private val enums: ArrayList<TypeDef.Enumeration<*>> = arrayListOf(
+    private val subscriptions: ArrayList<SubscriptionDef<*>> = arrayListOf(),
+        private val enums: ArrayList<TypeDef.Enumeration<*>> = arrayListOf(
         TypeDef.Enumeration (
             "__" + TypeKind::class.defaultKQLTypeName(),
             TypeKind::class,
@@ -70,7 +71,7 @@ data class MutableSchemaDefinition (
             }
         }
 
-        return SchemaDefinition(compiledObjects, queries, scalars, mutations, enums, unions, directives, inputObjects)
+        return SchemaDefinition(compiledObjects, queries, scalars, mutations, subscriptions, enums, unions, directives, inputObjects)
     }
 
     private fun validateUnionMember(union: TypeDef.Union,
@@ -107,6 +108,13 @@ data class MutableSchemaDefinition (
             throw SchemaException("Cannot add mutation with duplicated name ${mutation.name}")
         }
         mutations.add(mutation)
+    }
+
+    fun addSubscription(subscription: SubscriptionDef<*>){
+        if(subscription.checkEqualName(subscriptions)){
+            throw SchemaException("Cannot add mutation with duplicated name ${subscription.name}")
+        }
+        subscriptions.add(subscription)
     }
 
     fun addScalar(scalar: TypeDef.Scalar<*>) = addType(scalar, scalars, "Scalar")
@@ -173,3 +181,4 @@ private fun create__DirectiveDefinition() = TypeDSL(emptyList(), __Directive::cl
 }.toKQLObject()
 
 private fun <T> List<T>.containsAny(vararg elements: T) = elements.filter { this.contains(it) }.any()
+

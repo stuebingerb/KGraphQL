@@ -7,7 +7,7 @@ import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import kotlinx.coroutines.delay
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import kotlin.random.Random
 
 class ParallelExecutionTest {

@@ -1,0 +1,11 @@
+name: Testing
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker://gradle
+      - name: Run a one-line script
+        run: gradle jacocoTestReport coveralls

@@ -1,11 +1,11 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.Schema
-import org.junit.Test
 import org.openjdk.jmh.annotations.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
+import org.junit.Test
 
 @State(Scope.Benchmark)
 @Warmup(iterations = 5)
@@ -45,7 +45,7 @@ open class ParallelExecutionBenchmark {
     }
 
     @Benchmark @BenchmarkMode(Mode.AverageTime)
-    fun queryBenchmark(): String = schema.execute( "{ " + (0..999).map { "automated-${it}" }.joinToString(", ") + " }" )
+    fun queryBenchmark(): String = schema.executeBlocking( "{ " + (0..999).map { "automated-${it}" }.joinToString(", ") + " }" )
 
     @Test
     fun benchmarkWithThreads(){

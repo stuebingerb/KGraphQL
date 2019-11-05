@@ -25,8 +25,8 @@ sealed class ValueNode(override val loc: Location?): ASTNode() {
     class ObjectValueNode(val fields: List<ObjectFieldNode>, loc: Location?): ValueNode(loc) {
         class ObjectFieldNode(
             loc: Location?,
-            name: NameNode,
-            value: ValueNode
+            val name: NameNode,
+            val value: ValueNode
         ): ValueNode(loc)
     }
 
@@ -39,6 +39,7 @@ sealed class ValueNode(override val loc: Location?): ASTNode() {
         is NullValueNode -> "null"
         is EnumValueNode -> value
         is ListValueNode -> values.joinToString(prefix = "[", postfix = "]")
+        is ObjectValueNode -> fields.joinToString { "${it.name.value}: ${it.value.valueNodeName}" }
         else -> TODO("Add support for object")
     }
 

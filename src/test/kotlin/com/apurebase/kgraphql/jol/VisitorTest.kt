@@ -1,10 +1,10 @@
 package com.apurebase.kgraphql.jol
 
 import com.apurebase.kgraphql.schema.jol.Parser
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import org.junit.Ignore
+import org.junit.Test
 
-@Disabled("Visitors will probably be deleted again.")
+@Ignore("Will probably remove this all together")
 class VisitorTest {
 
     @Test
