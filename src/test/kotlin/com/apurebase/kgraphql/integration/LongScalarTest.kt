@@ -3,11 +3,9 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Ignore
 import org.junit.Test
 
 
-@Ignore("Long isn't supported by the specification.")
 class LongScalarTest {
 
     @Test
@@ -39,7 +37,6 @@ class LongScalarTest {
     data class VeryLong(val long: Long)
 
     @Test
-    @Ignore("Long should not be natively supported. ")
     fun `Schema may declare custom long scalar type`(){
         val schema = KGraphQL.schema {
             longScalar<VeryLong> {

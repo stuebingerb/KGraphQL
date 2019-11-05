@@ -3,8 +3,8 @@ package com.apurebase.kgraphql.specification.introspection
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest.Companion.INTROSPECTION_QUERY
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import org.amshove.kluent.shouldNotContain
-import org.amshove.kluent.shouldNotEqual
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.collection.IsEmptyCollection.empty
@@ -45,9 +45,9 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        expect<RequestException>("Property __typename on String does not exist"){
+        invoking {
             schema.executeBlocking("{sample{string{__typename}}}")
-        }
+        } shouldThrow GraphQLError::class withMessage "Property __typename on String does not exist"
     }
 
     data class Union1(val one : String)

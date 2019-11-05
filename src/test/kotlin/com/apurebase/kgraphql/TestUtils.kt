@@ -1,15 +1,12 @@
 package com.apurebase.kgraphql
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.amshove.kluent.shouldEqual
-import org.hamcrest.CoreMatchers
-import org.hamcrest.FeatureMatcher
-import org.hamcrest.MatcherAssert
+import org.hamcrest.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.instanceOf
 
 val objectMapper = jacksonObjectMapper()
@@ -93,5 +90,3 @@ class ExceptionMessageMatcher(message: String?)
 
     override fun featureValueOf(actual: Exception?): String? = actual?.message
 }
-
-

@@ -1,11 +1,10 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -31,9 +30,9 @@ class InterfacesSpecificationTest {
 
     @Test
     fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`(){
-        expect<RequestException>("Property stuff on SimpleInterface does not exist"){
+        invoking {
             schema.executeBlocking("{simple{exe, stuff}}")
-        }
+        } shouldThrow GraphQLError::class withMessage "Property stuff on SimpleInterface does not exist"
     }
 
     @Test

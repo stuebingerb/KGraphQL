@@ -3,12 +3,13 @@ package com.apurebase.kgraphql.schema
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.request.CachingDocumentParser
-import com.apurebase.kgraphql.request.DocumentParser
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.execution.ParallelRequestExecutor
 import com.apurebase.kgraphql.schema.execution.RequestExecutor
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.jol.Parser
+import com.apurebase.kgraphql.schema.jol.ast.NameNode
+import com.apurebase.kgraphql.schema.jol.ast.ValueNode
 import com.apurebase.kgraphql.schema.structure2.LookupSchema
 import com.apurebase.kgraphql.schema.structure2.RequestInterpreter
 import com.apurebase.kgraphql.schema.structure2.SchemaModel
@@ -23,12 +24,14 @@ class DefaultSchema (
 ) : Schema , __Schema by model, LookupSchema {
 
     companion object {
-        const val OPERATION_NAME_PARAM = "operationName"
+        val OPERATION_NAME_PARAM = NameNode("operationName", null)
     }
 
     private val requestExecutor : RequestExecutor = ParallelRequestExecutor(this)
 
      private val requestInterpreter : RequestInterpreter = RequestInterpreter(model)
+
+    private val cacheParser: CachingDocumentParser by lazy { CachingDocumentParser(configuration.documentParserCacheMaximumSize) }
 
     override suspend fun execute(request: String, variables: String?, context: Context): String {
         val parsedVariables = variables

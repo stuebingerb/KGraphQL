@@ -2,11 +2,11 @@ package com.apurebase.kgraphql.specification.typesystem
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
@@ -16,7 +16,7 @@ import org.junit.Test
 @Specification("3.1.7 Lists")
 class ListsSpecificationTest{
 
-    val objectMapper = jacksonObjectMapper()
+    private val objectMapper = jacksonObjectMapper()
 
     @Test
     fun `list arguments are valid`(){
@@ -27,6 +27,7 @@ class ListsSpecificationTest{
         }
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = listOf("GAGA", "DADA", "PADA")
         })
 
@@ -45,6 +46,7 @@ class ListsSpecificationTest{
         }
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = listOf("GAGA", null, "DADA", "PADA")
         })
 
@@ -61,14 +63,16 @@ class ListsSpecificationTest{
         }
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = listOf("GAGA", null, "DADA", "PADA")
         })
 
-        val expectedMessage =
-                "Invalid argument value [GAGA, null, DADA, PADA] from variable \$list, " +
-                "expected list with non null arguments"
-        expect<RequestException>(expectedMessage){
+        invoking {
             schema.executeBlocking("query(\$list: [String!]!){list(list: \$list)}", variables)
+        } shouldThrow GraphQLError::class with {
+            println(prettyPrint())
+            message shouldEqual "Invalid argument value [GAGA, null, DADA, PADA] from variable \$list, " +
+                    "expected list with non null arguments"
         }
     }
 
@@ -82,6 +86,7 @@ class ListsSpecificationTest{
 
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = "GAGA"
         })
 
@@ -99,6 +104,7 @@ class ListsSpecificationTest{
 
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = null
         })
 
@@ -115,6 +121,7 @@ class ListsSpecificationTest{
         }
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = listOf("GAGA", "DADA", "PADA")
         })
 

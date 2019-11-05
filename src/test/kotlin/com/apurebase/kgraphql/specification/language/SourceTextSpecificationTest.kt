@@ -1,15 +1,11 @@
 package com.apurebase.kgraphql.specification.language
 
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.assertNoErrors
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.executeEqualQueries
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -92,13 +88,13 @@ class SourceTextSpecificationTest {
     @Test
     @Specification("2.1.9 Names")
     fun `names are case sensitive`(){
-        expect<RequestException>("Property FIZZ on Query does not exist"){
+        invoking {
             deserialize(schema.executeBlocking("{FIZZ}"))
-        }
+        } shouldThrow GraphQLError::class withMessage "Property FIZZ on Query does not exist"
 
-        expect<RequestException>("Property Fizz on Query does not exist"){
+        invoking {
             deserialize(schema.executeBlocking("{Fizz}"))
-        }
+        } shouldThrow GraphQLError::class withMessage "Property Fizz on Query does not exist"
 
         val mapLowerCase = deserialize(schema.executeBlocking("{fizz}"))
         assertNoErrors(mapLowerCase)

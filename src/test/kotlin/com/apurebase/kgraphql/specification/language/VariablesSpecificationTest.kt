@@ -55,7 +55,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    @Ignore("Should this really be supported?")
+    @Ignore("I don't think this should actually be supported?")
     fun `query with variables and default value pointing to another variable`(){
         val map = execute(
                 query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int = \$defaultAge, \$defaultAge : Int!) " +

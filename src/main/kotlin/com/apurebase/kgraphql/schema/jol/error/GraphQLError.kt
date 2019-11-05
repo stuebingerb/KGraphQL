@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.schema.jol.ast.ASTNode
 import com.apurebase.kgraphql.schema.jol.ast.Location.Companion.getLocation
 import com.apurebase.kgraphql.schema.jol.ast.Source
 
-class GraphQLError(
+open class GraphQLError(
 
     /**
      * A message describing the Error for debugging purposes.
@@ -45,8 +45,10 @@ class GraphQLError(
     /**
      * The original error thrown from a field resolver during execution.
      */
-    val originalError: Exception? = null
+    val originalError: Throwable? = null
 ) : Exception(message) {
+
+    constructor(message: String, node: ASTNode?) : this(message, nodes = node?.let(::listOf))
 
     /**
      * An array of { line, column } locations within the source GraphQL document

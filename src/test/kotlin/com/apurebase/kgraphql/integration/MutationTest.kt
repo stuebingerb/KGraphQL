@@ -1,10 +1,8 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.assertNoErrors
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -37,22 +35,27 @@ class MutationTest : BaseSchemaTest() {
 
     @Test
     fun `invalid mutation name`(){
-        expect<RequestException>("Property createBanana on Mutation does not exist"){
+        invoking {
             execute("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
-        }
+        } shouldThrow GraphQLError::class withMessage "Property createBanana on Mutation does not exist"
     }
 
     @Test
     fun `invalid argument type`(){
-        expect<RequestException>("argument '\"fwfwf\"' is not valid value of type Int"){
+        invoking {
             execute("mutation {createActor(name: \"${testActor.name}\", age: \"fwfwf\"){age}}")
+        } shouldThrow GraphQLError::class with {
+            message shouldEqual "Cannot coerce \"fwfwf\" to numeric constant"
         }
+
     }
 
     @Test
     fun `invalid arguments number`(){
-        expect<RequestException>("createActor does support arguments [name, age]. Found arguments [name, age, bananan]"){
+        invoking {
             execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
+        } shouldThrow ValidationException::class with {
+            message shouldEqual "createActor does support arguments [name, age]. Found arguments [name, age, bananan]"
         }
     }
 

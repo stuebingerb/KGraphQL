@@ -1,12 +1,10 @@
 package com.apurebase.kgraphql.request
 
-import com.apurebase.kgraphql.ExecutionException
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.getIterableElementType
-import com.apurebase.kgraphql.isIterable
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.schema.jol.ast.TypeNode
 import com.apurebase.kgraphql.schema.jol.ast.ValueNode
 import com.apurebase.kgraphql.schema.jol.ast.VariableDefinitionNode
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import com.apurebase.kgraphql.schema.structure2.LookupSchema
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -29,7 +27,7 @@ data class Variables(
 
         validateVariable(typeDefinitionProvider.typeReference(kType), typeName, variable)
 
-        var value = variablesJson.get(kClass, kType, keyNode.name.value)
+        var value = variablesJson.get(kClass, kType, keyNode.name)
         if(value == null && variable.defaultValue != null){
             value = transformDefaultValue(transform, variable.defaultValue, kClass)
         }
@@ -38,8 +36,9 @@ data class Variables(
             if (isIterable && kType.getIterableElementType()?.isMarkedNullable == false) {
                 for (element in value as Iterable<*>) {
                     if (element == null) {
-                        throw RequestException(
-                                "Invalid argument value $value from variable $${keyNode.name.value}, expected list with non null arguments"
+                        throw GraphQLError(
+                            "Invalid argument value $value from variable $${keyNode.name.value}, expected list with non null arguments",
+                            keyNode
                         )
                     }
                 }
@@ -54,9 +53,7 @@ data class Variables(
         return when {
             transformedDefaultValue == null -> null
             kClass.isInstance(transformedDefaultValue) -> transformedDefaultValue as T?
-            else -> {
-                throw ExecutionException("Invalid transform function returned ")
-            }
+            else -> throw ExecutionException("Invalid transform function returned")
         }
     }
 
@@ -74,7 +71,10 @@ data class Variables(
         }
 
         if(invalidName || invalidIsList || invalidNullability || invalidElementNullability){
-            throw RequestException("Invalid variable $${variable.variable.name.value} argument type ${variableType.nameNode.value}, expected $expectedType")
+            throw GraphQLError(
+                "Invalid variable $${variable.variable.name.value} argument type ${variableType.nameNode.value}, expected $expectedType",
+                variable
+            )
         }
     }
 }

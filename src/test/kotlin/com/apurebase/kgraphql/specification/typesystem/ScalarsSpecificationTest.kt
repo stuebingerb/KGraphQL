@@ -1,12 +1,13 @@
 package com.apurebase.kgraphql.specification.typesystem
 
 import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.schema.jol.ast.ValueNode
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -23,12 +24,12 @@ class ScalarsSpecificationTest {
         val uuid = UUID.randomUUID()
         val testedSchema = KGraphQL.schema {
             stringScalar<UUID> {
-                description = "unique identifier of object"
+                description = "a unique identifier of object"
 
                 coercion = object : StringScalarCoercion<UUID> {
                     override fun serialize(instance: UUID): String = instance.toString()
 
-                    override fun deserialize(raw: String): UUID = UUID.fromString(raw)
+                    override fun deserialize(raw: String, valueNode: ValueNode?): UUID = UUID.fromString(raw)
                 }
             }
             query("person") {
@@ -57,8 +58,10 @@ class ScalarsSpecificationTest {
             }
         }
 
-        expect<RequestException>("is not valid value of type Int") {
+        invoking {
             schema.executeBlocking("mutation{Int(int: ${Integer.MAX_VALUE.toLong() + 2L})}")
+        } shouldThrow GraphQLError::class with {
+            message shouldEqual "Cannot coerce to type of Int as '${Integer.MAX_VALUE.toLong() + 2L}' is greater than (2^-31)-1"
         }
     }
 
@@ -78,7 +81,7 @@ class ScalarsSpecificationTest {
         val testedSchema = KGraphQL.schema {
             stringScalar<UUID> {
                 name = "ID"
-                description = "unique identifier of object"
+                description = "the unique identifier of object"
                 deserialize = { uuid: String -> UUID.fromString(uuid) }
                 serialize = UUID::toString
             }
@@ -101,9 +104,9 @@ class ScalarsSpecificationTest {
             }
         }
 
-        expect<RequestException>("") {
-            schema.executeBlocking("{Int(int: \"223\")}")
-        }
+        invoking {
+            schema.executeBlocking("mutation{Int(int: \"223\")}")
+        } shouldThrow GraphQLError::class withMessage "Cannot coerce \"223\" to numeric constant"
     }
 
     data class Number(val int: Int)
@@ -234,16 +237,21 @@ class ScalarsSpecificationTest {
             }
         """.trimIndent()
 
-        val response = deserialize(schema.executeBlocking(req, values))
-        assertThat(response.extract<Boolean>("data/boo"), equalTo(booValue))
-        assertThat(response.extract<Int>("data/lon"), equalTo(lonValue.toInt()))
-        assertThat(response.extract<Double>("data/dob"), equalTo(dobValue))
-        assertThat(response.extract<Int>("data/num"), equalTo(numValue))
-        assertThat(response.extract<String>("data/str"), equalTo(strValue))
+        try {
+            val response = deserialize(schema.executeBlocking(req, values))
+            assertThat(response.extract<Boolean>("data/boo"), equalTo(booValue))
+            assertThat(response.extract<Int>("data/lon"), equalTo(lonValue.toInt()))
+            assertThat(response.extract<Double>("data/dob"), equalTo(dobValue))
+            assertThat(response.extract<Int>("data/num"), equalTo(numValue))
+            assertThat(response.extract<String>("data/str"), equalTo(strValue))
 
-        assertThat(response.extract<Boolean>("data/multi/boo"), equalTo(false))
-        assertThat(response.extract<String>("data/multi/str"), equalTo("String"))
-        assertThat(response.extract<Int>("data/multi/num"), equalTo(25))
+            assertThat(response.extract<Boolean>("data/multi/boo"), equalTo(false))
+            assertThat(response.extract<String>("data/multi/str"), equalTo("String"))
+            assertThat(response.extract<Int>("data/multi/num"), equalTo(25))
+        } catch (e: GraphQLError) {
+            println(e.prettyPrint())
+            throw e
+        }
     }
 
     data class NewPart(val manufacturer: String, val name: String, val oem: Boolean, val addedDate: LocalDate)

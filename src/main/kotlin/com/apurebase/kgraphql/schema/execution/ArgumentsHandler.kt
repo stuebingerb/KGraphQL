@@ -1,13 +1,12 @@
 package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.ExecutionException
-import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.jol.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.jol.ast.ValueNode.*
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import com.apurebase.kgraphql.schema.structure2.InputValue
 
 
@@ -18,6 +17,7 @@ internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(sc
         inputValues: List<InputValue<*>>,
         args: ArgumentNodes?,
         variables: Variables,
+        executionNode: Execution,
         requestContext: Context
     ) : List<Any?>{
         val unsupportedArguments = args?.filter { arg ->
@@ -25,7 +25,9 @@ internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(sc
         }
 
         if(unsupportedArguments?.isNotEmpty() == true){
-            throw RequestException("$funName does support arguments ${inputValues.map { it.name }}. found arguments ${args.keys}"
+            throw GraphQLError(
+                "$funName does support arguments ${inputValues.map { it.name }}. found arguments ${args.keys}",
+                executionNode.selectionNode
             )
         }
 
@@ -39,42 +41,29 @@ internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(sc
                 parameter.type.isInstance(requestContext) -> requestContext
                 value == null && parameter.type.kind != TypeKind.NON_NULL -> parameter.default
                 value == null && parameter.type.kind == TypeKind.NON_NULL -> {
-                    parameter.default ?: throw RequestException(
-                            "argument '${parameter.name}' of type ${schema.typeReference(parameter.type)} " +
-                                    "on field '$funName' is not nullable, value cannot be null"
+                    parameter.default ?: throw GraphQLError(
+                        "argument '${parameter.name}' of type ${schema.typeReference(parameter.type)} on field '$funName' is not nullable, value cannot be null",
+                        executionNode.selectionNode
                     )
-                }
-                value is StringValueNode ||
-                        value is EnumValueNode ||
-                        value is NumberValueNode ||
-                        value is DoubleValueNode ||
-                        value is VariableNode ||
-                        value is BooleanValueNode ||
-                        value is NullValueNode-> {
-                    val transformedValue = transformPropertyValue(parameter, value, variables)
-                    if (transformedValue == null && parameter.type.isNotNullable()) {
-                        throw RequestException("argument ${parameter.name} is not optional, value cannot be null")
-                    }
-                    transformedValue
                 }
                 value is ListValueNode && parameter.type.isList() -> {
                     value.values.map { element ->
-                        when (element) {
-                            is StringValueNode,
-                            is EnumValueNode,
-                            is NumberValueNode,
-                            is DoubleValueNode,
-                            is VariableNode,
-                            is BooleanValueNode,
-                            is NullValueNode -> transformCollectionElementValue(parameter, element, variables)
-                            else -> throw ExecutionException("Unexpected non-string list element")
-                        }
+                        transformCollectionElementValue(parameter, element, variables)
                     }
                 }
                 value is ObjectValueNode && parameter.type.isNotList() -> {
                     transformPropertyObjectValue(parameter, value, variables)
                 }
-                else -> throw RequestException("Non string arguments are not supported yet")
+                else -> {
+                    val transformedValue = transformPropertyValue(parameter, value!!, variables)
+                    if (transformedValue == null && parameter.type.isNotNullable()) {
+                        throw GraphQLError(
+                            "argument ${parameter.name} is not optional, value cannot be null",
+                            executionNode.selectionNode
+                        )
+                    }
+                    transformedValue
+                }
             }
         }
     }

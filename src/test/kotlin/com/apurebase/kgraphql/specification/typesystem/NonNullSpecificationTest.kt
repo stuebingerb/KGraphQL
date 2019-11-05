@@ -1,11 +1,8 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -41,15 +38,16 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    fun `non‐null types are always required`(){
+    fun `non-null types are always required`() {
         val schema = KGraphQL.schema {
             query("nonNull"){
                 resolver { input: String -> input }
             }
         }
-
-        expect<RequestException>("Missing value for non-nullable argument input"){
+        invoking {
             schema.executeBlocking("{nonNull}")
+        } shouldThrow GraphQLError::class with {
+            message shouldEqual "Missing value for non-nullable argument input on the field 'nonNull'"
         }
     }
 

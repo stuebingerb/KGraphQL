@@ -1,12 +1,9 @@
 package com.apurebase.kgraphql.specification.language
 
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.jol.d
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -89,9 +86,9 @@ class InputValuesSpecificationTest {
     @Test
     @Specification("2.9.3 Boolean Value")
     fun `Invalid Boolean input value`(){
-        expect<RequestException>("argument 'null' is not valid value of type Boolean"){
+        invoking {
             deserialize(schema.executeBlocking("{Boolean(value : null)}"))
-        }
+        } shouldThrow GraphQLError::class withMessage "argument 'null' is not valid value of type Boolean"
     }
 
     @Test
@@ -195,8 +192,11 @@ class InputValuesSpecificationTest {
     @Test
     @Specification("2.9.8 Object Value")
     fun `Unknown object input value type`(){
-        expect<RequestException>("Invalid variable \$object argument type FakeDate, expected FakeData!"){
+        invoking {
             schema.executeBlocking("query(\$object: FakeDate){Object(value: \$object)}")
+        } shouldThrow GraphQLError::class with {
+            println(prettyPrint())
+            message shouldEqual "Invalid variable \$object argument type FakeDate, expected FakeData!"
         }
     }
 }

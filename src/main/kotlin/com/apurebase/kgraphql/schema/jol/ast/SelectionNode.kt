@@ -39,8 +39,8 @@ sealed class SelectionNode(val parent: SelectionNode?): ASTNode() {
 
         /**
          * ... on Type {
-         *   [..]
-         *   [..]
+         *   [...]
+         *   [...]
          * }
          */
         class InlineFragmentNode(

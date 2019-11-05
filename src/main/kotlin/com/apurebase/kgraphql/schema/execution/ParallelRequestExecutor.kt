@@ -5,7 +5,6 @@ import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
-import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.jol.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
@@ -102,13 +101,14 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     private suspend fun <T> writeOperation(isSubscription: Boolean, ctx: ExecutionContext, node: Execution.Node, operation: FunctionWrapper<T>): JsonNode {
         node.field.checkAccess(null, ctx.requestContext)
         val operationResult: T? = operation.invoke(
-                isSubscription = isSubscription,
-                children = node.children,
-                funName = node.field.name,
-                receiver = null,
-                inputValues = node.field.arguments,
-                args = node.arguments,
-                ctx = ctx
+            isSubscription = isSubscription,
+            children = node.children,
+            funName = node.field.name,
+            receiver = null,
+            inputValues = node.field.arguments,
+            args = node.arguments,
+            executionNode = node,
+            ctx = ctx
         )
 
         return createNode(ctx, operationResult, node, node.field.returnType)
@@ -118,19 +118,23 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         node.field.checkAccess(parent, ctx.requestContext)
 
         val operationResult: Any? = unionProperty.invoke(
-                funName = unionProperty.name,
-                receiver = parent,
-                inputValues = node.field.arguments,
-                args = node.arguments,
-                ctx = ctx
+            funName = unionProperty.name,
+            receiver = parent,
+            inputValues = node.field.arguments,
+            args = node.arguments,
+            executionNode = node,
+            ctx = ctx
         )
 
         val returnType = unionProperty.returnType.possibleTypes.find { it.isInstance(operationResult) }
 
-        if (returnType == null && !unionProperty.nullable) throw ExecutionException(
-                "Unexpected type of union property value, expected one of : ${unionProperty.type.possibleTypes}." +
-                        " value was $operationResult"
-        )
+        if (returnType == null && !unionProperty.nullable) {
+            val expectedOneOf = unionProperty.type.possibleTypes!!.joinToString { it.name.toString() }
+            throw ExecutionException(
+                "Unexpected type of union property value, expected one of: [$expectedOneOf]." +
+                    " value was $operationResult", node
+            )
+        }
 
         return createNode(ctx, operationResult, node, returnType ?: unionProperty.returnType)
     }
@@ -153,7 +157,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                         array.add(valuesMap[v])
                     }
                 } else {
-                    throw ExecutionException("Invalid collection value for non collection property")
+                    throw ExecutionException("Invalid collection value for non collection property", node)
                 }
             }
             value is String -> jsonNodeFactory.textNode(value)
@@ -168,20 +172,20 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             node is Execution.Union -> {
                 createObjectNode(ctx, value, node.memberExecution(returnType), returnType)
             }
-            else -> createSimpleValueNode(returnType, value)
+            else -> createSimpleValueNode(returnType, value, node)
         }
     }
 
-    private fun <T> createSimpleValueNode(returnType: Type, value: T): JsonNode {
+    private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonNode {
         return when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
-                serializeScalar(jsonNodeFactory, unwrapped, value)
+                serializeScalar(jsonNodeFactory, unwrapped, value, node)
             }
             is Type.Enum<*> -> {
                 jsonNodeFactory.textNode(value.toString())
             }
-            is TypeDef.Object<*> -> throw ExecutionException("Cannot handle object return type, schema structure exception")
-            else -> throw ExecutionException("Invalid Type:  ${returnType.name}")
+            is TypeDef.Object<*> -> throw ExecutionException("Cannot handle object return type, schema structure exception", node)
+            else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
         }
     }
 
@@ -189,7 +193,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         if (returnType !is Type.NonNull) {
             return jsonNodeFactory.nullNode()
         } else {
-            throw ExecutionException("null result for non-nullable operation ${node.field}")
+            throw ExecutionException("null result for non-nullable operation ${node.field}", node)
         }
     }
 
@@ -216,7 +220,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                 if (field is Field.Union<*>) {
                     return child.aliasOrKey to createUnionOperationNode(ctx, value, child, field as Field.Union<T>)
                 } else {
-                    throw ExecutionException("Unexpected non-union field for union execution node")
+                    throw ExecutionException("Unexpected non-union field for union execution node", child)
                 }
             }
             is Execution.Node -> {
@@ -233,7 +237,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
     private suspend fun <T> handleFragment(ctx: ExecutionContext, value: T, container: Execution.Fragment): Map<String, JsonNode?> {
         val expectedType = container.condition.type
-        val include = determineInclude(ctx, container.directives)
+        val include = determineInclude(ctx, container)
 
         if (include) {
             if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
@@ -255,7 +259,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     }
 
     private suspend fun <T> createPropertyNode(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field, parentTimes: Int): JsonNode? {
-        val include = determineInclude(ctx, node.directives)
+        val include = determineInclude(ctx, node)
         node.field.checkAccess(parentValue, ctx.requestContext)
 
         if (include) {
@@ -267,6 +271,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                         receiver = rawValue,
                         inputValues = field.arguments,
                         args = node.arguments,
+                        executionNode = node,
                         ctx = ctx
                     ) ?: rawValue
                     return createNode(ctx, value, node, field.returnType)
@@ -285,26 +290,28 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
 
     private suspend fun <T> handleFunctionProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.Function<*, *>): JsonNode {
         val result = field.invoke(
-                funName = field.name,
-                receiver = parentValue,
-                inputValues = field.arguments,
-                args = node.arguments,
-                ctx = ctx
+            funName = field.name,
+            receiver = parentValue,
+            inputValues = field.arguments,
+            args = node.arguments,
+            executionNode = node,
+            ctx = ctx
         )
         return createNode(ctx, result, node, field.returnType)
     }
 
-    private suspend fun determineInclude(ctx: ExecutionContext, directives: Map<Directive, ArgumentNodes?>?): Boolean {
-        if (directives?.isEmpty() == true) return true
-        return directives?.map { (directive, arguments) ->
+    private suspend fun determineInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {
+        if (executionNode.directives?.isEmpty() == true) return true
+        return executionNode.directives?.map { (directive, arguments) ->
             directive.execution.invoke(
                 funName = directive.name,
                 inputValues = directive.arguments,
                 receiver = null,
                 args = arguments,
+                executionNode = executionNode,
                 ctx = ctx
             )?.include
-                    ?: throw ExecutionException("Illegal directive implementation returning null result")
+                    ?: throw ExecutionException("Illegal directive implementation returning null result", executionNode)
         }?.reduce { acc, b -> acc && b } ?: true
     }
 
@@ -315,9 +322,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             receiver: Any?,
             inputValues: List<InputValue<*>>,
             args: ArgumentNodes?,
+            executionNode: Execution,
             ctx: ExecutionContext
     ): T? {
-        val transformedArgs = argumentsHandler.transformArguments(funName, inputValues, args, ctx.variables, ctx.requestContext)
+        val transformedArgs = argumentsHandler.transformArguments(funName, inputValues, args, ctx.variables, executionNode, ctx.requestContext)
         //exceptions are not caught on purpose to pass up business logic errors
         return when {
             hasReceiver -> invoke(receiver, *transformedArgs.toTypedArray())

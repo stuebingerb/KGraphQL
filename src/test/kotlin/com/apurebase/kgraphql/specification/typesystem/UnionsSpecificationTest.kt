@@ -3,6 +3,8 @@ package com.apurebase.kgraphql.specification.typesystem
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.junit.Test
@@ -44,8 +46,10 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query union property with invalid selection set`(){
-        expect<RequestException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]"){
+        invoking {
             execute("{actors{name, favourite{ name }}}")
+        } shouldThrow GraphQLError::class with {
+            message shouldEqual "Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]"
         }
     }
 
@@ -99,7 +103,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `Non nullable union types should fail`() {
-        expect<ExecutionException>("value was null") {
+        invoking {
             execute("""{
                 actors(all: true) {
                     name
@@ -110,6 +114,9 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }""".trimIndent())
+        } shouldThrow ExecutionException::class with {
+            println(prettyPrint())
+            message shouldEqual "Unexpected type of union property value, expected one of: [Actor, Scenario, Director]. value was null"
         }
     }
 

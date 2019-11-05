@@ -1,60 +1,54 @@
 package com.apurebase.kgraphql.schema.scalar
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.apurebase.kgraphql.ExecutionException
-import com.apurebase.kgraphql.RequestException
+import com.apurebase.kgraphql.dropQuotes
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.apurebase.kgraphql.schema.builtin.BOOLEAN_COERCION
 import com.apurebase.kgraphql.schema.builtin.DOUBLE_COERCION
 import com.apurebase.kgraphql.schema.builtin.FLOAT_COERCION
 import com.apurebase.kgraphql.schema.builtin.INT_COERCION
 import com.apurebase.kgraphql.schema.builtin.LONG_COERCION
 import com.apurebase.kgraphql.schema.builtin.STRING_COERCION
+import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.jol.ast.ValueNode
 import com.apurebase.kgraphql.schema.jol.ast.ValueNode.*
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import com.apurebase.kgraphql.schema.structure2.Type
 
-// TODO: Restructure how to handle scalars
+private typealias JsonValueNode = com.fasterxml.jackson.databind.node.ValueNode
+
 @Suppress("UNCHECKED_CAST")
+// TODO: Re-structure scalars, as it's a bit too complicated now.
 fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value : ValueNode): T {
     try {
         return when(scalar.coercion){
             //built in scalars
-            STRING_COERCION -> STRING_COERCION.deserialize((value as StringValueNode).value) as T
-            FLOAT_COERCION -> try {
-                (value as NumberValueNode).value.toDouble()
-            } catch(e: ClassCastException) {
-                (value as DoubleValueNode).value
-            } as T
-            DOUBLE_COERCION -> try {
-                (value as NumberValueNode).value.toDouble()
-            } catch(e: ClassCastException) {
-                (value as DoubleValueNode).value
-            } as T
+            STRING_COERCION -> STRING_COERCION.deserialize(value.valueNodeName, value as StringValueNode) as T
+            FLOAT_COERCION -> FLOAT_COERCION.deserialize(value.valueNodeName, value) as T
+            DOUBLE_COERCION -> DOUBLE_COERCION.deserialize(value.valueNodeName, value) as T
+            INT_COERCION -> INT_COERCION.deserialize(value.valueNodeName, value) as T
+            BOOLEAN_COERCION -> BOOLEAN_COERCION.deserialize(value.valueNodeName, value) as T
+            LONG_COERCION -> LONG_COERCION.deserialize(value.valueNodeName, value) as T
 
-
-            INT_COERCION -> INT_COERCION.deserialize((value as NumberValueNode).value.toString()) as T
-            BOOLEAN_COERCION -> BOOLEAN_COERCION.deserialize((value as BooleanValueNode).value.toString()) as T
-            LONG_COERCION -> LONG_COERCION.deserialize((value as NumberValueNode).value.toString()) as T
-
-            is StringScalarCoercion<T> -> scalar.coercion.deserialize((value as StringValueNode).value)
-            is IntScalarCoercion<T> -> scalar.coercion.deserialize((value as NumberValueNode).value.toInt())
-            is DoubleScalarCoercion<T> -> scalar.coercion.deserialize(try {
-                (value as NumberValueNode).value.toDouble()
-            } catch(e: ClassCastException) {
-                (value as DoubleValueNode).value
-            })
-            is BooleanScalarCoercion<T> -> scalar.coercion.deserialize((value as BooleanValueNode).value)
-            is LongScalarCoercion<T> -> scalar.coercion.deserialize((value as NumberValueNode).value)
-            else -> throw ExecutionException("Unsupported coercion for scalar type ${scalar.name}")
+            is StringScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.dropQuotes(), value)
+            is IntScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toInt(), value)
+            is DoubleScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toDouble(), value)
+            is BooleanScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toBoolean(), value)
+            is LongScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toLong(), value)
+            else -> throw GraphQLError("Unsupported coercion for scalar type ${scalar.name}", value)
         }
-    } catch (e: Exception){
-        throw RequestException("argument '${value.valueNodeName}' is not valid value of type ${scalar.name}", e)
+    } catch (e: Exception) {
+        throw if (e is GraphQLError) e
+        else GraphQLError(
+            message = "argument '${value.valueNodeName}' is not valid value of type ${scalar.name}",
+            nodes = listOf(value),
+            originalError = e
+        )
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T> serializeScalar(jsonNodeFactory: JsonNodeFactory, scalar: Type.Scalar<*>, value: T) = when(scalar.coercion){
+fun <T> serializeScalar(jsonNodeFactory: JsonNodeFactory, scalar: Type.Scalar<*>, value: T, executionNode: Execution): JsonValueNode = when(scalar.coercion){
     is StringScalarCoercion<*> -> {
         jsonNodeFactory.textNode((scalar.coercion as StringScalarCoercion<T>).serialize(value))
     }
@@ -70,6 +64,6 @@ fun <T> serializeScalar(jsonNodeFactory: JsonNodeFactory, scalar: Type.Scalar<*>
     is BooleanScalarCoercion<*> -> {
         jsonNodeFactory.booleanNode((scalar.coercion as BooleanScalarCoercion<T>).serialize(value))
     }
-    else -> throw ExecutionException("Unsupported coercion for scalar type ${scalar.name}")
+    else -> throw ExecutionException("Unsupported coercion for scalar type ${scalar.name}", executionNode)
 }
 

@@ -1,6 +1,9 @@
 package com.apurebase.kgraphql.schema.dsl
 
 import com.apurebase.kgraphql.schema.*
+import com.apurebase.kgraphql.schema.jol.Lexer
+import com.apurebase.kgraphql.schema.jol.Parser
+import com.apurebase.kgraphql.schema.jol.ast.ValueNode
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
@@ -186,9 +189,7 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
 inline fun <T: Any, reified Raw: Any> SchemaConfigurationDSL.appendMapper(scalar: ScalarDSL<T, Raw>, kClass: KClass<T>) {
     objectMapper.registerModule(SimpleModule().addDeserializer(kClass.java, object : UsesDeserializer<T>() {
         override fun deserialize(p: JsonParser, ctxt: DeserializationContext?): T? {
-            return scalar
-                .createCoercion()
-                .deserialize(p.readValueAs(Raw::class.java))
+            return scalar.deserialize?.invoke(p.readValueAs(Raw::class.java))
         }
     }))
 }

@@ -1,5 +1,7 @@
 package com.apurebase.kgraphql
 
+import com.apurebase.kgraphql.schema.jol.ast.ValueNode
+import com.apurebase.kgraphql.schema.jol.ast.ValueNode.StringValueNode
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 
 
@@ -19,7 +21,7 @@ class Id(val literal: String, val numeric: Int)
 class IdScalarSupport : StringScalarCoercion<Id> {
     override fun serialize(instance: Id): String = "${instance.literal}:${instance.numeric}"
 
-    override fun deserialize(raw: String): Id = Id(raw.split(':')[0], raw.split(':')[1].toInt())
+    override fun deserialize(raw: String, valueNode: ValueNode?) = Id(raw.split(':')[0], raw.split(':')[1].toInt())
 }
 
 enum class FilmType { FULL_LENGTH, SHORT_LENGTH }

@@ -1,9 +1,6 @@
 package com.apurebase.kgraphql.schema.structure2
 
-import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.request.VariablesJson
-import com.apurebase.kgraphql.request.graph.DirectiveInvocation
-import com.apurebase.kgraphql.request.graph.Fragment
 import com.apurebase.kgraphql.schema.DefaultSchema.Companion.OPERATION_NAME_PARAM
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.execution.Execution
@@ -17,6 +14,7 @@ import com.apurebase.kgraphql.schema.jol.ast.SelectionNode.FieldNode
 import com.apurebase.kgraphql.schema.jol.ast.SelectionNode.FragmentNode
 import com.apurebase.kgraphql.schema.jol.ast.SelectionNode.FragmentNode.FragmentSpreadNode
 import com.apurebase.kgraphql.schema.jol.ast.SelectionNode.FragmentNode.InlineFragmentNode
+import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import java.util.*
 import kotlin.reflect.full.starProjectedType
 
@@ -32,7 +30,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
         fun get(node: FragmentSpreadNode): Execution.Fragment? {
-            if(fragmentsStack.contains(node.name.value)) throw RequestException("Fragment spread circular references are not allowed")
+            if(fragmentsStack.contains(node.name.value)) throw GraphQLError("Fragment spread circular references are not allowed", node)
 
             val (conditionType, selectionSet) = fragments[node.name.value] ?: return null
             val condition = TypeCondition(conditionType)
@@ -41,7 +39,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
             val elements = selectionSet.selections.map { conditionType.handleSelectionFieldOrFragment(it, this) }
             fragmentsStack.pop()
 
-            return Execution.Fragment(condition, elements, node.directives?.lookup())
+            return Execution.Fragment(node, condition, elements, node.directives?.lookup())
         }
     }
 
@@ -50,26 +48,26 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
         val operation = test.filterIsInstance<OperationDefinitionNode>().let { operations ->
             when (operations.size) {
-                0 -> throw RequestException("Must provide any operation")
+                0 -> throw GraphQLError("Must provide any operation")
                 1 -> operations.first()
                 else -> {
                     val operationNamesFound = operations.mapNotNull { it.name?.value }.also {
-                        if (it.size != operations.size) throw RequestException("anonymous operation must be the only defined operation")
+                        if (it.size != operations.size) throw GraphQLError("anonymous operation must be the only defined operation")
                     }.joinToString(prefix = "[", postfix = "]")
 
                     val operationName = variables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
-                        ?: throw RequestException("Must provide an operation name from: $operationNamesFound")
+                        ?: throw GraphQLError("Must provide an operation name from: $operationNamesFound")
 
                     operations.firstOrNull { it.name?.value == operationName }
-                        ?: throw RequestException("Must provide an operation name from: $operationNamesFound, found $operationName")
+                        ?: throw GraphQLError("Must provide an operation name from: $operationNamesFound, found $operationName")
                 }
             }
         }
 
         val root = when (operation.operation) {
             OperationTypeNode.QUERY -> schemaModel.query
-            OperationTypeNode.MUTATION -> schemaModel.mutation ?: throw RequestException("Mutations are not supported on this schema")
-            OperationTypeNode.SUBSCRIPTION -> schemaModel.subscription ?: throw RequestException("Subscriptions are not supported on this schema")
+            OperationTypeNode.MUTATION -> schemaModel.mutation ?: throw GraphQLError("Mutations are not supported on this schema")
+            OperationTypeNode.SUBSCRIPTION -> schemaModel.subscription ?: throw GraphQLError("Subscriptions are not supported on this schema")
         }
 
         val fragmentDefinitions = test.filterIsInstance<FragmentDefinitionNode>().map { fragmentDef ->
@@ -100,7 +98,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
                 handleReturnTypeChildOrFragment(it, type, ctx)
             }
         } else if (type.unwrapped().fields?.isNotEmpty() == true) {
-            throw RequestException("Missing selection set on property ${propertyName?.value} of type ${type.unwrapped().name}")
+            throw GraphQLError("Missing selection set on property ${propertyName?.value} of type ${type.unwrapped().name}", selectionSet)
         }
 
         return children
@@ -120,6 +118,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
                 schemaModel.queryTypesByName[fragment.typeCondition?.name?.value] ?: throw throwUnknownFragmentTypeEx(fragment)
             }
             Execution.Fragment(
+                selectionNode = fragment,
                 condition = TypeCondition(type),
                 directives = fragment.directives?.lookup(),
                 elements = fragment.selectionSet.selections.map { type.handleSelectionFieldOrFragment(it, ctx) }
@@ -134,12 +133,13 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
     private fun Type.handleSelection(node: FieldNode, ctx: InterpreterContext, variables: List<VariableDefinitionNode>? = null): Execution.Node {
         return when (val field = this[node.name.value]) {
-            null -> throw RequestException("Property ${node.name.value} on $name does not exist")
+            null -> throw GraphQLError("Property ${node.name.value} on $name does not exist", node)
             is Field.Union<*> -> handleUnion(field, node, ctx)
             else -> {
                 validatePropertyArguments(this, field, node)
 
                 return Execution.Node(
+                    selectionNode = node,
                     field = field,
                     children = handleReturnType(ctx, field.returnType, node),
                     key = node.name.value,
@@ -170,10 +170,11 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
             if (b != null) return@associateWith handleReturnType(ctx, possibleType, b.selectionSet)
 
-            throw RequestException("Missing type argument for type ${possibleType.name}")
+            throw GraphQLError("Missing type argument for type ${possibleType.name}", selectionNode)
         }
 
         return Execution.Union (
+            node = selectionNode,
             unionField = field,
             memberChildren = unionMembersChildren,
             key = selectionNode.name.value,
@@ -184,35 +185,19 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
     }
 
-    private fun throwUnknownFragmentTypeEx(fragment: Fragment) : RequestException {
-        return RequestException("Unknown type ${fragment.typeCondition} in type condition on fragment ${fragment.fragmentKey}")
-    }
     private fun throwUnknownFragmentTypeEx(fragment: FragmentNode) = when (fragment) {
         is FragmentSpreadNode -> TODO("No Clue")
-        is InlineFragmentNode -> RequestException("Unknown type ${fragment.typeCondition?.name?.value} in type condition on fragment ${fragment.typeCondition?.name?.value}")
+        is InlineFragmentNode -> GraphQLError(
+            message = "Unknown type ${fragment.typeCondition?.name?.value} in type condition on fragment ${fragment.typeCondition?.name?.value}",
+            node = fragment
+        )
     }
 
-
-    private fun handleUnsupportedOperations(keys: List<String>) {
-        keys.forEach { key ->
-            if (!schemaModel.query.hasField(key)
-                    && (schemaModel.mutation == null || !schemaModel.mutation.hasField(key))
-                    && (schemaModel.subscription == null || !schemaModel.subscription.hasField(key))) {
-                throw RequestException("$key is not supported by this schema")
-            }
-        }
-    }
-
-//    fun List<DirectiveInvocation>.lookup() = associate { findDirective(it) to it.arguments }
     fun List<DirectiveNode>.lookup() = associate { findDirective(it) to it.arguments?.toArguments() }
 
-    fun findDirective(invocation: DirectiveNode): Directive {
+    private fun findDirective(invocation: DirectiveNode): Directive {
         return directivesByName[invocation.name.value.removePrefix("@")]
-            ?: throw RequestException("Directive ${invocation.name.value} does not exist")
+            ?: throw GraphQLError("Directive ${invocation.name.value} does not exist", invocation)
     }
 
-    fun findDirective(invocation : DirectiveInvocation) : Directive {
-        return directivesByName[invocation.key.removePrefix("@")]
-                ?: throw RequestException("Directive ${invocation.key} does not exist")
-    }
 }

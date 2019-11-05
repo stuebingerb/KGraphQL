@@ -6,7 +6,7 @@ import com.apurebase.kgraphql.schema.jol.ast.OperationTypeNode.*
 import com.apurebase.kgraphql.schema.jol.ast.TokenKindEnum.*
 import com.apurebase.kgraphql.schema.jol.error.syntaxError
 
-class Parser {
+open class Parser {
     private val options: Options
     private val lexer: Lexer
 
@@ -16,6 +16,11 @@ class Parser {
     }
 
     constructor(source: String, options: Options? = null) : this(Source(source), options)
+
+    constructor(lexer: Lexer, options: Options? = null) {
+        this.options = options ?: Options()
+        this.lexer = lexer
+    }
 
     /**
      * Converts a name lex token into a name parse node.
@@ -324,7 +329,7 @@ class Parser {
      *
      * EnumValue : Name but not `true`, `false` or `null`
      */
-    internal fun parseValueLiteral(isConst: Boolean): ValueNode {
+    fun parseValueLiteral(isConst: Boolean): ValueNode {
         val token = lexer.token
 
         return when (token.kind) {
