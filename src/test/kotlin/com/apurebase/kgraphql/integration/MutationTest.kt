@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.*
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import com.apurebase.kgraphql.GraphQLError
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat

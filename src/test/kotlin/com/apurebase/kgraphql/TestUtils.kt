@@ -8,6 +8,7 @@ import org.amshove.kluent.shouldEqual
 import org.hamcrest.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.instanceOf
+import java.io.File
 
 val objectMapper = jacksonObjectMapper()
 
@@ -90,3 +91,13 @@ class ExceptionMessageMatcher(message: String?)
 
     override fun featureValueOf(actual: Exception?): String? = actual?.message
 }
+
+@Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+fun Any.getResourceAsFile(name: String): File = this::class.java.classLoader.getResource(name).toURI().let(::File)
+
+object ResourceFiles {
+    val kitchenSinkQuery = getResourceAsFile("kitchen-sink.graphql").readText()
+}
+
+
+const val d = '$'

@@ -4,10 +4,10 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.jol.ast.ArgumentNodes
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode.*
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
-import com.apurebase.kgraphql.schema.structure2.InputValue
+import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
+import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.schema.structure.InputValue
 
 
 internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(schema) {

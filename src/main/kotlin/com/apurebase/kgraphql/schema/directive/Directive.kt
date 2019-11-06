@@ -6,7 +6,7 @@ import com.apurebase.kgraphql.schema.directive.DirectiveLocation.INLINE_FRAGMENT
 import com.apurebase.kgraphql.schema.introspection.__Directive
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
-import com.apurebase.kgraphql.schema.structure2.InputValue
+import com.apurebase.kgraphql.schema.structure.InputValue
 
 /**
  * Directives provide a way to describe alternate runtime execution and type validation behavior in a GraphQL document.

@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql.request
 
-import com.apurebase.kgraphql.schema.jol.Parser
-import com.apurebase.kgraphql.schema.jol.ast.DocumentNode
+import com.apurebase.kgraphql.schema.model.ast.DocumentNode
 import com.github.benmanes.caffeine.cache.Caffeine
 
 

@@ -10,10 +10,10 @@ import com.apurebase.kgraphql.schema.builtin.INT_COERCION
 import com.apurebase.kgraphql.schema.builtin.LONG_COERCION
 import com.apurebase.kgraphql.schema.builtin.STRING_COERCION
 import com.apurebase.kgraphql.schema.execution.Execution
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode.*
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
-import com.apurebase.kgraphql.schema.structure2.Type
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
+import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.schema.structure.Type
 
 private typealias JsonValueNode = com.fasterxml.jackson.databind.node.ValueNode
 
@@ -35,7 +35,10 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value : ValueNode): T {
             is DoubleScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toDouble(), value)
             is BooleanScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toBoolean(), value)
             is LongScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toLong(), value)
-            else -> throw GraphQLError("Unsupported coercion for scalar type ${scalar.name}", value)
+            else -> throw GraphQLError(
+                "Unsupported coercion for scalar type ${scalar.name}",
+                value
+            )
         }
     } catch (e: Exception) {
         throw if (e is GraphQLError) e

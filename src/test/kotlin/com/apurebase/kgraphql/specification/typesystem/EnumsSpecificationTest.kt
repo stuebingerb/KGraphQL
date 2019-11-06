@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.specification.typesystem
 
 import com.apurebase.kgraphql.*
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import com.apurebase.kgraphql.GraphQLError
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage

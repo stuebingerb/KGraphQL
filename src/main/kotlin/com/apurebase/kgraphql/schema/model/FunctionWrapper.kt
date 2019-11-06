@@ -5,7 +5,7 @@ package com.apurebase.kgraphql.schema.model
 import com.apurebase.kgraphql.schema.Publisher
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.Subscriber
-import com.apurebase.kgraphql.schema.structure2.validateName
+import com.apurebase.kgraphql.schema.structure.validateName
 import com.fasterxml.jackson.databind.ObjectWriter
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType

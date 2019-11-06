@@ -152,12 +152,6 @@ abstract class BaseSchemaTest {
                 }
             }
         }
-        query("test") {
-            resolver { ->
-                val test = arrayOf(1,2)
-                test
-            }
-        }
         query("filmByRank") {
             description = "ranked films"
             resolver { rank: Int -> when(rank){

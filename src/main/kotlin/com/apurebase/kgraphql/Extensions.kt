@@ -6,27 +6,27 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmErasure
 
-fun <T : Any> KClass<T>.defaultKQLTypeName() = this.simpleName!!
+internal fun <T : Any> KClass<T>.defaultKQLTypeName() = this.simpleName!!
 
-fun KType.defaultKQLTypeName() = this.jvmErasure.defaultKQLTypeName()
+internal fun KType.defaultKQLTypeName() = this.jvmErasure.defaultKQLTypeName()
 
-fun String.dropQuotes() : String = if(isLiteral()) drop(1).dropLast(1) else this
+internal fun String.dropQuotes() : String = if(isLiteral()) drop(1).dropLast(1) else this
 
-fun String.isLiteral() : Boolean = startsWith('\"') && endsWith('\"')
+internal fun String.isLiteral() : Boolean = startsWith('\"') && endsWith('\"')
 
-fun KParameter.isNullable() = type.isMarkedNullable
+internal fun KParameter.isNullable() = type.isMarkedNullable
 
-fun KParameter.isNotNullable() = !type.isMarkedNullable
+internal fun KParameter.isNotNullable() = !type.isMarkedNullable
 
-fun KClass<*>.isIterable() = isSubclassOf(Iterable::class)
+internal fun KClass<*>.isIterable() = isSubclassOf(Iterable::class)
 
-fun KType.isIterable() = jvmErasure.isIterable() || toString().startsWith("kotlin.Array")
+internal fun KType.isIterable() = jvmErasure.isIterable() || toString().startsWith("kotlin.Array")
 
-fun KType.getIterableElementType(): KType? {
+internal fun KType.getIterableElementType(): KType? {
     require(isIterable()) { "KType $this is not collection type" }
     return arguments.firstOrNull()?.type ?: throw NoSuchElementException("KType $this has no type arguments")
 }
 
 
-fun not(boolean: Boolean) = !boolean
+internal fun not(boolean: Boolean) = !boolean
 

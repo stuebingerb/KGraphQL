@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql
 
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode.StringValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 
 

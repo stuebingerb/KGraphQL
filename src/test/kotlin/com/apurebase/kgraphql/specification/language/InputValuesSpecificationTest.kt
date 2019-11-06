@@ -1,8 +1,7 @@
 package com.apurebase.kgraphql.specification.language
 
 import com.apurebase.kgraphql.*
-import com.apurebase.kgraphql.jol.d
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import com.apurebase.kgraphql.GraphQLError
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat

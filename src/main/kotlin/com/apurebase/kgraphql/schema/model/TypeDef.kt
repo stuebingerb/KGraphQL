@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.schema.model
 
 import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
-import com.apurebase.kgraphql.schema.structure2.Type
+import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 

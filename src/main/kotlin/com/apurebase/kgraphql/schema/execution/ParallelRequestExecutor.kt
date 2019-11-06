@@ -6,13 +6,13 @@ import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.jol.ast.ArgumentNodes
+import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
-import com.apurebase.kgraphql.schema.structure2.Field
-import com.apurebase.kgraphql.schema.structure2.InputValue
-import com.apurebase.kgraphql.schema.structure2.Type
+import com.apurebase.kgraphql.schema.structure.Field
+import com.apurebase.kgraphql.schema.structure.InputValue
+import com.apurebase.kgraphql.schema.structure.Type
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NullNode
@@ -203,7 +203,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             when (child) {
                 is Execution.Fragment -> objectNode.setAll(handleFragment(ctx, value, child))
                 else -> {
-                    val ( key, jsonNode) = handleProperty(ctx, value, child, type, node.children.size)
+                    val ( key, jsonNode) = handleProperty(ctx, value, child, type)
                     objectNode.set(key, jsonNode)
                 }
             }
@@ -211,7 +211,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         return objectNode
     }
 
-    private suspend fun <T> handleProperty(ctx: ExecutionContext, value: T, child: Execution, type: Type, childrenSize: Int): Pair<String, JsonNode?> {
+    private suspend fun <T> handleProperty(ctx: ExecutionContext, value: T, child: Execution, type: Type): Pair<String, JsonNode?> {
         when (child) {
             //Union is subclass of Node so check it first
             is Execution.Union -> {
@@ -226,8 +226,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             is Execution.Node -> {
                 val field = type.unwrapped()[child.key]
                     ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
-                return child.aliasOrKey to createPropertyNode(ctx, value, child, field, childrenSize)
-//                }
+                return child.aliasOrKey to createPropertyNode(ctx, value, child, field)
             }
             else -> {
                 throw UnsupportedOperationException("Handling containers is not implemented yet")
@@ -245,8 +244,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
                     return container.elements.flatMap { child ->
                         when (child) {
                             is Execution.Fragment -> handleFragment(ctx, value, child).toList()
-                            // TODO: should not just be 1
-                            else -> listOf(handleProperty(ctx, value, child, expectedType, 1))
+                            else -> listOf(handleProperty(ctx, value, child, expectedType))
                         }
                     }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
                 }
@@ -258,7 +256,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         return emptyMap()
     }
 
-    private suspend fun <T> createPropertyNode(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field, parentTimes: Int): JsonNode? {
+    private suspend fun <T> createPropertyNode(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field): JsonNode? {
         val include = determineInclude(ctx, node)
         node.field.checkAccess(parentValue, ctx.requestContext)
 
@@ -316,14 +314,14 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
     }
 
     internal suspend fun <T> FunctionWrapper<T>.invoke(
-            isSubscription: Boolean = false,
-            children: Collection<Execution> = emptyList(),
-            funName: String,
-            receiver: Any?,
-            inputValues: List<InputValue<*>>,
-            args: ArgumentNodes?,
-            executionNode: Execution,
-            ctx: ExecutionContext
+        isSubscription: Boolean = false,
+        children: Collection<Execution> = emptyList(),
+        funName: String,
+        receiver: Any?,
+        inputValues: List<InputValue<*>>,
+        args: ArgumentNodes?,
+        executionNode: Execution,
+        ctx: ExecutionContext
     ): T? {
         val transformedArgs = argumentsHandler.transformArguments(funName, inputValues, args, ctx.variables, executionNode, ctx.requestContext)
         //exceptions are not caught on purpose to pass up business logic errors

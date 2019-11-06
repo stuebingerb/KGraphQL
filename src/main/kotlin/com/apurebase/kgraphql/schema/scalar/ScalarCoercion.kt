@@ -1,6 +1,6 @@
 package com.apurebase.kgraphql.schema.scalar
 
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
 
 /**
  * Scalar resolves to a single scalar object, and can't have sub-selections in the request.

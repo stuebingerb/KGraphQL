@@ -1,9 +1,6 @@
 package com.apurebase.kgraphql.schema.dsl
 
 import com.apurebase.kgraphql.schema.*
-import com.apurebase.kgraphql.schema.jol.Lexer
-import com.apurebase.kgraphql.schema.jol.Parser
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
@@ -11,7 +8,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.apurebase.kgraphql.schema.model.EnumValueDef
 import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
-import com.apurebase.kgraphql.schema.structure2.SchemaCompilation
+import com.apurebase.kgraphql.schema.structure.SchemaCompilation
 import kotlin.reflect.KClass
 
 /**

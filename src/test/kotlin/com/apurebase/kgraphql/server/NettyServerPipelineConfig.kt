@@ -13,7 +13,7 @@ class NettyServerPipelineConfig(val httpRequestHandler: HttpRequestHandler) : Ch
         //handle HTTP
         pipeline.addLast(HttpRequestDecoder())
         pipeline.addLast(HttpObjectAggregator(10 * 1024 * 1024))
-        pipeline.addLast(HttpResponseEncoder())
+//        pipeline.addLast(HttpResponseEncoder())
         //handle http query
         pipeline.addLast(httpRequestHandler)
     }

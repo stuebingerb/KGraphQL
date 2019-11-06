@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import com.apurebase.kgraphql.GraphQLError
 import kotlinx.coroutines.delay
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert

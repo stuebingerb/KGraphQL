@@ -4,8 +4,8 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo

@@ -1,11 +1,11 @@
 package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.schema.directive.Directive
-import com.apurebase.kgraphql.schema.structure2.Field
-import com.apurebase.kgraphql.schema.structure2.Type
-import com.apurebase.kgraphql.schema.jol.ast.ArgumentNodes
-import com.apurebase.kgraphql.schema.jol.ast.SelectionNode
-import com.apurebase.kgraphql.schema.jol.ast.VariableDefinitionNode
+import com.apurebase.kgraphql.schema.structure.Field
+import com.apurebase.kgraphql.schema.structure.Type
+import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
+import com.apurebase.kgraphql.schema.model.ast.SelectionNode
+import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 
 
 sealed class Execution {

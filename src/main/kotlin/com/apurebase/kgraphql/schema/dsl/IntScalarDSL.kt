@@ -1,8 +1,7 @@
 package com.apurebase.kgraphql.schema.dsl
 
 import com.apurebase.kgraphql.schema.SchemaException
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode.NumberValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.scalar.IntScalarCoercion
 import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
 import kotlin.reflect.KClass

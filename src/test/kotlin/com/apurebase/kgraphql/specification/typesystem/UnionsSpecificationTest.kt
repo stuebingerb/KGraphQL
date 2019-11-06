@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.specification.typesystem
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.schema.SchemaException
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import com.apurebase.kgraphql.GraphQLError
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert

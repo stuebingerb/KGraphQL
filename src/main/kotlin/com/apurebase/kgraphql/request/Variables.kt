@@ -1,11 +1,11 @@
 package com.apurebase.kgraphql.request
 
 import com.apurebase.kgraphql.*
-import com.apurebase.kgraphql.schema.jol.ast.TypeNode
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode
-import com.apurebase.kgraphql.schema.jol.ast.VariableDefinitionNode
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
-import com.apurebase.kgraphql.schema.structure2.LookupSchema
+import com.apurebase.kgraphql.schema.model.ast.TypeNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
+import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.schema.structure.LookupSchema
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -64,7 +64,6 @@ data class Variables(
         val invalidIsList = expectedType.isList != variableType.isList
         val invalidNullability = !expectedType.isNullable && variableType !is TypeNode.NonNullTypeNode && variable.defaultValue == null
 
-        // TODO: No clue if this is correct
         val invalidElementNullability = !expectedType.isElementNullable && when (variableType) {
             is TypeNode.ListTypeNode -> variableType.isElementNullable
             else -> false

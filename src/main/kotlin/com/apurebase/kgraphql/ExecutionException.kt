@@ -1,8 +1,7 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.execution.Execution
-import com.apurebase.kgraphql.schema.jol.ast.ASTNode
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import com.apurebase.kgraphql.schema.model.ast.ASTNode
 
 class ExecutionException(
     message: String,

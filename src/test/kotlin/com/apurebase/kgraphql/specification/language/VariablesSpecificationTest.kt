@@ -5,8 +5,6 @@ import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
-import com.apurebase.kgraphql.jol.d
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Ignore

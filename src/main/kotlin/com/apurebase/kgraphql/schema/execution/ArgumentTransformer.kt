@@ -3,11 +3,11 @@ package com.apurebase.kgraphql.schema.execution
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
-import com.apurebase.kgraphql.schema.jol.ast.ValueNode
-import com.apurebase.kgraphql.schema.jol.error.GraphQLError
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.schema.scalar.deserializeScalar
-import com.apurebase.kgraphql.schema.structure2.InputValue
-import com.apurebase.kgraphql.schema.structure2.Type
+import com.apurebase.kgraphql.schema.structure.InputValue
+import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.KType
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
@@ -33,7 +33,7 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                         .inputFields
                         ?.firstOrNull { it.name == valueField.name.value }
                         ?.type as? Type
-                        ?: throw TODO("Handle this")
+                        ?: throw UnknownError("Something went wrong while searching for the constructor parameter type")
 
                     params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
                 }.toMap()
@@ -42,12 +42,18 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
             }
             value is ValueNode.NullValueNode -> {
                 if (type.isNotNullable()) {
-                    throw GraphQLError("argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}", value)
+                    throw GraphQLError(
+                        "argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}",
+                        value
+                    )
                 } else null
             }
             value is ValueNode.ListValueNode && type.isList() -> {
                 if (type.isNotList()) {
-                    throw GraphQLError("argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}", value)
+                    throw GraphQLError(
+                        "argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}",
+                        value
+                    )
                 } else {
                     value.values.map { valueNode ->
                         transformValue(type.unwrapList(), valueNode, variables)
@@ -71,10 +77,16 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
         schema.model.enums[kClass]?.let { enumType ->
             return if (value is ValueNode.EnumValueNode) {
                 enumType.values.find { it.name == value.value }?.value ?: throwInvalidEnumValue(enumType)
-            } else throw GraphQLError("String literal '${value.valueNodeName}' is invalid value for enum type ${enumType.name}", value)
+            } else throw GraphQLError(
+                "String literal '${value.valueNodeName}' is invalid value for enum type ${enumType.name}",
+                value
+            )
         } ?: schema.model.scalars[kClass]?.let { scalarType ->
             return deserializeScalar(scalarType, value)
-        } ?: throw GraphQLError("Invalid argument value '${value.valueNodeName}' for type ${schema.model.inputTypes[kClass]?.name}", value)
+        } ?: throw GraphQLError(
+            "Invalid argument value '${value.valueNodeName}' for type ${schema.model.inputTypes[kClass]?.name}",
+            value
+        )
     }
 
     fun transformCollectionElementValue(inputValue: InputValue<*>, value: ValueNode, variables: Variables): Any? {

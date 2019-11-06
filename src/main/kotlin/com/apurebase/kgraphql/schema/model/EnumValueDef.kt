@@ -1,6 +1,6 @@
 package com.apurebase.kgraphql.schema.model
 
-import com.apurebase.kgraphql.schema.structure2.EnumValue
+import com.apurebase.kgraphql.schema.structure.EnumValue
 
 
 class EnumValueDef<T : Enum<T>>(

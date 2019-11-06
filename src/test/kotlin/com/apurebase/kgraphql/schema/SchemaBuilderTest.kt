@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.schema
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
-import com.apurebase.kgraphql.schema.structure2.Field
+import com.apurebase.kgraphql.schema.structure.Field
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import org.hamcrest.CoreMatchers.*
