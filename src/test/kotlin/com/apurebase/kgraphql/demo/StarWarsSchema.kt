@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql.demo
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.apurebase.kgraphql.KGraphQL
 
 enum class Episode {
@@ -36,7 +35,7 @@ val luke = Human("2000", "Luke Skywalker", emptyList(), Episode.values().toSet()
 
 val r2d2 = Droid("2001", "R2-D2", emptyList(), Episode.values().toSet(), "Astromech")
 
-fun main(args: Array<String>) {
+fun main() {
     val schema = KGraphQL.schema {
 
         configure {
@@ -62,6 +61,6 @@ fun main(args: Array<String>) {
         enum<Episode>()
     }
 
-    println(schema.execute("{hero(episode: JEDI){id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
-    println(schema.execute("{heroes {id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
+    println(schema.executeBlocking("{hero(episode: JEDI){id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
+    println(schema.executeBlocking("{heroes {id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
 }

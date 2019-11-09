@@ -1,9 +1,11 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.GraphQLError
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.junit.Test
 import java.util.*
 
@@ -32,13 +34,13 @@ class SchemaInheritanceTest {
             query("c") { resolver { -> C(name, age) } }
         }
 
-        expect<RequestException>("property id on B does not exist") {
-            deserialize(schema.execute("{b{id, name, age}}"))
-        }
+        invoking {
+            deserialize(schema.executeBlocking("{b{id, name, age}}"))
+        } shouldThrow GraphQLError::class withMessage "Property id on B does not exist"
 
-        expect<RequestException>("property id on C does not exist") {
-            deserialize(schema.execute("{c{id, name, age}}"))
-        }
+        invoking {
+            deserialize(schema.executeBlocking("{c{id, name, age}}"))
+        } shouldThrow GraphQLError::class withMessage "Property id on C does not exist"
     }
 
 }

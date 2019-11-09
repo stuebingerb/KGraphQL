@@ -1,11 +1,10 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.GraphQLError
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -33,14 +32,14 @@ class EnumsSpecificationTest {
 
     @Test
     fun `string literals must not be accepted as an enum input`(){
-        expect<RequestException>("String literal '\"COOL\"' is invalid value for enum type Coolness"){
-            schema.execute("{cool(cool : \"COOL\")}")
-        }
+        invoking {
+            schema.executeBlocking("{cool(cool : \"COOL\")}")
+        } shouldThrow GraphQLError::class withMessage "String literal '\"COOL\"' is invalid value for enum type Coolness"
     }
 
     @Test
     fun `string constants are accepted as an enum input`(){
-        val response = deserialize(schema.execute("{cool(cool : COOL)}"))
+        val response = deserialize(schema.executeBlocking("{cool(cool : COOL)}"))
         assertThat(response.extract<String>("data/cool"), equalTo("COOL"))
     }
 

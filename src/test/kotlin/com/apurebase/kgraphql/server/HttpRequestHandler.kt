@@ -40,7 +40,7 @@ class HttpRequestHandler(val schema : DefaultSchema) : SimpleChannelInboundHandl
         val query = objectMapper.readTree(content)["query"].textValue()
                 ?: throw IllegalArgumentException("Please specify only one query")
         try {
-            val response = schema.execute(query, null)
+            val response = schema.executeBlocking(query, null)
             writeResponse(ctx, response)
         } catch(e: Exception) {
             writeResponse(ctx, "{\"errors\" : { \"message\": \"Caught ${e.javaClass.canonicalName}: ${e.message?.replace("\"", "\\\"")}\"}}")

@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.*
 import org.junit.After
+import java.io.ByteArrayInputStream
 
 
 abstract class BaseSchemaTest {
@@ -114,7 +115,6 @@ abstract class BaseSchemaTest {
     //test film 1
     val tomHardy = Actor("Tom Hardy", 232)
     val christianBale = Actor("Christian Bale", 232)
-    val rickyGervais = Actor("Ricky Gervais", 58)
     val christopherNolan = Director("Christopher Nolan", 43, listOf(tomHardy, christianBale))
     val prestige = Film(Id("Prestige", 2006), 2006, "Prestige", christopherNolan)
 
@@ -124,6 +124,9 @@ abstract class BaseSchemaTest {
     val kevinSpacey = Actor("Kevin Spacey", 2132)
     val davidFincher = Director("David Fincher", 43, listOf(bradPitt, morganFreeman, kevinSpacey))
     val se7en = Film(Id("Se7en", 1995), 1995, "Se7en", davidFincher)
+
+
+    val rickyGervais = Actor("Ricky Gervais", 58)
 
     //new actors created via mutations in schema
     val createdActors = mutableListOf<Actor>()
@@ -278,5 +281,5 @@ abstract class BaseSchemaTest {
     @After
     fun cleanup() = createdActors.clear()
 
-    fun execute(query: String, variables : String? = null) = deserialize(testedSchema.execute(query, variables))
+    fun execute(query: String, variables : String? = null) = deserialize(testedSchema.executeBlocking(query, variables))
 }

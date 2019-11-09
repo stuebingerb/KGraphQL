@@ -1,26 +1,30 @@
+@file:Suppress("ClassName", "RemoveRedundantQualifierName")
+
 package com.apurebase.kgraphql.schema.builtin
 
-import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.dropQuotes
 import com.apurebase.kgraphql.isLiteral
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 
 
-private val STRING_DESCRIPTION =
-        "The String scalar type represents textual data, represented as UTF‐8 character sequences"
+private const val STRING_DESCRIPTION =
+        "The String scalar type represents textual data, represented as UTF-8 character sequences"
 
-private val INT_DESCRIPTION =
-        "The Int scalar type represents a signed 32‐bit numeric non‐fractional value"
+private const val INT_DESCRIPTION =
+        "The Int scalar type represents a signed 32-bit numeric non-fractional value"
 
-private val LONG_DESCRIPTION =
-        "The Long scalar type represents a signed 64‐bit numeric non‐fractional value"
+private const val LONG_DESCRIPTION =
+        "The Long scalar type represents a signed 64-bit numeric non-fractional value"
 
-private val FLOAT_DESCRIPTION =
-        "The Float scalar type represents signed double‐precision fractional values as specified by IEEE 754"
+private const val FLOAT_DESCRIPTION =
+        "The Float scalar type represents signed double-precision fractional values as specified by IEEE 754"
 
-private val BOOLEAN_DESCRIPTION =
+private const val BOOLEAN_DESCRIPTION =
         "The Boolean scalar type represents true or false"
 
 /**
@@ -45,54 +49,86 @@ object BUILT_IN_TYPE {
 object STRING_COERCION : StringScalarCoercion<String>{
     override fun serialize(instance: String): String = instance
 
-    override fun deserialize(raw: String): String {
-        if(raw.isLiteral()) {
-            return raw.dropQuotes()
-        } else {
-            throw RequestException("Cannot coerce string constant $raw, expected string literal")
-        }
+    override fun deserialize(raw: String, valueNode: ValueNode?) = when (valueNode) {
+        null -> raw.dropQuotes()
+        is StringValueNode -> valueNode.value
+        else -> throw GraphQLError(
+            "Cannot coerce ${valueNode.valueNodeName} to string constant",
+            valueNode
+        )
     }
 }
 
 object DOUBLE_COERCION : StringScalarCoercion<Double>{
     override fun serialize(instance: Double): String = instance.toString()
 
-    override fun deserialize(raw: String): Double {
-        if(raw.isLiteral()) {
-            throw RequestException("Cannot coerce string literal, expected numeric string constant")
-        } else {
-            return raw.toDouble()
+    override fun deserialize(raw: String, valueNode: ValueNode?) = when (valueNode) {
+        null -> {
+            if (!raw.isLiteral()) raw.toDouble()
+            else throw GraphQLError("Cannot coerce string literal, expected numeric string constant")
         }
+        is DoubleValueNode -> valueNode.value
+        is NumberValueNode -> valueNode.value.toDouble()
+        else -> throw GraphQLError(
+            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
+            valueNode
+        )
     }
 }
 
 object FLOAT_COERCION : StringScalarCoercion<Float>{
     override fun serialize(instance: Float): String = instance.toDouble().toString()
 
-    override fun deserialize(raw: String): Float = DOUBLE_COERCION.deserialize(raw).toFloat()
+    override fun deserialize(raw: String, valueNode: ValueNode?) = when (valueNode) {
+        null -> DOUBLE_COERCION.deserialize(raw).toFloat()
+        is DoubleValueNode -> DOUBLE_COERCION.deserialize(raw, valueNode).toFloat()
+        is NumberValueNode -> DOUBLE_COERCION.deserialize(raw, valueNode).toFloat()
+        else -> throw GraphQLError(
+            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
+            valueNode
+        )
+    }
 }
 
 object INT_COERCION : StringScalarCoercion<Int>{
     override fun serialize(instance: Int): String = instance.toString()
 
-    override fun deserialize(raw: String): Int {
-        if(raw.isLiteral()) {
-            throw RequestException("Cannot coerce string literal, expected numeric string constant")
-        } else {
-            return raw.toInt()
+    override fun deserialize(raw: String, valueNode: ValueNode?) = when (valueNode) {
+        null -> {
+            if(!raw.isLiteral()) raw.toInt()
+            else throw GraphQLError("Cannot coerce string literal, expected numeric string constant")
         }
+        is NumberValueNode -> when {
+            valueNode.value > Integer.MAX_VALUE -> throw GraphQLError(
+                "Cannot coerce to type of Int as '${valueNode.value}' is greater than (2^-31)-1",
+                valueNode
+            )
+            valueNode.value < Integer.MIN_VALUE -> throw GraphQLError(
+                "Cannot coerce to type of Int as '${valueNode.value}' is less than -(2^-31)",
+                valueNode
+            )
+            else -> valueNode.value.toInt()
+        }
+        else -> throw GraphQLError(
+            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
+            valueNode
+        )
     }
 }
 
 object LONG_COERCION : StringScalarCoercion<Long> {
     override fun serialize(instance: Long): String = instance.toString()
 
-    override fun deserialize(raw: String): Long {
-        if(raw.isLiteral()) {
-            throw RequestException("Cannot coerce string literal, expected numeric string constant")
-        } else {
-            return raw.toLong()
+    override fun deserialize(raw: String, valueNode: ValueNode?) = when(valueNode) {
+        null -> {
+            if (!raw.isLiteral()) raw.toLong()
+            else throw GraphQLError("Cannot coerce string literal, expected numeric string constant")
         }
+        is NumberValueNode -> valueNode.value
+        else -> throw GraphQLError(
+            "Cannot coerce ${valueNode.valueNodeName} to expected numeric constant",
+            valueNode
+        )
     }
 }
 
@@ -100,16 +136,30 @@ object LONG_COERCION : StringScalarCoercion<Long> {
 object BOOLEAN_COERCION : StringScalarCoercion<Boolean> {
     override fun serialize(instance: Boolean): String = instance.toString()
 
-    override fun deserialize(raw: String): Boolean {
-        if(raw.isLiteral()) {
-            throw RequestException("Cannot coerce string literal, expected numeric string constant")
-        } else {
-            return when {
-            //custom parsing, because String#toBoolean() returns false for any input != true
+    override fun deserialize(raw: String, valueNode: ValueNode?) = when (valueNode) {
+        null -> {
+            if (raw.isLiteral()) throw GraphQLError("Cannot coerce string literal, expected numeric string constant")
+            when {
+                //custom parsing, because String#toBoolean() returns false for any input != true
                 raw.equals("true", true) -> true
                 raw.equals("false", true) -> false
                 else -> throw IllegalArgumentException("$raw does not represent valid Boolean value")
             }
         }
+        is BooleanValueNode -> valueNode.value
+        is StringValueNode -> when {
+            valueNode.value.equals("true", true) -> true
+            valueNode.value.equals("false", true) -> false
+            else -> throw IllegalArgumentException("${valueNode.value} does not represent valid Boolean value")
+        }
+        is NumberValueNode -> when (valueNode.value) {
+            0L, -1L -> false
+            1L -> true
+            else -> throw IllegalArgumentException("${valueNode.value} does not represent valid Boolean value")
+        }
+        else -> throw GraphQLError(
+            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
+            valueNode
+        )
     }
 }

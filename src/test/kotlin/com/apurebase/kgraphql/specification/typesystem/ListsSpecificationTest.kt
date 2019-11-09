@@ -2,11 +2,11 @@ package com.apurebase.kgraphql.specification.typesystem
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
@@ -16,7 +16,7 @@ import org.junit.Test
 @Specification("3.1.7 Lists")
 class ListsSpecificationTest{
 
-    val objectMapper = jacksonObjectMapper()
+    private val objectMapper = jacksonObjectMapper()
 
     @Test
     fun `list arguments are valid`(){
@@ -27,10 +27,11 @@ class ListsSpecificationTest{
         }
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = listOf("GAGA", "DADA", "PADA")
         })
 
-        val response = deserialize(schema.execute("query(\$list: [String!]!){list(list: \$list)}", variables))
+        val response = deserialize(schema.executeBlocking("query(\$list: [String!]!){list(list: \$list)}", variables))
         assertThat(response.extract<String>("data/list[0]"), equalTo("GAGA"))
         assertThat(response.extract<String>("data/list[1]"), equalTo("DADA"))
         assertThat(response.extract<String>("data/list[2]"), equalTo("PADA"))
@@ -45,10 +46,11 @@ class ListsSpecificationTest{
         }
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = listOf("GAGA", null, "DADA", "PADA")
         })
 
-        val response = deserialize(schema.execute("query(\$list: [String!]!){list(list: \$list)}", variables))
+        val response = deserialize(schema.executeBlocking("query(\$list: [String!]!){list(list: \$list)}", variables))
         assertThat(response.extract<String>("data/list[1]"), nullValue())
     }
 
@@ -61,14 +63,16 @@ class ListsSpecificationTest{
         }
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = listOf("GAGA", null, "DADA", "PADA")
         })
 
-        val expectedMessage =
-                "Invalid argument value [GAGA, null, DADA, PADA] from variable \$list, " +
-                "expected list with non null arguments"
-        expect<RequestException>(expectedMessage){
-            schema.execute("query(\$list: [String!]!){list(list: \$list)}", variables)
+        invoking {
+            schema.executeBlocking("query(\$list: [String!]!){list(list: \$list)}", variables)
+        } shouldThrow GraphQLError::class with {
+            println(prettyPrint())
+            message shouldEqual "Invalid argument value [GAGA, null, DADA, PADA] from variable \$list, " +
+                    "expected list with non null arguments"
         }
     }
 
@@ -82,10 +86,11 @@ class ListsSpecificationTest{
 
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = "GAGA"
         })
 
-        val response = deserialize(schema.execute("query(\$list: [String!]!){list(list: \$list)}", variables))
+        val response = deserialize(schema.executeBlocking("query(\$list: [String!]!){list(list: \$list)}", variables))
         assertThat(response.extract<String>("data/list[0]"), equalTo("GAGA"))
     }
 
@@ -99,10 +104,11 @@ class ListsSpecificationTest{
 
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = null
         })
 
-        val response = deserialize(schema.execute("query(\$list: [String!]!){list(list: \$list)}", variables))
+        val response = deserialize(schema.executeBlocking("query(\$list: [String!]!){list(list: \$list)}", variables))
         assertThat(response.extract<String>("data/list"), nullValue())
     }
 
@@ -115,10 +121,11 @@ class ListsSpecificationTest{
         }
 
         val variables = objectMapper.writeValueAsString(object {
+            @Suppress("unused")
             val list = listOf("GAGA", "DADA", "PADA")
         })
 
-        val response = deserialize(schema.execute("query(\$list: [String!]!){list(list: \$list)}", variables))
+        val response = deserialize(schema.executeBlocking("query(\$list: [String!]!){list(list: \$list)}", variables))
         assertThat(response.extract<Any>("data/list"), notNullValue())
     }
 
@@ -133,7 +140,7 @@ class ListsSpecificationTest{
             }
         }
 
-        val response = deserialize(schema.execute("{list}"))
+        val response = deserialize(schema.executeBlocking("{list}"))
         assertThat(response.extract<Iterable<String>>("data/list"), equalTo(getResult()))
     }
 }

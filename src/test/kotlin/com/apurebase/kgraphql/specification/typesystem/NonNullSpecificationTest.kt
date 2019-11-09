@@ -1,11 +1,8 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -21,7 +18,7 @@ class NonNullSpecificationTest {
             }
         }
         expect<NullPointerException> {
-            schema.execute("{nonNull}")
+            schema.executeBlocking("{nonNull}")
         }
     }
 
@@ -33,23 +30,24 @@ class NonNullSpecificationTest {
             }
         }
 
-        val responseOmittedInput = deserialize(schema.execute("{nullable}"))
+        val responseOmittedInput = deserialize(schema.executeBlocking("{nullable}"))
         assertThat(responseOmittedInput.extract<Any?>("data/nullable"), nullValue())
 
-        val responseNullInput = deserialize(schema.execute("{nullable(input: null)}"))
+        val responseNullInput = deserialize(schema.executeBlocking("{nullable(input: null)}"))
         assertThat(responseNullInput.extract<Any?>("data/nullable"), nullValue())
     }
 
     @Test
-    fun `non‐null types are always required`(){
+    fun `non-null types are always required`() {
         val schema = KGraphQL.schema {
             query("nonNull"){
                 resolver { input: String -> input }
             }
         }
-
-        expect<RequestException>("Missing value for non-nullable argument input"){
-            schema.execute("{nonNull}")
+        invoking {
+            schema.executeBlocking("{nonNull}")
+        } shouldThrow GraphQLError::class with {
+            message shouldEqual "Missing value for non-nullable argument input on the field 'nonNull'"
         }
     }
 
@@ -61,7 +59,7 @@ class NonNullSpecificationTest {
             }
         }
 
-        schema.execute("query(\$arg: String!){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
+        schema.executeBlocking("query(\$arg: String!){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
     }
 
 }

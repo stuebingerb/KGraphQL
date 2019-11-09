@@ -1,14 +1,11 @@
 package com.apurebase.kgraphql.specification.language
 
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.assertNoErrors
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.executeEqualQueries
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.GraphQLError
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -28,15 +25,15 @@ class SourceTextSpecificationTest {
 
     @Test
     fun `invalid unicode character`() {
-        expect<RequestException>("Illegal character: \\u0003"){
-            deserialize(schema.execute("\u0003"))
+        expect<GraphQLError>("Syntax Error: Cannot contain the invalid character \"\\u0003\"."){
+            deserialize(schema.executeBlocking("\u0003"))
         }
     }
 
     @Test
     @Specification("2.1.1 Unicode")
     fun `ignore unicode BOM character`() {
-        val map = deserialize(schema.execute("\uFEFF{fizz}"))
+        val map = deserialize(schema.executeBlocking("\uFEFF{fizz}"))
         assertNoErrors(map)
         assertThat(map.extract<String>("data/fizz"), equalTo("buzz"))
     }
@@ -91,15 +88,15 @@ class SourceTextSpecificationTest {
     @Test
     @Specification("2.1.9 Names")
     fun `names are case sensitive`(){
-        expect<RequestException>("FIZZ is not supported by this schema"){
-            deserialize(schema.execute("{FIZZ}"))
-        }
+        invoking {
+            deserialize(schema.executeBlocking("{FIZZ}"))
+        } shouldThrow GraphQLError::class withMessage "Property FIZZ on Query does not exist"
 
-        expect<RequestException>("Fizz is not supported by this schema"){
-            deserialize(schema.execute("{Fizz}"))
-        }
+        invoking {
+            deserialize(schema.executeBlocking("{Fizz}"))
+        } shouldThrow GraphQLError::class withMessage "Property Fizz on Query does not exist"
 
-        val mapLowerCase = deserialize(schema.execute("{fizz}"))
+        val mapLowerCase = deserialize(schema.executeBlocking("{fizz}"))
         assertNoErrors(mapLowerCase)
         assertThat(mapLowerCase.extract<String>("data/fizz"), equalTo("buzz"))
     }

@@ -1,6 +1,8 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.GraphQLError
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -48,9 +50,9 @@ class QueryTest : BaseSchemaTest() {
 
     @Test
     fun `query with invalid field name`(){
-        expect<RequestException>("property favDish on Director does not exist"){
+        invoking {
             execute("{film{title, director{name, favDish}}}")
-        }
+        } shouldThrow GraphQLError::class withMessage "Property favDish on Director does not exist"
     }
 
     @Test
@@ -91,9 +93,9 @@ class QueryTest : BaseSchemaTest() {
 
     @Test
     fun `query with ignored property`(){
-        expect<RequestException>("property author on Scenario does not exist"){
+        invoking {
             execute("{scenario{author, content}}")
-        }
+        } shouldThrow GraphQLError::class withMessage "Property author on Scenario does not exist"
     }
 
     @Test
@@ -153,8 +155,10 @@ class QueryTest : BaseSchemaTest() {
 
     @Test
     fun `query with invalid field arguments`(){
-        expect<ValidationException>("Property id on type Scenario has no arguments, found: [uppercase]"){
+        invoking {
             execute("{scenario{id(uppercase: true), content}}")
+        } shouldThrow ValidationException::class with {
+            message shouldEqual "Property id on type Scenario has no arguments, found: [uppercase]"
         }
     }
 
@@ -270,8 +274,8 @@ class QueryTest : BaseSchemaTest() {
 
     @Test
     fun `query with missing selection set`(){
-        expect<RequestException>("Missing selection set on property film of type Film"){
+        invoking {
             execute("{film}")
-        }
+        } shouldThrow GraphQLError::class withMessage "Missing selection set on property film of type Film"
     }
 }

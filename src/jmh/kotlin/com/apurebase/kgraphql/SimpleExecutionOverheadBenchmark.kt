@@ -37,7 +37,7 @@ open class SimpleExecutionOverheadBenchmark {
     @Benchmark
     fun benchmark(): String {
         if(withKGraphQL){
-            return schema.execute("{one{name, quantity, active}, two(name : \"FELLA\"){range{start, endInclusive}}, three{id}}")
+            return schema.executeBlocking("{one{name, quantity, active}, two(name : \"FELLA\"){range{start, endInclusive}}, three{id}}")
         } else {
             return runBlocking {
                 ": ${objectMapper.writeValueAsString(oneResolver())} " +

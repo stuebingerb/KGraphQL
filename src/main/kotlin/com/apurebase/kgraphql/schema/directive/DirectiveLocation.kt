@@ -8,5 +8,11 @@ enum class DirectiveLocation {
     FIELD,
     FRAGMENT_DEFINITION,
     FRAGMENT_SPREAD,
-    INLINE_FRAGMENT
+    INLINE_FRAGMENT;
+
+    companion object {
+        fun from(str: String) = str.toLowerCase().let { lowered ->
+            values().firstOrNull { it.name.toLowerCase() == lowered }
+        }
+    }
 }

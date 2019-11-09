@@ -1,23 +1,15 @@
 package com.apurebase.kgraphql.specification.language
 
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.assertNoErrors
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.executeEqualQueries
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.extractOrNull
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.integration.BaseSchemaTest.Companion.INTROSPECTION_QUERY
+import com.apurebase.kgraphql.GraphQLError
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.not
-import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.CoreMatchers.nullValue
-import org.hamcrest.CoreMatchers.startsWith
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -73,7 +65,7 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `Inline fragments may also be used to apply a directive to a group of fields`() {
-        val response = deserialize(schema.execute(
+        val response = deserialize(schema.executeBlocking(
                 "query (\$expandedInfo : Boolean!){actor{actualActor{name ... @include(if: \$expandedInfo){ age }}}}",
                 "{\"expandedInfo\":false}"
         ))
@@ -132,7 +124,7 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `queries with recursive fragments are denied`() {
-        expect<RequestException>("Fragment spread circular references are not allowed"){
+        invoking {
             BaseTestSchema.execute("""
             query IntrospectionQuery {
                 __schema {
@@ -151,6 +143,6 @@ class FragmentsSpecificationTest {
                 }
             }
         """)
-        }
+        } shouldThrow GraphQLError::class withMessage "Fragment spread circular references are not allowed"
     }
 }

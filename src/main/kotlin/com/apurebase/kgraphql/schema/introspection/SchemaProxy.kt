@@ -1,8 +1,8 @@
 package com.apurebase.kgraphql.schema.introspection
 
 import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.schema.structure2.LookupSchema
-import com.apurebase.kgraphql.schema.structure2.Type
+import com.apurebase.kgraphql.schema.structure.LookupSchema
+import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -44,7 +44,7 @@ class SchemaProxy(var proxiedSchema : LookupSchema? = null) : LookupSchema {
 
     override fun inputTypeByName(name: String): Type? = inputTypeByName(name)
 
-    override fun execute(request: String, variables: String?, context: Context): String {
+    override suspend fun execute(request: String, variables: String?, context: Context): String {
         return getProxied().execute(request, variables, context)
     }
 }

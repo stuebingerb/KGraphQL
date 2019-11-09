@@ -9,17 +9,13 @@ import kotlin.reflect.KFunction
 
 
 class QueryOrMutationDSL(
-        val name : String,
-        block : QueryOrMutationDSL.() -> Unit
+    val name : String,
+    private val block : QueryOrMutationDSL.() -> Unit
 ) : LimitedAccessItemDSL<Nothing>(), ResolverDSL.Target {
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
 
-    init {
-        block()
-    }
-
-    internal var functionWrapper : FunctionWrapper<*>? = null
+    private var functionWrapper : FunctionWrapper<*>? = null
 
     private fun resolver(function: FunctionWrapper<*>): ResolverDSL {
         functionWrapper = function
@@ -58,30 +54,32 @@ class QueryOrMutationDSL(
     }
 
     internal fun toKQLQuery(): QueryDef<out Any?> {
+        block()
         val function = functionWrapper ?: throw IllegalArgumentException("resolver has to be specified for query [$name]")
 
         return QueryDef (
-                name = name,
-                resolver = function,
-                description = description,
-                isDeprecated = isDeprecated,
-                deprecationReason = deprecationReason,
-                inputValues = inputValues,
-                accessRule = accessRuleBlock
+            name = name,
+            resolver = function,
+            description = description,
+            isDeprecated = isDeprecated,
+            deprecationReason = deprecationReason,
+            inputValues = inputValues,
+            accessRule = accessRuleBlock
         )
     }
 
     internal fun toKQLMutation(): MutationDef<out Any?> {
+        block()
         val function = functionWrapper ?: throw IllegalArgumentException("resolver has to be specified for mutation [$name]")
 
         return MutationDef(
-                name = name,
-                resolver = function,
-                description = description,
-                isDeprecated = isDeprecated,
-                deprecationReason = deprecationReason,
-                inputValues = inputValues,
-                accessRule = accessRuleBlock
+            name = name,
+            resolver = function,
+            description = description,
+            isDeprecated = isDeprecated,
+            deprecationReason = deprecationReason,
+            inputValues = inputValues,
+            accessRule = accessRuleBlock
         )
     }
 }

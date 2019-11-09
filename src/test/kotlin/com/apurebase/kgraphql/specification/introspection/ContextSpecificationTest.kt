@@ -19,7 +19,7 @@ class ContextSpecificationTest {
       }
     }
 
-    val response = deserialize(schema.execute("{__schema{queryType{fields{args{name}}}}}"))
+    val response = deserialize(schema.executeBlocking("{__schema{queryType{fields{args{name}}}}}"))
     println("response: $response")
     MatcherAssert.assertThat(response.extract("data/__schema/queryType/fields[0]/args[0]/name"), CoreMatchers.equalTo("limit"))
   }
@@ -33,7 +33,7 @@ class ContextSpecificationTest {
       }
     }
 
-    val response = deserialize(schema.execute("{__schema{mutationType{fields{args{name}}}}}"))
+    val response = deserialize(schema.executeBlocking("{__schema{mutationType{fields{args{name}}}}}"))
     println("response: $response")
     MatcherAssert.assertThat(response.extract("data/__schema/mutationType/fields[0]/args[0]/name"), CoreMatchers.equalTo("input"))
   }

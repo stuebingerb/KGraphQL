@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema.dsl
 
 import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import kotlin.reflect.KClass
@@ -18,7 +19,7 @@ class StringScalarDSL<T : Any>(kClass: KClass<T>, block: ScalarDSL<T, String>.()
 
             override fun serialize(instance: T): String = serializeImpl(instance)
 
-            override fun deserialize(raw: String): T = deserializeImpl(raw)
+            override fun deserialize(raw: String, valueNode: ValueNode?): T = deserializeImpl(raw)
         }
     }
 

@@ -1,28 +1,33 @@
 package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.ExecutionException
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.request.Arguments
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.structure2.InputValue
+import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
+import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.schema.structure.InputValue
 
 
 internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(schema) {
 
     fun transformArguments (
-            funName: String,
-            inputValues: List<InputValue<*>>,
-            args: Arguments?,
-            variables: Variables,
-            requestContext: Context
+        funName: String,
+        inputValues: List<InputValue<*>>,
+        args: ArgumentNodes?,
+        variables: Variables,
+        executionNode: Execution,
+        requestContext: Context
     ) : List<Any?>{
-        val unsupportedArguments = args?.filter { arg -> inputValues.none { value -> value.name == arg.key }}
+        val unsupportedArguments = args?.filter { arg ->
+            inputValues.none { value -> value.name == arg.key }
+        }
 
         if(unsupportedArguments?.isNotEmpty() == true){
-            throw RequestException("$funName does support arguments ${inputValues.map { it.name }}. found arguments ${args.keys}"
+            throw GraphQLError(
+                "$funName does support arguments ${inputValues.map { it.name }}. found arguments ${args.keys}",
+                executionNode.selectionNode
             )
         }
 
@@ -30,36 +35,35 @@ internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(sc
             val value = args?.get(parameter.name)
 
             parameter.type.isInstance(requestContext)
+
             when {
                 //inject request context
                 parameter.type.isInstance(requestContext) -> requestContext
                 value == null && parameter.type.kind != TypeKind.NON_NULL -> parameter.default
                 value == null && parameter.type.kind == TypeKind.NON_NULL -> {
-                    parameter.default ?: throw RequestException(
-                            "argument '${parameter.name}' of type ${schema.typeReference(parameter.type)} " +
-                                    "on field '$funName' is not nullable, value cannot be null"
+                    parameter.default ?: throw GraphQLError(
+                        "argument '${parameter.name}' of type ${schema.typeReference(parameter.type)} on field '$funName' is not nullable, value cannot be null",
+                        executionNode.selectionNode
                     )
                 }
-                value is String -> {
-                    val transformedValue = transformPropertyValue(parameter, value, variables)
+                value is ListValueNode && parameter.type.isList() -> {
+                    value.values.map { element ->
+                        transformCollectionElementValue(parameter, element, variables)
+                    }
+                }
+                value is ObjectValueNode && parameter.type.isNotList() -> {
+                    transformPropertyObjectValue(parameter, value, variables)
+                }
+                else -> {
+                    val transformedValue = transformPropertyValue(parameter, value!!, variables)
                     if (transformedValue == null && parameter.type.isNotNullable()) {
-                        throw RequestException("argument ${parameter.name} is not optional, value cannot be null")
+                        throw GraphQLError(
+                            "argument ${parameter.name} is not optional, value cannot be null",
+                            executionNode.selectionNode
+                        )
                     }
                     transformedValue
                 }
-                value is List<*> && parameter.type.isList() -> {
-                    value.map { element ->
-                        if (element is String) {
-                            transformCollectionElementValue(parameter, element, variables)
-                        } else {
-                            throw ExecutionException("Unexpected non-string list element")
-                        }
-                    }
-                }
-                value is List<*> && parameter.type.isNotList() -> {
-                    transformPropertyObjectValue(parameter, value)
-                }
-                else -> throw RequestException("Non string arguments are not supported yet")
             }
         }
     }

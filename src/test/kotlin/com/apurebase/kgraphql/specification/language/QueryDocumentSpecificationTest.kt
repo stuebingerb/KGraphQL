@@ -1,13 +1,11 @@
 package com.apurebase.kgraphql.specification.language
 
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.RequestException
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.assertNoErrors
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.GraphQLError
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -27,21 +25,21 @@ class QueryDocumentSpecificationTest {
 
     @Test
     fun `anonymous operation must be the only defined operation`(){
-        expect<RequestException>("anonymous operation must be the only defined operation"){
-            deserialize(schema.execute("query {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
-        }
+        invoking {
+            deserialize(schema.executeBlocking("query {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
+        } shouldThrow GraphQLError::class withMessage "anonymous operation must be the only defined operation"
     }
 
     @Test
     fun `must provide operation name when multiple named operations`(){
-        expect<RequestException>("Must provide an operation name from: [FIZZ, BUZZ]"){
-            deserialize(schema.execute("query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
-        }
+        invoking {
+            deserialize(schema.executeBlocking("query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
+        } shouldThrow GraphQLError::class withMessage "Must provide an operation name from: [FIZZ, BUZZ]"
     }
 
     @Test
     fun `execute operation by name in variable`(){
-        val map = deserialize(schema.execute (
+        val map = deserialize(schema.executeBlocking (
                 "query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}",
                 "{\"operationName\":\"FIZZ\"}"
         ))

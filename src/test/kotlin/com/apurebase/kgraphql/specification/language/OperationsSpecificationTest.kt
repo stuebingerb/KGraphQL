@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.subscribe
 import com.apurebase.kgraphql.schema.dsl.unsubscribe
-import org.junit.Assert
+import org.amshove.kluent.shouldEqual
 import org.junit.Test
 
 data class Actor(var name : String? = "", var age: Int? = 0)
@@ -51,7 +51,7 @@ class OperationsSpecificationTest {
 
     @Test
     fun `unnamed and named queries are equivalent`(){
-        executeEqualQueries( schema,
+        executeEqualQueries(schema,
                 mapOf("data" to mapOf("fizz" to "buzz")),
                 "{fizz}",
                 "query {fizz}",
@@ -61,9 +61,8 @@ class OperationsSpecificationTest {
 
     @Test
     fun `unnamed and named mutations are equivalent`(){
-        executeEqualQueries( schema,
+        executeEqualQueries(schema,
                 mapOf("data" to mapOf("createActor" to mapOf("name" to "Kurt Russel"))),
-                "{createActor(name : \"Kurt Russel\"){name}}",
                 "mutation {createActor(name : \"Kurt Russel\"){name}}",
                 "mutation KURT {createActor(name : \"Kurt Russel\"){name}}"
         )
@@ -71,32 +70,34 @@ class OperationsSpecificationTest {
 
     @Test
     fun `handle subscription`(){
-        schema.execute("subscription {subscriptionActor(subscription : \"mySubscription\"){name}}")
+        schema.executeBlocking("subscription {subscriptionActor(subscription : \"mySubscription\"){name}}")
 
         subscriptionResult = ""
-        schema.execute("{createActor(name : \"Kurt Russel\"){name}}")
-        Assert.assertEquals(subscriptionResult, "{\"data\":{\"name\":\"Kurt Russel\"}}")
+        schema.executeBlocking("mutation {createActor(name : \"Kurt Russel\"){name}}")
+
+        subscriptionResult shouldEqual "{\"data\":{\"name\":\"Kurt Russel\"}}"
 
         subscriptionResult = ""
-        schema.execute("{createActor(name : \"Kurt Russel1\"){name}}")
-        Assert.assertEquals(subscriptionResult, "{\"data\":{\"name\":\"Kurt Russel1\"}}")
+        schema.executeBlocking("mutation{createActor(name : \"Kurt Russel1\"){name}}")
+        subscriptionResult shouldEqual "{\"data\":{\"name\":\"Kurt Russel1\"}}"
 
         subscriptionResult = ""
-        schema.execute("{createActor(name : \"Kurt Russel2\"){name}}")
-        Assert.assertEquals(subscriptionResult, "{\"data\":{\"name\":\"Kurt Russel2\"}}")
+        schema.executeBlocking("mutation{createActor(name : \"Kurt Russel2\"){name}}")
+        subscriptionResult shouldEqual "{\"data\":{\"name\":\"Kurt Russel2\"}}"
 
-        schema.execute("subscription {unsubscriptionActor(subscription : \"mySubscription\"){name}}")
+        schema.executeBlocking("subscription {unsubscriptionActor(subscription : \"mySubscription\"){name}}")
 
         subscriptionResult = ""
-        schema.execute("{createActor(name : \"Kurt Russel\"){name}}")
-        Assert.assertEquals(subscriptionResult, "")
+        schema.executeBlocking("mutation{createActor(name : \"Kurt Russel\"){name}}")
+        subscriptionResult shouldEqual ""
 
     }
 
     @Test
     fun `Subscription return type must be the same as the publisher's`(){
         expect<SchemaException>("Subscription return type must be the same as the publisher's"){
-            schema.execute("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
+            schema.executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
         }
     }
 }
+

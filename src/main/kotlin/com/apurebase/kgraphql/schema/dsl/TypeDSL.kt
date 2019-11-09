@@ -13,7 +13,7 @@ import kotlin.reflect.KProperty1
 open class TypeDSL<T : Any>(
         private val supportedUnions: Collection<TypeDef.Union>,
         val kClass: KClass<T>,
-        block: TypeDSL<T>.() -> Unit
+        private val block: TypeDSL<T>.() -> Unit
 ) : ItemDSL() {
 
     var name = kClass.defaultKQLTypeName()
@@ -85,19 +85,17 @@ open class TypeDSL<T : Any>(
         unionProperties.add(property.toKQLProperty(union))
     }
 
-    init {
-        block()
-    }
 
     internal fun toKQLObject() : TypeDef.Object<T> {
+        block()
         return TypeDef.Object(
-                name = name,
-                kClass = kClass,
-                kotlinProperties = describedKotlinProperties.toMap(),
-                extensionProperties = extensionProperties.toList(),
-                unionProperties = unionProperties.toList(),
-                transformations = transformationProperties.associate { it.kProperty to it },
-                description = description
+            name = name,
+            kClass = kClass,
+            kotlinProperties = describedKotlinProperties.toMap(),
+            extensionProperties = extensionProperties.toList(),
+            unionProperties = unionProperties.toList(),
+            transformations = transformationProperties.associateBy { it.kProperty },
+            description = description
         )
     }
 }
