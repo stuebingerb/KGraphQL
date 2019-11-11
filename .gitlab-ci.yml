@@ -25,14 +25,14 @@ build:
   script:
     - gradle assemble
 
-test:
-  stage: test
-  cache:
-    paths:
-      - build
-      - .gradle
-  script:
-    - gradle jacocoTestReport coveralls
+#test:
+#  stage: test
+#  cache:
+#    paths:
+#      - build
+#      - .gradle
+#  script:
+#    - gradle jacocoTestReport coveralls
 
 bintray:publish:
   stage: publish

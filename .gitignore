@@ -1,4 +1,3 @@
-.idea/.name
 .idea/vcs.xml
 
 # Created by https://www.gitignore.io/api/java,gradle,intellij+iml
@@ -128,3 +127,4 @@ gradle-app.setting
 **/build/
 
 # End of https://www.gitignore.io/api/java,gradle,intellij+iml
+/.idea/compiler.xml
