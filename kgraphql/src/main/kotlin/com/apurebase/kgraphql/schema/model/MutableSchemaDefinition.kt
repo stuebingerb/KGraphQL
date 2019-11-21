@@ -141,7 +141,7 @@ data class MutableSchemaDefinition (
     }
 }
 
-private fun create__TypeDefinition() = TypeDSL(emptyList(), __Type::class) {
+private fun create__TypeDefinition() = TypeDSL(emptyList(), __Type::class).apply {
     transformation(__Type::fields) { fields: List<__Field>?, includeDeprecated: Boolean? ->
         if (includeDeprecated == true) fields else fields?.filterNot { it.isDeprecated }
     }
@@ -153,7 +153,7 @@ private fun create__TypeDefinition() = TypeDSL(emptyList(), __Type::class) {
 private fun create__DirectiveDefinition() = TypeDSL(
     emptyList(),
     __Directive::class
-) {
+).apply {
     property<Boolean>("onField") {
         resolver { dir: __Directive ->
             dir.locations.contains(DirectiveLocation.FIELD)

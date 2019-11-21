@@ -7,8 +7,7 @@ import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import kotlin.reflect.KClass
 
 
-class StringScalarDSL<T : Any>(kClass: KClass<T>, block: ScalarDSL<T, String>.() -> Unit)
-    : ScalarDSL<T, String>(kClass, block){
+class StringScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, String>(kClass) {
 
     override fun createCoercionFromFunctions(): ScalarCoercion<T, String> {
         return object : StringScalarCoercion<T> {

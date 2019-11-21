@@ -15,9 +15,8 @@ import kotlin.reflect.KProperty1
 
 
 open class TypeDSL<T : Any>(
-        private val supportedUnions: Collection<TypeDef.Union>,
-        val kClass: KClass<T>,
-        private val block: TypeDSL<T>.() -> Unit
+    private val supportedUnions: Collection<TypeDef.Union>,
+    val kClass: KClass<T>
 ) : ItemDSL() {
 
     var name = kClass.defaultKQLTypeName()
@@ -91,7 +90,6 @@ open class TypeDSL<T : Any>(
 
 
     internal fun toKQLObject() : TypeDef.Object<T> {
-        block()
         return TypeDef.Object(
             name = name,
             kClass = kClass,

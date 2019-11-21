@@ -7,8 +7,7 @@ import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
 import kotlin.reflect.KClass
 
 
-class DoubleScalarDSL<T : Any>(kClass: KClass<T>, block: ScalarDSL<T, Double>.() -> Unit)
-    : ScalarDSL<T, Double>(kClass, block){
+class DoubleScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, Double>(kClass) {
 
     override fun createCoercionFromFunctions(): ScalarCoercion<T, Double> {
         return object : DoubleScalarCoercion<T> {

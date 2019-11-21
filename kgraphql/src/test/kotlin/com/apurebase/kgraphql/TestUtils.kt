@@ -5,8 +5,10 @@ import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.amshove.kluent.shouldEqual
-import org.hamcrest.*
+import org.hamcrest.CoreMatchers
+import org.hamcrest.FeatureMatcher
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.instanceOf
 import java.io.File
 
@@ -48,8 +50,8 @@ fun <T>extractOrNull(map: Map<*,*>, path : String) : T? {
     }
 }
 
-fun defaultSchema(block: SchemaBuilder<Unit>.() -> Unit): DefaultSchema {
-    return SchemaBuilder(block).build() as DefaultSchema
+fun defaultSchema(block: SchemaBuilder.() -> Unit): DefaultSchema {
+    return SchemaBuilder().apply(block).build() as DefaultSchema
 }
 
 fun assertNoErrors(map : Map<*,*>) {
@@ -59,7 +61,7 @@ fun assertNoErrors(map : Map<*,*>) {
 
 fun assertError(map : Map<*,*>, vararg messageElements : String) {
     val errorMessage = map.extract<String>("errors/message")
-    MatcherAssert.assertThat(errorMessage, CoreMatchers.notNullValue())
+    assertThat(errorMessage, CoreMatchers.notNullValue())
 
     messageElements
         .filterNot { errorMessage.contains(it) }
