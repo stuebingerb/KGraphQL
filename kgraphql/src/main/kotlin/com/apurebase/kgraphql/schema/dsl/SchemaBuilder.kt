@@ -1,14 +1,19 @@
 package com.apurebase.kgraphql.schema.dsl
 
-import com.apurebase.kgraphql.schema.*
+import com.apurebase.kgraphql.schema.Publisher
+import com.apurebase.kgraphql.schema.Schema
+import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.dsl.operations.QueryOrMutationDSL
+import com.apurebase.kgraphql.schema.dsl.operations.SubscriptionDSL
+import com.apurebase.kgraphql.schema.dsl.types.*
+import com.apurebase.kgraphql.schema.model.EnumValueDef
+import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
+import com.apurebase.kgraphql.schema.model.TypeDef
+import com.apurebase.kgraphql.schema.structure.SchemaCompilation
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.apurebase.kgraphql.schema.model.EnumValueDef
-import com.apurebase.kgraphql.schema.model.TypeDef
-import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
-import com.apurebase.kgraphql.schema.structure.SchemaCompilation
 import kotlin.reflect.KClass
 
 /**

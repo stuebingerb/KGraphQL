@@ -1,4 +1,4 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.types
 
 import kotlin.reflect.KClass
 

@@ -1,5 +1,6 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.types
 
+import com.apurebase.kgraphql.schema.dsl.ItemDSL
 import kotlin.reflect.KClass
 
 

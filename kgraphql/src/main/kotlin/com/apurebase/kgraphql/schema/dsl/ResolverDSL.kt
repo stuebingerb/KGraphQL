@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.schema.dsl
 
+import com.apurebase.kgraphql.schema.dsl.types.InputValuesDSL
 import com.apurebase.kgraphql.schema.model.InputValueDef
 
 

@@ -1,6 +1,8 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.operations
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.schema.dsl.LimitedAccessItemDSL
+import com.apurebase.kgraphql.schema.dsl.ResolverDSL
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import com.apurebase.kgraphql.schema.model.MutationDef
@@ -11,7 +13,8 @@ import kotlin.reflect.KFunction
 class QueryOrMutationDSL(
     val name : String,
     private val block : QueryOrMutationDSL.() -> Unit
-) : LimitedAccessItemDSL<Nothing>(), ResolverDSL.Target {
+) : LimitedAccessItemDSL<Nothing>(),
+    ResolverDSL.Target {
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
 

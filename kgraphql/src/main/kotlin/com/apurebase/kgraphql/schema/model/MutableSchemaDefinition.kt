@@ -5,13 +5,8 @@ import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.builtin.BUILT_IN_TYPE
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.directive.DirectiveLocation
-import com.apurebase.kgraphql.schema.dsl.TypeDSL
-import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.introspection.__Directive
-import com.apurebase.kgraphql.schema.introspection.__EnumValue
-import com.apurebase.kgraphql.schema.introspection.__Field
-import com.apurebase.kgraphql.schema.introspection.__Schema
-import com.apurebase.kgraphql.schema.introspection.__Type
+import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
+import com.apurebase.kgraphql.schema.introspection.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -146,35 +141,42 @@ data class MutableSchemaDefinition (
     }
 }
 
-private fun create__TypeDefinition() = TypeDSL(emptyList(), __Type::class){
-    transformation(__Type::fields){ fields: List<__Field>?, includeDeprecated : Boolean? ->
+private fun create__TypeDefinition() = TypeDSL(emptyList(), __Type::class) {
+    transformation(__Type::fields) { fields: List<__Field>?, includeDeprecated: Boolean? ->
         if (includeDeprecated == true) fields else fields?.filterNot { it.isDeprecated }
     }
-    transformation(__Type::enumValues){ enumValues: List<__EnumValue>?, includeDeprecated: Boolean? ->
+    transformation(__Type::enumValues) { enumValues: List<__EnumValue>?, includeDeprecated: Boolean? ->
         if (includeDeprecated == true) enumValues else enumValues?.filterNot { it.isDeprecated }
     }
 }.toKQLObject()
 
-private fun create__DirectiveDefinition() = TypeDSL(emptyList(), __Directive::class){
-    property<Boolean>("onField"){
+private fun create__DirectiveDefinition() = TypeDSL(
+    emptyList(),
+    __Directive::class
+) {
+    property<Boolean>("onField") {
         resolver { dir: __Directive ->
             dir.locations.contains(DirectiveLocation.FIELD)
         }
         deprecate("Use `locations`.")
     }
-    property<Boolean>("onFragment"){
-        resolver { dir: __Directive -> dir.locations.containsAny (
-            DirectiveLocation.FRAGMENT_SPREAD,
-            DirectiveLocation.FRAGMENT_DEFINITION,
-            DirectiveLocation.INLINE_FRAGMENT)
+    property<Boolean>("onFragment") {
+        resolver { dir: __Directive ->
+            dir.locations.containsAny(
+                DirectiveLocation.FRAGMENT_SPREAD,
+                DirectiveLocation.FRAGMENT_DEFINITION,
+                DirectiveLocation.INLINE_FRAGMENT
+            )
         }
         deprecate("Use `locations`.")
     }
-    property<Boolean>("onOperation"){
-        resolver{ dir : __Directive -> dir.locations.containsAny (
-            DirectiveLocation.QUERY,
-            DirectiveLocation.MUTATION,
-            DirectiveLocation.SUBSCRIPTION)
+    property<Boolean>("onOperation") {
+        resolver { dir: __Directive ->
+            dir.locations.containsAny(
+                DirectiveLocation.QUERY,
+                DirectiveLocation.MUTATION,
+                DirectiveLocation.SUBSCRIPTION
+            )
         }
         deprecate("Use `locations`.")
     }

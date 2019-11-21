@@ -1,5 +1,6 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.types
 
+import com.apurebase.kgraphql.schema.dsl.DepreciableItemDSL
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import kotlin.reflect.KClass
 

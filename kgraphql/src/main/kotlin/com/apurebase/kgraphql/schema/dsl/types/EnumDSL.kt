@@ -1,6 +1,7 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.types
 
 import com.apurebase.kgraphql.defaultKQLTypeName
+import com.apurebase.kgraphql.schema.dsl.ItemDSL
 import kotlin.reflect.KClass
 
 
@@ -19,7 +20,7 @@ class EnumDSL<T : Enum<T>>(kClass: KClass<T>, block : (EnumDSL<T>.() -> Unit)?) 
     }
 
     infix fun T.describe(content: String){
-        valueDefinitions[this] = EnumValueDSL(this){
+        valueDefinitions[this] = EnumValueDSL(this) {
             description = content
         }
     }

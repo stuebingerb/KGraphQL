@@ -1,9 +1,12 @@
 package com.apurebase.kgraphql.specification.language
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.executeEqualQueries
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
-import com.apurebase.kgraphql.schema.dsl.subscribe
-import com.apurebase.kgraphql.schema.dsl.unsubscribe
+import com.apurebase.kgraphql.schema.dsl.operations.subscribe
+import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
 import org.amshove.kluent.shouldEqual
 import org.junit.Test
 
