@@ -20,7 +20,7 @@ import kotlin.reflect.KClass
 /**
  * SchemaBuilder exposes rich DSL to setup GraphQL schema
  */
-class SchemaBuilder {
+internal class SchemaBuilder {
 
     private val model = MutableSchemaDefinition()
 
