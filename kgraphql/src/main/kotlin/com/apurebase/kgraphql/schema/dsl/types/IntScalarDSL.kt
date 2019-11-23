@@ -1,4 +1,4 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.types
 
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
@@ -7,8 +7,7 @@ import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
 import kotlin.reflect.KClass
 
 
-class IntScalarDSL<T : Any>(kClass: KClass<T>, block: ScalarDSL<T, Int>.() -> Unit)
-    : ScalarDSL<T, Int>(kClass, block){
+class IntScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, Int>(kClass) {
 
     override fun createCoercionFromFunctions(): ScalarCoercion<T, Int> {
         return object : IntScalarCoercion<T> {

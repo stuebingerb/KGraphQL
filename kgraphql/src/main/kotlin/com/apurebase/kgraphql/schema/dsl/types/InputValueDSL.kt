@@ -1,14 +1,11 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.types
 
+import com.apurebase.kgraphql.schema.dsl.DepreciableItemDSL
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import kotlin.reflect.KClass
 
 
-class InputValueDSL<T : Any>(val kClass: KClass<T>, block : InputValueDSL<T>.() -> Unit) : DepreciableItemDSL() {
-
-    init {
-        block()
-    }
+class InputValueDSL<T : Any>(val kClass: KClass<T>) : DepreciableItemDSL() {
 
     lateinit var name : String
 

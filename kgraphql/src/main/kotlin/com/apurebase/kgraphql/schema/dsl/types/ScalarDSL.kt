@@ -1,13 +1,13 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.types
 
 import com.apurebase.kgraphql.defaultKQLTypeName
+import com.apurebase.kgraphql.schema.dsl.ItemDSL
 import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
 import kotlin.reflect.KClass
 
 
 abstract class ScalarDSL<T : Any, Raw : Any>(
-    kClass: KClass<T>,
-    private val block: ScalarDSL<T, Raw>.() -> Unit
+    kClass: KClass<T>
 ) : ItemDSL() {
 
     companion object {
@@ -24,7 +24,6 @@ abstract class ScalarDSL<T : Any, Raw : Any>(
     var coercion: ScalarCoercion<T, Raw>? = null
 
     fun createCoercion() : ScalarCoercion<T, Raw> {
-        block()
         return coercion ?: createCoercionFromFunctions()
     }
 

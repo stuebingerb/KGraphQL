@@ -1,19 +1,22 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.types
 
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.dsl.ItemDSL
+import com.apurebase.kgraphql.schema.dsl.KotlinPropertyDSL
+import com.apurebase.kgraphql.schema.dsl.PropertyDSL
+import com.apurebase.kgraphql.schema.dsl.UnionPropertyDSL
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.PropertyDef
-import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.model.Transformation
+import com.apurebase.kgraphql.schema.model.TypeDef
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 
 open class TypeDSL<T : Any>(
-        private val supportedUnions: Collection<TypeDef.Union>,
-        val kClass: KClass<T>,
-        private val block: TypeDSL<T>.() -> Unit
+    private val supportedUnions: Collection<TypeDef.Union>,
+    val kClass: KClass<T>
 ) : ItemDSL() {
 
     var name = kClass.defaultKQLTypeName()
@@ -87,7 +90,6 @@ open class TypeDSL<T : Any>(
 
 
     internal fun toKQLObject() : TypeDef.Object<T> {
-        block()
         return TypeDef.Object(
             name = name,
             kClass = kClass,

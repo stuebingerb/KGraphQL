@@ -1,8 +1,11 @@
-package com.apurebase.kgraphql.schema.dsl
+package com.apurebase.kgraphql.schema.dsl.operations
 
-import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.schema.*
-import com.apurebase.kgraphql.schema.model.*
+import com.apurebase.kgraphql.schema.Publisher
+import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.Subscriber
+import com.apurebase.kgraphql.schema.Subscription
+import com.apurebase.kgraphql.schema.model.FunctionWrapper
+import com.apurebase.kgraphql.schema.model.SubscriptionDef
 import com.fasterxml.jackson.databind.ObjectWriter
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
@@ -10,45 +13,21 @@ import kotlin.reflect.full.starProjectedType
 
 
 class SubscriptionDSL(
-        val name : String,
-        block : SubscriptionDSL.() -> Unit
-) : LimitedAccessItemDSL<Nothing>(), ResolverDSL.Target {
-
-    private val inputValues = mutableListOf<InputValueDef<*>>()
-
-    init {
-        block()
-    }
-
-    private var functionWrapper : FunctionWrapper<*>? = null
-
-    private fun resolver(function: FunctionWrapper<*>): ResolverDSL {
-        functionWrapper = function
-        return ResolverDSL(this)
-    }
-
-    fun <T>resolver(function: suspend (String) -> T) = resolver(FunctionWrapper.on(function))
-
-    fun accessRule(rule: (Context) -> Exception?){
-        val accessRuleAdapter: (Nothing?, Context) -> Exception? = { _, ctx -> rule(ctx) }
-        this.accessRuleBlock = accessRuleAdapter
-    }
-
-    override fun addInputValues(inputValues: Collection<InputValueDef<*>>) {
-        this.inputValues.addAll(inputValues)
-    }
+    name: String
+) : AbstractOperationDSL(name) {
 
     internal fun toKQLSubscription(): SubscriptionDef<out Any?> {
-        val function = functionWrapper ?: throw IllegalArgumentException("resolver has to be specified for subscription [$name]")
+        val function =
+            functionWrapper ?: throw IllegalArgumentException("resolver has to be specified for query [$name]")
 
-        return SubscriptionDef (
-                name = name,
-                resolver = function,
-                description = description,
-                isDeprecated = isDeprecated,
-                deprecationReason = deprecationReason,
-                inputValues = inputValues,
-                accessRule = accessRuleBlock
+        return SubscriptionDef(
+            name = name,
+            resolver = function,
+            description = description,
+            isDeprecated = isDeprecated,
+            deprecationReason = deprecationReason,
+            inputValues = inputValues,
+            accessRule = accessRuleBlock
         )
     }
 }

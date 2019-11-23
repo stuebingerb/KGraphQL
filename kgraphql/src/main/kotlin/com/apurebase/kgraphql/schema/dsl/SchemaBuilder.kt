@@ -1,27 +1,32 @@
 package com.apurebase.kgraphql.schema.dsl
 
-import com.apurebase.kgraphql.schema.*
+import com.apurebase.kgraphql.schema.Publisher
+import com.apurebase.kgraphql.schema.Schema
+import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.dsl.operations.MutationDSL
+import com.apurebase.kgraphql.schema.dsl.operations.QueryDSL
+import com.apurebase.kgraphql.schema.dsl.operations.SubscriptionDSL
+import com.apurebase.kgraphql.schema.dsl.types.*
+import com.apurebase.kgraphql.schema.model.EnumValueDef
+import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
+import com.apurebase.kgraphql.schema.model.TypeDef
+import com.apurebase.kgraphql.schema.structure.SchemaCompilation
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.apurebase.kgraphql.schema.model.EnumValueDef
-import com.apurebase.kgraphql.schema.model.TypeDef
-import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
-import com.apurebase.kgraphql.schema.structure.SchemaCompilation
 import kotlin.reflect.KClass
 
 /**
  * SchemaBuilder exposes rich DSL to setup GraphQL schema
  */
-class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -> Unit) {
+class SchemaBuilder internal constructor() {
 
     private val model = MutableSchemaDefinition()
 
     private var configuration = SchemaConfigurationDSL()
 
     fun build(): Schema {
-        init()
         return SchemaCompilation(configuration.build(), model.toSchemaDefinition()).perform()
     }
 
@@ -33,75 +38,79 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     // OPERATIONS
     //================================================================================
 
-    fun query(name : String, init: QueryOrMutationDSL.() -> Unit): Publisher {
-        val query = QueryOrMutationDSL(name, init).toKQLQuery()
+    fun query(name: String, init: QueryDSL.() -> Unit): Publisher {
+        val query = QueryDSL(name)
+            .apply(init)
+            .toKQLQuery()
         model.addQuery(query)
         return query
     }
 
-    fun mutation(name : String, init: QueryOrMutationDSL.() -> Unit): Publisher {
-        val mutation = QueryOrMutationDSL(name, init).toKQLMutation()
+    fun mutation(name: String, init: MutationDSL.() -> Unit): Publisher {
+        val mutation = MutationDSL(name)
+            .apply(init)
+            .toKQLMutation()
+
         model.addMutation(mutation)
         return mutation
     }
 
     fun subscription(name : String, init: SubscriptionDSL.() -> Unit){
-        model.addSubscription(SubscriptionDSL(name, init).toKQLSubscription())
+        val subscription = SubscriptionDSL(name)
+            .apply(init)
+            .toKQLSubscription()
+
+        model.addSubscription(subscription)
     }
 
     //================================================================================
     // SCALAR
     //================================================================================
 
-    fun <T : Any>stringScalar(kClass: KClass<T>, block: ScalarDSL<T, String>.() -> Unit){
-        val scalar = StringScalarDSL(kClass, block)
-        val coercion = scalar.createCoercion()
+    fun <T : Any> stringScalar(kClass: KClass<T>, block: ScalarDSL<T, String>.() -> Unit) {
+        val scalar = StringScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, coercion, scalar.description))
+        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
     }
 
     inline fun <reified T : Any> stringScalar(noinline block: ScalarDSL<T, String>.() -> Unit) {
         stringScalar(T::class, block)
     }
 
-    fun <T : Any>intScalar(kClass: KClass<T>, block: ScalarDSL<T, Int>.() -> Unit){
-        val scalar = IntScalarDSL(kClass, block)
-        val coercion = scalar.createCoercion()
+    fun <T : Any> intScalar(kClass: KClass<T>, block: ScalarDSL<T, Int>.() -> Unit) {
+        val scalar = IntScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, coercion, scalar.description))
+        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
     }
 
     inline fun <reified T : Any> intScalar(noinline block: ScalarDSL<T, Int>.() -> Unit) {
         intScalar(T::class, block)
     }
 
-    fun <T : Any>floatScalar(kClass: KClass<T>, block: ScalarDSL<T, Double>.() -> Unit){
-        val scalar = DoubleScalarDSL(kClass, block)
-        val coercion = scalar.createCoercion()
+    fun <T : Any> floatScalar(kClass: KClass<T>, block: ScalarDSL<T, Double>.() -> Unit) {
+        val scalar = DoubleScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, coercion, scalar.description))
+        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
     }
 
     inline fun <reified T : Any> floatScalar(noinline block: ScalarDSL<T, Double>.() -> Unit) {
         floatScalar(T::class, block)
     }
 
-    fun <T : Any>longScalar(kClass: KClass<T>, block: ScalarDSL<T, Long>.() -> Unit){
-        val scalar = LongScalarDSL(kClass, block)
-        val coercion = scalar.createCoercion()
+    fun <T : Any> longScalar(kClass: KClass<T>, block: ScalarDSL<T, Long>.() -> Unit) {
+        val scalar = LongScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, coercion, scalar.description))
+        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
     }
 
-    inline fun <reified T : Any>longScalar(noinline block: ScalarDSL<T, Long>.() -> Unit) {
+    inline fun <reified T : Any> longScalar(noinline block: ScalarDSL<T, Long>.() -> Unit) {
         longScalar(T::class, block)
     }
 
-    fun <T : Any>booleanScalar(kClass: KClass<T>, block: ScalarDSL<T, Boolean>.() -> Unit){
-        val scalar = BooleanScalarDSL(kClass, block)
-        val coercion = scalar.createCoercion()
+    fun <T : Any> booleanScalar(kClass: KClass<T>, block: ScalarDSL<T, Boolean>.() -> Unit) {
+        val scalar = BooleanScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, coercion, scalar.description))
+        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
     }
 
     inline fun <reified T : Any> booleanScalar(noinline block: ScalarDSL<T, Boolean>.() -> Unit) {
@@ -112,8 +121,8 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     // TYPE
     //================================================================================
 
-    fun <T : Any>type(kClass: KClass<T>, block: TypeDSL<T>.() -> Unit){
-        val type = TypeDSL(model.unionsMonitor, kClass, block)
+    fun <T : Any> type(kClass: KClass<T>, block: TypeDSL<T>.() -> Unit) {
+        val type = TypeDSL(model.unionsMonitor, kClass).apply(block)
         model.addObject(type.toKQLObject())
     }
 
@@ -129,8 +138,12 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     // ENUM
     //================================================================================
 
-    fun <T : Enum<T>>enum(kClass: KClass<T>, enumValues : Array<T>, block: (EnumDSL<T>.() -> Unit)? = null){
-        val type = EnumDSL(kClass, block)
+    fun <T : Enum<T>> enum(kClass: KClass<T>, enumValues: Array<T>, block: (EnumDSL<T>.() -> Unit)? = null) {
+        val type = EnumDSL(kClass).apply {
+            if (block != null) {
+                block()
+            }
+        }
 
         val kqlEnumValues = enumValues.map { value ->
             type.valueDefinitions[value]?.let { valueDSL ->
@@ -159,8 +172,8 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     // UNION
     //================================================================================
 
-    fun unionType(name : String, block : UnionTypeDSL.() -> Unit) : TypeID {
-        val union = UnionTypeDSL(block)
+    fun unionType(name: String, block: UnionTypeDSL.() -> Unit): TypeID {
+        val union = UnionTypeDSL().apply(block)
         model.addUnion(TypeDef.Union(name, union.possibleTypes, union.description))
         return TypeID(name)
     }
@@ -169,8 +182,8 @@ class SchemaBuilder<Context : Any>(private val init: SchemaBuilder<Context>.() -
     // INPUT
     //================================================================================
 
-    fun <T : Any>inputType(kClass: KClass<T>, block : InputTypeDSL<T>.() -> Unit) {
-        val input = InputTypeDSL(kClass, block)
+    fun <T : Any> inputType(kClass: KClass<T>, block: InputTypeDSL<T>.() -> Unit) {
+        val input = InputTypeDSL(kClass).apply(block)
         model.addInputObject(TypeDef.Input(input.name, kClass, input.description))
     }
 
