@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.schema.dsl.operations
 
-import AbstractOperationDSL
 import com.apurebase.kgraphql.schema.Publisher
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.Subscriber

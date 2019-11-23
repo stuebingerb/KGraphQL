@@ -1,3 +1,5 @@
+package com.apurebase.kgraphql.schema.dsl.operations
+
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.dsl.LimitedAccessItemDSL
 import com.apurebase.kgraphql.schema.dsl.ResolverDSL

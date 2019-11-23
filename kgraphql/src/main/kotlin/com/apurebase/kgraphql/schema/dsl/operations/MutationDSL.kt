@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.schema.dsl.operations
 
-import AbstractOperationDSL
 import com.apurebase.kgraphql.schema.model.MutationDef
 
 class MutationDSL(
