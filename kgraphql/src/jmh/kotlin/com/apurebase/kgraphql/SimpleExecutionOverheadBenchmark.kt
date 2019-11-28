@@ -7,7 +7,7 @@ import com.apurebase.kgraphql.schema.Schema
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.runBlocking
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.openjdk.jmh.annotations.*
 import java.util.concurrent.TimeUnit
 

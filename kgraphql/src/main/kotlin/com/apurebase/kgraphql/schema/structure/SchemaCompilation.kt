@@ -204,6 +204,17 @@ class SchemaCompilation(
                 ?: typeCreator (kClass)
     }
 
+    private fun <T, K, R> handleDataloadOperation(operation: PropertyDef.DataLoadedFunction<T, K, R>): Field {
+        val returnType = handlePossiblyWrappedType(operation.returnWrapper.kFunction.returnType, TypeCategory.QUERY)
+        val inputValues = handleInputValues(operation.name, operation.prepare, operation.inputValues)
+
+        return Field.DataLoader(
+            kql = operation,
+            returnType = returnType,
+            arguments = inputValues
+        )
+    }
+
     private fun handleObjectType(kClass: KClass<*>) : Type {
         assertValidObjectType(kClass)
         val objectDefs = definition.objects.filter { it.kClass.isSuperclassOf(kClass) }
@@ -234,6 +245,10 @@ class SchemaCompilation(
             .flatMap(TypeDef.Object<*>::extensionProperties)
             .map { property -> handleOperation(property) }
 
+        val dataloadExtensionFields = objectDefs
+            .flatMap(TypeDef.Object<*>::dataloadExtensionProperties)
+            .map { property -> handleDataloadOperation(property) }
+
         val unionFields = objectDefs
             .flatMap(TypeDef.Object<*>::unionProperties)
             .map { property -> handleUnionProperty(property) }
@@ -247,7 +262,7 @@ class SchemaCompilation(
                 PropertyDef.Function<Nothing, String?> ("__typename", FunctionWrapper.on(typenameResolver, true))
         )
 
-        val declaredFields = kotlinFields + extensionFields + unionFields
+        val declaredFields = kotlinFields + extensionFields + unionFields + dataloadExtensionFields
 
         if(declaredFields.isEmpty()){
             throw SchemaException("An Object type must define one or more fields. Found none on type ${objectDef.name}")

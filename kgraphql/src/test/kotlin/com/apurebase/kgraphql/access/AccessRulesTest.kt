@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.access
 import com.apurebase.kgraphql.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class AccessRulesTest {
 

@@ -2,7 +2,7 @@ package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import kotlinx.coroutines.runBlocking
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.openjdk.jmh.annotations.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit

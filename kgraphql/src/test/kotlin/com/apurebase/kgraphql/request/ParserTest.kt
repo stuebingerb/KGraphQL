@@ -14,7 +14,7 @@ import com.apurebase.kgraphql.ResourceFiles.kitchenSinkQuery
 import com.apurebase.kgraphql.d
 import com.apurebase.kgraphql.schema.model.ast.*
 import org.amshove.kluent.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ParserTest {
 

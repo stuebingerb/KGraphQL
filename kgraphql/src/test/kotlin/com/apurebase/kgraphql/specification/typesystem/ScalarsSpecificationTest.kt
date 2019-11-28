@@ -10,7 +10,7 @@ import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 

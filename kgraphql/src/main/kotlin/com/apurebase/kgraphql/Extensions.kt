@@ -1,5 +1,8 @@
 package com.apurebase.kgraphql
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
@@ -30,3 +33,34 @@ internal fun KType.getIterableElementType(): KType? {
 
 internal fun not(boolean: Boolean) = !boolean
 
+
+
+internal suspend fun <T, R> Collection<T>.toMapAsync(
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    block: suspend (T) -> R
+): Map<T, R> = coroutineScope {
+    val channel = Channel<Pair<T, R>>()
+    val jobs = map { item ->
+        launch(dispatcher) {
+            try {
+                val res = block(item)
+                channel.send(item to res)
+            } catch (e: Exception) {
+                channel.close(e)
+            }
+        }
+    }
+    val resultMap = mutableMapOf<T, R>()
+    repeat(size) {
+        try {
+            val (item, result) = channel.receive()
+            resultMap[item] = result
+        } catch (e: Exception) {
+            jobs.forEach { job: Job -> job.cancel() }
+            throw e
+        }
+    }
+
+    channel.close()
+    resultMap
+}

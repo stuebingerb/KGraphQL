@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
 import org.amshove.kluent.shouldEqual
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 data class Actor(var name : String? = "", var age: Int? = 0)
 data class Actress(var name : String? = "", var age: Int? = 0)

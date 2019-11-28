@@ -6,7 +6,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.execution.merge
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class MapMergeTest {
     private val jsonNodeFactory = JsonNodeFactory.instance

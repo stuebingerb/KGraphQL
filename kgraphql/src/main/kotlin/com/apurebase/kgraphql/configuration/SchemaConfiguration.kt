@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.configuration
 
+import com.apurebase.kgraphql.schema.execution.Executor
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.CoroutineDispatcher
 
@@ -11,5 +12,7 @@ data class SchemaConfiguration (
         val objectMapper: ObjectMapper,
         val useDefaultPrettyPrinter: Boolean,
         //execution
-        val coroutineDispatcher: CoroutineDispatcher
+        val coroutineDispatcher: CoroutineDispatcher,
+
+        val executor: Executor
 )

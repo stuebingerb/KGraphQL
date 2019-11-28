@@ -41,6 +41,21 @@ sealed class Field : __Field {
         }
     }
 
+    class DataLoader<T, K, R>(
+        val kql: PropertyDef.DataLoadedFunction<T, K, R>,
+        override val returnType: Type,
+        override val arguments: List<InputValue<*>>
+    ): Field() {
+        override val isDeprecated = kql.isDeprecated
+        override val deprecationReason = kql.deprecationReason
+        override val description = kql.description
+        override val name = kql.name
+
+        override fun checkAccess(parent: Any?, ctx: Context) {
+            kql.accessRule?.invoke(parent as T?, ctx)?.let { throw it }
+        }
+    }
+
     class Kotlin<T : Any, R>(
         kql : PropertyDef.Kotlin<T, R>,
         override val returnType: Type,

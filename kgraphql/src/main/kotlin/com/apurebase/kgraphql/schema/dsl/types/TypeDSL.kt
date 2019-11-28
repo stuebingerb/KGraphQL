@@ -29,6 +29,8 @@ open class TypeDSL<T : Any>(
 
     internal val describedKotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
 
+    internal val dataloadedExtensionProperties = mutableSetOf<PropertyDef.DataLoadedFunction<T, *, *>>()
+
     fun <R, E> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
@@ -61,6 +63,11 @@ open class TypeDSL<T : Any>(
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
+    fun <KEY, TYPE> dataProperty(name: String, block: DataLoaderPropertyDSL<T, KEY, TYPE>.() -> Unit) {
+        dataloadedExtensionProperties.add(
+            DataLoaderPropertyDSL(name, block).toKQLProperty()
+        )
+    }
 
     fun <R> property(kProperty: KProperty1<T, R>, block : KotlinPropertyDSL<T, R>.() -> Unit){
         val dsl = KotlinPropertyDSL(kProperty, block)
@@ -95,6 +102,7 @@ open class TypeDSL<T : Any>(
             kClass = kClass,
             kotlinProperties = describedKotlinProperties.toMap(),
             extensionProperties = extensionProperties.toList(),
+            dataloadExtensionProperties = dataloadedExtensionProperties.toList(),
             unionProperties = unionProperties.toList(),
             transformations = transformationProperties.associateBy { it.kProperty },
             description = description

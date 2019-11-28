@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 
 /**

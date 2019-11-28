@@ -7,7 +7,7 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.executeEqualQueries
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Specification("2.6 Arguments")
 class ArgumentsSpecificationTest {

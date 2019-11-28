@@ -7,7 +7,7 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Specification("2.5 Fields")
 class FieldsSpecificationTest {

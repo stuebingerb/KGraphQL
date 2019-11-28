@@ -19,6 +19,23 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
             inputValues : List<InputValueDef<*>> = emptyList()
     ) : BaseOperationDef<T, R>(name, resolver, inputValues, accessRule), PropertyDef<T>
 
+    /**
+     * [T] -> The Parent Type
+     * [K] -> The Key that'll be passed to the dataLoader
+     * [R] -> The return type
+     */
+    open class DataLoadedFunction<T, K, R>(
+        override val name: String,
+        val loader: FunctionWrapper<Map<K, R>>,
+        val prepare: FunctionWrapper<K>,
+        val returnWrapper: FunctionWrapper<R>, // TODO: Try not to depend on this and remove this field.
+        override val description: String? = null,
+        override val isDeprecated: Boolean = false,
+        override val deprecationReason: String? = null,
+        override val accessRule: ((T?, Context) -> Exception?)? = null,
+        val inputValues: List<InputValueDef<*>> = emptyList()
+    ): PropertyDef<T>
+
     open class Kotlin<T : Any, R> (
             val kProperty: KProperty1<T, R>,
             override val description: String? = null,

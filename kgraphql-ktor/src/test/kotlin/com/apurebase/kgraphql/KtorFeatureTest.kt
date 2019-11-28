@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql
 
 import org.amshove.kluent.shouldEqual
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class KtorFeatureTest {
     @Test

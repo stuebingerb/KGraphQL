@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.schema.SchemaException
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.greaterThan
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Specification("3.1.2 Objects")
 class ObjectsSpecificationTest {
