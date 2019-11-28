@@ -1,8 +1,8 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.extractOrNull
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest
+import org.amshove.kluent.shouldEqual
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
@@ -36,6 +36,21 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
 
         val mapNeither = execute("{film{title, year @include(if: true) @skip(if: false)}}")
         assertThat(extractOrNull(mapNeither, "data/film/year"), notNullValue())
+    }
+
+    @Test
+    fun `query with @include and @skip directive on field object`() {
+        val mapWithSkip = execute("{ number(big: true), film @skip(if: true) { title } }")
+        mapWithSkip.extract<String?>("data/film") shouldEqual null
+
+        val mapWithoutSkip = execute("{ number(big: true), film @skip(if: false) { title } }")
+        mapWithoutSkip.extract<String>("data/film/title") shouldEqual "Prestige"
+
+        val mapWithInclude = execute("{ number(big: true), film @include(if: true) { title } }")
+        mapWithInclude.extract<String?>("data/film/title") shouldEqual "Prestige"
+
+        val mapWithoutInclude = execute("{ number(big: true), film @include(if: false) { title } }")
+        mapWithoutInclude.extract<String>("data/film") shouldEqual null
     }
 
     @Test

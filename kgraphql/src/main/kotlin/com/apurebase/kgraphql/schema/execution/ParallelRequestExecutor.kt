@@ -52,16 +52,19 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         val data = root.putObject("data")
 
         val resultMap = plan.toMapAsync {
-            writeOperation(
+            val ctx = ExecutionContext(Variables(schema, variables, it.variables), context)
+            if (determineInclude(ctx, it)) writeOperation(
                 isSubscription = plan.isSubscription,
-                ctx = ExecutionContext(Variables(schema, variables, it.variables), context),
+                ctx = ctx,
                 node = it,
                 operation = it.field as Field.Function<*, *>
-            )
+            ) else null
         }
 
         for (operation in plan) {
-            data.set(operation.aliasOrKey, resultMap[operation])
+            if (resultMap[operation] != null) { // Remove all by skip/include directives
+                data.set(operation.aliasOrKey, resultMap[operation])
+            }
         }
 
         return objectWriter.writeValueAsString(root)
