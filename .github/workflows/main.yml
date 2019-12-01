@@ -6,6 +6,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: docker://gradle
-      - name: Run a one-line script
-        run: gradle jacocoTestReport coveralls
+      - uses: actions/checkout@v1
+      - name: Run Tests
+        run: ./gradlew test

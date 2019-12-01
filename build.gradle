@@ -2,7 +2,6 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.3.50"
     id "com.github.ben-manes.versions" version "0.24.0"
     id "com.jfrog.bintray" version "1.8.4"
-    id "jacoco"
     id "maven-publish"
 }
 
@@ -11,7 +10,6 @@ allprojects {
     group 'com.apurebase'
 
     apply plugin: 'kotlin'
-    apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
     apply plugin: "com.jfrog.bintray"
 
@@ -53,7 +51,7 @@ allprojects {
         publications = ['MyPublication']
         configurations = ['archives']
         pkg {
-            repo = 'apurebase'
+            repo = 'apurebase-test'
             name = project.name
             licenses = ['MIT']
             vcsUrl = 'https://github.com/aPureBase/KGraphQL'
@@ -79,80 +77,3 @@ allprojects {
     }
 }
 
-
-subprojects {
-    check.dependsOn jacocoTestReport
-    check.dependsOn jacocoTestCoverageVerification
-    tasks.test.finalizedBy jacocoTestReport
-
-    jacoco {
-        toolVersion = "0.8.4"
-        reportsDir = file("$buildDir/reports")
-    }
-
-    jacocoTestReport {
-        group = "Reporting"
-        description = "Generate Jacoco coverage reports"
-
-        reports {
-            html.enabled = true
-            csv.enabled = true
-        }
-
-        // what to exclude from coverage report
-        // UI, "noise", generated classes, platform classes, etc.
-        def excludes = [
-                '**/Manifest*.*',
-                '**/*Test*.*'
-        ]
-        // generated classes
-        afterEvaluate {
-            classDirectories.from = project.files(classDirectories.files.collect {
-                fileTree(dir: it, excludes: excludes)
-            })
-        }
-    }
-
-    jacocoTestCoverageVerification {
-        violationRules {
-            rule {
-                limit {
-                    minimum = 0.5
-                }
-            }
-
-            rule {
-                enabled = false
-                element = 'CLASS'
-                includes = ['org.gradle.*']
-
-                limit {
-                    counter = 'LINE'
-                    value = 'TOTALCOUNT'
-                    maximum = 0.3
-                }
-            }
-        }
-    }
-}
-
-task jacocoRootReport(type: JacocoReport, group: 'reporting') {
-    description = 'Generates an aggregate report from all subprojects'
-    dependsOn subprojects.test
-
-    additionalSourceDirs.from = files subprojects.sourceSets.main.allSource.srcDirs
-    sourceDirectories.from = files subprojects.sourceSets.main.allSource.srcDirs
-    classDirectories.from = files subprojects.sourceSets.main.output
-    executionData.from = files subprojects.jacocoTestReport.executionData
-
-    reports {
-        html.enabled = true
-        csv.enabled = true
-    }
-
-    doFirst {
-        executionData.from = files(executionData.findAll { it.exists() })
-    }
-}
-
-tasks.test.finalizedBy jacocoRootReport
