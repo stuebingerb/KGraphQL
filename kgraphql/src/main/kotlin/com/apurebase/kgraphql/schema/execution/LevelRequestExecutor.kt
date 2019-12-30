@@ -5,28 +5,31 @@ import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
+import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
+import com.apurebase.kgraphql.schema.model.ast.SelectionNode
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
+import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.*
 import kotlinx.coroutines.channels.*
 import kotlinx.serialization.json.*
 import kotlin.reflect.KProperty1
 
-sealed class JsonMsg
-object Finished: JsonMsg()
+@Suppress("EXPERIMENTAL_API_USAGE")
+fun CoroutineScope.actorTest() = actor<Pair<Int, SendChannel<CoroutineScope>>> {
+    val scopes = mutableListOf<Pair<CoroutineScope, Job>>()
 
-
-fun CoroutineScope.l() = actor<JsonMsg> {
-    val list = listOf("")
-    for (msg in channel) {
-        when (msg) {
-            is Finished -> println("All Done!")
+    for ((lvl, sendChannel) in channel) {
+        if (scopes.getOrNull(lvl) == null) {
+            val parent = if (lvl > 0) scopes[lvl-1] else null
+            val newJob = SupervisorJob(parent?.second)
+            scopes.add(lvl, CoroutineScope(newJob) to newJob)
         }
+        sendChannel.send(scopes[lvl].first)
     }
 }
 
@@ -41,36 +44,23 @@ class LevelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Corouti
         val requestContext: Context
     ) : Mutex by Mutex() {
 
-        inner class ExecutionJob: Job by Job() {
-            init {
-                invokeOnCompletion {
-                    println("Shall be shown!!!!!!!!!!!!!")
-                }
-            }
-        }
+        private val abc = actorTest()
 
-        private val levelStack = mutableMapOf<Int, ExecutionJob>()
-
-        suspend fun launchAt(index: Int, block: suspend () -> Unit) = launch(get(index)) {
-            block()
-        }
-
-        suspend fun get(index: Int) = withLock(this) {
-            levelStack.getOrElse(0) {
-                ExecutionJob().also {
-                    levelStack[index] = it
-                }
-            }
+        suspend fun get(lvl: Int): CoroutineScope {
+            val channel = Channel<CoroutineScope>()
+            abc.send(lvl to channel)
+            val scope = channel.receive()
+            channel.cancel()
+            return scope
         }
     }
 
 
-    private fun <T> CoroutineScope.writeOperation(
+    private suspend fun <T> writeOperation(
         ctx: ExecutionContext,
         node: Execution.Node,
-        operation: FunctionWrapper<T>,
-        channel: SendChannel<JsonElement>
-    ) = launch {
+        operation: FunctionWrapper<T>
+    ): JsonElement {
         node.field.checkAccess(null, ctx.requestContext)
         val result: T? = operation.invoke(
             funName = node.field.name,
@@ -81,22 +71,23 @@ class LevelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Corouti
             ctx = ctx
         )
 
-        createNode(ctx, 0, result, node, node.field.returnType, channel)
+        return createNode(ctx, result, node, node.field.returnType).await()
     }
 
-    private fun <T> create() = flow<JsonElement> {
-        emit(JsonNull)
+
+
+    private fun SelectionNode.level(): Int {
+        if (parent == null) return 0
+        return 1 + parent.level()
     }
 
     private suspend fun <T> createNode(
         ctx: ExecutionContext,
-        lvl: Int,
         value: T?,
         node: Execution.Node,
-        returnType: Type,
-        channel: SendChannel<JsonElement>
-    ): Job = ctx.launchAt(lvl) {
-        val result = when {
+        returnType: Type
+    ): Deferred<JsonElement> = ctx.get(node.selectionNode.level()).async {
+        when {
             value == null -> createNullNode(node, returnType)
             value is Collection<*> || value is Array<*> -> {
                 if (returnType.isList()) {
@@ -107,9 +98,9 @@ class LevelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Corouti
 
                     val list = arrayOfNulls<JsonElement>(values.size)
                     values.mapIndexed { index, v ->
-                        val ch = Channel<JsonElement>()
-                        createNode(ctx, lvl, v, node, returnType.unwrapList(), ch)
-                        ctx.launchAt(lvl) { list[index] = ch.receive() }
+                        launch {
+                            list[index] = createNode(ctx, v, node, returnType.unwrapList()).await()
+                        }
                     }.joinAll()
 
                     JsonArray(list.asList().filterNotNull()) // TODO: not finalized!
@@ -124,53 +115,59 @@ class LevelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Corouti
             value is Boolean -> JsonPrimitive(value)
             value is Long -> JsonPrimitive(value)
             node.children.isNotEmpty() -> {
-                val map = mutableMapOf<String, JsonElement>()
-                node.children
-                    .asFlow(ctx, lvl + 1, value, node, returnType)
-                    .collect { map[it.first] = it.second }
-
-                map.let(::JsonObject)
+                // ctx.get(node.selectionNode.level()).launch
+                createObjectNode(ctx, value, node, returnType)
             }
             node is Execution.Union -> throw IllegalArgumentException("Unions are not supported at the moment!")
             else -> throw IllegalArgumentException("Simple valueNode not supported")
         }
-        channel.send(result)
-        channel.close()
     }
 
-    private fun <T> Collection<Execution>.asFlow(
-        ctx: ExecutionContext,
-        lvl: Int,
-        value: T,
-        node: Execution.Node,
-        type: Type
-    ) = flow {
-        map { child ->
+    private suspend fun <T> createObjectNode(ctx: ExecutionContext, value: T, node: Execution.Node, type: Type) = kson {
+        for (child in node.children) {
             when (child) {
-                is Execution.Fragment -> throw IllegalArgumentException("Fragments aren't supported at the moment")
-                is Execution.Node -> {
-                    val field = type.unwrapped()[child.key]
-                        ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
-
-                    val ch = Channel<JsonElement>()
-                    createPropertyNode(ctx, lvl + 1, value, child, field, ch)
-
-                    emit(child.aliasOrKey to ch.receive())
-                    ch.close()
-                }
-                else -> TODO("Case not supported")
+                is Execution.Fragment -> handleFragment(ctx, value, child)
+                else -> applyProperty(ctx, value, child, type)
             }
         }
     }
 
-    private suspend fun <T> createPropertyNode(
+    private suspend fun <T> KJsonObjectBuilder.handleFragment(ctx: ExecutionContext, value: T, container: Execution.Fragment) {
+        val expectedType = container.condition.type
+
+        if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
+            if (expectedType.isInstance(value)) {
+                container.elements.map { child ->
+                    when (child) {
+                        is Execution.Fragment -> handleFragment(ctx, value, child)
+                        else -> listOf(applyProperty(ctx, value, child, expectedType))
+                    }
+                }
+            }
+        } else {
+            throw IllegalStateException("fragments can be specified on object types, interfaces, and unions")
+        }
+    }
+
+    private suspend fun <T> KJsonObjectBuilder.applyProperty(ctx: ExecutionContext, value: T, child: Execution, type: Type) {
+        when (child) {
+            is Execution.Union -> throw UnsupportedOperationException("Unions are currently not supported!")
+            is Execution.Node -> {
+                val field = type.unwrapped()[child.key]
+                    ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
+                child.aliasOrKey to createPropertyNodeAsync(ctx, value, child, field).await()
+            }
+            else -> throw UnsupportedOperationException("Whatever this is isn't supported!")
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private suspend fun <T> createPropertyNodeAsync(
         ctx: ExecutionContext,
-        lvl: Int,
         parentValue: T,
         node: Execution.Node,
-        field: Field,
-        channel: SendChannel<JsonElement>
-    ) = ctx.launchAt(lvl) {
+        field: Field
+    ): Deferred<JsonElement> = ctx.get(node.selectionNode.level()).async {
         // TODO: Check include directive
         node.field.checkAccess(parentValue, ctx.requestContext)
 
@@ -186,55 +183,51 @@ class LevelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Corouti
                     ctx = ctx
                 ) ?: rawValue
 
-                createNode(ctx, lvl, value, node, field.returnType, channel)
+                createNode(ctx, value, node, field.returnType).await()
             }
             is Field.Function<*, *> -> {
-                handleFunctionProperty(ctx, lvl, parentValue, node, field, channel)
+                handleFunctionProperty(ctx, parentValue, node, field)
             }
             is Field.DataLoader<*, *, *> -> {
-                handleDataProperty(ctx, lvl, parentValue, node, field, channel)
+                handleDataProperty(ctx, parentValue, node, field as Field.DataLoader<T, *, *>).await()
             }
             else -> throw TODO("Only Kotlin Fields are supported!")
         }
     }
 
-    private fun ExecutionPlan.toFlowOld(variables: VariablesJson, context: Context) = flow {
-        forEach { node ->
-            val ctx = ExecutionContext(Variables(schema, variables, node.variables), context)
-            val operation = node.field as Field.Function<*, *>
-
-            // TODO: Restructure
-            val channel = Channel<JsonElement>()
-            writeOperation(ctx, node, operation, channel)
-
-            emit(node.aliasOrKey to channel.receive())
-        }
-    }
-
-    private fun List<Execution>.toFlow() = flow {
-
-    }
-
-    private suspend fun <T> handleDataProperty(ctx: ExecutionContext, lvl: Int, parentValue: T, node: Execution.Node, field: Field.DataLoader<*,*,*>, sendChannel: SendChannel<JsonElement>) = ctx.launchAt(lvl) {
-        val preparedValue = field.kql.prepare(
+    private suspend fun <T> handleDataProperty(
+        ctx: ExecutionContext,
+        parentValue: T,
+        node: Execution.Node,
+        field: Field.DataLoader<T, *, *>
+    ): Deferred<JsonElement> = ctx.get(node.selectionNode.level()).async {
+        val preparedValue = field.kql.prepare.invoke(
             funName = field.name,
             receiver = parentValue,
             inputValues = field.arguments,
             args = node.arguments,
             executionNode = node,
             ctx = ctx
-        )
-//        field.kql.loader()
+        ) ?: TODO("Nullable prepare functions isn't supported")
+
+        val value = (field.loader as nidomiro.kdataloader.DataLoader<Any, *>).loadAsync(preparedValue)
+
+        launch {
+            delay(1000)
+            field.loader.dispatch()
+        }
+
+        val loaded = value.await()
+
+        createNode(ctx, loaded, node, field.returnType).await()
     }
 
     private suspend fun <T> handleFunctionProperty(
         ctx: ExecutionContext,
-        lvl: Int,
         parentValue: T,
         node: Execution.Node,
-        field: Field.Function<*, *>,
-        channel: SendChannel<JsonElement>
-    ) = ctx.launchAt(lvl) {
+        field: Field.Function<*, *>
+    ): JsonElement {
         val result = field(
             funName = field.name,
             receiver = parentValue,
@@ -243,27 +236,25 @@ class LevelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Corouti
             executionNode = node,
             ctx = ctx
         )
-        createNode(ctx, lvl, result, node, field.returnType, channel)
+        return createNode(ctx, result, node, field.returnType).await()
     }
 
     override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context): String {
-        val dataMap = mutableMapOf<String, JsonElement>()
+        val ctx = ExecutionContext(Variables(schema, variables, plan.firstOrNull { it.variables != null }?.variables), context)
 
-        plan
-            .toFlowOld(variables, context)
-            .collect { dataMap[it.first] = it.second }
-
-        return json {
-            "data" to JsonObject(dataMap)
+        return kson {
+            "data" to kson {
+                plan.forEach { node ->
+                    node.aliasOrKey to writeOperation(ctx, node, node.field as Field.Function<*, *>)
+                }
+            }
         }.toString()
     }
 
-    private fun createNullNode(node: Execution.Node, returnType: Type): JsonNull {
-        if (returnType !is Type.NonNull) {
-            return JsonNull
-        } else {
-            throw ExecutionException("null result for non-nullable operation ${node.field}", node)
-        }
+    private fun createNullNode(node: Execution.Node, returnType: Type): JsonNull = if (returnType !is Type.NonNull) {
+        JsonNull
+    } else {
+        throw ExecutionException("null result for non-nullable operation ${node.field}", node)
     }
 
     override fun execute(plan: ExecutionPlan, variables: VariablesJson, context: Context) = runBlocking {

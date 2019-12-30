@@ -181,7 +181,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
             when (child) {
                 is Execution.Fragment -> objectNode.setAll(handleFragment(ctx, value, child))
                 else -> {
-                    val ( key, jsonNode) = handleProperty(ctx, value, child, type, node.children.size)
+                    val (key, jsonNode) = handleProperty(ctx, value, child, type, node.children.size)
                     objectNode.set(key, jsonNode)
                 }
             }

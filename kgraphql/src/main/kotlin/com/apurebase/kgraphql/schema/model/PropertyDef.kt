@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema.model
 
 import com.apurebase.kgraphql.Context
+import nidomiro.kdataloader.BatchLoader
 import kotlin.reflect.KProperty1
 
 interface PropertyDef<T> : Depreciable, DescribedDef {
@@ -26,7 +27,7 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
      */
     open class DataLoadedFunction<T, K, R>(
         override val name: String,
-        val loader: FunctionWrapper<Map<K, R>>,
+        val loader: BatchLoader<K, R>,
         val prepare: FunctionWrapper<K>,
         val returnWrapper: FunctionWrapper<R>, // TODO: Try not to depend on this and remove this field.
         override val description: String? = null,

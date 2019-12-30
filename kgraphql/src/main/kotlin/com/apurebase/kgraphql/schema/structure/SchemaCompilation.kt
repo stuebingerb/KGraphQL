@@ -19,6 +19,8 @@ import com.apurebase.kgraphql.schema.model.QueryDef
 import com.apurebase.kgraphql.schema.model.SchemaDefinition
 import com.apurebase.kgraphql.schema.model.Transformation
 import com.apurebase.kgraphql.schema.model.TypeDef
+import nidomiro.kdataloader.DataLoaderOptions
+import nidomiro.kdataloader.SimpleDataLoaderImpl
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
@@ -208,8 +210,11 @@ class SchemaCompilation(
         val returnType = handlePossiblyWrappedType(operation.returnWrapper.kFunction.returnType, TypeCategory.QUERY)
         val inputValues = handleInputValues(operation.name, operation.prepare, operation.inputValues)
 
+        val dataLoader = SimpleDataLoaderImpl(DataLoaderOptions(), operation.loader)
+        // TODO: Some logic here, to not create the same dataLoader for a single execution request!
         return Field.DataLoader(
             kql = operation,
+            loader = dataLoader,
             returnType = returnType,
             arguments = inputValues
         )

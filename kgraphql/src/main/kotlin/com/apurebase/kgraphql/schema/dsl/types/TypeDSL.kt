@@ -2,10 +2,7 @@ package com.apurebase.kgraphql.schema.dsl.types
 
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.schema.SchemaException
-import com.apurebase.kgraphql.schema.dsl.ItemDSL
-import com.apurebase.kgraphql.schema.dsl.KotlinPropertyDSL
-import com.apurebase.kgraphql.schema.dsl.PropertyDSL
-import com.apurebase.kgraphql.schema.dsl.UnionPropertyDSL
+import com.apurebase.kgraphql.schema.dsl.*
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.PropertyDef
 import com.apurebase.kgraphql.schema.model.Transformation

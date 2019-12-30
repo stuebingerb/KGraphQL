@@ -3,6 +3,9 @@ package com.apurebase.kgraphql
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.execution.Executor
+import kotlinx.coroutines.runBlocking
+import nidomiro.kdataloader.ExecutionResult
+import nidomiro.kdataloader.dsl.dataLoader
 import org.amshove.kluent.shouldEqual
 import org.junit.jupiter.api.Assertions.assertTimeoutPreemptively
 import org.junit.jupiter.api.RepeatedTest
@@ -21,19 +24,19 @@ class DataLoaderTest {
     private val jogvan = Person(1, "Jógvan", "Olsen")
     private val beinisson = Person(2, "Høgni", "Beinisson")
     private val juul = Person(3, "Høgni", "Juul")
-    private val jarad = Person(4, "Jarad", "??")
+    private val otherOne = Person(4, "The other one", "??")
 
     private val colleagues = mapOf(
         jogvan.id to listOf(beinisson, juul),
-        beinisson.id to listOf(jogvan, juul, jarad),
+        beinisson.id to listOf(jogvan, juul, otherOne),
         juul.id to listOf(beinisson, jogvan),
-        jarad.id to listOf(beinisson)
+        otherOne.id to listOf(beinisson)
     )
 
     private val boss = mapOf(
         jogvan.id to juul,
         juul.id to beinisson,
-        beinisson.id to jarad
+        beinisson.id to otherOne
     )
 
     data class Tree(val id: Int, val value: String)
@@ -53,7 +56,7 @@ class DataLoaderTest {
 
 
     fun schema(
-        block: SchemaBuilder<Unit>.() -> Unit = {}
+        block: SchemaBuilder.() -> Unit = {}
     ): Pair<DefaultSchema, AtomicCounters> {
         val counters = AtomicCounters()
 
@@ -64,7 +67,7 @@ class DataLoaderTest {
             }
 
             query("people") {
-                resolver { -> listOf(jogvan, beinisson, juul, jarad) }
+                resolver { -> listOf(jogvan, beinisson, juul, otherOne) }
             }
 
             type<Person> {
@@ -77,7 +80,7 @@ class DataLoaderTest {
                     prepare { it.id }
                     loader { keys ->
                         println("== Running [respondsTo] loader with keys: $keys ==")
-                        keys.map { it to boss[it] }.toMap()
+                        keys.map { ExecutionResult.Success(boss[it]) }
                     }
                 }
                 dataProperty<Int, List<Person>>("colleagues") {
@@ -85,7 +88,7 @@ class DataLoaderTest {
                     prepare { it.id }
                     loader { keys ->
                         println("== Running [colleagues] loader with keys: $keys ==")
-                        keys.map { it to (colleagues[it] ?: listOf()) }.toMap()
+                        keys.map { ExecutionResult.Success(colleagues[it] ?: listOf()) }
                     }
                 }
             }
@@ -113,8 +116,8 @@ class DataLoaderTest {
                         println("== Running [B] loader with keys: $keys ==")
                         counters.abcB.loader.incrementAndGet()
                         keys.map {
-                            it to it.map(Char::toInt).fold(0) { a, b -> a + b }
-                        }.toMap()
+                            ExecutionResult.Success(it.map(Char::toInt).fold(0) { a, b -> a + b })
+                        }
                     }
                     prepare { parent: ABC ->
                         counters.abcB.prepare.incrementAndGet()
@@ -134,8 +137,8 @@ class DataLoaderTest {
                                 "Testing 3" -> "Jógvan" to "Høgni"
                                 else -> "${it}Nest-0" to "${it}Nest-1"
                             }
-                            it to listOf(ABC(a1), ABC(a2))
-                        }.toMap()
+                            ExecutionResult.Success(listOf(ABC(a1), ABC(a2)))
+                        }
                     }
                     prepare { parent ->
                         counters.abcChildren.prepare.incrementAndGet()
@@ -151,7 +154,7 @@ class DataLoaderTest {
                     loader { keys ->
                         println("== Running [child] loader with keys: $keys ==")
                         counters.treeChild.loader.incrementAndGet()
-                        keys.map { num -> num to Tree(10 + num, "Fisk - $num") }.toMap()
+                        keys.map { num -> ExecutionResult.Success(Tree(10 + num, "Fisk - $num")) }
                     }
 
                     prepare { parent, buzz: Int ->
@@ -165,6 +168,20 @@ class DataLoaderTest {
         }
 
         return schema to counters
+    }
+
+    @RepeatedTest(repeatTimes)
+    fun abc() {
+        runBlocking {
+            val dataLoader = dataLoader({ keys: List<Int> -> keys.map { ExecutionResult.Success(it.toString()) } })
+
+            val deferred1 = dataLoader.loadAsync(1)
+            val deferred2 = dataLoader.loadAsync(2)
+
+            dataLoader.dispatch()
+            println("1 -> ${deferred1.await()}")
+            println("2 -> ${deferred2.await()}")
+        }
     }
 
     @RepeatedTest(repeatTimes)
@@ -207,17 +224,12 @@ class DataLoaderTest {
                     fullName
                 }
             """.trimIndent()
-            println(1)
             val res = schema.executeBlocking(query)
-            println(2)
             println(res)
             val result = res.deserialize()
 
-            println(3)
             result.extract<String>("data/people[0]/respondsTo/fullName") shouldEqual "${juul.firstName} ${juul.lastName}"
-            println(4)
             result.extract<String>("data/people[1]/colleagues[0]/fullName") shouldEqual "${jogvan.firstName} ${jogvan.lastName}"
-            println(5)
         }
     }
 

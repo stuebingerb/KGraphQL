@@ -4,14 +4,15 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import com.apurebase.kgraphql.schema.model.PropertyDef
+import nidomiro.kdataloader.BatchLoader
 
 class DataLoaderPropertyDSL<T, K, R>(
     val name: String,
     private val block : DataLoaderPropertyDSL<T, K, R>.() -> Unit
 ): LimitedAccessItemDSL<T>(), ResolverDSL.Target {
 
+    internal lateinit var dataLoader: BatchLoader<K, R>
     internal lateinit var prepareWrapper: FunctionWrapper<K>
-    internal lateinit var dataLoader: FunctionWrapper<Map<K, R>>
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
 
@@ -21,8 +22,8 @@ class DataLoaderPropertyDSL<T, K, R>(
         returnType = FunctionWrapper.on(block)
     }
 
-    fun loader(block: suspend (List<K>) -> Map<K, R>) {
-        dataLoader = FunctionWrapper.on(block)
+    fun loader(block: BatchLoader<K, R>) {
+        dataLoader = block
     }
 
     fun prepare(block: suspend (T) -> K) {
@@ -49,8 +50,8 @@ class DataLoaderPropertyDSL<T, K, R>(
             deprecationReason = deprecationReason,
             isDeprecated = isDeprecated,
             inputValues = inputValues,
-            prepare = prepareWrapper,
             returnWrapper = returnType,
+            prepare = prepareWrapper,
             loader = dataLoader
         )
     }
