@@ -5,6 +5,8 @@ import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import com.apurebase.kgraphql.schema.model.PropertyDef
 import nidomiro.kdataloader.BatchLoader
+import nidomiro.kdataloader.DataLoaderOptions
+import nidomiro.kdataloader.SimpleDataLoaderImpl
 
 class DataLoaderPropertyDSL<T, K, R>(
     val name: String,
@@ -52,7 +54,7 @@ class DataLoaderPropertyDSL<T, K, R>(
             inputValues = inputValues,
             returnWrapper = returnType,
             prepare = prepareWrapper,
-            loader = dataLoader
+            loader = nidomiro.kdataloader.factories.SimpleDataLoaderFactory(nidomiro.kdataloader.DataLoaderOptions(), mapOf(), dataLoader)
         )
     }
 

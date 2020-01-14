@@ -19,8 +19,10 @@ import com.apurebase.kgraphql.schema.model.QueryDef
 import com.apurebase.kgraphql.schema.model.SchemaDefinition
 import com.apurebase.kgraphql.schema.model.Transformation
 import com.apurebase.kgraphql.schema.model.TypeDef
+import nidomiro.kdataloader.DataLoader
 import nidomiro.kdataloader.DataLoaderOptions
 import nidomiro.kdataloader.SimpleDataLoaderImpl
+import nidomiro.kdataloader.factories.DataLoaderFactory
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
@@ -52,7 +54,7 @@ class SchemaCompilation(
         INPUT, QUERY
     }
 
-    fun perform(): DefaultSchema {
+    suspend fun perform(): DefaultSchema {
         val queryType = handleQueries()
         val mutationType = handleMutations()
         val subscriptionType = handleSubscriptions()
@@ -109,52 +111,52 @@ class SchemaCompilation(
         }
     }
 
-    private fun handlePartialDirective(directive: Directive.Partial) : Directive {
+    private suspend fun handlePartialDirective(directive: Directive.Partial) : Directive {
         val inputValues = handleInputValues(directive.name, directive.execution, emptyList())
         return directive.toDirective(inputValues)
     }
 
-    private fun handleQueries() : Type {
+    private suspend fun handleQueries() : Type {
         return Type.OperationObject(
             name = "Query",
             description = "Query object",
-            fields = definition.queries.map(this::handleOperation) + introspectionSchemaQuery() + introspectionTypeQuery()
+            fields = definition.queries.map { handleOperation(it) } + introspectionSchemaQuery() + introspectionTypeQuery()
         )
     }
 
-    private fun handleMutations() : Type {
+    private suspend fun handleMutations() : Type {
         return Type.OperationObject("Mutation", "Mutation object", definition.mutations.map { handleOperation(it) })
     }
 
-    private fun handleSubscriptions() : Type {
+    private suspend fun handleSubscriptions() : Type {
         return Type.OperationObject("Subscription", "Subscription object", definition.subscriptions.map { handleOperation(it) })
     }
 
     @Suppress("USELESS_CAST") // We are casting as __Schema so we don't get proxied types. https://github.com/aPureBase/KGraphQL/issues/45
-    private fun introspectionSchemaQuery() = handleOperation(
+    private suspend fun introspectionSchemaQuery() = handleOperation(
         QueryDef("__schema", FunctionWrapper.on<__Schema> { schemaProxy as __Schema })
     )
 
-    private fun introspectionTypeQuery() = handleOperation(
+    private suspend fun introspectionTypeQuery() = handleOperation(
         QueryDef("__type", FunctionWrapper.on {
             name : String -> schemaProxy.findTypeByName(name)
         })
     )
 
-    private fun handleOperation(operation : BaseOperationDef<*, *>) : Field {
+    private suspend fun handleOperation(operation : BaseOperationDef<*, *>) : Field {
         val returnType = handlePossiblyWrappedType(operation.kFunction.returnType, TypeCategory.QUERY)
         val inputValues = handleInputValues(operation.name, operation, operation.inputValues)
         return Field.Function(operation, returnType, inputValues)
     }
 
-    private fun handleUnionProperty(unionProperty: PropertyDef.Union<*>) : Field {
+    private suspend fun handleUnionProperty(unionProperty: PropertyDef.Union<*>) : Field {
         val inputValues = handleInputValues(unionProperty.name, unionProperty, unionProperty.inputValues)
         val type = handleUnionType(unionProperty.union)
 
         return Field.Union(unionProperty, unionProperty.nullable, type, inputValues)
     }
 
-    private fun handlePossiblyWrappedType(kType : KType, typeCategory: TypeCategory) : Type = when {
+    private suspend fun handlePossiblyWrappedType(kType : KType, typeCategory: TypeCategory) : Type = when {
         kType.isIterable() -> handleCollectionType(kType, typeCategory)
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
@@ -162,7 +164,7 @@ class SchemaCompilation(
         else -> handleSimpleType(kType, typeCategory)
     }
 
-    private fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {
+    private suspend fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {
         val type = when {
             kType.getIterableElementType() != null -> kType.getIterableElementType()
             kType.arguments.size == 1 -> kType.arguments.first().type
@@ -173,7 +175,7 @@ class SchemaCompilation(
         return applyNullability(kType, nullableListType)
     }
 
-    private fun handleSimpleType(kType: KType, typeCategory: TypeCategory): Type {
+    private suspend fun handleSimpleType(kType: KType, typeCategory: TypeCategory): Type {
         val simpleType = handleRawType(kType.jvmErasure, typeCategory)
         return applyNullability(kType, simpleType)
     }
@@ -186,7 +188,7 @@ class SchemaCompilation(
         }
     }
 
-    private fun handleRawType(kClass: KClass<*>, typeCategory: TypeCategory) : Type {
+    private suspend fun handleRawType(kClass: KClass<*>, typeCategory: TypeCategory) : Type {
 
         if(kClass == Context::class) throw SchemaException("Context type cannot be part of schema")
 
@@ -195,32 +197,35 @@ class SchemaCompilation(
             TypeCategory.INPUT -> inputTypeProxies
         }
 
-        val typeCreator = when(typeCategory){
-            TypeCategory.QUERY -> this::handleObjectType
-            TypeCategory.INPUT -> this::handleInputType
-        }
 
         return cachedInstances[kClass]
-                ?: enums[kClass]
-                ?: scalars[kClass]
-                ?: typeCreator (kClass)
+            ?: enums[kClass]
+            ?: scalars[kClass]
+            ?: when(typeCategory) {
+                TypeCategory.QUERY -> handleObjectType(kClass)
+                TypeCategory.INPUT -> handleInputType(kClass)
+            }
     }
 
-    private fun <T, K, R> handleDataloadOperation(operation: PropertyDef.DataLoadedFunction<T, K, R>): Field {
+    private suspend fun <T, K, R> handleDataloadOperation(
+        operation: PropertyDef.DataLoadedFunction<T, K, R>,
+        ctx: MutableMap<DataLoaderFactory<*,*>, DataLoader<*, *>>
+    ): Field {
         val returnType = handlePossiblyWrappedType(operation.returnWrapper.kFunction.returnType, TypeCategory.QUERY)
         val inputValues = handleInputValues(operation.name, operation.prepare, operation.inputValues)
 
-        val dataLoader = SimpleDataLoaderImpl(DataLoaderOptions(), operation.loader)
-        // TODO: Some logic here, to not create the same dataLoader for a single execution request!
+        val dataloader = ctx.getOrPut(operation.loader) { operation.loader.constructNew() }
+        
+
         return Field.DataLoader(
             kql = operation,
-            loader = dataLoader,
+            loader = dataloader as DataLoader<K, R>,
             returnType = returnType,
             arguments = inputValues
         )
     }
 
-    private fun handleObjectType(kClass: KClass<*>) : Type {
+    private suspend fun handleObjectType(kClass: KClass<*>) : Type {
         assertValidObjectType(kClass)
         val objectDefs = definition.objects.filter { it.kClass.isSuperclassOf(kClass) }
         val objectDef = objectDefs.find { it.kClass == kClass } ?: TypeDef.Object(kClass.defaultKQLTypeName(), kClass)
@@ -250,9 +255,10 @@ class SchemaCompilation(
             .flatMap(TypeDef.Object<*>::extensionProperties)
             .map { property -> handleOperation(property) }
 
+        val dataLoaderCtx = mutableMapOf<DataLoaderFactory<*, *>, DataLoader<*, *>>()
         val dataloadExtensionFields = objectDefs
             .flatMap(TypeDef.Object<*>::dataloadExtensionProperties)
-            .map { property -> handleDataloadOperation(property) }
+            .map { property -> handleDataloadOperation(property, dataLoaderCtx) }
 
         val unionFields = objectDefs
             .flatMap(TypeDef.Object<*>::unionProperties)
@@ -282,13 +288,13 @@ class SchemaCompilation(
         return typeProxy
     }
 
-    private fun handleInputType(kClass: KClass<*>) : Type {
+    private suspend fun handleInputType(kClass: KClass<*>) : Type {
         assertValidObjectType(kClass)
 
         val inputObjectDef = definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName(), kClass)
         val objectType = Type.Input(inputObjectDef)
         val typeProxy = TypeProxy(objectType)
-        inputTypeProxies.put(kClass, typeProxy)
+        inputTypeProxies[kClass] = typeProxy
 
         val fields = kClass.memberProperties.map { property -> handleKotlinInputProperty(property) }
 
@@ -296,7 +302,7 @@ class SchemaCompilation(
         return typeProxy
     }
 
-    private fun handleInputValues(operationName : String, operation: FunctionWrapper<*>, inputValues: List<InputValueDef<*>>) : List<InputValue<*>> {
+    private suspend fun handleInputValues(operationName : String, operation: FunctionWrapper<*>, inputValues: List<InputValueDef<*>>) : List<InputValue<*>> {
         val invalidInputValues = inputValues
                 .map { it.name }
                 .filterNot { it in operation.argumentsDescriptor.keys }
@@ -312,7 +318,7 @@ class SchemaCompilation(
         }
     }
 
-    private fun handleUnionType(union : TypeDef.Union) : Type.Union {
+    private suspend fun handleUnionType(union : TypeDef.Union) : Type.Union {
         val possibleTypes = union.members.map {
             handleRawType(it, TypeCategory.QUERY)
         }
@@ -327,12 +333,12 @@ class SchemaCompilation(
         return unionType
     }
 
-    private fun handleKotlinInputProperty(kProperty: KProperty1<*, *>) : InputValue<*> {
+    private suspend fun handleKotlinInputProperty(kProperty: KProperty1<*, *>) : InputValue<*> {
         val type = handlePossiblyWrappedType(kProperty.returnType, TypeCategory.INPUT)
         return InputValue(InputValueDef(kProperty.returnType.jvmErasure, kProperty.name), type)
     }
 
-    private fun <T : Any, R> handleKotlinProperty (
+    private suspend fun <T : Any, R> handleKotlinProperty (
             kProperty: KProperty1<T, R>,
             kqlProperty: PropertyDef.Kotlin<*, *>?,
             transformation: Transformation<*, *>?

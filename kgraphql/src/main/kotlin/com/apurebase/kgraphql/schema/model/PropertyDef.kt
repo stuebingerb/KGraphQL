@@ -27,7 +27,7 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
      */
     open class DataLoadedFunction<T, K, R>(
         override val name: String,
-        val loader: BatchLoader<K, R>,
+        val loader: nidomiro.kdataloader.factories.DataLoaderFactory<K, R>,
         val prepare: FunctionWrapper<K>,
         val returnWrapper: FunctionWrapper<R>, // TODO: Try not to depend on this and remove this field.
         override val description: String? = null,

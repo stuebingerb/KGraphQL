@@ -28,7 +28,7 @@ class DefaultSchema (
 
     private val requestExecutor : RequestExecutor = when (configuration.executor) {
         Parallel -> ParallelRequestExecutor(this)
-        Level -> LevelRequestExecutor(this)
+        DataLoaderPrepared -> DataLoaderPreparedRequestExecutor(this)
     }
 
      private val requestInterpreter : RequestInterpreter = RequestInterpreter(model)

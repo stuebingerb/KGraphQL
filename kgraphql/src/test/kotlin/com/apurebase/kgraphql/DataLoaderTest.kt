@@ -63,7 +63,7 @@ class DataLoaderTest {
         val schema = defaultSchema {
             configure {
                 useDefaultPrettyPrinter = true
-                executor = Executor.Level
+                executor = Executor.DataLoaderPrepared
             }
 
             query("people") {
@@ -250,9 +250,12 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            val result = deserialize(schema.executeBlocking(query))
+            val res = schema.executeBlocking(query)
+            println(res)
+            val result = deserialize(res)
             counters.treeChild.prepare.get() shouldEqual 2
             counters.treeChild.loader.get() shouldEqual 1
+
 
             result.extract<Int>("data/tree[1]/id") shouldEqual 2
             result.extract<Int>("data/tree[0]/child/id") shouldEqual 14
@@ -291,20 +294,20 @@ class DataLoaderTest {
             val (schema) = schema()
 
             val query = """
-            {
-                abc {
-                    value
-                    B
-                    children {
+                {
+                    abc {
                         value
                         B
                         children {
                             value
                             B
+                            children {
+                                value
+                                B
+                            }
                         }
                     }
                 }
-            }
             """.trimIndent()
 
             val result = schema.executeBlocking(query)
