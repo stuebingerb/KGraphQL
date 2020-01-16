@@ -27,6 +27,8 @@ class DataLoaderTest {
     private val juul = Person(3, "Høgni", "Juul")
     private val otherOne = Person(4, "The other one", "??")
 
+    val allPeople = listOf(jogvan, beinisson, juul, otherOne)
+
     private val colleagues = mapOf(
         jogvan.id to listOf(beinisson, juul),
         beinisson.id to listOf(jogvan, juul, otherOne),
@@ -42,7 +44,7 @@ class DataLoaderTest {
 
     data class Tree(val id: Int, val value: String)
 
-    data class ABC(val value: String)
+    data class ABC(val value: String, val personId: Int? = null)
 
     data class AtomicProperty(
         val loader: AtomicInteger = AtomicInteger(),
@@ -67,7 +69,7 @@ class DataLoaderTest {
             }
 
             query("people") {
-                resolver { -> listOf(jogvan, beinisson, juul, otherOne) }
+                resolver { -> allPeople }
             }
 
             type<Person> {
@@ -76,7 +78,7 @@ class DataLoaderTest {
                 }
 
                 dataProperty<Int, Person?>("respondsTo") {
-                    setReturnType { jogvan as Person? }
+//                    setReturnType { jogvan as Person? }
                     prepare { it.id }
                     loader { keys ->
                         println("== Running [respondsTo] loader with keys: $keys ==")
@@ -84,7 +86,7 @@ class DataLoaderTest {
                     }
                 }
                 dataProperty<Int, List<Person>>("colleagues") {
-                    setReturnType { listOf() }
+//                    setReturnType { listOf() }
                     prepare { it.id }
                     loader { keys ->
                         println("== Running [colleagues] loader with keys: $keys ==")
@@ -104,14 +106,14 @@ class DataLoaderTest {
 
             query("abc") {
                 resolver { ->
-                    (1..3).map { ABC("Testing $it") }
+                    (1..3).map { ABC("Testing $it", if (it == 2) null else it) }
                 }
             }
 
             type<ABC> {
 
                 dataProperty<String, Int>("B") {
-                    setReturnType { 25 }
+//                    setReturnType { 25 }
                     loader { keys ->
                         println("== Running [B] loader with keys: $keys ==")
                         counters.abcB.loader.incrementAndGet()
@@ -134,8 +136,20 @@ class DataLoaderTest {
                     }
                 }
 
+                dataProperty<Int?, Person?>("person") {
+//                    setReturnType { null as Person? }
+                    prepare { it.personId }
+                    loader { personIds ->
+                        personIds.map {
+                            ExecutionResult.Success(
+                                if (it == null || it < 1) null else allPeople[it - 1]
+                            )
+                        }
+                    }
+                }
+
                 dataProperty<String, List<ABC>>("children") {
-                    setReturnType { listOf() }
+//                    setReturnType { listOf() }
                     loader { keys ->
                         println("== Running [children] loader with keys: $keys ==")
                         counters.abcChildren.loader.incrementAndGet()
@@ -159,7 +173,7 @@ class DataLoaderTest {
 
             type<Tree> {
                 dataProperty<Int, Tree>("child") {
-                    setReturnType { Tree(0, "") }
+//                    setReturnType { Tree(0, "") }
                     loader { keys ->
                         println("== Running [child] loader with keys: $keys ==")
                         counters.treeChild.loader.incrementAndGet()
@@ -221,6 +235,31 @@ class DataLoaderTest {
             """.trimIndent()
 
             val result = schema.executeBlocking(query).also(::println).deserialize()
+        }
+    }
+
+    @RepeatedTest(repeatTimes)
+    fun `dataloader with nullable prepare keys`() {
+        assertTimeoutPreemptively(timeout) {
+            val (schema) = schema()
+
+            val query = """
+                {
+                    abc {
+                        value
+                        personId
+                        person {
+                            id
+                            fullName
+                        }
+                    }
+                }
+            """.trimIndent()
+            val result = schema.executeBlocking(query).also(::println).deserialize()
+
+            result.extract<String>("data/abc[0]/person/fullName") shouldEqual "${jogvan.firstName} ${jogvan.lastName}"
+            extractOrNull<String>(result, "data/abc[1]/person") shouldEqual null
+            result.extract<String>("data/abc[2]/person/fullName") shouldEqual "${juul.firstName} ${juul.lastName}"
         }
     }
 

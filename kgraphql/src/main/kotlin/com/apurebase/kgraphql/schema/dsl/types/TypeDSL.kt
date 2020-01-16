@@ -9,6 +9,8 @@ import com.apurebase.kgraphql.schema.model.Transformation
 import com.apurebase.kgraphql.schema.model.TypeDef
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
+import kotlin.reflect.full.createType
+import kotlin.reflect.typeOf
 
 
 open class TypeDSL<T : Any>(
@@ -26,7 +28,7 @@ open class TypeDSL<T : Any>(
 
     internal val describedKotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
 
-    internal val dataloadedExtensionProperties = mutableSetOf<PropertyDef.DataLoadedFunction<T, *, *>>()
+    val dataloadedExtensionProperties = mutableSetOf<PropertyDef.DataLoadedFunction<T, *, *>>()
 
     fun <R, E> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
@@ -60,9 +62,10 @@ open class TypeDSL<T : Any>(
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <KEY, TYPE> dataProperty(name: String, block: DataLoaderPropertyDSL<T, KEY, TYPE>.() -> Unit) {
+    @UseExperimental(ExperimentalStdlibApi::class)
+    inline fun <KEY, reified TYPE> dataProperty(name: String, noinline block: DataLoaderPropertyDSL<T, KEY, TYPE>.() -> Unit) {
         dataloadedExtensionProperties.add(
-            DataLoaderPropertyDSL(name, block).toKQLProperty()
+            DataLoaderPropertyDSL(name, typeOf<TYPE>(), block).toKQLProperty()
         )
     }
 

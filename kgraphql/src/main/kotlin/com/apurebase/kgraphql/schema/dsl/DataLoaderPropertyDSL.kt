@@ -5,11 +5,11 @@ import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import com.apurebase.kgraphql.schema.model.PropertyDef
 import nidomiro.kdataloader.BatchLoader
-import nidomiro.kdataloader.DataLoaderOptions
-import nidomiro.kdataloader.SimpleDataLoaderImpl
+import kotlin.reflect.KType
 
 class DataLoaderPropertyDSL<T, K, R>(
     val name: String,
+    val returnType: KType,
     private val block : DataLoaderPropertyDSL<T, K, R>.() -> Unit
 ): LimitedAccessItemDSL<T>(), ResolverDSL.Target {
 
@@ -17,12 +17,6 @@ class DataLoaderPropertyDSL<T, K, R>(
     internal lateinit var prepareWrapper: FunctionWrapper<K>
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
-
-    internal lateinit var returnType: FunctionWrapper<R>
-
-    fun setReturnType(block: suspend () -> R) {
-        returnType = FunctionWrapper.on(block)
-    }
 
     fun loader(block: BatchLoader<K, R>) {
         dataLoader = block
@@ -52,7 +46,7 @@ class DataLoaderPropertyDSL<T, K, R>(
             deprecationReason = deprecationReason,
             isDeprecated = isDeprecated,
             inputValues = inputValues,
-            returnWrapper = returnType,
+            returnType = returnType,
             prepare = prepareWrapper,
             loader = nidomiro.kdataloader.factories.SimpleDataLoaderFactory(nidomiro.kdataloader.DataLoaderOptions(), mapOf(), dataLoader)
         )

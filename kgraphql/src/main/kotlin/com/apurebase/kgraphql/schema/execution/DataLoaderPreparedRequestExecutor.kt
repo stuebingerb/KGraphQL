@@ -298,9 +298,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             args = node.arguments,
             executionNode = node,
             ctx = ctx
-        ) ?: TODO("Nullable prepare functions isn't supported")
+        ) // ?: TODO("Nullable prepare functions isn't supported")
 
-        val dLoader = (field.loader as DataLoader<Any, *>)
+        val dLoader = (field.loader as DataLoader<Any?, *>)
 
         val value = dLoader.loadAsync(preparedValue)
 

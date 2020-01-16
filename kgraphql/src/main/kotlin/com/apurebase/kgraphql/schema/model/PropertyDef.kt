@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema.model
 import com.apurebase.kgraphql.Context
 import nidomiro.kdataloader.BatchLoader
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KType
 
 interface PropertyDef<T> : Depreciable, DescribedDef {
 
@@ -29,7 +30,7 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
         override val name: String,
         val loader: nidomiro.kdataloader.factories.DataLoaderFactory<K, R>,
         val prepare: FunctionWrapper<K>,
-        val returnWrapper: FunctionWrapper<R>, // TODO: Try not to depend on this and remove this field.
+        val returnType: KType,
         override val description: String? = null,
         override val isDeprecated: Boolean = false,
         override val deprecationReason: String? = null,

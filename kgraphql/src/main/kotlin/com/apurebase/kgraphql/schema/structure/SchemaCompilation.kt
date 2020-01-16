@@ -211,11 +211,11 @@ class SchemaCompilation(
         operation: PropertyDef.DataLoadedFunction<T, K, R>,
         ctx: MutableMap<DataLoaderFactory<*,*>, DataLoader<*, *>>
     ): Field {
-        val returnType = handlePossiblyWrappedType(operation.returnWrapper.kFunction.returnType, TypeCategory.QUERY)
+        val returnType = handlePossiblyWrappedType(operation.returnType, TypeCategory.QUERY)
         val inputValues = handleInputValues(operation.name, operation.prepare, operation.inputValues)
 
         val dataloader = ctx.getOrPut(operation.loader) { operation.loader.constructNew() }
-        
+
 
         return Field.DataLoader(
             kql = operation,
