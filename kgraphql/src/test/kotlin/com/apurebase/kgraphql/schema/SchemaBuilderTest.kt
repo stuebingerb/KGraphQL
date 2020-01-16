@@ -228,7 +228,7 @@ class SchemaBuilderTest {
             }
         }
 
-        deserialize(schema.executeBlocking("{actor{favDishes(size: 2)}}"))
+        schema.executeBlocking("{actor{favDishes(size: 2)}}").also(::println).deserialize()
     }
 
     @Test

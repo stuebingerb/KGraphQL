@@ -24,6 +24,7 @@ allprojects {
         compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
         compile "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
         compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+        compile "org.slf4j:slf4j-api:$slf4j_version"
 
 
         testCompile "io.netty:netty-all:$netty_version"
@@ -32,6 +33,7 @@ allprojects {
         testCompile "org.junit.jupiter:junit-jupiter-api:$junit_version"
         testCompile "org.junit.jupiter:junit-jupiter-params:$junit_version"
         testRuntime "org.junit.jupiter:junit-jupiter-engine:$junit_version"
+        testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-debug:$coroutine_version"
     }
 
     task sourcesJar(type: Jar, dependsOn: classes) {

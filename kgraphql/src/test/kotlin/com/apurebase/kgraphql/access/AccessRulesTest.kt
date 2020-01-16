@@ -63,7 +63,7 @@ class AccessRulesTest {
     @Test
     fun `reject property resolver access rule`() {
         expect<IllegalAccessException>("ILLEGAL ACCESS") {
-            schema.executeBlocking("{black_mamba {item}}", context { +"LAKERS" })
+            schema.executeBlocking("{black_mamba {item}}", context { +"LAKERS" }).also(::println)
         }
     }
 

@@ -7,8 +7,10 @@ import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
+import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode
+import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
@@ -17,16 +19,17 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
 import nidomiro.kdataloader.DataLoader
+import java.lang.NullPointerException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KProperty1
 
 
-class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
+class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExecutor, CoroutineScope {
 
     private val argumentsHandler = ArgumentsHandler(schema)
     private val dispatcher = schema.configuration.coroutineDispatcher
-    private val coroutineContext = Job() + this.dispatcher
+    override val coroutineContext = Job()
 
     inner class ExecutionContext(
         val variables: Variables,
@@ -40,13 +43,11 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         }
         suspend fun add(loader: DataLoader<*, *>, node: SelectionNode, count: Long) = withLock {
             if (dataCounters[loader] == null) {
-                println("Creating new counter: $count")
                 dataCounters[loader] = node to AtomicLong(count)
             } else {
                 val (otherParentValue, counter) = dataCounters[loader]!!
                 if (otherParentValue != node) {
                     counter.getAndUpdate {
-                        println("${(node as SelectionNode.FieldNode).aliasOrName.value} Updating counter from $it to ${it + count}")
                         it + count
                     }
                 }
@@ -70,26 +71,35 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             ctx = ctx
         )
 
-        node.aliasOrKey to createNodeAsync(ctx, result, node, node.field.returnType, 0).await()
+
+        applyKeyToElement(ctx, result, node, node.field.returnType, 1)
     }
 
-
-
-    private fun SelectionNode.level(): Int {
-        if (parent == null) return 0
-        return 1 + parent.level()
+    private fun Any?.toPrimitive(node: Execution.Node, returnType: Type): JsonElement = when {
+        this == null -> createNullNode(node, returnType.unwrapList())
+        this is Collection<*> || this is Array<*> -> when (this) {
+            is Array<*> -> this.toList()
+            else -> this as Collection<*>
+        }.map { it.toPrimitive(node, returnType.unwrapList()) }.let(::JsonArray)
+        this is String -> JsonPrimitive(this)
+        this is Int -> JsonPrimitive(this)
+        this is Float -> JsonPrimitive(this)
+        this is Double -> JsonPrimitive(this)
+        this is Boolean -> JsonPrimitive(this)
+        this is Long -> JsonPrimitive(this)
+        returnType.unwrapped() is Type.Enum<*> -> JsonPrimitive(toString())
+        else -> throw TODO("Whaa? -> $this")
     }
 
-    private fun <T> DeferredJsonMap.createNodeAsync(
+    private suspend fun <T> DeferredJsonMap.applyKeyToElement(
         ctx: ExecutionContext,
         value: T?,
         node: Execution.Node,
         returnType: Type,
         parentCount: Long
-    ): Deferred<JsonElement> = async {
-        println("abc")
-        when {
-            value == null -> createNullNode(node, returnType)
+    ) {
+        return when {
+            value == null -> node.aliasOrKey toValue createNullNode(node, returnType)
             value is Collection<*> || value is Array<*> -> {
                 if (returnType.isList()) {
                     val values = when (value) {
@@ -97,31 +107,67 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                         else -> value as Collection<*>
                     }
 
-                    arr(values) {
-                        createNodeAsync(ctx, it, node, returnType.unwrapList(), values.size.toLong()).await()
+                    if (node.children.isEmpty()) {
+                        node.aliasOrKey toDeferredArray {
+                            values.map { addValue(it.toPrimitive(node, returnType)) }
+                        }
+                    } else {
+                        node.aliasOrKey toDeferredArray {
+                            values.map { v ->
+                                addDeferredObj {
+                                    when {
+                                        v == null -> createNullNode(node, returnType)
+//                                        node.children.isEmpty() -> createSimpleValueNode(returnType.unwrapList(), v, node)
+                                        node.children.isNotEmpty() -> this@addDeferredObj.applyObjectProperties(ctx, v, node, returnType.unwrapList(), values.size.toLong())
+                                        else -> throw TODO("Unknown error!")
+                                    }
+                                }
+                            }
+                        }
                     }
                 } else {
                     throw ExecutionException("Invalid collection value for non collection property", node)
                 }
             }
-            value is String -> JsonPrimitive(value)
-            value is Int -> JsonPrimitive(value)
-            value is Float -> JsonPrimitive(value)
-            value is Double -> JsonPrimitive(value)
-            value is Boolean -> JsonPrimitive(value)
-            value is Long -> JsonPrimitive(value)
-            node.children.isNotEmpty() -> {
-                println("-- Creating objectNode!")
-                obj {
-                    createObjectNode(ctx, value, node, returnType, parentCount)
+            value is String -> node.aliasOrKey toValue JsonPrimitive(value)
+            value is Int -> node.aliasOrKey toValue JsonPrimitive(value)
+            value is Float -> node.aliasOrKey toValue JsonPrimitive(value)
+            value is Double -> node.aliasOrKey toValue JsonPrimitive(value)
+            value is Boolean -> node.aliasOrKey toValue JsonPrimitive(value)
+            value is Long -> node.aliasOrKey toValue JsonPrimitive(value)
+            value is Deferred<*> -> {
+                deferredLaunch {
+                    applyKeyToElement(ctx, value.await(), node, returnType, parentCount)
                 }
+//                if (node.children.isEmpty()) node.aliasOrKey.ebc(value) {
+//                    it.toPrimitive(node, returnType)
+//                } else deferredLaunch {
+//                    applyKeyToElement(ctx, value.await(), node, returnType, parentCount)
+//                }
             }
-            node is Execution.Union -> throw IllegalArgumentException("Unions are not supported at the moment!")
-            else -> throw IllegalArgumentException("Simple valueNode not supported")
+            node.children.isNotEmpty() -> node.aliasOrKey toDeferredObj {
+                applyObjectProperties(ctx, value, node, returnType, parentCount)
+            }
+            node is Execution.Union -> node.aliasOrKey toDeferredObj {
+                applyObjectProperties(ctx, value, node.memberExecution(returnType), returnType, parentCount)
+            }
+            else -> node.aliasOrKey toValue createSimpleValueNode(returnType, value, node)
         }
     }
 
-    private suspend fun <T> DeferredJsonMap.createObjectNode(ctx: ExecutionContext, value: T, node: Execution.Node, type: Type, parentCount: Long) {
+    private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonElement {
+        return when (val unwrapped = returnType.unwrapped()) {
+            is Type.Scalar<*> -> {
+                serializeScalar(unwrapped, value, node)
+            }
+            is Type.Enum<*> -> JsonPrimitive(value.toString())
+            is TypeDef.Object<*> -> throw ExecutionException("Cannot handle object return type, schema structure exception", node)
+            else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
+        }
+    }
+
+
+    private suspend fun <T> DeferredJsonMap.applyObjectProperties(ctx: ExecutionContext, value: T, node: Execution.Node, type: Type, parentCount: Long) {
         node.children.map { child ->
             when (child) {
                 is Execution.Fragment -> handleFragment(ctx, value, child)
@@ -131,6 +177,8 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     }
 
     private suspend fun <T> DeferredJsonMap.handleFragment(ctx: ExecutionContext, value: T, container: Execution.Fragment) {
+        if (!shouldInclude(ctx, container)) return
+
         val expectedType = container.condition.type
 
         if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
@@ -147,18 +195,50 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private suspend fun <T> DeferredJsonMap.applyProperty(ctx: ExecutionContext, value: T, child: Execution, type: Type, parentCount: Long) {
         when (child) {
-            is Execution.Union -> throw UnsupportedOperationException("Unions are currently not supported!")
+            is Execution.Union -> {
+                val field = type.unwrapped()[child.key]
+                    ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
+                if (field is Field.Union<*>) {
+                    createUnionOperationNode(ctx, value, child, field as Field.Union<T>, parentCount)
+                } else {
+                    throw ExecutionException("Unexpected non-union field for union execution node", child)
+                }
+            }
             is Execution.Node -> {
                 val field = type.unwrapped()[child.key]
                     ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
-                child.aliasOrKey toObj {
-                    createPropertyNodeAsync(ctx, value, child, field, parentCount)
-                }
+                createPropertyNodeAsync(ctx, value, child, field, parentCount)
             }
             else -> throw UnsupportedOperationException("Whatever this is isn't supported!")
         }
+    }
+
+    private suspend fun <T> DeferredJsonMap.createUnionOperationNode(ctx: ExecutionContext, parent: T, node: Execution.Union, unionProperty: Field.Union<T>, parentCount: Long) {
+        node.field.checkAccess(parent, ctx.requestContext)
+
+        val operationResult: Any? = unionProperty.invoke(
+            funName = unionProperty.name,
+            receiver = parent,
+            inputValues = node.field.arguments,
+            args = node.arguments,
+            executionNode = node,
+            ctx = ctx
+        )
+
+        val returnType = unionProperty.returnType.possibleTypes.find { it.isInstance(operationResult) }
+
+        if (returnType == null && !unionProperty.nullable) {
+            val expectedOneOf = unionProperty.type.possibleTypes!!.joinToString { it.name.toString() }
+            throw ExecutionException(
+                "Unexpected type of union property value, expected one of: [$expectedOneOf]." +
+                        " value was $operationResult", node
+            )
+        }
+
+        applyKeyToElement(ctx, operationResult, node, returnType ?: unionProperty.returnType, parentCount)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -168,13 +248,19 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         node: Execution.Node,
         field: Field,
         parentCount: Long
-    ) {
+    )  {
         // TODO: Check include directive
         node.field.checkAccess(parentValue, ctx.requestContext)
+        if (!shouldInclude(ctx, node)) return
+
 
         when (field) {
             is Field.Kotlin<*, *> -> {
-                val rawValue = (field.kProperty as KProperty1<T, *>).get(parentValue)
+                val rawValue = try {
+                    (field.kProperty as KProperty1<T, *>).get(parentValue)
+                } catch(e: NullPointerException) {
+                    throw e
+                }
                 val value: Any? = field.transformation?.invoke(
                     funName = field.name,
                     receiver = rawValue,
@@ -184,7 +270,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                     ctx = ctx
                 ) ?: rawValue
 
-                node.aliasOrKey to createNodeAsync(ctx, value, node, field.returnType, parentCount).await()
+                applyKeyToElement(ctx, value, node, field.returnType, parentCount)
             }
             is Field.Function<*, *> -> {
                 handleFunctionProperty(ctx, parentValue, node, field, parentCount)
@@ -198,13 +284,13 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         }
     }
 
-    private fun <T> DeferredJsonMap.handleDataPropertyAsync(
+    private suspend fun <T> DeferredJsonMap.handleDataPropertyAsync(
         ctx: ExecutionContext,
         parentValue: T,
         node: Execution.Node,
         field: Field.DataLoader<T, *, *>,
         parentCount: Long
-    ): Job = launch {
+    ) {
         val preparedValue = field.kql.prepare.invoke(
             funName = field.name,
             receiver = parentValue,
@@ -223,14 +309,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
 
 
         if (stats.objectsRequested >= count) {
-            println("Sending dispatch!")
             dLoader.dispatch()
         }
-        else println("No dispatch ${stats.objectsRequested} == $count")
-
-        val loaded = value.await()
-
-        node.aliasOrKey to createNodeAsync(ctx, loaded, node, field.returnType, parentCount).await()
+        applyKeyToElement(ctx, value, node, field.returnType, parentCount)
     }
 
     private suspend fun <T> DeferredJsonMap.handleFunctionProperty(
@@ -240,25 +321,33 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         field: Field.Function<*, *>,
         parentCount: Long
     ) {
-        val result = field(
-            funName = field.name,
-            receiver = parentValue,
-            inputValues = field.arguments,
-            args = node.arguments,
-            executionNode = node,
-            ctx = ctx
-        )
+        val deferred = CompletableDeferred<Any?>()
+        deferredLaunch {
+            try {
+                val res = field.invoke(
+                    funName = field.name,
+                    receiver = parentValue,
+                    inputValues = field.arguments,
+                    args = node.arguments,
+                    executionNode = node,
+                    ctx = ctx
+                )
+                deferred.complete(res)
+            } catch (e: Throwable) {
+                deferred.completeExceptionally(e)
+            }
+        }
 
-        node.aliasOrKey to createNodeAsync(ctx, result, node, field.returnType, parentCount).await()
+        applyKeyToElement(ctx, deferred, node, field.returnType, parentCount)
     }
 
-    override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context) = kson2(dispatcher) {
+    override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context) = deferredJsonBuilder(dispatcher) {
         val ctx = ExecutionContext(Variables(schema, variables, plan.firstOrNull { it.variables != null }?.variables), context)
 
 
-        "data" toObj {
+        "data" toDeferredObj {
             plan.forEach { node ->
-                writeOperation(ctx, node, node.field as Field.Function<*, *>)
+                if (shouldInclude(ctx, node)) writeOperation(ctx, node, node.field as Field.Function<*, *>)
             }
         }
     }.toString()
@@ -271,6 +360,21 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
 
     override fun execute(plan: ExecutionPlan, variables: VariablesJson, context: Context) = runBlocking {
         suspendExecute(plan, variables, context)
+    }
+
+    private suspend fun shouldInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {
+        if (executionNode.directives?.isEmpty() == true) return true
+        return executionNode.directives?.map { (directive, arguments) ->
+            directive.execution.invoke(
+                funName = directive.name,
+                inputValues = directive.arguments,
+                receiver = null,
+                args = arguments,
+                executionNode = executionNode,
+                ctx = ctx
+            )?.include
+                ?: throw ExecutionException("Illegal directive implementation returning null result", executionNode)
+        }?.reduce { acc, b -> acc && b } ?: true
     }
 
     internal suspend operator fun <T> FunctionWrapper<T>.invoke(
@@ -289,12 +393,10 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             executionNode,
             ctx.requestContext
         )
-        //exceptions are not caught on purpose to pass up business logic errors
+
         return when {
             hasReceiver -> invoke(receiver, *transformedArgs.toTypedArray())
             else -> invoke(*transformedArgs.toTypedArray())
         }
     }
-
-    private fun log(str: String) = println("LevelRequestExecutor: $str")
 }

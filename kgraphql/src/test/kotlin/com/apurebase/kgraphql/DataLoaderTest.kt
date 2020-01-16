@@ -3,10 +3,11 @@ package com.apurebase.kgraphql
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.execution.Executor
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.delay
 import nidomiro.kdataloader.ExecutionResult
-import nidomiro.kdataloader.dsl.dataLoader
 import org.amshove.kluent.shouldEqual
+import org.hamcrest.CoreMatchers
+import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.Assertions.assertTimeoutPreemptively
 import org.junit.jupiter.api.RepeatedTest
 import java.time.Duration.ofSeconds
@@ -14,8 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 // This is just for safety, so when the tests fail and
 // end up in an endless waiting state, they'll fail after this amount
-val timeout = ofSeconds(25)!!
-const val repeatTimes = 1
+val timeout = ofSeconds(10)!!
+const val repeatTimes = 2
 
 class DataLoaderTest {
 
@@ -53,7 +54,6 @@ class DataLoaderTest {
         val abcChildren: AtomicProperty = AtomicProperty(),
         val treeChild: AtomicProperty = AtomicProperty()
     )
-
 
     fun schema(
         block: SchemaBuilder.() -> Unit = {}
@@ -125,6 +125,15 @@ class DataLoaderTest {
                     }
                 }
 
+                property<ABC>("simpleChild") {
+                    resolver {
+                        delay(10)
+                        Thread.sleep(10)
+                        delay(10)
+                        ABC("NewChild!")
+                    }
+                }
+
                 dataProperty<String, List<ABC>>("children") {
                     setReturnType { listOf() }
                     loader { keys ->
@@ -171,16 +180,23 @@ class DataLoaderTest {
     }
 
     @RepeatedTest(repeatTimes)
-    fun abc() {
-        runBlocking {
-            val dataLoader = dataLoader({ keys: List<Int> -> keys.map { ExecutionResult.Success(it.toString()) } })
+    fun `Old basic resolvers in new executor`() {
+        assertTimeoutPreemptively(timeout) {
+            val (schema) = schema()
+            val query = """
+                {
+                    abc {
+                        value
+                        simpleChild {
+                            value
+                        }
+                    }
+                }
+            """.trimIndent()
 
-            val deferred1 = dataLoader.loadAsync(1)
-            val deferred2 = dataLoader.loadAsync(2)
+            val result = schema.executeBlocking(query).also(::println).deserialize()
 
-            dataLoader.dispatch()
-            println("1 -> ${deferred1.await()}")
-            println("2 -> ${deferred2.await()}")
+            MatcherAssert.assertThat(result.extract<String>("data/abc[0]/simpleChild/value"), CoreMatchers.equalTo("NewChild!"))
         }
     }
 
@@ -195,14 +211,16 @@ class DataLoaderTest {
                         id
                         fullName
                         respondsTo {
-                            id
+                            fullName
+                            respondsTo {
+                                fullName
+                            }
                         }
                     }
                 }
             """.trimIndent()
 
-            val res = schema.executeBlocking(query)
-            println(res)
+            val result = schema.executeBlocking(query).also(::println).deserialize()
         }
     }
 
@@ -224,9 +242,8 @@ class DataLoaderTest {
                     fullName
                 }
             """.trimIndent()
-            val res = schema.executeBlocking(query)
-            println(res)
-            val result = res.deserialize()
+            val result = schema.executeBlocking(query).also(::println).deserialize()
+
 
             result.extract<String>("data/people[0]/respondsTo/fullName") shouldEqual "${juul.firstName} ${juul.lastName}"
             result.extract<String>("data/people[1]/colleagues[0]/fullName") shouldEqual "${jogvan.firstName} ${jogvan.lastName}"
@@ -250,9 +267,7 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            val res = schema.executeBlocking(query)
-            println(res)
-            val result = deserialize(res)
+            val result = schema.executeBlocking(query).also(::println).deserialize()
             counters.treeChild.prepare.get() shouldEqual 2
             counters.treeChild.loader.get() shouldEqual 1
 
@@ -275,7 +290,7 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            val result = schema.executeBlocking(query).deserialize()
+            val result = schema.executeBlocking(query).also(::println).deserialize()
 
             counters.treeChild.prepare.get() shouldEqual 4
             counters.treeChild.loader.get() shouldEqual 1
@@ -310,9 +325,8 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            val result = schema.executeBlocking(query)
+            val result = schema.executeBlocking(query).also(::println).deserialize()
 
-            println(result)
 //            throw TODO("Assert results")
         }
     }
