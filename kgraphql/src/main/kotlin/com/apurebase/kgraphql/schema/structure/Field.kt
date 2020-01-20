@@ -44,7 +44,7 @@ sealed class Field : __Field {
 
     class DataLoader<T, K, R>(
         val kql: PropertyDef.DataLoadedFunction<T, K, R>,
-        val loader: nidomiro.kdataloader.DataLoader<K, R>,
+        val loader: nidomiro.kdataloader.factories.DataLoaderFactory<K, R>,
         override val returnType: Type,
         override val arguments: List<InputValue<*>>
     ): Field() {

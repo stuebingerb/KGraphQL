@@ -14,5 +14,6 @@ data class SchemaConfiguration (
         //execution
         val coroutineDispatcher: CoroutineDispatcher,
 
-        val executor: Executor
+        val executor: Executor,
+        val timeout: Long?
 )

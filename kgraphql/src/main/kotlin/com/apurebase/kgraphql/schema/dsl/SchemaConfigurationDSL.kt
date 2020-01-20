@@ -17,6 +17,7 @@ class SchemaConfigurationDSL {
     var acceptSingleValueAsArray: Boolean = true
     var coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
     var executor: Executor = Executor.DataLoaderPrepared // Parallel
+    var timeout: Long? = null
 
     internal fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
 
@@ -28,7 +29,8 @@ class SchemaConfigurationDSL {
             objectMapper,
             useDefaultPrettyPrinter,
             coroutineDispatcher,
-            executor
+            executor,
+            timeout
         )
     }
 }

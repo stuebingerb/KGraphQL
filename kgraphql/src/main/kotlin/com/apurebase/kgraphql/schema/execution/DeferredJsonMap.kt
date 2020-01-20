@@ -44,15 +44,15 @@ class DeferredJsonMap internal constructor(
         this@toDeferredArray toDeferredValue array.asDeferred()
     }
 
-    fun <T> String.ebc(value: Deferred<T?>, block: suspend DeferredJsonMap.(T?) -> JsonElement) {
-        val deferred = CompletableDeferred<JsonElement>()
-        this@ebc toDeferredValue deferred
-        deferredLaunch {
-            val l = value.await()
-            val ll = block(l)
-            deferred.complete(ll)
-        }
-    }
+//    fun <T> String.ebc(value: Deferred<T?>, block: suspend DeferredJsonMap.(T?) -> JsonElement) {
+//        val deferred = CompletableDeferred<JsonElement>()
+//        this@ebc toDeferredValue deferred
+//        deferredLaunch {
+//            val l = value.await()
+//            val ll = block(l)
+//            deferred.complete(ll)
+//        }
+//    }
 
     fun asDeferred() : Deferred<JsonElement> {
         return async(coroutineContext, start = CoroutineStart.LAZY) {
@@ -75,8 +75,8 @@ class DeferredJsonMap internal constructor(
         job.complete()
     }
 
-    fun deferredLaunch(block: suspend DeferredJsonMap.() -> Unit) {
-        moreJobs.add(async(job, start = CoroutineStart.LAZY) {
+    fun deferredLaunch(lazy: Boolean = true, block: suspend DeferredJsonMap.() -> Unit) {
+        moreJobs.add(async(job, start = if (lazy) CoroutineStart.LAZY else CoroutineStart.DEFAULT) {
             block(this@DeferredJsonMap)
         })
     }

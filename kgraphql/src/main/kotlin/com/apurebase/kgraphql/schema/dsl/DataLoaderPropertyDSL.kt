@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import com.apurebase.kgraphql.schema.model.PropertyDef
 import nidomiro.kdataloader.BatchLoader
+import nidomiro.kdataloader.dsl.dataLoaderFactory
 import kotlin.reflect.KType
 
 class DataLoaderPropertyDSL<T, K, R>(
@@ -48,10 +49,9 @@ class DataLoaderPropertyDSL<T, K, R>(
             inputValues = inputValues,
             returnType = returnType,
             prepare = prepareWrapper,
-            loader = nidomiro.kdataloader.factories.SimpleDataLoaderFactory(nidomiro.kdataloader.DataLoaderOptions(), mapOf(), dataLoader)
+            loader = dataLoaderFactory(dataLoader)
         )
     }
-
 
     override fun addInputValues(inputValues: Collection<InputValueDef<*>>) {
         this.inputValues.addAll(inputValues)

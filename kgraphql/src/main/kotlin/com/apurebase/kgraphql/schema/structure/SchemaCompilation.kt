@@ -208,18 +208,14 @@ class SchemaCompilation(
     }
 
     private suspend fun <T, K, R> handleDataloadOperation(
-        operation: PropertyDef.DataLoadedFunction<T, K, R>,
-        ctx: MutableMap<DataLoaderFactory<*,*>, DataLoader<*, *>>
+        operation: PropertyDef.DataLoadedFunction<T, K, R>
     ): Field {
         val returnType = handlePossiblyWrappedType(operation.returnType, TypeCategory.QUERY)
         val inputValues = handleInputValues(operation.name, operation.prepare, operation.inputValues)
 
-        val dataloader = ctx.getOrPut(operation.loader) { operation.loader.constructNew() }
-
-
         return Field.DataLoader(
             kql = operation,
-            loader = dataloader as DataLoader<K, R>,
+            loader = operation.loader,
             returnType = returnType,
             arguments = inputValues
         )
@@ -255,10 +251,9 @@ class SchemaCompilation(
             .flatMap(TypeDef.Object<*>::extensionProperties)
             .map { property -> handleOperation(property) }
 
-        val dataLoaderCtx = mutableMapOf<DataLoaderFactory<*, *>, DataLoader<*, *>>()
         val dataloadExtensionFields = objectDefs
             .flatMap(TypeDef.Object<*>::dataloadExtensionProperties)
-            .map { property -> handleDataloadOperation(property, dataLoaderCtx) }
+            .map { property -> handleDataloadOperation(property) }
 
         val unionFields = objectDefs
             .flatMap(TypeDef.Object<*>::unionProperties)

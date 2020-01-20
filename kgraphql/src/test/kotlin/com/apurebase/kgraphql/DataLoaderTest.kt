@@ -194,6 +194,29 @@ class DataLoaderTest {
     }
 
     @RepeatedTest(repeatTimes)
+    fun `Nested array loaders`() {
+        assertTimeoutPreemptively(timeout) {
+            val (schema) = schema()
+            val query = """
+                {
+                    people {
+                        fullName
+                        colleagues {
+                            fullName
+                            respondsTo {
+                                fullName
+                            }
+                        }
+                    }
+                }                
+            """.trimIndent()
+
+            val result = schema.executeBlocking(query).also(::println).deserialize()
+
+        }
+    }
+
+    @RepeatedTest(repeatTimes)
     fun `Old basic resolvers in new executor`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -289,14 +312,14 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @RepeatedTest(2)
     fun `basic data loader`() {
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
 
             val query = """
                 {
-                    tree {
+                    tree { # <-- 2
                         id
                         child(buzz: 3) {
                             id
