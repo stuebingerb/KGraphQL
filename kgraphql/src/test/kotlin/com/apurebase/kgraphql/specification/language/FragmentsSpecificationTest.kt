@@ -145,4 +145,28 @@ class FragmentsSpecificationTest {
         """)
         } shouldThrow GraphQLError::class withMessage "Fragment spread circular references are not allowed"
     }
+
+    @Test
+    fun `queries with duplicated fragments are denied`() {
+        invoking {
+            BaseTestSchema.execute("""
+            {
+                film {
+                    ...film_title
+                }
+            }
+            
+            fragment film_title on Film {
+                title
+            }
+            
+            fragment film_title on Film {
+                director {
+                    name
+                    age
+                }
+            }
+        """)
+        } shouldThrow GraphQLError::class withMessage "There can be only one fragment named film_title."
+    }
 }

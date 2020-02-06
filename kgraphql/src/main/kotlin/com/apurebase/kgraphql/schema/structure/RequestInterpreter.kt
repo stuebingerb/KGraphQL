@@ -72,10 +72,16 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
             OperationTypeNode.SUBSCRIPTION -> schemaModel.subscription ?: throw GraphQLError("Subscriptions are not supported on this schema")
         }
 
-        val fragmentDefinitions = test.filterIsInstance<FragmentDefinitionNode>().map { fragmentDef ->
+        val fragmentDefinitionNode = test.filterIsInstance<FragmentDefinitionNode>()
+        val fragmentDefinitions = fragmentDefinitionNode.map { fragmentDef ->
             val type = schemaModel.allTypesByName.getValue(fragmentDef.typeCondition.name.value)
+            val name = fragmentDef.name!!.value
 
-            fragmentDef.name!!.value to (type to fragmentDef.selectionSet)
+            if (fragmentDefinitionNode.count { it.name!!.value == name } > 1) {
+                throw GraphQLError("There can be only one fragment named $name.", fragmentDef )
+            }
+
+            name to (type to fragmentDef.selectionSet)
         }.toMap()
 
         val ctx = InterpreterContext(fragmentDefinitions)
