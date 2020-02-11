@@ -51,7 +51,7 @@ allprojects {
         publications = ['MyPublication']
         configurations = ['archives']
         pkg {
-            repo = 'apurebase-test'
+            repo = 'apurebase'
             name = project.name
             licenses = ['MIT']
             vcsUrl = 'https://github.com/aPureBase/KGraphQL'
