@@ -14,8 +14,8 @@ class DataLoaderPropertyDSL<T, K, R>(
     private val block : DataLoaderPropertyDSL<T, K, R>.() -> Unit
 ): LimitedAccessItemDSL<T>(), ResolverDSL.Target {
 
-    internal lateinit var dataLoader: BatchLoader<K, R>
-    internal lateinit var prepareWrapper: FunctionWrapper<K>
+    internal var dataLoader: BatchLoader<K, R>? = null
+    internal var prepareWrapper: FunctionWrapper<K>? = null
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
 
@@ -40,6 +40,9 @@ class DataLoaderPropertyDSL<T, K, R>(
 
     fun toKQLProperty(): PropertyDef.DataLoadedFunction<T, K, R> {
         block()
+        requireNotNull(prepareWrapper)
+        requireNotNull(dataLoader)
+
         return PropertyDef.DataLoadedFunction(
             name = name,
             description = description,
@@ -48,8 +51,8 @@ class DataLoaderPropertyDSL<T, K, R>(
             isDeprecated = isDeprecated,
             inputValues = inputValues,
             returnType = returnType,
-            prepare = prepareWrapper,
-            loader = dataLoaderFactory(dataLoader)
+            prepare = prepareWrapper!!,
+            loader = dataLoaderFactory(dataLoader!!)
         )
     }
 

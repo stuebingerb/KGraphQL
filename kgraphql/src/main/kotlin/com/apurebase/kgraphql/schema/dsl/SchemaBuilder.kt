@@ -191,12 +191,8 @@ class SchemaBuilder internal constructor() {
         model.addInputObject(TypeDef.Input(input.name, kClass, input.description))
     }
 
-    inline fun <reified T : Any> inputType(noinline block : InputTypeDSL<T>.() -> Unit) {
+    inline fun <reified T : Any> inputType(noinline block : InputTypeDSL<T>.() -> Unit = {}) {
         inputType(T::class, block)
-    }
-
-    inline fun <reified T : Any> inputType() {
-        inputType(T::class) {}
     }
 }
 
