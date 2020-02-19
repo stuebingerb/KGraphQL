@@ -1,7 +1,9 @@
 package com.apurebase.kgraphql.schema.model
 
 import com.apurebase.kgraphql.Context
+import nidomiro.kdataloader.BatchLoader
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KType
 
 interface PropertyDef<T> : Depreciable, DescribedDef {
 
@@ -18,6 +20,23 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
             accessRule : ((T?, Context) -> Exception?)? = null,
             inputValues : List<InputValueDef<*>> = emptyList()
     ) : BaseOperationDef<T, R>(name, resolver, inputValues, accessRule), PropertyDef<T>
+
+    /**
+     * [T] -> The Parent Type
+     * [K] -> The Key that'll be passed to the dataLoader
+     * [R] -> The return type
+     */
+    open class DataLoadedFunction<T, K, R>(
+        override val name: String,
+        val loader: nidomiro.kdataloader.factories.DataLoaderFactory<K, R>,
+        val prepare: FunctionWrapper<K>,
+        val returnType: KType,
+        override val description: String? = null,
+        override val isDeprecated: Boolean = false,
+        override val deprecationReason: String? = null,
+        override val accessRule: ((T?, Context) -> Exception?)? = null,
+        val inputValues: List<InputValueDef<*>> = emptyList()
+    ): PropertyDef<T>
 
     open class Kotlin<T : Any, R> (
             val kProperty: KProperty1<T, R>,

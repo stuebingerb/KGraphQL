@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.introspection.*
 import com.apurebase.kgraphql.schema.model.*
+import nidomiro.kdataloader.DataLoader
 import kotlin.reflect.full.findAnnotation
 
 
@@ -38,6 +39,22 @@ sealed class Field : __Field {
 
         override fun checkAccess(parent: Any?, ctx: Context) {
             accessRule?.invoke(parent as T?, ctx)?.let { throw it }
+        }
+    }
+
+    class DataLoader<T, K, R>(
+        val kql: PropertyDef.DataLoadedFunction<T, K, R>,
+        val loader: nidomiro.kdataloader.factories.DataLoaderFactory<K, R>,
+        override val returnType: Type,
+        override val arguments: List<InputValue<*>>
+    ): Field() {
+        override val isDeprecated = kql.isDeprecated
+        override val deprecationReason = kql.deprecationReason
+        override val description = kql.description
+        override val name = kql.name
+
+        override fun checkAccess(parent: Any?, ctx: Context) {
+            kql.accessRule?.invoke(parent as T?, ctx)?.let { throw it }
         }
     }
 

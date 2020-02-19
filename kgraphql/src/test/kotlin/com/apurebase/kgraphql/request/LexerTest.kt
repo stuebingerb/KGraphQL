@@ -5,7 +5,7 @@ import com.apurebase.kgraphql.schema.model.ast.Token
 import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.*
 import com.apurebase.kgraphql.GraphQLError
 import org.amshove.kluent.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 internal class LexerTest {
 

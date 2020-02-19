@@ -8,7 +8,7 @@ import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.collection.IsEmptyCollection.empty
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class IntrospectionSpecificationTest {
 

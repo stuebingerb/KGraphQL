@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.access
 import com.apurebase.kgraphql.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class AccessRulesTest {
 
@@ -63,7 +63,7 @@ class AccessRulesTest {
     @Test
     fun `reject property resolver access rule`() {
         expect<IllegalAccessException>("ILLEGAL ACCESS") {
-            schema.executeBlocking("{black_mamba {item}}", context { +"LAKERS" })
+            schema.executeBlocking("{black_mamba {item}}", context { +"LAKERS" }).also(::println)
         }
     }
 

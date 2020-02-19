@@ -7,7 +7,7 @@ import com.apurebase.kgraphql.GraphQLError
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 
 @Specification("3.1.4 Unions")

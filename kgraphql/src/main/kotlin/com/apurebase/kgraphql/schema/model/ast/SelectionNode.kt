@@ -4,6 +4,8 @@ import com.apurebase.kgraphql.schema.model.ast.TypeNode.NamedTypeNode
 
 sealed class SelectionNode(val parent: SelectionNode?): ASTNode() {
 
+    abstract val fullPath: String
+
     class FieldNode(
         parent: SelectionNode?,
         val alias: NameNode?,
@@ -24,9 +26,14 @@ sealed class SelectionNode(val parent: SelectionNode?): ASTNode() {
         }
 
         val aliasOrName get() = alias ?: name
+
+        override val fullPath get() = (parent?.fullPath?.let { "$it." } ?: "") + aliasOrName.value
+
     }
 
     sealed class FragmentNode(parent: SelectionNode?, val directives: List<DirectiveNode>?): SelectionNode(parent) {
+        override val fullPath get () = parent?.fullPath?.let {"$it."} ?: ""
+
         /**
          * ...FragmentName
          */
@@ -59,7 +66,6 @@ sealed class SelectionNode(val parent: SelectionNode?): ASTNode() {
                 _loc = loc
                 return this
             }
-
         }
     }
 

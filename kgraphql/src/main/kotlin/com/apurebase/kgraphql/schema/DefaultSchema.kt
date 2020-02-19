@@ -4,10 +4,10 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.request.CachingDocumentParser
 import com.apurebase.kgraphql.request.VariablesJson
-import com.apurebase.kgraphql.schema.execution.ParallelRequestExecutor
-import com.apurebase.kgraphql.schema.execution.RequestExecutor
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.request.Parser
+import com.apurebase.kgraphql.schema.execution.*
+import com.apurebase.kgraphql.schema.execution.Executor.*
 import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.apurebase.kgraphql.schema.structure.LookupSchema
 import com.apurebase.kgraphql.schema.structure.RequestInterpreter
@@ -26,7 +26,10 @@ class DefaultSchema (
         val OPERATION_NAME_PARAM = NameNode("operationName", null)
     }
 
-    private val requestExecutor : RequestExecutor = ParallelRequestExecutor(this)
+    private val requestExecutor : RequestExecutor = when (configuration.executor) {
+        Parallel -> ParallelRequestExecutor(this)
+        DataLoaderPrepared -> DataLoaderPreparedRequestExecutor(this)
+    }
 
      private val requestInterpreter : RequestInterpreter = RequestInterpreter(model)
 

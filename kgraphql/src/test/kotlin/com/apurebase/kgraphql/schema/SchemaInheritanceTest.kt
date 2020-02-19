@@ -6,7 +6,7 @@ import com.apurebase.kgraphql.GraphQLError
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 
 

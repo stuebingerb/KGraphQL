@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 
 /**
@@ -228,7 +228,7 @@ class SchemaBuilderTest {
             }
         }
 
-        deserialize(schema.executeBlocking("{actor{favDishes(size: 2)}}"))
+        schema.executeBlocking("{actor{favDishes(size: 2)}}").also(::println).deserialize()
     }
 
     @Test

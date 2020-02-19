@@ -4,11 +4,13 @@ import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.executeEqualQueries
 import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
+import com.apurebase.kgraphql.schema.execution.Executor
 import org.amshove.kluent.shouldEqual
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 data class Actor(var name : String? = "", var age: Int? = 0)
 data class Actress(var name : String? = "", var age: Int? = 0)
@@ -18,7 +20,10 @@ class OperationsSpecificationTest {
 
     var subscriptionResult = ""
 
-    val schema = defaultSchema {
+    fun newSchema(executor: Executor = Executor.DataLoaderPrepared) = defaultSchema {
+        configure {
+            this@configure.executor = executor
+        }
 
         query("fizz") {
             resolver{ -> "buzz"}.withArgs {  }
@@ -54,7 +59,7 @@ class OperationsSpecificationTest {
 
     @Test
     fun `unnamed and named queries are equivalent`(){
-        executeEqualQueries(schema,
+        executeEqualQueries(newSchema(),
                 mapOf("data" to mapOf("fizz" to "buzz")),
                 "{fizz}",
                 "query {fizz}",
@@ -64,7 +69,7 @@ class OperationsSpecificationTest {
 
     @Test
     fun `unnamed and named mutations are equivalent`(){
-        executeEqualQueries(schema,
+        executeEqualQueries(newSchema(),
                 mapOf("data" to mapOf("createActor" to mapOf("name" to "Kurt Russel"))),
                 "mutation {createActor(name : \"Kurt Russel\"){name}}",
                 "mutation KURT {createActor(name : \"Kurt Russel\"){name}}"
@@ -73,6 +78,7 @@ class OperationsSpecificationTest {
 
     @Test
     fun `handle subscription`(){
+        val schema = newSchema(Executor.Parallel)
         schema.executeBlocking("subscription {subscriptionActor(subscription : \"mySubscription\"){name}}")
 
         subscriptionResult = ""
@@ -99,7 +105,7 @@ class OperationsSpecificationTest {
     @Test
     fun `Subscription return type must be the same as the publisher's`(){
         expect<SchemaException>("Subscription return type must be the same as the publisher's"){
-            schema.executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
+            newSchema(Executor.Parallel).executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
         }
     }
 }

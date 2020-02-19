@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
+import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KClass
 
 /**
@@ -27,7 +28,10 @@ class SchemaBuilder internal constructor() {
     private var configuration = SchemaConfigurationDSL()
 
     fun build(): Schema {
-        return SchemaCompilation(configuration.build(), model.toSchemaDefinition()).perform()
+        // TODO: [runBlocking] is a temp fix
+        return runBlocking {
+            SchemaCompilation(configuration.build(), model.toSchemaDefinition()).perform()
+        }
     }
 
     fun configure(block: SchemaConfigurationDSL.() -> Unit){
@@ -187,12 +191,8 @@ class SchemaBuilder internal constructor() {
         model.addInputObject(TypeDef.Input(input.name, kClass, input.description))
     }
 
-    inline fun <reified T : Any> inputType(noinline block : InputTypeDSL<T>.() -> Unit) {
+    inline fun <reified T : Any> inputType(noinline block : InputTypeDSL<T>.() -> Unit = {}) {
         inputType(T::class, block)
-    }
-
-    inline fun <reified T : Any> inputType() {
-        inputType(T::class) {}
     }
 }
 

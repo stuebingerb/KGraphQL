@@ -2,16 +2,15 @@ package com.apurebase.kgraphql.schema.dsl.types
 
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.schema.SchemaException
-import com.apurebase.kgraphql.schema.dsl.ItemDSL
-import com.apurebase.kgraphql.schema.dsl.KotlinPropertyDSL
-import com.apurebase.kgraphql.schema.dsl.PropertyDSL
-import com.apurebase.kgraphql.schema.dsl.UnionPropertyDSL
+import com.apurebase.kgraphql.schema.dsl.*
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.PropertyDef
 import com.apurebase.kgraphql.schema.model.Transformation
 import com.apurebase.kgraphql.schema.model.TypeDef
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
+import kotlin.reflect.full.createType
+import kotlin.reflect.typeOf
 
 
 open class TypeDSL<T : Any>(
@@ -28,6 +27,8 @@ open class TypeDSL<T : Any>(
     internal val unionProperties = mutableSetOf<PropertyDef.Union<T>>()
 
     internal val describedKotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
+
+    val dataloadedExtensionProperties = mutableSetOf<PropertyDef.DataLoadedFunction<T, *, *>>()
 
     fun <R, E> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E) -> R) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
@@ -61,6 +62,12 @@ open class TypeDSL<T : Any>(
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
+    @UseExperimental(ExperimentalStdlibApi::class)
+    inline fun <KEY, reified TYPE> dataProperty(name: String, noinline block: DataLoaderPropertyDSL<T, KEY, TYPE>.() -> Unit) {
+        dataloadedExtensionProperties.add(
+            DataLoaderPropertyDSL(name, typeOf<TYPE>(), block).toKQLProperty()
+        )
+    }
 
     fun <R> property(kProperty: KProperty1<T, R>, block : KotlinPropertyDSL<T, R>.() -> Unit){
         val dsl = KotlinPropertyDSL(kProperty, block)
@@ -95,6 +102,7 @@ open class TypeDSL<T : Any>(
             kClass = kClass,
             kotlinProperties = describedKotlinProperties.toMap(),
             extensionProperties = extensionProperties.toList(),
+            dataloadExtensionProperties = dataloadedExtensionProperties.toList(),
             unionProperties = unionProperties.toList(),
             transformations = transformationProperties.associateBy { it.kProperty },
             description = description

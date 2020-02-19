@@ -1,14 +1,11 @@
 package com.apurebase.kgraphql.specification.language
 
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.assertNoErrors
-import com.apurebase.kgraphql.expect
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
 @Specification("2.10 Variables")
 class VariablesSpecificationTest : BaseSchemaTest() {
@@ -53,7 +50,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    @Ignore("I don't think this should actually be supported?")
+    @Disabled("I don't think this should actually be supported?")
     fun `query with variables and default value pointing to another variable`(){
         val map = execute(
                 query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int = \$defaultAge, \$defaultAge : Int!) " +
