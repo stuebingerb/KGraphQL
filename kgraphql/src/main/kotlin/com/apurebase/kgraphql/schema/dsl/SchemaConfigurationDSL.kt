@@ -16,7 +16,7 @@ class SchemaConfigurationDSL {
     var documentParserCacheMaximumSize: Long = 1000L
     var acceptSingleValueAsArray: Boolean = true
     var coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
-    var executor: Executor = Executor.DataLoaderPrepared // Parallel
+    var executor: Executor = Executor.Parallel
     var timeout: Long? = null
 
     internal fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
