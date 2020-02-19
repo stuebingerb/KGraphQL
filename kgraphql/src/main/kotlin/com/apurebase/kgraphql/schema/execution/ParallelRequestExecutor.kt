@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 
@@ -242,7 +243,15 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor, Coro
         if (include) {
             when (field) {
                 is Field.Kotlin<*, *> -> {
-                    val rawValue = (field.kProperty as KProperty1<T, *>).get(parentValue)
+                    val rawValue = try {
+                        (field.kProperty as KProperty1<T, *>).get(parentValue)
+                    } catch (e: IllegalArgumentException) {
+                        throw ExecutionException(
+                            "Couldn't retrieve '${field.kProperty.name}' from class ${parentValue}}",
+                            node,
+                            e
+                        )
+                    }
                     val value: Any? = field.transformation?.invoke(
                         funName = field.name,
                         receiver = rawValue,
