@@ -19,7 +19,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
 import nidomiro.kdataloader.DataLoader
 import nidomiro.kdataloader.factories.DataLoaderFactory
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KProperty1
@@ -30,8 +29,6 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     private val argumentsHandler = ArgumentsHandler(schema)
     private val dispatcher = schema.configuration.coroutineDispatcher
     override val coroutineContext = Job()
-
-    private val logger = LoggerFactory.getLogger(this::class.java)
 
     inner class ExecutionContext(
         val variables: Variables,
@@ -66,8 +63,6 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             builder.deferredLaunch {
                 val count = get(loader)
                 val stats = loader.createStatisticsSnapshot()
-                logger.debug("${node.aliasOrKey} | Count: $count")
-                logger.debug("${node.aliasOrKey} | Requests: ${stats.objectsRequested}")
                 if (stats.objectsRequested >= count) {
                     loader.dispatch()
                 } // else if (stats.objectsRequested > count) throw TODO("This should never happen!!!")
@@ -368,7 +363,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         applyKeyToElement(ctx, deferred, node, field.returnType, parentCount)
     }
 
-    override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context) = deferredJsonBuilder(dispatcher, logger, schema.configuration.timeout) {
+    override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context) = deferredJsonBuilder(dispatcher, schema.configuration.timeout) {
         val ctx = ExecutionContext(Variables(schema, variables, plan.firstOrNull { it.variables != null }?.variables), context)
 
 

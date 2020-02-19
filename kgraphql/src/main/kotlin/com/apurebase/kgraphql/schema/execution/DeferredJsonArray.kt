@@ -3,11 +3,9 @@ package com.apurebase.kgraphql.schema.execution
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import org.slf4j.Logger
 
 class DeferredJsonArray internal constructor(
-    private val dispatcher: CoroutineDispatcher,
-    private val logger: Logger?
+    private val dispatcher: CoroutineDispatcher
 ): CoroutineScope {
 
     private val job = SupervisorJob()
@@ -25,14 +23,14 @@ class DeferredJsonArray internal constructor(
     }
 
     suspend fun addDeferredObj(block: suspend DeferredJsonMap.() -> Unit) {
-        val map = DeferredJsonMap(dispatcher, logger)
+        val map = DeferredJsonMap(dispatcher)
         block(map)
         addDeferredValue(map.asDeferred())
     }
 
     // TODO: Add support for this within the [DataLoaderPreparedRequestExecutor]
     suspend fun addDeferredArray(block: suspend DeferredJsonArray.() -> Unit) {
-        val array = DeferredJsonArray(dispatcher, logger)
+        val array = DeferredJsonArray(dispatcher)
         block(array)
         addDeferredValue(array.asDeferred())
     }
@@ -45,14 +43,12 @@ class DeferredJsonArray internal constructor(
     }
 
     suspend fun awaitAll() {
-        logger?.trace("awaiting all in array")
         check(completedArray == null) { "The deferred tree has already been awaited!" }
         completedArray = deferredArray.awaitAll()
         job.complete()
     }
 
     fun build(): JsonArray {
-        logger?.trace("completing array")
         checkNotNull(completedArray) { "The deferred tree has not been awaited!" }
         return JsonArray(completedArray!!)
     }

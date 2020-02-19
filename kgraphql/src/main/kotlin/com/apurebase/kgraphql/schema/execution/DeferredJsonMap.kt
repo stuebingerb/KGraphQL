@@ -3,11 +3,9 @@ package com.apurebase.kgraphql.schema.execution
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import org.slf4j.Logger
 
 class DeferredJsonMap internal constructor(
-    private val dispatcher: CoroutineDispatcher,
-    private val logger: Logger? = null
+    private val dispatcher: CoroutineDispatcher
 ): CoroutineScope {
 
     internal val job = Job()
@@ -32,27 +30,17 @@ class DeferredJsonMap internal constructor(
             val prevMap = unDefinedDeferredMap.getValue(this)
             block(prevMap)
         } else {
-            val map = DeferredJsonMap(dispatcher, logger)
+            val map = DeferredJsonMap(dispatcher)
             block(map)
             unDefinedDeferredMap[this] = map
         }
     }
 
     suspend infix fun String.toDeferredArray(block: suspend DeferredJsonArray.() -> Unit) {
-        val array = DeferredJsonArray(dispatcher, logger)
+        val array = DeferredJsonArray(dispatcher)
         block(array)
         this@toDeferredArray toDeferredValue array.asDeferred()
     }
-
-//    fun <T> String.ebc(value: Deferred<T?>, block: suspend DeferredJsonMap.(T?) -> JsonElement) {
-//        val deferred = CompletableDeferred<JsonElement>()
-//        this@ebc toDeferredValue deferred
-//        deferredLaunch {
-//            val l = value.await()
-//            val ll = block(l)
-//            deferred.complete(ll)
-//        }
-//    }
 
     fun asDeferred() : Deferred<JsonElement> {
         return async(coroutineContext, start = CoroutineStart.LAZY) {
@@ -62,7 +50,6 @@ class DeferredJsonMap internal constructor(
     }
 
     suspend fun awaitAll() {
-        logger?.trace("awaiting all in map")
         check(completedMap == null) { "The deferred tree has already been awaited!" }
 
         (moreJobs + deferredMap.values).awaitAll()
@@ -82,7 +69,6 @@ class DeferredJsonMap internal constructor(
     }
 
     fun build(): JsonObject {
-        logger?.trace("completing map")
         checkNotNull(completedMap) { "The deferred tree has not been awaited!" }
         return JsonObject(completedMap!!)
     }

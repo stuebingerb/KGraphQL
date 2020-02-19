@@ -24,7 +24,6 @@ allprojects {
         compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
         compile "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
         compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
-        compile "org.slf4j:slf4j-api:$slf4j_version"
 
 
         testCompile "io.netty:netty-all:$netty_version"
