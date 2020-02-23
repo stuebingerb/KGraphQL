@@ -5,7 +5,6 @@ import com.apurebase.kgraphql.schema.model.ast.Token
 import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum
 import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.*
 import com.apurebase.kgraphql.schema.structure.dedentBlockStringValue
-import jdk.nashorn.internal.runtime.JSONFunctions
 
 data class Lexer(
     val source: Source,
@@ -522,13 +521,32 @@ data class Lexer(
         else -> -1
     }
 
-    private fun printCharCode(code: Int?) = when {
-        code == null -> EOF.str
-        // Trust JSON for ASCII.
-        code < 0x007f -> JSONFunctions.quote(code.toChar().toString())
-        // Otherwise print the escaped form.
-        else -> "\"\\u${("00" + code.toString(16).toUpperCase()).takeLast(4)}\""
-    }
+    private fun printCharCode(code: Int?) =
+        if (code == null) EOF.str
+        else StringBuilder().apply {
+            append("\"")
+            when (val char = code.toChar()) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\b' -> append("\\b")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else ->
+                    if (code < 0x007f && char > ' ') {
+                        // Refer: https://utf8-chartable.de/unicode-utf8-table.pl?number=128
+                        append(char)
+                    } else {
+                        append("\\u")
+                        val hex = Integer.toHexString(code)
+                        for (i in hex.length..3) {
+                            append('0')
+                        }
+                        append(hex.toUpperCase())
+                    }
+            }
+            append("\"")
+        }.toString()
 
     /**
      * Report a message that an unexpected character was encountered.
