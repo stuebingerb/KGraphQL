@@ -19,10 +19,6 @@ import com.apurebase.kgraphql.schema.model.QueryDef
 import com.apurebase.kgraphql.schema.model.SchemaDefinition
 import com.apurebase.kgraphql.schema.model.Transformation
 import com.apurebase.kgraphql.schema.model.TypeDef
-import nidomiro.kdataloader.DataLoader
-import nidomiro.kdataloader.DataLoaderOptions
-import nidomiro.kdataloader.SimpleDataLoaderImpl
-import nidomiro.kdataloader.factories.DataLoaderFactory
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
@@ -58,6 +54,7 @@ class SchemaCompilation(
         val queryType = handleQueries()
         val mutationType = handleMutations()
         val subscriptionType = handleSubscriptions()
+        definition.unions.forEach { handleUnionType(it) }
         definition.objects.forEach { handleObjectType(it.kClass) }
         definition.inputObjects.forEach { handleInputType(it.kClass) }
 
@@ -161,6 +158,11 @@ class SchemaCompilation(
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
         kType.arguments.isNotEmpty() -> throw SchemaException("Generic types are not supported by GraphQL, found $kType")
+        kType.jvmErasure.isSealed -> TypeDef.Union(
+            name = kType.jvmErasure.simpleName!!,
+            members = kType.jvmErasure.sealedSubclasses.toSet(),
+            description = null
+        ).let { handleUnionType(it) }
         else -> handleSimpleType(kType, typeCategory)
     }
 
@@ -231,12 +233,14 @@ class SchemaCompilation(
 
         val objectType = if(kind == TypeKind.OBJECT) Type.Object(objectDef) else Type.Interface(objectDef)
         val typeProxy = TypeProxy(objectType)
-        queryTypeProxies.put(kClass, typeProxy)
+        queryTypeProxies[kClass] = typeProxy
 
-        val allKotlinProperties = objectDefs.fold(emptyMap<String, PropertyDef.Kotlin<*, *>>(),
-                { acc, def -> acc + def.kotlinProperties.mapKeys { entry -> entry.key.name } })
-        val allTransformations= objectDefs.fold(emptyMap<String, Transformation<*, *>>(),
-                { acc, def -> acc + def.transformations.mapKeys { entry -> entry.key.name } })
+        val allKotlinProperties = objectDefs.fold(emptyMap<String, PropertyDef.Kotlin<*, *>>()) { acc, def ->
+            acc + def.kotlinProperties.mapKeys { (property) -> property.name }
+        }
+        val allTransformations= objectDefs.fold(emptyMap<String, Transformation<*, *>>()) { acc, def ->
+            acc + def.transformations.mapKeys { (property) -> property.name }
+        }
 
         val kotlinFields = kClass.memberProperties
                 .filter { field -> field.visibility == KVisibility.PUBLIC }

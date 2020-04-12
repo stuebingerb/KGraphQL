@@ -28,7 +28,6 @@ class SchemaBuilder internal constructor() {
     private var configuration = SchemaConfigurationDSL()
 
     fun build(): Schema {
-        // TODO: [runBlocking] is a temp fix
         return runBlocking {
             SchemaCompilation(configuration.build(), model.toSchemaDefinition()).perform()
         }
@@ -180,6 +179,15 @@ class SchemaBuilder internal constructor() {
         val union = UnionTypeDSL().apply(block)
         model.addUnion(TypeDef.Union(name, union.possibleTypes, union.description))
         return TypeID(name)
+    }
+
+    inline fun <reified T: Any> unionType(noinline block: UnionTypeDSL.() -> Unit = {}): TypeID {
+        if (!T::class.isSealed) throw SchemaException("Can't generate a union type out of a non sealed class. '${T::class.simpleName}'")
+
+        return unionType(T::class.simpleName!!) {
+            T::class.sealedSubclasses.forEach { type(it) }
+            block()
+        }
     }
 
     //================================================================================

@@ -1,9 +1,9 @@
-package com.apurebase.kgraphql.integration
+package com.apurebase.kgraphql.integration.github
 
 import com.apurebase.kgraphql.KGraphQL
 import org.junit.jupiter.api.Test
 
-class GitHubIssuesBugTest {
+class GitHubIssue75 {
     data class SearchHit(val spanData: Span)
     data class Tag(val key: String, val type: String, val value: String)
     data class LogPoint(val timestamp: Int, val fields: List<LogPointField>)
@@ -11,8 +11,15 @@ class GitHubIssuesBugTest {
     data class Trace(val traceID: String, val spans: ArrayList<Span>) {
         companion object {
             fun fromSearchHits(traceID: String, hits: Array<SearchHit>): Trace {
-                val spansArray = hits.map { Span.fromSearchHit(it) }.toTypedArray<Span>()
-                return Trace(traceID, ArrayList(spansArray.sortedBy { it.startTime }))
+                val spansArray = hits.map {
+                    Span.fromSearchHit(
+                        it
+                    )
+                }.toTypedArray<Span>()
+                return Trace(
+                    traceID,
+                    ArrayList(spansArray.sortedBy { it.startTime })
+                )
             }
         }
     }
@@ -44,9 +51,21 @@ class GitHubIssuesBugTest {
                                 serviceName = "example1",
                                 logs = arrayListOf(),
                                 tags = arrayListOf(
-                                    Tag(type = "string", value = "sample text", key = "_tracestep_stack"),
-                                    Tag(type = "bool", value = "true", key = "_tracestep_main"),
-                                    Tag(type = "string", value = "proto", key = "internal.span.format")
+                                    Tag(
+                                        type = "string",
+                                        value = "sample text",
+                                        key = "_tracestep_stack"
+                                    ),
+                                    Tag(
+                                        type = "bool",
+                                        value = "true",
+                                        key = "_tracestep_main"
+                                    ),
+                                    Tag(
+                                        type = "string",
+                                        value = "proto",
+                                        key = "internal.span.format"
+                                    )
                                 )
                             ),
                             Span(
@@ -59,9 +78,21 @@ class GitHubIssuesBugTest {
                                 serviceName = "example2",
                                 logs = arrayListOf(),
                                 tags = arrayListOf(
-                                    Tag(type = "string", value = "sample text", key = "_tracestep_stack"),
-                                    Tag(type = "bool", value = "false", key = "_tracestep_main"),
-                                    Tag(type = "string", value = "proto", key = "internal.span.format")
+                                    Tag(
+                                        type = "string",
+                                        value = "sample text",
+                                        key = "_tracestep_stack"
+                                    ),
+                                    Tag(
+                                        type = "bool",
+                                        value = "false",
+                                        key = "_tracestep_main"
+                                    ),
+                                    Tag(
+                                        type = "string",
+                                        value = "proto",
+                                        key = "internal.span.format"
+                                    )
                                 )
                             )
                         )

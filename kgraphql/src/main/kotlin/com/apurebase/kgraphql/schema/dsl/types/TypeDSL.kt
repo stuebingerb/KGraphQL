@@ -90,7 +90,7 @@ open class TypeDSL<T : Any>(
     fun unionProperty(name : String, block : UnionPropertyDSL<T>.() -> Unit){
         val property = UnionPropertyDSL(name, block)
         val union = supportedUnions.find { property.returnType.typeID.equals(it.name, true) }
-                ?: throw SchemaException("Union Type: ${property.returnType.typeID} does not exist")
+            ?: throw SchemaException("Union Type: ${property.returnType.typeID} does not exist")
 
         unionProperties.add(property.toKQLProperty(union))
     }

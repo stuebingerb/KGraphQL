@@ -172,4 +172,39 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
         }
     }
+    sealed class AAA {
+        data class BBB(val i: Int) : AAA()
+        class CCC(val s: String) : AAA()
+    }
+    @Test
+    fun `automatic unions out of sealed classes`() {
+        KGraphQL.schema {
+            unionType<AAA>()
+
+            query("returnUnion") {
+                resolver { ctx: Context, isB: Boolean ->
+                    if(isB) {
+                        AAA.BBB(1)
+                    } else {
+                        AAA.CCC("String")
+                    }
+                }
+            }
+        }
+            .executeBlocking("""
+            {
+                f: returnUnion(isB: false) {
+                    ... on BBB { i }
+                    ... on CCC { s }
+                }
+                t: returnUnion(isB: true) {
+                    ... on BBB { i }
+                    ... on CCC { s }                
+                }
+            }
+        """.trimIndent()).also(::println).deserialize().run {
+            extract<String>("data/f/s") shouldBeEqualTo "String"
+            extract<Int>("data/t/i") shouldBeEqualTo 1
+        }
+    }
 }
