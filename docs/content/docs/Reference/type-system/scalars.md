@@ -23,7 +23,7 @@ stringScalar<UUID> {
 stringScalar<UUID> {
   coercion = object : StringScalarCoercion<UUID> {
     override fun serialize(instance: UUID): String = instance.toString()
-    override fun deserialize(raw: String): UUID = UUID.fromString(raw)
+    override fun deserialize(raw: String, valueNode: ValueNode?): UUID = UUID.fromString(raw)
   }
 }
 ```
