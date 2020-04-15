@@ -7,6 +7,39 @@ Resolver is KGraphQL definition of piece of system logic, required to resolve re
 
 Resolver clause accepts kotlin function and returns its DSL item, which is entry point for additional customization of resolver
 
+## Context
+
+To get access to the context object, you can just request for the `Context` object within your resolver.
+
+When providing `Context` as an argument for your resolver, it will be skipped and not published to your API, but KGraphQL will make sure to provide it to the resolver, so you can use it like the following example: 
+```kotlin
+query("hello") {
+	resolver { country: String, ctx: Context ->
+		val user = ctx.get<User>()
+		Hello(label = "Hello ${user?.name ?: "unknown"}")
+	}
+}
+```
+
+Then in your query execution process you will provide a `Context` like shown here: 
+```kotlin
+val query = """
+	query fetchHelloLabel($country: String!) {
+		hello(country: $country) {
+			label
+		}
+	}
+"""
+val variables = """
+	{"country": "English"}
+"""
+val user = User(id = 1, name = "Username")
+val ctx = context {
+	+user
+}
+schema.execute(query, variables, ctx)
+```
+
 ## withArgs {}
 `withArgs` closure exposes single method `arg`
 
