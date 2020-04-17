@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.specification.typesystem
 
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.schema.execution.Executor
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
@@ -62,4 +63,26 @@ class NonNullSpecificationTest {
         schema.executeBlocking("query(\$arg: String!){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
     }
 
+    data class Type1(val value: String)
+    data class Type2(val items: List<Type1?>)
+    @Test
+    fun `null within arrays should work`() {
+        val schema = KGraphQL.schema {
+            configure {
+                executor = Executor.DataLoaderPrepared
+            }
+            query("data") {
+                resolver { ->
+                    Type2(
+                        items = listOf(
+                            Type1("Stuff"),
+                            null
+                        )
+                    )
+                }
+            }
+        }
+
+        schema.executeBlocking("{ data { items { value } } }").let(::println)
+    }
 }

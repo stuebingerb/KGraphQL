@@ -131,8 +131,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                             values.map { v ->
                                 addDeferredObj {
                                     when {
-                                        v == null -> createNullNode(node, returnType)
-//                                        node.children.isEmpty() -> createSimpleValueNode(returnType.unwrapList(), v, node)
+                                        v == null -> createNullNode(node, returnType.unwrapList())
                                         node.children.isNotEmpty() -> this@addDeferredObj.applyObjectProperties(
                                             ctx = ctx,
                                             value = v,
