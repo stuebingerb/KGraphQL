@@ -129,18 +129,18 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                     } else {
                         node.aliasOrKey toDeferredArray {
                             values.map { v ->
-                                addDeferredObj {
-                                    when {
-                                        v == null -> createNullNode(node, returnType.unwrapList())
-                                        node.children.isNotEmpty() -> this@addDeferredObj.applyObjectProperties(
+                                when {
+                                    v == null -> addValue(createNullNode(node, returnType.unwrapList()))
+                                    node.children.isNotEmpty() -> addDeferredObj {
+                                        this@addDeferredObj.applyObjectProperties(
                                             ctx = ctx,
                                             value = v,
                                             node = node,
                                             type = returnType.unwrapList(),
                                             parentCount = values.size.toLong()
                                         )
-                                        else -> throw TODO("Unknown error!")
                                     }
+                                    else -> throw TODO("Unknown error!")
                                 }
                             }
                         }

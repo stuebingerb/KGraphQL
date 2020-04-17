@@ -83,6 +83,17 @@ class NonNullSpecificationTest {
             }
         }
 
-        schema.executeBlocking("{ data { items { value } } }").let(::println)
+        schema.executeBlocking("""
+            {
+                data {
+                    items {
+                        value
+                    }
+                }
+            }
+        """.trimIndent()).also(::println).deserialize().run {
+            extract<String>("data/data/items[0]/value") shouldBeEqualTo "Stuff"
+            extract<String?>("data/data/items[1]").shouldBeNull()
+        }
     }
 }
