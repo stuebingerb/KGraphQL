@@ -39,7 +39,7 @@ class KtorFeatureTest {
                 }
             }) {
                 handleRequest {
-                    uri = GRAPHQL_ENDPOINT
+                    uri = "graphql"
                     method = HttpMethod.Post
                     addHeader(HttpHeaders.ContentType, "application/json;charset=UTF-8")
                     setBody(Kraph { it(this) }.toRequestString())
