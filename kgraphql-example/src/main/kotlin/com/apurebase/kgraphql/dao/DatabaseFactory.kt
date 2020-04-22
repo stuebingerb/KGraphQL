@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -66,7 +67,8 @@ object DatabaseFactory {
 
 fun <T:Any> String.execAndMap(transform : (ResultSet) -> T) : MutableList<T> {
     val result = arrayListOf<T>()
-    TransactionManager.current().exec(this) { rs ->
+
+    TransactionManager.currentOrNew(DEFAULT_ISOLATION_LEVEL).exec(this) { rs ->
         while (rs.next()) {
             result += transform(rs)
         }

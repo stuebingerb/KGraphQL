@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.schema.dsl
 
+import com.apurebase.kgraphql.configuration.PluginConfiguration
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -7,7 +8,7 @@ import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.Executor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-
+import kotlin.reflect.KClass
 
 class SchemaConfigurationDSL {
     var useDefaultPrettyPrinter: Boolean = false
@@ -19,8 +20,16 @@ class SchemaConfigurationDSL {
     var executor: Executor = Executor.Parallel
     var timeout: Long? = null
 
-    internal fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
+    private val plugins: MutableMap<KClass<*>, Any> = mutableMapOf()
 
+    fun install(plugin: PluginConfiguration) {
+        val kClass = plugin::class
+        require(plugins[kClass] == null)
+        plugins[kClass] = plugin
+    }
+
+
+    internal fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
     internal fun build(): SchemaConfiguration {
         objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, acceptSingleValueAsArray)
         return SchemaConfiguration(
@@ -30,7 +39,8 @@ class SchemaConfigurationDSL {
             useDefaultPrettyPrinter,
             coroutineDispatcher,
             executor,
-            timeout
+            timeout,
+            plugins
         )
     }
 }

@@ -42,7 +42,7 @@ class SchemaCompilation(
 
     private val scalars = definition.scalars.associate { scalar -> scalar.kClass to scalar.toScalarType() }
 
-    private val schemaProxy = SchemaProxy()
+    private val schemaProxy = SchemaProxy(configuration)
 
     private val contextType = Type._Context()
 

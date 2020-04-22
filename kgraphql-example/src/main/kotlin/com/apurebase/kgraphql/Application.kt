@@ -57,6 +57,10 @@ fun Application.module() {
 
                 configure {
                     useDefaultPrettyPrinter = true
+                    ktor {
+                        endpoint = "/"
+                        playground = true
+                    }
                 }
 
                 stringScalar<LocalDate> {
