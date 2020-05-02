@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
+import nidomiro.kdataloader.DataLoader
 import kotlin.reflect.KProperty1
 
 
@@ -260,7 +261,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     return handleFunctionProperty(ctx, parentValue, node, field)
                 }
                 is Field.DataLoader<*, *, *> -> {
-                    return handleDataProperty(ctx, parentValue, node, field, parentTimes)
+                    return handleDataProperty(ctx, parentValue, node, field)
                 }
                 else -> {
                     throw Exception("Unexpected field type: $field, should be Field.Kotlin or Field.Function")
@@ -271,7 +272,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         }
     }
 
-    private suspend fun <T> handleDataProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.DataLoader<*, *, *>, parentTimes: Int): JsonNode {
+    private suspend fun <T> handleDataProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.DataLoader<*, *, *>): JsonNode {
         val preparedValue = field.kql.prepare.invoke(
             funName = field.name,
             receiver = parentValue,
@@ -281,17 +282,12 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             ctx = ctx
         ) ?: TODO("Nullable prepare functions isn't supported")
 
-        val valueDeferred = CompletableDeferred<Any?>()
-//        ctx.loadValue(
-//            ctx.dataLoaders.getValue(field),
-//            preparedValue,
-//            valueDeferred,
-//            parentTimes
-//        )
-        println("Waiting for key: $preparedValue - [parent: $parentValue]")
-        val value = valueDeferred.await()
-        println("Loaded key: $preparedValue | $value - [parent: $parentValue]")
-        return createNode(ctx, value, node, field.returnType)
+        // as this isn't the DataLoaderPreparedRequestExecutor. We'll use this instant workaround instead.
+        val loader = field.loader.constructNew() as DataLoader<Any?, Any?>
+        val value = loader.loadAsync(preparedValue)
+        loader.dispatch()
+
+        return createNode(ctx, value.await(), node, field.returnType)
     }
 
     private suspend fun <T> handleFunctionProperty(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field.Function<*, *>): JsonNode {

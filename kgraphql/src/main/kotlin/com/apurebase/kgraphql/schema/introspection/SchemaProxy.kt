@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.schema.introspection
 
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
+import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import com.apurebase.kgraphql.schema.structure.LookupSchema
 import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.KClass
@@ -48,7 +49,7 @@ class SchemaProxy(
 
     override fun inputTypeByName(name: String): Type? = inputTypeByName(name)
 
-    override suspend fun execute(request: String, variables: String?, context: Context): String {
-        return getProxied().execute(request, variables, context)
+    override suspend fun execute(request: String, variables: String?, context: Context, options: ExecutionOptions): String {
+        return getProxied().execute(request, variables, context, options)
     }
 }

@@ -27,7 +27,9 @@ class DefaultSchema (
         val OPERATION_NAME_PARAM = NameNode("operationName", null)
     }
 
-    private val requestExecutor : RequestExecutor = when (configuration.executor) {
+    private val defaultRequestExecutor: RequestExecutor = getExecutor(configuration.executor)
+
+    private fun getExecutor(executor: Executor) = when (executor) {
         Parallel -> ParallelRequestExecutor(this)
         DataLoaderPrepared -> DataLoaderPreparedRequestExecutor(this)
     }
@@ -36,14 +38,16 @@ class DefaultSchema (
 
     private val cacheParser: CachingDocumentParser by lazy { CachingDocumentParser(configuration.documentParserCacheMaximumSize) }
 
-    override suspend fun execute(request: String, variables: String?, context: Context): String = coroutineScope {
+    override suspend fun execute(request: String, variables: String?, context: Context, options: ExecutionOptions): String = coroutineScope {
         val parsedVariables = variables
             ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
             ?: VariablesJson.Empty()
 
         val document = Parser(request).parseDocument()
 
-        requestExecutor.suspendExecute(
+        val executor = options.executor?.let(this@DefaultSchema::getExecutor) ?: defaultRequestExecutor
+
+        executor.suspendExecute(
             plan = requestInterpreter.createExecutionPlan(document, parsedVariables),
             variables = parsedVariables,
             context = context

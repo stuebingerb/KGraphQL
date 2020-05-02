@@ -373,7 +373,7 @@ class SchemaBuilderTest {
         }
 
         val georgeName = "George"
-        val response = deserialize(schema.executeBlocking("{name}", context { + UserData(georgeName, "STUFF") }))
+        val response = deserialize(schema.executeBlocking("{name}", context = context { + UserData(georgeName, "STUFF") }))
         assertThat(response.extract<String>("data/name"), equalTo(georgeName))
     }
 
@@ -400,7 +400,7 @@ class SchemaBuilderTest {
             + UserData(georgeName, "STUFF")
             inject("ADA")
         }
-        val response = deserialize (schema.executeBlocking("{actor{ nickname, name(addStuff: true) }}", context))
+        val response = deserialize (schema.executeBlocking("{actor{ nickname, name(addStuff: true) }}", context = context))
         assertThat(response.extract<String>("data/actor/name"), equalTo("${georgeName}STUFF"))
         assertThat(response.extract<String>("data/actor/nickname"), equalTo("Hodor and $georgeName"))
     }
