@@ -280,7 +280,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             args = node.arguments,
             executionNode = node,
             ctx = ctx
-        ) ?: TODO("Nullable prepare functions isn't supported")
+        )
 
         // as this isn't the DataLoaderPreparedRequestExecutor. We'll use this instant workaround instead.
         val loader = field.loader.constructNew() as DataLoader<Any?, Any?>
