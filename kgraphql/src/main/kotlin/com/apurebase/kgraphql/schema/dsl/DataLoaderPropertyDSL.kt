@@ -31,6 +31,34 @@ class DataLoaderPropertyDSL<T, K, R>(
         prepareWrapper = FunctionWrapper.on(block, true)
     }
 
+    fun <E, W> prepare(block: suspend (T, E, W) -> K) {
+        prepareWrapper = FunctionWrapper.on(block, true)
+    }
+
+    fun <E, W, Q> prepare(block: suspend (T, E, W, Q) -> K) {
+        prepareWrapper = FunctionWrapper.on(block, true)
+    }
+
+    fun <E, W, Q, A> prepare(block: suspend (T, E, W, Q, A) -> K) {
+        prepareWrapper = FunctionWrapper.on(block, true)
+    }
+
+    fun <E, W, Q, A, S> prepare(block: suspend (T, E, W, Q, A, S) -> K) {
+        prepareWrapper = FunctionWrapper.on(block, true)
+    }
+
+    fun <E, W, Q, A, S, B> prepare(block: suspend (T, E, W, Q, A, S, B) -> K) {
+        prepareWrapper = FunctionWrapper.on(block, true)
+    }
+
+    fun <E, W, Q, A, S, B, U> prepare(block: suspend (T, E, W, Q, A, S, B, U) -> K) {
+        prepareWrapper = FunctionWrapper.on(block, true)
+    }
+
+    fun <E, W, Q, A, S, B, U, C> prepare(block: suspend (T, E, W, Q, A, S, B, U, C) -> K) {
+        prepareWrapper = FunctionWrapper.on(block, true)
+    }
+
     fun accessRule(rule: (T, Context) -> Exception?){
         val accessRuleAdapter: (T?, Context) -> Exception? = { parent, ctx ->
             if (parent != null) rule(parent, ctx) else IllegalArgumentException("Unexpected null parent of kotlin property")
