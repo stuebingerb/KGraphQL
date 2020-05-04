@@ -17,7 +17,7 @@ class DataLoaderPropertyDSLTest {
                 executor = Executor.DataLoaderPrepared
             }
             query("parent") {
-                resolver { -> Parent("") }
+                resolver { -> Parent() }
             }
             type<Parent> {
                 dataProperty<String, Parent>("child") {
@@ -42,5 +42,5 @@ class DataLoaderPropertyDSLTest {
         results.extract<String>("data/parent/child/data") shouldBeEqualTo "A 1 C 2 E 3 G 4"
     }
 
-    class Parent(val data: String)
+    class Parent(val data: String = "")
 }
