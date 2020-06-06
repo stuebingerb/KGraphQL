@@ -1,17 +1,18 @@
 package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.schema.directive.Directive
+import com.apurebase.kgraphql.schema.introspection.NotIntrospected
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.Type
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode
 import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 
-
 sealed class Execution {
     abstract val selectionNode: SelectionNode
     abstract val directives: Map<Directive, ArgumentNodes?>?
 
+    @NotIntrospected
     open class Node (
         override val selectionNode: SelectionNode,
         val field: Field,

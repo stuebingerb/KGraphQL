@@ -2,6 +2,8 @@ package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.helpers.getFields
+import com.apurebase.kgraphql.schema.execution.Execution
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -278,4 +280,48 @@ class QueryTest : BaseSchemaTest() {
             execute("{film}")
         } shouldThrow GraphQLError::class withMessage "Missing selection set on property film of type Film"
     }
+
+    data class SampleNode(val id: Int, val name: String, val fields: List<String>? = null)
+
+    @Test
+    fun `access to execution node`(){
+        val result = defaultSchema {
+            configure { useDefaultPrettyPrinter = true }
+            query("root") {
+                resolver { node: Execution.Node ->
+                    SampleNode(0, "Root", fields = node.getFields())
+                }
+            }
+            type<SampleNode> {
+                property<List<SampleNode>>("children") {
+                    resolver { parent, amount: Int, node: Execution.Node ->
+                        (1..amount).map {
+                            SampleNode(it, "${node.aliasOrKey}-Testing", fields = node.getFields())
+                        }
+                    }
+                }
+            }
+        }.executeBlocking("""
+            {
+                root {
+                    fields
+                    kids: children(amount: 1) {
+                        id
+                        fields
+                        ...aFragment
+                    }
+                }
+            }
+            fragment aFragment on SampleNode {
+                id
+                name
+            }
+        """.trimIndent()).also(::println).deserialize()
+
+        result.extract<List<String>>("data/root/fields") shouldBeEqualTo listOf("fields")
+        result.extract<Int>("data/root/kids[0]/id") shouldBeEqualTo 1
+        result.extract<String>("data/root/kids[0]/name") shouldBeEqualTo "kids-Testing"
+        result.extract<List<String>>("data/root/kids[0]/fields") shouldBeEqualTo listOf("id", "fields", "name")
+    }
+
 }

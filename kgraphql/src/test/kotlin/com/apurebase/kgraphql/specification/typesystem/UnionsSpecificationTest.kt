@@ -4,6 +4,9 @@ import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.helpers.getFields
+import com.apurebase.kgraphql.schema.execution.Execution
+import kotlinx.coroutines.test.runBlockingTest
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
@@ -116,7 +119,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }""".trimIndent())
         } shouldThrow ExecutionException::class with {
             println(prettyPrint())
-            message shouldEqual "Unexpected type of union property value, expected one of: [Actor, Scenario, Director]. value was null"
+            message shouldBeEqualTo "Unexpected type of union property value, expected one of: [Actor, Scenario, Director]. value was null"
         }
     }
 
@@ -172,13 +175,15 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
         }
     }
+
+    @Suppress("unused")
     sealed class AAA {
         data class BBB(val i: Int) : AAA()
         class CCC(val s: String) : AAA()
     }
     @Test
     fun `automatic unions out of sealed classes`() {
-        KGraphQL.schema {
+        defaultSchema {
             unionType<AAA>()
 
             query("returnUnion") {
@@ -205,6 +210,35 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         """.trimIndent()).also(::println).deserialize().run {
             extract<String>("data/f/s") shouldBeEqualTo "String"
             extract<Int>("data/t/i") shouldBeEqualTo 1
+        }
+    }
+
+    @Suppress("unused")
+    sealed class WithFields {
+        data class Value1(val i: Int, val fields: List<String>) : WithFields()
+        data class Value2(val s: String, val fields: List<String>) : WithFields()
+    }
+    @Test
+    fun `union types in lists`() {
+        defaultSchema {
+            unionType<WithFields>()
+
+            query("returnUnion") {
+                resolver { node: Execution.Node ->
+                    WithFields.Value1(1, node.getFields())
+                }
+            }
+        }.executeBlocking("""
+            {
+                returnUnion {
+                    ... on Value1 { i, fields }
+                    ... on Value2 { s, fields }
+                }
+            }
+        """.trimIndent()).also(::println).deserialize().run {
+            extract<Int>("data/returnUnion/i") shouldBeEqualTo 1
+            extract<String?>("data/returnUnion/s") shouldBeEqualTo null
+            extract<List<String>>("data/returnUnion/fields") shouldBeEqualTo listOf("i", "fields", "s")
         }
     }
 }
