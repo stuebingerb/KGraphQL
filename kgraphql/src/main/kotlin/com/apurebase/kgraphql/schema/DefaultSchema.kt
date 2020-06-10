@@ -48,7 +48,7 @@ class DefaultSchema (
         val executor = options.executor?.let(this@DefaultSchema::getExecutor) ?: defaultRequestExecutor
 
         executor.suspendExecute(
-            plan = requestInterpreter.createExecutionPlan(document, parsedVariables),
+            plan = requestInterpreter.createExecutionPlan(document, parsedVariables, options),
             variables = parsedVariables,
             context = context
         )

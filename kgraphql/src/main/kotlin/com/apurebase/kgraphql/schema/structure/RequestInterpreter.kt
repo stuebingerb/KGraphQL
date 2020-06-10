@@ -14,6 +14,7 @@ import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode.FragmentSpreadNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode.InlineFragmentNode
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import com.apurebase.kgraphql.schema.model.ast.*
 import java.util.*
 import kotlin.reflect.full.starProjectedType
@@ -45,7 +46,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         }
     }
 
-    fun createExecutionPlan(document: DocumentNode, variables: VariablesJson): ExecutionPlan {
+    fun createExecutionPlan(document: DocumentNode, variables: VariablesJson, options: ExecutionOptions): ExecutionPlan {
         val test = document.definitions.filterIsInstance<ExecutableDefinitionNode>()
 
         val operation = test.filterIsInstance<OperationDefinitionNode>().let { operations ->
@@ -87,6 +88,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         val ctx = InterpreterContext(fragmentDefinitions)
 
         return ExecutionPlan(
+            options,
             operation.selectionSet.selections.map {
                 root.handleSelection(it as FieldNode, ctx, operation.variableDefinitions)
             }

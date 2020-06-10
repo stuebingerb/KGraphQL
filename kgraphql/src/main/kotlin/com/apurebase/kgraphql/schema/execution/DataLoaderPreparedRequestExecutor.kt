@@ -275,7 +275,6 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         field: Field,
         parentCount: Long
     )  {
-        // TODO: Check include directive
         node.field.checkAccess(parentValue, ctx.requestContext)
         if (!shouldInclude(ctx, node)) return
 
@@ -360,7 +359,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     }
 
     override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context) = coroutineScope {
-        deferredJsonBuilder(timeout = schema.configuration.timeout) {
+        deferredJsonBuilder(timeout = plan.options.timeout ?: schema.configuration.timeout) {
             val ctx = ExecutionContext(
                 Variables(schema, variables, plan.firstOrNull { it.variables != null }?.variables),
                 context
