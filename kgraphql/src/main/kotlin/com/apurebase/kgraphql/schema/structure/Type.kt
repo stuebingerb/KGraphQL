@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema.structure
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__EnumValue
 import com.apurebase.kgraphql.schema.introspection.__Field
@@ -248,6 +249,28 @@ interface Type : __Type {
 
     class _Context : Type {
         override val kClass: KClass<*>? = Context::class
+
+        override val kind: TypeKind = TypeKind.OBJECT
+
+        override val name: String? = null
+
+        override val description: String = ""
+
+        override val enumValues: List<__EnumValue>? = null
+
+        override val inputFields: List<__InputValue>? = null
+
+        override val ofType: __Type? = null
+
+        override val interfaces: List<__Type>? = null
+
+        override val fields: List<__Field>? = null
+
+        override val possibleTypes: List<__Type>? = null
+    }
+
+    class _ExecutionNode : Type {
+        override val kClass: KClass<*>? = Execution.Node::class
 
         override val kind: TypeKind = TypeKind.OBJECT
 

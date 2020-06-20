@@ -8,6 +8,8 @@ import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.directive.Directive
+import com.apurebase.kgraphql.schema.execution.Execution
+import com.apurebase.kgraphql.schema.introspection.NotIntrospected
 import com.apurebase.kgraphql.schema.introspection.SchemaProxy
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Schema
@@ -45,6 +47,8 @@ class SchemaCompilation(
     private val schemaProxy = SchemaProxy(configuration)
 
     private val contextType = Type._Context()
+
+    private val executionType = Type._ExecutionNode()
 
     private enum class TypeCategory {
         INPUT, QUERY
@@ -156,6 +160,7 @@ class SchemaCompilation(
     private suspend fun handlePossiblyWrappedType(kType : KType, typeCategory: TypeCategory) : Type = when {
         kType.isIterable() -> handleCollectionType(kType, typeCategory)
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
+        kType.jvmErasure == Execution.Node::class && typeCategory == TypeCategory.INPUT -> executionType
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
         kType.arguments.isNotEmpty() -> throw SchemaException("Generic types are not supported by GraphQL, found $kType")
         kType.jvmErasure.isSealed -> TypeDef.Union(
@@ -295,7 +300,9 @@ class SchemaCompilation(
         val typeProxy = TypeProxy(objectType)
         inputTypeProxies[kClass] = typeProxy
 
-        val fields = kClass.memberProperties.map { property -> handleKotlinInputProperty(property) }
+        val fields = if (kClass.findAnnotation<NotIntrospected>() == null) {
+            kClass.memberProperties.map { property -> handleKotlinInputProperty(property) }
+        } else listOf()
 
         typeProxy.proxied = Type.Input(inputObjectDef, fields)
         return typeProxy

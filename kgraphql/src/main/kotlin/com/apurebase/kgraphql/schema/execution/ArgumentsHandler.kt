@@ -39,6 +39,7 @@ internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(sc
             when {
                 //inject request context
                 parameter.type.isInstance(requestContext) -> requestContext
+                parameter.type.isInstance(executionNode) -> executionNode
                 value == null && parameter.type.kind != TypeKind.NON_NULL -> parameter.default
                 value == null && parameter.type.kind == TypeKind.NON_NULL -> {
                     parameter.default ?: throw GraphQLError(
