@@ -14,6 +14,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }} 
-          path: ./docs/
+          path: docs
           repository: jeggy/kgraphql-docs
           tags: latest
