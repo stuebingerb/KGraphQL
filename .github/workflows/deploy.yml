@@ -24,4 +24,5 @@ jobs:
         with:
           remote_host: ssh://root@174.138.11.43
           ssh_private_key: ${{ secrets.PRIVATE_SSH_KEY }}
+          ssh_public_key: ${{ secrets.PUBLIC_SSH_KEY }}
           args: stack deploy --compose-file docs/docker-compose.prod.yaml kgraphql
