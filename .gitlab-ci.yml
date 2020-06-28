@@ -25,15 +25,6 @@ build:
   script:
     - gradle assemble
 
-#test:
-#  stage: test
-#  cache:
-#    paths:
-#      - build
-#      - .gradle
-#  script:
-#    - gradle jacocoTestReport coveralls
-
 bintray:publish:
   stage: publish
   cache:
@@ -44,22 +35,3 @@ bintray:publish:
     - ./gradlew bintrayUpload
   only:
     - tags
-
-#pages:
-#  image: node
-#  stage: publish
-#  artifacts:
-#    paths:
-#      - public
-#  before_script:
-#    - git submodule update --init
-#    - cd docs
-#    - cd themes/docsy
-#    - git submodule update --init
-#    - cd ../..
-#  script:
-#    - yarn
-#    - yarn build
-#  only:
-#    - master
-
