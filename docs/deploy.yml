@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  docs:
+    image: jeggy/kgraphql-docs:latest
+    networks:
+      - public
+    deploy:
+      labels:
+        traefik.http.routers.kgraphql.rule: 'Host(`kgraphql.io`)'
+        traefik.http.routers.kgraphql.entrypoints: 'websecure'
+        traefik.http.routers.kgraphql.tls.certresolver: 'le'
+        traefik.http.services.kgraphql.loadbalancer.server.port: '8000'
+
+
+
+networks:
+  public:
+    external: true

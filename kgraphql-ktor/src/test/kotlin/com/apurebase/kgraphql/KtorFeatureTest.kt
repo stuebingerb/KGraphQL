@@ -32,10 +32,12 @@ class KtorFeatureTest {
                         }
                     }
                 }
-                routing {
-                    authenticate(optional = true) {
-                        graphql(ctxBuilder) { block() }
+                install(GraphQL) {
+                    context(ctxBuilder)
+                    wrap { next ->
+                        authenticate(optional = true) { next() }
                     }
+                    schema(block)
                 }
             }) {
                 handleRequest {

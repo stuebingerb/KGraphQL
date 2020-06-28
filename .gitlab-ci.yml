@@ -45,21 +45,21 @@ bintray:publish:
   only:
     - tags
 
-pages:
-  image: node
-  stage: publish
-  artifacts:
-    paths:
-      - public
-  before_script:
-    - git submodule update --init
-    - cd docs
-    - cd themes/docsy
-    - git submodule update --init
-    - cd ../..
-  script:
-    - yarn
-    - yarn build
-  only:
-    - master
+#pages:
+#  image: node
+#  stage: publish
+#  artifacts:
+#    paths:
+#      - public
+#  before_script:
+#    - git submodule update --init
+#    - cd docs
+#    - cd themes/docsy
+#    - git submodule update --init
+#    - cd ../..
+#  script:
+#    - yarn
+#    - yarn build
+#  only:
+#    - master
 
