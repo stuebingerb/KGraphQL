@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Push Docker to DockerHub 
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }} 
-          path: docs
-          repository: jeggy/kgraphql-docs
-          tags: latest
+#      - name: Push Docker to DockerHub 
+#        uses: docker/build-push-action@v1
+#        with:
+#          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+#          password: ${{ secrets.DOCKER_HUB_PASSWORD }} 
+#          path: docs
+#          repository: jeggy/kgraphql-docs
+#          tags: latest
       - name: Deploy
         uses: sagebind/docker-swarm-deploy-action@v2
         with:
