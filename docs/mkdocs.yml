@@ -1,0 +1,90 @@
+site_name: KGraphQL
+site_description: KGraphQL Documentation
+site_url: https://kgraphql.io
+dev_addr: 0.0.0.0:8000
+
+repo_name: 'GitHub'
+repo_url: 'https://github.com/apurebase/kgraphql'
+
+docs_dir: 'content'
+
+# https://squidfunk.github.io/mkdocs-material/
+theme:
+  name: 'material'
+  custom_dir: 'theme'
+  language: en
+  include_sidebar: true
+  # favicon
+  # logo
+  feature:
+    tabs: false
+  palette:
+    scheme: preference
+    primary: 'pink'
+    accent: 'pink'
+  i18n:
+    prev: 'Previous'
+    next: 'Next'
+
+google_analytics:
+  - UA-164594051-1
+  - auto
+
+extra_css:
+  - assets/hljs/styles/atom-one-light.css # HightlightJS's CSS theme
+
+extra_javascript:
+  - assets/hljs/highlight.pack.js # Download from https://highlightjs.org/download/
+  - assets/hljs/init.js
+
+plugins:
+  - search
+  - exclude:
+      glob:
+        - "**/include-*.md"
+
+# https://squidfunk.github.io/mkdocs-material/extensions/admonition/
+# https://facelessuser.github.io/pymdown-extensions/
+markdown_extensions:
+  - attr_list
+  - admonition
+  - footnotes
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist
+  - pymdownx.tabbed
+  - pymdownx.snippets:
+      check_paths: true
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/aPureBase/KGraphQL
+    - icon: fontawesome/brands/slack
+      link: https://kotlinlang.slack.com/messages/kgraphql
+
+nav:
+  - 'Overview': 'index.md'
+  - 'Installation': 'Installation/index.md'
+  - 'Examples': 'Examples/index.md'
+  - 'Plugins':
+    - 'Ktor': 'Plugins/ktor.md'
+  - 'Tutorials':
+    - 'Star Wars Tutorial': 'Tutorials/starwars.md'
+  - 'Reference':
+    - 'Operations': 'Reference/operations.md'
+    - 'Configuration': 'Reference/configuration.md'
+    - 'Resolver': 'Reference/resolver.md'
+    - 'Deprecation': 'Reference/deprecation.md'
+    - 'Type System':
+      - 'Overview': 'Reference/Type System/overview.md'
+      - 'Scalars': 'Reference/Type System/scalars.md'
+      - 'Enums': 'Reference/Type System/enums.md'
+      - 'Unions': 'Reference/Type System/unions.md'
+      - 'Input Objects': 'Reference/Type System/input-objects.md'
+      - 'Objects and Interfaces': 'Reference/Type System/objects-and-interfaces.md'
+
