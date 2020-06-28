@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build and Push to Docker Hub
-    runs-on: docker:19.03.12-dind
+    runs-on: ubuntu-latest
     steps:
       - uses: docker/build-push-action@v1
         with:
