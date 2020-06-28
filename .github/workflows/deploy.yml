@@ -1,0 +1,19 @@
+name: Deploy Docs
+on:
+  push:
+    branches:
+      - master
+
+
+jobs:
+  build:
+    name: Build and Push to Docker Hub
+    runs-on: docker:19.03.12-dind
+    steps:
+      - uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }} 
+          path: docs/
+          repository: jeggy/kgraphql-docs
+          tags: latest
