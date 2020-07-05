@@ -10,7 +10,7 @@ services:
         traefik.http.routers.kgraphql.rule: 'Host(`kgraphql.io`)'
         traefik.http.routers.kgraphql.entrypoints: 'websecure'
         traefik.http.routers.kgraphql.tls.certresolver: 'le'
-        traefik.http.services.kgraphql.loadbalancer.server.port: '8000'
+        traefik.http.services.kgraphql.loadbalancer.server.port: '80'
 
 
 

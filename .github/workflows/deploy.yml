@@ -7,11 +7,11 @@ on:
 
 jobs:
   build:
-    name: Build and Push to Docker Hub
+    name: Build & deploy docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Push Docker to DockerHub
+      - name: Push DockerHub
         uses: docker/build-push-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
@@ -19,7 +19,7 @@ jobs:
           path: docs
           repository: jeggy/kgraphql-docs
           tags: latest
-      - name: Deploy
+      - name: Deploy to Swarm
         uses: sagebind/docker-swarm-deploy-action@v2
         with:
           remote_host: ${{ secrets.DOCKER_HOST }}
