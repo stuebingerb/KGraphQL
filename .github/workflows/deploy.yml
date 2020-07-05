@@ -11,18 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-#      - name: Push Docker to DockerHub 
-#        uses: docker/build-push-action@v1
-#        with:
-#          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-#          password: ${{ secrets.DOCKER_HUB_PASSWORD }} 
-#          path: docs
-#          repository: jeggy/kgraphql-docs
-#          tags: latest
+      - name: Push Docker to DockerHub
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          path: docs
+          repository: jeggy/kgraphql-docs
+          tags: latest
       - name: Deploy
         uses: sagebind/docker-swarm-deploy-action@v2
         with:
-          remote_host: ssh://root@174.138.11.43
+          remote_host: ${{ secrets.DOCKER_HOST }}
           ssh_private_key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
           ssh_public_key: ${{ secrets.DOCKER_SSH_PUBLIC_KEY }}
-          args: stack deploy --compose-file docs/docker-compose.prod.yaml kgraphql
+          args: stack deploy --compose-file docs/docker-compose.prod.yml kgraphql

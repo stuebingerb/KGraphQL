@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   docs:
-    image: jeggy/kgraphql-docs:latest
+    image: jeggy/kgraphql-docs
     networks:
       - public
     deploy:
