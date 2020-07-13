@@ -37,7 +37,7 @@ fun main() {
 ```
 
 ## Documentation
-See the [documentation](https://kgraphql.in/) for a more detailed explanation of the library.
+See the [documentation](https://kgraphql.io/) for a more detailed explanation of the library.
 
 ## Contributing
 
