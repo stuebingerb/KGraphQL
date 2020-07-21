@@ -1,3 +1,5 @@
+@file:Suppress("LocalVariableName")
+
 package com.apurebase.kgraphql.schema.structure
 
 import com.apurebase.kgraphql.Context
@@ -334,7 +336,13 @@ class SchemaCompilation(
             throw SchemaException("Invalid union type members")
         }
 
-        val unionType = Type.Union(union, possibleTypes)
+        val __typenameField = handleOperation (
+            PropertyDef.Function<Nothing, String?> ("__typename", FunctionWrapper.on( { value: Any ->
+                schemaProxy.typeByKClass(value.javaClass.kotlin)?.name
+            }, true))
+        )
+
+        val unionType = Type.Union(union, __typenameField, possibleTypes)
         unions.add(unionType)
         return unionType
     }
