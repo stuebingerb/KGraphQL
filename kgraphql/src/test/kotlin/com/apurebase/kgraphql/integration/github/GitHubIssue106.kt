@@ -27,7 +27,7 @@ class GitHubIssue106 {
                 }
             """)
         } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Java class as inputType are not supported"
+            message shouldBeEqualTo "Java class 'LatLng' as inputType are not supported"
         }
 
     }

@@ -26,18 +26,18 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                 }
             }
             value is ValueNode.ObjectValueNode -> {
-                val constructor = type.unwrapped().kClass!!.primaryConstructor ?: throw GraphQLError("Java class as inputType are not supported")
+                val constructor = type.unwrapped().kClass!!.primaryConstructor ?: throw GraphQLError("Java class '${type.unwrapped().kClass!!.simpleName}' as inputType are not supported", value)
                 val params = constructor.parameters.associateBy { it.name }
                 val valueMap = value.fields.map { valueField ->
                     val inputField = type
                             .unwrapped()
                             .inputFields
                             ?.firstOrNull { it.name == valueField.name.value }
-                            ?: throw GraphQLError("Constructor Parameter '${valueField.name.value}' can not be found in '${type.unwrapped().kClass!!.simpleName}'")
+                            ?: throw GraphQLError("Constructor Parameter '${valueField.name.value}' can not be found in '${type.unwrapped().kClass!!.simpleName}'", value)
 
                     val paramType = inputField
                             .type as? Type
-                        ?: throw GraphQLError("Something went wrong while searching for the constructor parameter type : '${valueField.name.value}'")
+                        ?: throw GraphQLError("Something went wrong while searching for the constructor parameter type : '${valueField.name.value}'", value)
 
                     params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
                 }.toMap()
