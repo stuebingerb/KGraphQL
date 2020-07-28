@@ -26,7 +26,8 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                 }
             }
             value is ValueNode.ObjectValueNode -> {
-                val params = type.unwrapped().kClass!!.primaryConstructor!!.parameters.associateBy { it.name }
+                val constructor = type.unwrapped().kClass!!.primaryConstructor ?: throw GraphQLError("Java class as inputType are not supported")
+                val params = constructor.parameters.associateBy { it.name }
                 val valueMap = value.fields.map { valueField ->
                     val paramType = type
                         .unwrapped()
@@ -38,7 +39,7 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                     params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
                 }.toMap()
 
-                type.unwrapped().kClass?.primaryConstructor?.callBy(valueMap)
+                constructor.callBy(valueMap)
             }
             value is ValueNode.NullValueNode -> {
                 if (type.isNotNullable()) {
