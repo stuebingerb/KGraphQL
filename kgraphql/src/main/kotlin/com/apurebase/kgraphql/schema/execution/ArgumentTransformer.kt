@@ -26,19 +26,23 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                 }
             }
             value is ValueNode.ObjectValueNode -> {
-                val params = type.unwrapped().kClass!!.primaryConstructor!!.parameters.associateBy { it.name }
+                val constructor = type.unwrapped().kClass!!.primaryConstructor ?: throw GraphQLError("Java class '${type.unwrapped().kClass!!.simpleName}' as inputType are not supported", value)
+                val params = constructor.parameters.associateBy { it.name }
                 val valueMap = value.fields.map { valueField ->
-                    val paramType = type
-                        .unwrapped()
-                        .inputFields
-                        ?.firstOrNull { it.name == valueField.name.value }
-                        ?.type as? Type
-                        ?: throw UnknownError("Something went wrong while searching for the constructor parameter type")
+                    val inputField = type
+                            .unwrapped()
+                            .inputFields
+                            ?.firstOrNull { it.name == valueField.name.value }
+                            ?: throw GraphQLError("Constructor Parameter '${valueField.name.value}' can not be found in '${type.unwrapped().kClass!!.simpleName}'", value)
+
+                    val paramType = inputField
+                            .type as? Type
+                        ?: throw GraphQLError("Something went wrong while searching for the constructor parameter type : '${valueField.name.value}'", value)
 
                     params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
                 }.toMap()
 
-                type.unwrapped().kClass?.primaryConstructor?.callBy(valueMap)
+                constructor.callBy(valueMap)
             }
             value is ValueNode.NullValueNode -> {
                 if (type.isNotNullable()) {
