@@ -57,12 +57,12 @@ class SchemaCompilation(
     }
 
     suspend fun perform(): DefaultSchema {
-        val queryType = handleQueries()
-        val mutationType = handleMutations()
-        val subscriptionType = handleSubscriptions()
         definition.unions.forEach { handleUnionType(it) }
         definition.objects.forEach { handleObjectType(it.kClass) }
         definition.inputObjects.forEach { handleInputType(it.kClass) }
+        val queryType = handleQueries()
+        val mutationType = handleMutations()
+        val subscriptionType = handleSubscriptions()
 
         queryTypeProxies.forEach { (kClass, typeProxy) ->
             introspectPossibleTypes(kClass, typeProxy)
@@ -198,6 +198,10 @@ class SchemaCompilation(
     }
 
     private suspend fun handleRawType(kClass: KClass<*>, typeCategory: TypeCategory) : Type {
+        when (val type = unions.find { it.name == kClass.simpleName }) {
+            null -> Unit
+            else -> return type
+        }
 
         if(kClass == Context::class) throw SchemaException("Context type cannot be part of schema")
 
