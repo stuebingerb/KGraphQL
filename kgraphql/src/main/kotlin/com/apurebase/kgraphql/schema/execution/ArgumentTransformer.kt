@@ -42,6 +42,10 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                     params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
                 }.toMap()
 
+                require(params.size == valueMap.size) {
+                    throw GraphQLError("Constructor has ${params.size} parameters while you are sending ${valueMap.size}")
+                }
+
                 constructor.callBy(valueMap)
             }
             value is ValueNode.NullValueNode -> {

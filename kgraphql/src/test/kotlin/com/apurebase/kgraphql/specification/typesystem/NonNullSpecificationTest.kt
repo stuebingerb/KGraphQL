@@ -96,4 +96,25 @@ class NonNullSpecificationTest {
             extract<String?>("data/data/items[1]").shouldBeNull()
         }
     }
+
+    data class MyInput(val value1: String, val value2: String?)
+    @Test
+    fun `nullable values without default values should raise an error`() {
+
+        val schema = KGraphQL.schema {
+            query("main") {
+                resolver { input: MyInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
+            }
+        }
+
+        invoking {
+            schema.executeBlocking("""
+                {
+                    main(input: { value1: "Hello" })
+                }
+            """)
+        } shouldThrow GraphQLError::class with {
+            message shouldEqual "Constructor has 2 parameters while you are sending 1"
+        }
+    }
 }
