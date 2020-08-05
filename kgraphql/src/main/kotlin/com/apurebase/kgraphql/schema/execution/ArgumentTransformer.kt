@@ -42,8 +42,13 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                     params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
                 }.toMap()
 
-                require(params.size == valueMap.size) {
-                    throw GraphQLError("Constructor has ${params.size} parameters while you are sending ${valueMap.size}")
+                val valueMapNames = valueMap.keys.map { it.name }
+                val missingNonOptionalInputs = params
+                        .filter { (key, value) -> !value.isOptional && !valueMapNames.contains(key) }
+
+                require(missingNonOptionalInputs.isEmpty()) {
+                    val inputs = missingNonOptionalInputs.keys.joinToString(",")
+                    throw GraphQLError("You are missing non optional input fields: $inputs")
                 }
 
                 constructor.callBy(valueMap)

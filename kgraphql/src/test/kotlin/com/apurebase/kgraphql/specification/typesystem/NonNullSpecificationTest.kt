@@ -114,7 +114,25 @@ class NonNullSpecificationTest {
                 }
             """)
         } shouldThrow GraphQLError::class with {
-            message shouldEqual "Constructor has 2 parameters while you are sending 1"
+            message shouldEqual "You are missing non optional input fields: value2"
+        }
+    }
+
+    data class MyOptionalInput(val value1: String, val value2: String? = null)
+    @Test
+    fun `nullable values with default values should execute successfully`() {
+        val schema = KGraphQL.schema {
+            query("main") {
+                resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
+            }
+        }
+
+        schema.executeBlocking("""
+            {
+                main(input: { value1: "Hello" })
+            }
+        """.trimIndent()).also(::println).deserialize().run {
+            extract<String>("data/main") shouldBeEqualTo "Hello - Nada"
         }
     }
 }
