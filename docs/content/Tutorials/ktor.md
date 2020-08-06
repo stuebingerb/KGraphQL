@@ -8,33 +8,47 @@ The very first thing we'll be doing is creating a new IntelliJ project and use t
 
 After this we'll press "Next" and fill out the necessary information and then press "Finish". Now we have a brand new ktor project. Now we can add the dependencies needed to our `gradle.properties` and `build.gradle.kts` files.
 
-**gradle.properties**
-```properties
-kgraphql_version=x.x.x
-```
+=== "gradle.properties"
+    ```properties
+    kgraphql_version=x.x.x
+    ```
+
 Replace `x.x.x` with the latest version [![Bintray](https://api.bintray.com/packages/apurebase/apurebase/kgraphql/images/download.svg)](https://bintray.com/apurebase/apurebase/kgraphql).
 
-**build.gradle.kts**
-```kotlin
-val ktor_version: String by project
-val kotlin_version: String by project
-val logback_version: String by project
-val kgraphql_version: String by project // <-- Add this line
+=== "Kotlin Gradle Script"
+    ```kotlin
+    val ktor_version: String by project
+    val kotlin_version: String by project
+    val logback_version: String by project
+    val kgraphql_version: String by project // <-- Add this line
+    
+    ...
+    
+    dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
+        implementation("io.ktor:ktor-server-netty:$ktor_version")
+        implementation("ch.qos.logback:logback-classic:$logback_version")
+        implementation("com.apurebase:kgraphql:$kgraphql_version")      // <-- Add these two lines
+        implementation("com.apurebase:kgraphql-ktor:$kgraphql_version") // <-- Add these two lines
+        testImplementation("io.ktor:ktor-server-tests:$ktor_version")
+    }
+    ```
 
-...
-
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("ch.qos.logback:logback-classic:$logback_version")
-    implementation("com.apurebase:kgraphql:$kgraphql_version")      // <-- Add these two lines
-    implementation("com.apurebase:kgraphql-ktor:$kgraphql_version") // <-- Add these two lines
-    testImplementation("io.ktor:ktor-server-tests:$ktor_version")
-}
-```
+=== "Gradle"
+    ```groovy
+    dependencies {
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+        implementation "io.ktor:ktor-server-netty:$ktor_version"
+        implementation "ch.qos.logback:logback-classic:$logback_version"
+        implementation "com.apurebase:kgraphql:$kgraphql_version"      // <-- Add these two lines
+        implementation "com.apurebase:kgraphql-ktor:$kgraphql_version" // <-- Add these two lines
+        testImplementation "io.ktor:ktor-server-tests:$ktor_version"
+    }
+    ```
 
 The only thing left is installing the GraphQL feature onto our server by opening `src/Application.kt` and add these lines to the `Application.module` function
 
+=== "Application.kt"
 ```kotlin
 fun Application.module(testing: Boolean = false) {
     install(GraphQL) {
