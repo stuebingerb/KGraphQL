@@ -76,6 +76,7 @@ nav:
     - 'Ktor': 'Plugins/ktor.md'
   - 'Tutorials':
     - 'Star Wars Tutorial': 'Tutorials/starwars.md'
+    - 'Ktor Tutorial': 'Tutorials/ktor.md'
   - 'Reference':
     - 'Operations': 'Reference/operations.md'
     - 'Configuration': 'Reference/configuration.md'
