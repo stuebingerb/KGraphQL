@@ -42,13 +42,12 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                     params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
                 }.toMap()
 
-                val valueMapNames = valueMap.keys.map { it.name }
-                val missingNonOptionalInputs = params
-                        .filter { (key, value) -> !value.isOptional && !valueMapNames.contains(key) }
+                val missingNonOptionalInputs = params.values
+                        .filter { !it.isOptional && !valueMap.containsKey(it) }
 
-                require(missingNonOptionalInputs.isEmpty()) {
-                    val inputs = missingNonOptionalInputs.keys.joinToString(",")
-                    throw GraphQLError("You are missing non optional input fields: $inputs")
+                if (missingNonOptionalInputs.isNotEmpty()) {
+                    val inputs = missingNonOptionalInputs.map { it.name }.joinToString(",")
+                    throw GraphQLError("You are missing non optional input fields: $inputs", value)
                 }
 
                 constructor.callBy(valueMap)
