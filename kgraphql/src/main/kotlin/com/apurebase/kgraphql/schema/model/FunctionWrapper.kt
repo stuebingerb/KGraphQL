@@ -12,6 +12,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.valueParameters
+import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.jvm.reflect
 
 
@@ -474,4 +475,8 @@ interface FunctionWrapper <T> : Publisher {
             }
         }
     }
+
+    fun hasReturnType(): Boolean = getObjectTypeName() != "java.lang.Void" && getObjectTypeName() != "kotlin.Unit"
+
+    private fun getObjectTypeName() = kFunction.returnType.jvmErasure.javaObjectType.name
 }
