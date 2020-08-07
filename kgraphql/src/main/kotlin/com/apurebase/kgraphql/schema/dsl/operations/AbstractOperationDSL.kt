@@ -20,7 +20,7 @@ abstract class AbstractOperationDSL(
     private fun resolver(function: FunctionWrapper<*>): ResolverDSL {
 
         require(function.hasReturnType()) {
-            "Resolver for $name has no return values"
+            "Resolver for '$name' has no return value"
         }
 
         functionWrapper = function
