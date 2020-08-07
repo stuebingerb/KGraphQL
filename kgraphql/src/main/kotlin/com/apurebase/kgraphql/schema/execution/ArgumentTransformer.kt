@@ -42,6 +42,14 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
                     params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
                 }.toMap()
 
+                val missingNonOptionalInputs = params.values
+                        .filter { !it.isOptional && !valueMap.containsKey(it) }
+
+                if (missingNonOptionalInputs.isNotEmpty()) {
+                    val inputs = missingNonOptionalInputs.map { it.name }.joinToString(",")
+                    throw GraphQLError("You are missing non optional input fields: $inputs", value)
+                }
+
                 constructor.callBy(valueMap)
             }
             value is ValueNode.NullValueNode -> {
