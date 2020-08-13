@@ -18,6 +18,11 @@ abstract class AbstractOperationDSL(
     internal var functionWrapper: FunctionWrapper<*>? = null
 
     private fun resolver(function: FunctionWrapper<*>): ResolverDSL {
+
+        require(function.hasReturnType()) {
+            "Resolver for '$name' has no return value"
+        }
+
         functionWrapper = function
         return ResolverDSL(this)
     }

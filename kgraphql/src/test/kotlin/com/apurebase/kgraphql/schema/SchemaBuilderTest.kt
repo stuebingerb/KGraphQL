@@ -6,6 +6,10 @@ import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import com.apurebase.kgraphql.schema.structure.Field
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
@@ -588,5 +592,18 @@ class SchemaBuilderTest {
         val names = types.map {it["name"]}
         assertThat(names, hasItem("TypeAsInput"))
         assertThat(names, hasItem("TypeAsObject"))
+    }
+
+    @Test
+    fun `Resolver cannot return an Unit value`(){
+        invoking {
+            KGraphQL.schema {
+                query("main") {
+                    resolver { -> Unit }
+                }
+            }
+        } shouldThrow IllegalArgumentException::class with {
+            message shouldEqual "Resolver for main has no return values"
+        }
     }
 }
