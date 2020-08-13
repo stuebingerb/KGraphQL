@@ -600,7 +600,7 @@ class SchemaBuilderTest {
                 }
             }
         } shouldThrow IllegalArgumentException::class with {
-            message shouldBeEqualTo "Resolver for main has no return values"
+            message shouldBeEqualTo "Resolver for 'main' has no return value"
         }
     }
 }
