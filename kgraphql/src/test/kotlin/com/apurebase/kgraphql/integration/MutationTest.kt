@@ -45,7 +45,7 @@ class MutationTest : BaseSchemaTest() {
         invoking {
             execute("mutation {createActor(name: \"${testActor.name}\", age: \"fwfwf\"){age}}")
         } shouldThrow GraphQLError::class with {
-            message shouldEqual "Cannot coerce \"fwfwf\" to numeric constant"
+            message shouldBeEqualTo "Cannot coerce \"fwfwf\" to numeric constant"
         }
 
     }
@@ -55,7 +55,7 @@ class MutationTest : BaseSchemaTest() {
         invoking {
             execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         } shouldThrow ValidationException::class with {
-            message shouldEqual "createActor does support arguments [name, age]. Found arguments [name, age, bananan]"
+            message shouldBeEqualTo "createActor does support arguments [name, age]. Found arguments [name, age, bananan]"
         }
     }
 

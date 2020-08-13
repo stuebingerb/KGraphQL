@@ -9,6 +9,7 @@ import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
 import com.apurebase.kgraphql.schema.execution.Executor
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldEqual
 import org.junit.jupiter.api.Test
 
@@ -84,21 +85,21 @@ class OperationsSpecificationTest {
         subscriptionResult = ""
         schema.executeBlocking("mutation {createActor(name : \"Kurt Russel\"){name}}")
 
-        subscriptionResult shouldEqual "{\"data\":{\"name\":\"Kurt Russel\"}}"
+        subscriptionResult shouldBeEqualTo "{\"data\":{\"name\":\"Kurt Russel\"}}"
 
         subscriptionResult = ""
         schema.executeBlocking("mutation{createActor(name : \"Kurt Russel1\"){name}}")
-        subscriptionResult shouldEqual "{\"data\":{\"name\":\"Kurt Russel1\"}}"
+        subscriptionResult shouldBeEqualTo "{\"data\":{\"name\":\"Kurt Russel1\"}}"
 
         subscriptionResult = ""
         schema.executeBlocking("mutation{createActor(name : \"Kurt Russel2\"){name}}")
-        subscriptionResult shouldEqual "{\"data\":{\"name\":\"Kurt Russel2\"}}"
+        subscriptionResult shouldBeEqualTo "{\"data\":{\"name\":\"Kurt Russel2\"}}"
 
         schema.executeBlocking("subscription {unsubscriptionActor(subscription : \"mySubscription\"){name}}")
 
         subscriptionResult = ""
         schema.executeBlocking("mutation{createActor(name : \"Kurt Russel\"){name}}")
-        subscriptionResult shouldEqual ""
+        subscriptionResult shouldBeEqualTo ""
 
     }
 

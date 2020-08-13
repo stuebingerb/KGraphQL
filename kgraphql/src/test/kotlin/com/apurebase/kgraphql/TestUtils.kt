@@ -4,6 +4,7 @@ import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldEqual
 import org.hamcrest.CoreMatchers
 import org.hamcrest.FeatureMatcher
@@ -84,7 +85,7 @@ fun executeEqualQueries(schema: Schema, expected: Map<*,*>, vararg queries : Str
     queries.map { request ->
         schema.executeBlocking(request).deserialize()
     }.forEach { map ->
-        map shouldEqual expected
+        map shouldBeEqualTo expected
     }
 }
 

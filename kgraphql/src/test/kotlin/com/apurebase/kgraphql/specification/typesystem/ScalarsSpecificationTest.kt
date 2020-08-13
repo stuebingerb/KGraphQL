@@ -61,7 +61,7 @@ class ScalarsSpecificationTest {
         invoking {
             schema.executeBlocking("mutation{Int(int: ${Integer.MAX_VALUE.toLong() + 2L})}")
         } shouldThrow GraphQLError::class with {
-            message shouldEqual "Cannot coerce to type of Int as '${Integer.MAX_VALUE.toLong() + 2L}' is greater than (2^-31)-1"
+            message shouldBeEqualTo "Cannot coerce to type of Int as '${Integer.MAX_VALUE.toLong() + 2L}' is greater than (2^-31)-1"
         }
     }
 

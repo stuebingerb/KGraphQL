@@ -32,82 +32,82 @@ internal class LexerTest {
     @Test
     fun `accepts BOM header`() {
         lexOne("\uFEFF foo") {
-            kind shouldEqual NAME
-            start shouldEqual 2
-            end shouldEqual 5
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 2
+            end shouldBeEqualTo 5
+            value shouldBeEqualTo "foo"
         }
     }
 
     @Test
     fun `tracks line breaks`() {
         lexOne("foo") {
-            kind shouldEqual NAME
-            start shouldEqual 0
-            end shouldEqual 3
-            line shouldEqual 1
-            column shouldEqual 1
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 3
+            line shouldBeEqualTo 1
+            column shouldBeEqualTo 1
+            value shouldBeEqualTo "foo"
         }
         lexOne("\nfoo") {
-            kind shouldEqual NAME
-            start shouldEqual 1
-            end shouldEqual 4
-            line shouldEqual 2
-            column shouldEqual 1
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 1
+            end shouldBeEqualTo 4
+            line shouldBeEqualTo 2
+            column shouldBeEqualTo 1
+            value shouldBeEqualTo "foo"
         }
         lexOne("\rfoo") {
-            kind shouldEqual NAME
-            start shouldEqual 1
-            end shouldEqual 4
-            line shouldEqual 2
-            column shouldEqual 1
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 1
+            end shouldBeEqualTo 4
+            line shouldBeEqualTo 2
+            column shouldBeEqualTo 1
+            value shouldBeEqualTo "foo"
         }
         lexOne("\r\nfoo") {
-            kind shouldEqual NAME
-            start shouldEqual 2
-            end shouldEqual 5
-            line shouldEqual 2
-            column shouldEqual 1
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 2
+            end shouldBeEqualTo 5
+            line shouldBeEqualTo 2
+            column shouldBeEqualTo 1
+            value shouldBeEqualTo "foo"
         }
         lexOne("\n\rfoo") {
-            kind shouldEqual NAME
-            start shouldEqual 2
-            end shouldEqual 5
-            line shouldEqual 3
-            column shouldEqual 1
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 2
+            end shouldBeEqualTo 5
+            line shouldBeEqualTo 3
+            column shouldBeEqualTo 1
+            value shouldBeEqualTo "foo"
         }
         lexOne("\r\r\n\nfoo") {
-            kind shouldEqual NAME
-            start shouldEqual 4
-            end shouldEqual 7
-            line shouldEqual 4
-            column shouldEqual 1
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 4
+            end shouldBeEqualTo 7
+            line shouldBeEqualTo 4
+            column shouldBeEqualTo 1
+            value shouldBeEqualTo "foo"
         }
         lexOne("\n\n\r\rfoo") {
-            kind shouldEqual NAME
-            start shouldEqual 4
-            end shouldEqual 7
-            line shouldEqual 5
-            column shouldEqual 1
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 4
+            end shouldBeEqualTo 7
+            line shouldBeEqualTo 5
+            column shouldBeEqualTo 1
+            value shouldBeEqualTo "foo"
         }
     }
 
     @Test
     fun `records line and column`() {
         lexOne("\n \r\n \r  foo\n") {
-            kind shouldEqual NAME
-            start shouldEqual 8
-            end shouldEqual 11
-            line shouldEqual 4
-            column shouldEqual 3
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 8
+            end shouldBeEqualTo 11
+            line shouldBeEqualTo 4
+            column shouldBeEqualTo 3
+            value shouldBeEqualTo "foo"
         }
     }
 
@@ -119,25 +119,25 @@ internal class LexerTest {
 
 
 """) {
-            kind shouldEqual NAME
-            start shouldEqual 6
-            end shouldEqual 9
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 6
+            end shouldBeEqualTo 9
+            value shouldBeEqualTo "foo"
         }
         lexOne("""
     #comment
     foo#comment
 """) {
-            kind shouldEqual NAME
-            start shouldEqual 18
-            end shouldEqual 21
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 18
+            end shouldBeEqualTo 21
+            value shouldBeEqualTo "foo"
         }
         lexOne(",,,foo,,,") {
-            kind shouldEqual NAME
-            start shouldEqual 3
-            end shouldEqual 6
-            value shouldEqual "foo"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 3
+            end shouldBeEqualTo 6
+            value shouldBeEqualTo "foo"
         }
     }
 
@@ -147,15 +147,15 @@ internal class LexerTest {
             lexOne(listOf("", "","    ?", "").joinToString("\n"))
         } shouldThrow GraphQLError::class
 
-        result.exception.prettyPrint() shouldEqual """
-              Syntax Error: Cannot parse the unexpected character "?".
-              
-              GraphQL request:3:5
-              2 |
-              3 |     ?
-                |     ^
-              4 |
-        """.trimIndent()
+        result.exception.prettyPrint() shouldBeEqualTo """
+                  Syntax Error: Cannot parse the unexpected character "?".
+                  
+                  GraphQL request:3:5
+                  2 |
+                  3 |     ?
+                    |     ^
+                  4 |
+            """.trimIndent()
     }
 
     @Test
@@ -170,15 +170,15 @@ internal class LexerTest {
             Lexer(source).advance()
         } shouldThrow GraphQLError::class
 
-        result.exception.prettyPrint() shouldEqual """
-            Syntax Error: Cannot parse the unexpected character "?".
-            
-            foo.graphql:13:6
-            12 |
-            13 |      ?
-               |      ^
-            14 |
-        """.trimIndent()
+        result.exception.prettyPrint() shouldBeEqualTo """
+                Syntax Error: Cannot parse the unexpected character "?".
+                
+                foo.graphql:13:6
+                12 |
+                13 |      ?
+                   |      ^
+                14 |
+            """.trimIndent()
 
     }
 
@@ -193,194 +193,194 @@ internal class LexerTest {
             Lexer(source).advance()
         } shouldThrow GraphQLError::class
 
-        result.exception.prettyPrint() shouldEqual """
-            Syntax Error: Cannot parse the unexpected character "?".
-            
-            foo.graphql:1:5
-            1 |     ?
-              |     ^
-        """.trimIndent()
+        result.exception.prettyPrint() shouldBeEqualTo """
+                Syntax Error: Cannot parse the unexpected character "?".
+                
+                foo.graphql:1:5
+                1 |     ?
+                  |     ^
+            """.trimIndent()
     }
 
     @Test
     fun `lexes strings`() {
         lexOne("\"\"") {
-            kind shouldEqual STRING
-            start shouldEqual 0
-            end shouldEqual 2
-            value shouldEqual ""
+            kind shouldBeEqualTo STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 2
+            value shouldBeEqualTo ""
         }
 
         lexOne("\"simple\"") {
-            kind shouldEqual STRING
-            start shouldEqual 0
-            end shouldEqual 8
-            value shouldEqual "simple"
+            kind shouldBeEqualTo STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 8
+            value shouldBeEqualTo "simple"
         }
 
         lexOne("\" white space \"") {
-            kind shouldEqual STRING
-            start shouldEqual 0
-            end shouldEqual 15
-            value shouldEqual " white space "
+            kind shouldBeEqualTo STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 15
+            value shouldBeEqualTo " white space "
         }
 
         lexOne("\"quote \\\"\"") {
-            kind shouldEqual STRING
-            start shouldEqual 0
-            end shouldEqual 10
-            value shouldEqual "quote \""
+            kind shouldBeEqualTo STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 10
+            value shouldBeEqualTo "quote \""
         }
 
         lexOne("\"escaped \\n\\r\\b\\t\\f\"") {
-            kind shouldEqual STRING
-            start shouldEqual 0
-            end shouldEqual 20
-            value shouldEqual "escaped \n\r\b\tf"
+            kind shouldBeEqualTo STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 20
+            value shouldBeEqualTo "escaped \n\r\b\tf"
         }
 
         lexOne("\"slashes \\\\ \\/\"") {
-            kind shouldEqual STRING
-            start shouldEqual 0
-            end shouldEqual 15
-            value shouldEqual "slashes \\ /"
+            kind shouldBeEqualTo STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 15
+            value shouldBeEqualTo "slashes \\ /"
         }
 
         lexOne("\"unicode \\u1234\\u5678\\u90AB\\uCDEF\"") {
-            kind shouldEqual STRING
-            start shouldEqual 0
-            end shouldEqual 34
-            value shouldEqual "unicode \u1234\u5678\u90AB\uCDEF"
+            kind shouldBeEqualTo STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 34
+            value shouldBeEqualTo "unicode \u1234\u5678\u90AB\uCDEF"
         }
     }
 
     @Test
     fun `lex reports useful string errors`() {
         shouldThrowSyntaxError("\"") {
-            message shouldEqual "Syntax Error: Unterminated string."
+            message shouldBeEqualTo "Syntax Error: Unterminated string."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("\"\"\"") {
-            message shouldEqual "Syntax Error: Unterminated string."
+            message shouldBeEqualTo "Syntax Error: Unterminated string."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 4
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 4
             }
         }
 
         shouldThrowSyntaxError("\"\"\"\"") {
-            message shouldEqual "Syntax Error: Unterminated string."
+            message shouldBeEqualTo "Syntax Error: Unterminated string."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 5
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 5
             }
         }
 
         shouldThrowSyntaxError("\"no end quote") {
-            message shouldEqual "Syntax Error: Unterminated string."
+            message shouldBeEqualTo "Syntax Error: Unterminated string."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 14
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 14
             }
         }
 
         shouldThrowSyntaxError("'single quotes'") {
-            message shouldEqual "Syntax Error: Unexpected single quote character (\'), did you mean to use a double quote (\")?"
+            message shouldBeEqualTo "Syntax Error: Unexpected single quote character (\'), did you mean to use a double quote (\")?"
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 1
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 1
             }
         }
 
         shouldThrowSyntaxError("\"contains unescaped \u0007 control char\"") {
-            message shouldEqual "Syntax Error: Invalid character within String: \"\\u0007\"."
+            message shouldBeEqualTo "Syntax Error: Invalid character within String: \"\\u0007\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 21
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 21
             }
         }
 
         shouldThrowSyntaxError("\"null-byte is not \u0000 end of file\"") {
-            message shouldEqual "Syntax Error: Invalid character within String: \"\\u0000\"."
+            message shouldBeEqualTo "Syntax Error: Invalid character within String: \"\\u0000\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 19
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 19
             }
         }
 
         shouldThrowSyntaxError("\"multi\nline\"") {
-            message shouldEqual "Syntax Error: Unterminated string."
+            message shouldBeEqualTo "Syntax Error: Unterminated string."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
 
         shouldThrowSyntaxError("\"multi\rline\"") {
-            message shouldEqual "Syntax Error: Unterminated string."
+            message shouldBeEqualTo "Syntax Error: Unterminated string."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
 
         shouldThrowSyntaxError("\"bad \\z esc\"") {
-            message shouldEqual "Syntax Error: Invalid character escape sequence: \\z."
+            message shouldBeEqualTo "Syntax Error: Invalid character escape sequence: \\z."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
 
         shouldThrowSyntaxError("\"bad \\x esc\"") {
-            message shouldEqual "Syntax Error: Invalid character escape sequence: \\x."
+            message shouldBeEqualTo "Syntax Error: Invalid character escape sequence: \\x."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
 
         shouldThrowSyntaxError("\"bad \\u1 esc\"") {
-            message shouldEqual "Syntax Error: Invalid character escape sequence: \\u1 es."
+            message shouldBeEqualTo "Syntax Error: Invalid character escape sequence: \\u1 es."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
 
         shouldThrowSyntaxError("\"bad \\u0XX1 esc\"") {
-            message shouldEqual "Syntax Error: Invalid character escape sequence: \\u0XX1."
+            message shouldBeEqualTo "Syntax Error: Invalid character escape sequence: \\u0XX1."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
 
         shouldThrowSyntaxError("\"bad \\uXXXX esc\"") {
-            message shouldEqual "Syntax Error: Invalid character escape sequence: \\uXXXX."
+            message shouldBeEqualTo "Syntax Error: Invalid character escape sequence: \\uXXXX."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
 
         shouldThrowSyntaxError("\"bad \\uFXXX esc\"") {
-            message shouldEqual "Syntax Error: Invalid character escape sequence: \\uFXXX."
+            message shouldBeEqualTo "Syntax Error: Invalid character escape sequence: \\uFXXX."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
 
         shouldThrowSyntaxError("\"bad \\uXXXF esc\"") {
-            message shouldEqual "Syntax Error: Invalid character escape sequence: \\uXXXF."
+            message shouldBeEqualTo "Syntax Error: Invalid character escape sequence: \\uXXXF."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 7
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 7
             }
         }
     }
@@ -388,66 +388,66 @@ internal class LexerTest {
     @Test
     fun `lexes block strings`() {
         lexOne("\"\"\"\"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 6
-            value shouldEqual ""
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 6
+            value shouldBeEqualTo ""
         }
 
         lexOne("\"\"\"simple\"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 12
-            value shouldEqual "simple"
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 12
+            value shouldBeEqualTo "simple"
         }
 
         lexOne("\"\"\" white space \"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 19
-            value shouldEqual " white space "
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 19
+            value shouldBeEqualTo " white space "
         }
 
         lexOne("\"\"\"contains \" quote\"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 22
-            value shouldEqual "contains \" quote"
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 22
+            value shouldBeEqualTo "contains \" quote"
         }
 
         lexOne("\"\"\"contains \\\"\"\" triplequote\"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 31
-            value shouldEqual "contains \"\"\" triplequote"
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 31
+            value shouldBeEqualTo "contains \"\"\" triplequote"
         }
 
         lexOne("\"\"\"multi\nline\"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 16
-            value shouldEqual "multi\nline"
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 16
+            value shouldBeEqualTo "multi\nline"
         }
 
         lexOne("\"\"\"multi\rline\r\nnormalized\"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 28
-            value shouldEqual "multi\nline\nnormalized"
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 28
+            value shouldBeEqualTo "multi\nline\nnormalized"
         }
 
         lexOne("\"\"\"unescaped \\n\\r\\b\\t\\f\\u1234\"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 32
-            value shouldEqual "unescaped \\n\\r\\b\\t\\f\\u1234"
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 32
+            value shouldBeEqualTo "unescaped \\n\\r\\b\\t\\f\\u1234"
         }
 
         lexOne("\"\"\"slashes \\\\ \\/\"\"\"") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 19
-            value shouldEqual "slashes \\\\ \\/"
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 19
+            value shouldBeEqualTo "slashes \\\\ \\/"
         }
 
 
@@ -458,10 +458,10 @@ internal class LexerTest {
             lines
 
         ""${'"'}""") {
-            kind shouldEqual BLOCK_STRING
-            start shouldEqual 0
-            end shouldEqual 68
-            value shouldEqual "spans\n  multiple\n    lines"
+            kind shouldBeEqualTo BLOCK_STRING
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 68
+            value shouldBeEqualTo "spans\n  multiple\n    lines"
         }
     }
 
@@ -475,12 +475,12 @@ internal class LexerTest {
 
         ${'\n'} ""${'"'} second_token"""
         lexSecond(str) {
-            kind shouldEqual NAME
-            start shouldEqual 71
-            end shouldEqual 83
-            line shouldEqual 8
-            column shouldEqual 6
-            value shouldEqual "second_token"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 71
+            end shouldBeEqualTo 83
+            line shouldBeEqualTo 8
+            column shouldBeEqualTo 6
+            value shouldBeEqualTo "second_token"
         }
 
 
@@ -492,46 +492,46 @@ internal class LexerTest {
             "\"\"\"\n second_token"
         ).joinToString("")
         lexSecond(str2) {
-            kind shouldEqual NAME
-            start shouldEqual 37
-            end shouldEqual 49
-            line shouldEqual 8
-            column shouldEqual 2
-            value shouldEqual "second_token"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 37
+            end shouldBeEqualTo 49
+            line shouldBeEqualTo 8
+            column shouldBeEqualTo 2
+            value shouldBeEqualTo "second_token"
         }
     }
 
     @Test
     fun `lex reports useful block string errors`() {
         shouldThrowSyntaxError("\"\"\"") {
-            message shouldEqual "Syntax Error: Unterminated string."
+            message shouldBeEqualTo "Syntax Error: Unterminated string."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 4
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 4
             }
         }
 
         shouldThrowSyntaxError("\"\"\"no end quote") {
-            message shouldEqual "Syntax Error: Unterminated string."
+            message shouldBeEqualTo "Syntax Error: Unterminated string."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 16
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 16
             }
         }
 
         shouldThrowSyntaxError("\"\"\"contains unescaped \u0007 control char\"\"\"") {
-            message shouldEqual "Syntax Error: Invalid character within String: \"\\u0007\"."
+            message shouldBeEqualTo "Syntax Error: Invalid character within String: \"\\u0007\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 23
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 23
             }
         }
 
         shouldThrowSyntaxError("\"\"\"null-byte is not \u0000 end of file\"\"\"") {
-            message shouldEqual "Syntax Error: Invalid character within String: \"\\u0000\"."
+            message shouldBeEqualTo "Syntax Error: Invalid character within String: \"\\u0000\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 21
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 21
             }
         }
     }
@@ -539,245 +539,245 @@ internal class LexerTest {
     @Test
     fun `lexes numbers`() {
         lexOne("4") {
-            kind shouldEqual INT
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual "4"
+            kind shouldBeEqualTo INT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo "4"
         }
 
         lexOne("4.123") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 5
-            value shouldEqual "4.123"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 5
+            value shouldBeEqualTo "4.123"
         }
 
         lexOne("-4") {
-            kind shouldEqual INT
-            start shouldEqual 0
-            end shouldEqual 2
-            value shouldEqual "-4"
+            kind shouldBeEqualTo INT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 2
+            value shouldBeEqualTo "-4"
         }
 
         lexOne("9") {
-            kind shouldEqual INT
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual "9"
+            kind shouldBeEqualTo INT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo "9"
         }
 
         lexOne("0") {
-            kind shouldEqual INT
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual "0"
+            kind shouldBeEqualTo INT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo "0"
         }
 
         lexOne("-4.123") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 6
-            value shouldEqual "-4.123"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 6
+            value shouldBeEqualTo "-4.123"
         }
 
         lexOne("0.123") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 5
-            value shouldEqual "0.123"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 5
+            value shouldBeEqualTo "0.123"
         }
 
         lexOne("123e4") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 5
-            value shouldEqual "123e4"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 5
+            value shouldBeEqualTo "123e4"
         }
 
         lexOne("123E4") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 5
-            value shouldEqual "123E4"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 5
+            value shouldBeEqualTo "123E4"
         }
 
         lexOne("123e-4") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 6
-            value shouldEqual "123e-4"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 6
+            value shouldBeEqualTo "123e-4"
         }
 
         lexOne("123e+4") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 6
-            value shouldEqual "123e+4"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 6
+            value shouldBeEqualTo "123e+4"
         }
 
         lexOne("-1.123e4") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 8
-            value shouldEqual "-1.123e4"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 8
+            value shouldBeEqualTo "-1.123e4"
         }
 
         lexOne("-1.123E4") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 8
-            value shouldEqual "-1.123E4"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 8
+            value shouldBeEqualTo "-1.123E4"
         }
 
         lexOne("-1.123e-4") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 9
-            value shouldEqual "-1.123e-4"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 9
+            value shouldBeEqualTo "-1.123e-4"
         }
 
         lexOne("-1.123e+4") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 9
-            value shouldEqual "-1.123e+4"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 9
+            value shouldBeEqualTo "-1.123e+4"
         }
 
         lexOne("-1.123e4567") {
-            kind shouldEqual FLOAT
-            start shouldEqual 0
-            end shouldEqual 11
-            value shouldEqual "-1.123e4567"
+            kind shouldBeEqualTo FLOAT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 11
+            value shouldBeEqualTo "-1.123e4567"
         }
     }
 
     @Test
     fun `lex reports useful number errors`() {
         shouldThrowSyntaxError("00") {
-            message shouldEqual "Syntax Error: Invalid number, unexpected digit after 0: \"0\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, unexpected digit after 0: \"0\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("01") {
-            message shouldEqual "Syntax Error: Invalid number, unexpected digit after 0: \"1\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, unexpected digit after 0: \"1\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("01.23") {
-            message shouldEqual "Syntax Error: Invalid number, unexpected digit after 0: \"1\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, unexpected digit after 0: \"1\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("+1") {
-            message shouldEqual "Syntax Error: Cannot parse the unexpected character \"+\"."
+            message shouldBeEqualTo "Syntax Error: Cannot parse the unexpected character \"+\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 1
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 1
             }
         }
 
         shouldThrowSyntaxError("1.") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: <EOF>."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: <EOF>."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 3
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 3
             }
         }
 
         shouldThrowSyntaxError("1e") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: <EOF>."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: <EOF>."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 3
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 3
             }
         }
 
         shouldThrowSyntaxError("1E") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: <EOF>."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: <EOF>."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 3
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 3
             }
         }
 
         shouldThrowSyntaxError("1.e1") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"e\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"e\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 3
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 3
             }
         }
 
         shouldThrowSyntaxError(".123") {
-            message shouldEqual "Syntax Error: Cannot parse the unexpected character \".\"."
+            message shouldBeEqualTo "Syntax Error: Cannot parse the unexpected character \".\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 1
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 1
             }
         }
 
         shouldThrowSyntaxError("1.A") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"A\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"A\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 3
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 3
             }
         }
 
         shouldThrowSyntaxError("-A") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"A\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"A\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("1.0e") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: <EOF>."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: <EOF>."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 5
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 5
             }
         }
 
         shouldThrowSyntaxError("1.0eA") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"A\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"A\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 5
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 5
             }
         }
 
         shouldThrowSyntaxError("1.2e3e") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"e\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"e\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 6
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 6
             }
         }
 
         shouldThrowSyntaxError("1.2e3.4") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \".\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \".\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 6
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 6
             }
         }
 
         shouldThrowSyntaxError("1.23.4") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \".\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \".\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 5
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 5
             }
         }
     }
@@ -785,66 +785,66 @@ internal class LexerTest {
     @Test
     fun `lex does not allow name-start after a number`() {
         shouldThrowSyntaxError("0xF1") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"x\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"x\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("0b10") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"b\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"b\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("123abc") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"a\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"a\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 4
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 4
             }
         }
 
         shouldThrowSyntaxError("1_234") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"_\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"_\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("1ß") {
-            message shouldEqual "Syntax Error: Cannot parse the unexpected character \"\\u00DF\"."
+            message shouldBeEqualTo "Syntax Error: Cannot parse the unexpected character \"\\u00DF\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
 
         shouldThrowSyntaxError("1.23f") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"f\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"f\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 5
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 5
             }
         }
 
         shouldThrowSyntaxError("1.234_5") {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"_\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"_\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 6
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 6
             }
         }
 
         shouldThrowSyntaxError("1ß") {
-            message shouldEqual "Syntax Error: Cannot parse the unexpected character \"\\u00DF\"."
+            message shouldBeEqualTo "Syntax Error: Cannot parse the unexpected character \"\\u00DF\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 2
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 2
             }
         }
     }
@@ -852,128 +852,128 @@ internal class LexerTest {
     @Test
     fun `lexes punctuation`() {
         lexOne("!") {
-            kind shouldEqual BANG
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo BANG
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("$") {
-            kind shouldEqual DOLLAR
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo DOLLAR
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("(") {
-            kind shouldEqual PAREN_L
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo PAREN_L
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne(")") {
-            kind shouldEqual PAREN_R
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo PAREN_R
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("...") {
-            kind shouldEqual SPREAD
-            start shouldEqual 0
-            end shouldEqual 3
-            value shouldEqual null
+            kind shouldBeEqualTo SPREAD
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 3
+            value shouldBeEqualTo null
         }
 
         lexOne(":") {
-            kind shouldEqual COLON
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo COLON
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("=") {
-            kind shouldEqual EQUALS
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo EQUALS
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("@") {
-            kind shouldEqual AT
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo AT
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("[") {
-            kind shouldEqual BRACKET_L
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo BRACKET_L
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("]") {
-            kind shouldEqual BRACKET_R
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo BRACKET_R
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("{") {
-            kind shouldEqual BRACE_L
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo BRACE_L
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("|") {
-            kind shouldEqual PIPE
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo PIPE
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
 
         lexOne("}") {
-            kind shouldEqual BRACE_R
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual null
+            kind shouldBeEqualTo BRACE_R
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo null
         }
     }
 
     @Test
     fun `lex reports useful unknown character error`() {
         shouldThrowSyntaxError("..") {
-            message shouldEqual "Syntax Error: Cannot parse the unexpected character \".\"."
+            message shouldBeEqualTo "Syntax Error: Cannot parse the unexpected character \".\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 1
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 1
             }
         }
 
         shouldThrowSyntaxError("?") {
-            message shouldEqual "Syntax Error: Cannot parse the unexpected character \"?\"."
+            message shouldBeEqualTo "Syntax Error: Cannot parse the unexpected character \"?\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 1
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 1
             }
         }
 
         shouldThrowSyntaxError("\u203B") {
-            message shouldEqual "Syntax Error: Cannot parse the unexpected character \"\\u203B\"."
+            message shouldBeEqualTo "Syntax Error: Cannot parse the unexpected character \"\\u203B\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 1
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 1
             }
         }
 
         shouldThrowSyntaxError("\u200b") {
-            message shouldEqual "Syntax Error: Cannot parse the unexpected character \"\\u200B\"."
+            message shouldBeEqualTo "Syntax Error: Cannot parse the unexpected character \"\\u200B\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 1
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 1
             }
         }
     }
@@ -985,19 +985,19 @@ internal class LexerTest {
         val firstToken = lexer.advance()
 
         firstToken.run {
-            kind shouldEqual NAME
-            start shouldEqual 0
-            end shouldEqual 1
-            value shouldEqual "a"
+            kind shouldBeEqualTo NAME
+            start shouldBeEqualTo 0
+            end shouldBeEqualTo 1
+            value shouldBeEqualTo "a"
         }
 
         val result = invoking { lexer.advance() } shouldThrow GraphQLError::class
 
         result.exception.run {
-            message shouldEqual "Syntax Error: Invalid number, expected digit but got: \"b\"."
+            message shouldBeEqualTo "Syntax Error: Invalid number, expected digit but got: \"b\"."
             locations!!.first().run {
-                line shouldEqual 1
-                column shouldEqual 3
+                line shouldBeEqualTo 1
+                column shouldBeEqualTo 3
             }
         }
     }
@@ -1024,8 +1024,8 @@ internal class LexerTest {
             endToken.kind shouldNotEqual COMMENT
         } while (endToken?.kind != EOF)
 
-        startToken.prev shouldEqual null
-        endToken.next shouldEqual null
+        startToken.prev shouldBeEqualTo null
+        endToken.next shouldBeEqualTo null
 
         val tokens = mutableListOf<Token>()
         var tok: Token? = startToken
@@ -1033,7 +1033,7 @@ internal class LexerTest {
             tokens.add(tok)
             tok = tok.next ?: break
             if (tokens.size != 0) {
-                tok.prev shouldEqual tokens[tokens.size - 1]
+                tok.prev shouldBeEqualTo tokens[tokens.size - 1]
             }
         }
 
@@ -1057,30 +1057,30 @@ internal class LexerTest {
 
     @Test
     fun `returns true for punctuator tokens`() {
-        isPunctuatorToken("!") shouldEqual true
-        isPunctuatorToken("$") shouldEqual true
-        isPunctuatorToken("&") shouldEqual true
-        isPunctuatorToken("(") shouldEqual true
-        isPunctuatorToken(")") shouldEqual true
-        isPunctuatorToken("...") shouldEqual true
-        isPunctuatorToken(":") shouldEqual true
-        isPunctuatorToken("=") shouldEqual true
-        isPunctuatorToken("@") shouldEqual true
-        isPunctuatorToken("[") shouldEqual true
-        isPunctuatorToken("]") shouldEqual true
-        isPunctuatorToken("{") shouldEqual true
-        isPunctuatorToken("|") shouldEqual true
-        isPunctuatorToken("}") shouldEqual true
+        isPunctuatorToken("!") shouldBeEqualTo true
+        isPunctuatorToken("$") shouldBeEqualTo true
+        isPunctuatorToken("&") shouldBeEqualTo true
+        isPunctuatorToken("(") shouldBeEqualTo true
+        isPunctuatorToken(")") shouldBeEqualTo true
+        isPunctuatorToken("...") shouldBeEqualTo true
+        isPunctuatorToken(":") shouldBeEqualTo true
+        isPunctuatorToken("=") shouldBeEqualTo true
+        isPunctuatorToken("@") shouldBeEqualTo true
+        isPunctuatorToken("[") shouldBeEqualTo true
+        isPunctuatorToken("]") shouldBeEqualTo true
+        isPunctuatorToken("{") shouldBeEqualTo true
+        isPunctuatorToken("|") shouldBeEqualTo true
+        isPunctuatorToken("}") shouldBeEqualTo true
     }
 
     @Test
     fun `returns false for non-punctuator tokens`() {
-        isPunctuatorToken("") shouldEqual false
-        isPunctuatorToken("name") shouldEqual false
-        isPunctuatorToken("1") shouldEqual false
-        isPunctuatorToken("3.14") shouldEqual false
-        isPunctuatorToken("\"str\"") shouldEqual false
-        isPunctuatorToken("\"\"\"str\"\"\"") shouldEqual false
+        isPunctuatorToken("") shouldBeEqualTo false
+        isPunctuatorToken("name") shouldBeEqualTo false
+        isPunctuatorToken("1") shouldBeEqualTo false
+        isPunctuatorToken("3.14") shouldBeEqualTo false
+        isPunctuatorToken("\"str\"") shouldBeEqualTo false
+        isPunctuatorToken("\"\"\"str\"\"\"") shouldBeEqualTo false
     }
 
 }

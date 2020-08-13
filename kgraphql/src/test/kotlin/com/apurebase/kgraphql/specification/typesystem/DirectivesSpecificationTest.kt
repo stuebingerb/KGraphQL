@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.specification.typesystem
 
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldEqual
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
@@ -41,16 +42,16 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     @Test
     fun `query with @include and @skip directive on field object`() {
         val mapWithSkip = execute("{ number(big: true), film @skip(if: true) { title } }")
-        mapWithSkip.extract<String?>("data/film") shouldEqual null
+        mapWithSkip.extract<String?>("data/film") shouldBeEqualTo null
 
         val mapWithoutSkip = execute("{ number(big: true), film @skip(if: false) { title } }")
-        mapWithoutSkip.extract<String>("data/film/title") shouldEqual "Prestige"
+        mapWithoutSkip.extract<String>("data/film/title") shouldBeEqualTo "Prestige"
 
         val mapWithInclude = execute("{ number(big: true), film @include(if: true) { title } }")
-        mapWithInclude.extract<String?>("data/film/title") shouldEqual "Prestige"
+        mapWithInclude.extract<String?>("data/film/title") shouldBeEqualTo "Prestige"
 
         val mapWithoutInclude = execute("{ number(big: true), film @include(if: false) { title } }")
-        mapWithoutInclude.extract<String>("data/film") shouldEqual null
+        mapWithoutInclude.extract<String>("data/film") shouldBeEqualTo null
     }
 
     @Test

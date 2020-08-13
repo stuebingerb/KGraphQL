@@ -160,7 +160,7 @@ class QueryTest : BaseSchemaTest() {
         invoking {
             execute("{scenario{id(uppercase: true), content}}")
         } shouldThrow ValidationException::class with {
-            message shouldEqual "Property id on type Scenario has no arguments, found: [uppercase]"
+            message shouldBeEqualTo "Property id on type Scenario has no arguments, found: [uppercase]"
         }
     }
 

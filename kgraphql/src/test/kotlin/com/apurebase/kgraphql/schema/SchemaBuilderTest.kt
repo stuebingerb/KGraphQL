@@ -6,10 +6,7 @@ import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import com.apurebase.kgraphql.schema.structure.Field
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldEqual
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
+import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
@@ -603,7 +600,7 @@ class SchemaBuilderTest {
                 }
             }
         } shouldThrow IllegalArgumentException::class with {
-            message shouldEqual "Resolver for main has no return values"
+            message shouldBeEqualTo "Resolver for main has no return values"
         }
     }
 }

@@ -71,7 +71,7 @@ class ListsSpecificationTest{
             schema.executeBlocking("query(\$list: [String!]!){list(list: \$list)}", variables)
         } shouldThrow GraphQLError::class with {
             println(prettyPrint())
-            message shouldEqual "Invalid argument value [GAGA, null, DADA, PADA] from variable \$list, " +
+            message shouldBeEqualTo "Invalid argument value [GAGA, null, DADA, PADA] from variable \$list, " +
                     "expected list with non null arguments"
         }
     }

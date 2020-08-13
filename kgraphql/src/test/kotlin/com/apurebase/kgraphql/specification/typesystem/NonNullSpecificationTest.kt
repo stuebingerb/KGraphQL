@@ -48,7 +48,7 @@ class NonNullSpecificationTest {
         invoking {
             schema.executeBlocking("{nonNull}")
         } shouldThrow GraphQLError::class with {
-            message shouldEqual "Missing value for non-nullable argument input on the field 'nonNull'"
+            message shouldBeEqualTo "Missing value for non-nullable argument input on the field 'nonNull'"
         }
     }
 
@@ -114,7 +114,7 @@ class NonNullSpecificationTest {
                 }
             """)
         } shouldThrow GraphQLError::class with {
-            message shouldEqual "You are missing non optional input fields: value2"
+            message shouldBeEqualTo "You are missing non optional input fields: value2"
         }
     }
 

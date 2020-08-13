@@ -52,7 +52,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         invoking {
             execute("{actors{name, favourite{ name }}}")
         } shouldThrow GraphQLError::class with {
-            message shouldEqual "Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]"
+            message shouldBeEqualTo "Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]"
         }
     }
 

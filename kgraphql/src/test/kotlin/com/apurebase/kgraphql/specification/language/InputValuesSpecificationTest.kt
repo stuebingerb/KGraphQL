@@ -195,7 +195,7 @@ class InputValuesSpecificationTest {
             schema.executeBlocking("query(\$object: FakeDate){Object(value: \$object)}")
         } shouldThrow GraphQLError::class with {
             println(prettyPrint())
-            message shouldEqual "Invalid variable \$object argument type FakeDate, expected FakeData!"
+            message shouldBeEqualTo "Invalid variable \$object argument type FakeDate, expected FakeData!"
         }
     }
 }
