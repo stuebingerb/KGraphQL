@@ -6,7 +6,7 @@ import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class GraphqlRequest(
-    val operationName: String?,
-    val variables: JsonObject?,
+    val operationName: String? = null,
+    val variables: JsonObject? = null,
     val query: String
 )
