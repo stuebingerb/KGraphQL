@@ -5,6 +5,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.json
 import org.amshove.kluent.shouldEqualUnordered
 import org.junit.jupiter.api.RepeatedTest
@@ -45,12 +46,12 @@ class DeferredJsonMapTest {
         }
 
         log(0, "completing builder")
-        mapJob.await() shouldEqualUnordered json {
-            "hello" to "world"
-            "extra" to json {
-                "v1" to "new world"
-                "v2" to ""
-            }
+        mapJob.await() shouldEqualUnordered buildJsonObject {
+            put("hello", JsonPrimitive("world"))
+            put("extra", buildJsonObject {
+                put("v1" , JsonPrimitive("new world"))
+                put("v2" , JsonPrimitive(""))
+            })
         }
     }
 
