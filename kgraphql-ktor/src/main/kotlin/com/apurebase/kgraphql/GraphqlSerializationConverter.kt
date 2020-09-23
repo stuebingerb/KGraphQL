@@ -5,24 +5,25 @@ import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.request.*
-import io.ktor.serialization.DefaultJsonConfiguration
+import io.ktor.serialization.*
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.pipeline.*
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.core.readText
 import io.ktor.utils.io.readRemaining
 import kotlinx.serialization.json.*
+import kotlinx.serialization.parse
 import java.nio.charset.Charset
 
 @KtorExperimentalAPI
-class GraphqlSerializationConverter(private val json: Json = Json(DefaultJsonConfiguration)) : ContentConverter {
+class GraphqlSerializationConverter(private val json: Json = DefaultJson) : ContentConverter {
     override suspend fun convertForSend(
             context: PipelineContext<Any, ApplicationCall>,
             contentType: ContentType,
             value: Any
     ): Any? {
         @Suppress("UNCHECKED_CAST")
-        val content = json.stringify(GraphqlRequest.serializer(), value as GraphqlRequest)
+        val content = json.encodeToString (GraphqlRequest.serializer(), value as GraphqlRequest)
         return TextContent(content, contentType.withCharset(context.call.suitableCharset()))
     }
 
@@ -42,7 +43,7 @@ class GraphqlSerializationConverter(private val json: Json = Json(DefaultJsonCon
         val suitableCharset = contentType.charset() ?: contentType.defaultCharset()
         val content = channel.readRemaining().readText(suitableCharset)
 
-        return json.parse(GraphqlRequest.serializer(), content)
+        return json.decodeFromString (GraphqlRequest.serializer(), content)
     }
 
 }

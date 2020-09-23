@@ -9,8 +9,7 @@ import io.ktor.response.respond
 import io.ktor.response.respondBytes
 import io.ktor.routing.*
 import io.ktor.util.AttributeKey
-import kotlinx.serialization.UnstableDefault
-import kotlinx.serialization.json.Json.Default.parse
+import kotlinx.serialization.json.Json.Default.decodeFromString
 
 class GraphQL {
 
@@ -45,7 +44,6 @@ class GraphQL {
     companion object Feature: ApplicationFeature<Application, Configuration, GraphQL> {
         override val key = AttributeKey<GraphQL>("KGraphQL")
 
-        @UnstableDefault
         override fun install(pipeline: Application, configure: Configuration.() -> Unit): GraphQL {
             val config = Configuration().apply(configure)
             val schema = KGraphQL.schema {
@@ -57,7 +55,7 @@ class GraphQL {
                 val routing: Route.() -> Unit = {
                     route(config.endpoint) {
                         post {
-                            val request = parse(GraphqlRequest.serializer(), call.receiveText())
+                            val request = decodeFromString(GraphqlRequest.serializer(), call.receiveText())
                             val ctx = context {
                                 config.contextSetup?.invoke(this, call)
                             }

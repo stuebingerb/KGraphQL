@@ -10,7 +10,6 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import io.ktor.util.KtorExperimentalAPI
-import kotlinx.serialization.UnstableDefault
 import me.lazmaid.kraph.Kraph
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
@@ -19,7 +18,6 @@ class KtorFeatureTest {
 
     data class User(val id: Int = -1, val name: String = ""): Principal
 
-    @UnstableDefault
     @KtorExperimentalAPI
     private fun withServer(ctxBuilder: ContextBuilder.(ApplicationCall) -> Unit = {}, block: SchemaBuilder.() -> Unit): (Kraph.() -> Unit) -> String {
         return {
@@ -50,7 +48,6 @@ class KtorFeatureTest {
         }
     }
 
-    @UnstableDefault
     @KtorExperimentalAPI
     @Test
     fun `Simple query test`() {
@@ -68,7 +65,6 @@ class KtorFeatureTest {
 
     }
 
-    @UnstableDefault
     @KtorExperimentalAPI
     @Test
     fun `Simple mutation test`() {
@@ -89,7 +85,6 @@ class KtorFeatureTest {
     data class Actor(val name : String, val age: Int)
     data class UserData(val username: String, val stuff: String)
 
-    @UnstableDefault
     @KtorExperimentalAPI
     @Test
     fun `Simple context test`() {
@@ -138,7 +133,6 @@ class KtorFeatureTest {
 
     data class InputTwo(val one : InputOne, val quantity : Int, val tokens : List<String>)
 
-    @UnstableDefault
     @KtorExperimentalAPI
     @Test
     fun `Simple variables test`() {
