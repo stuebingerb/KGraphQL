@@ -1,12 +1,14 @@
 package com.apurebase.kgraphql.request
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.getIterableElementType
+import com.apurebase.kgraphql.isIterable
+import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
-import com.apurebase.kgraphql.schema.model.ast.NameNode
-import com.apurebase.kgraphql.GraphQLError
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
@@ -35,7 +37,7 @@ interface VariablesJson {
             require(kClass == kType.jvmErasure) { "kClass and KType must represent same class" }
             return json.let { node ->  node[key.value] }?.let { tree ->
                 try {
-                    objectMapper.convertValue(tree, kType.toTypeReference())
+                    objectMapper.convertValue(tree, kClass.javaObjectType)
                 } catch(e : Exception) {
                     throw if (e is GraphQLError) e
                     else ExecutionException("Failed to coerce $tree as $kType", key, e)
