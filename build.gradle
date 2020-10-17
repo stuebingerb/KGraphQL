@@ -62,7 +62,7 @@ allprojects {
             name = project.name
             licenses = ['MIT']
             vcsUrl = 'https://github.com/aPureBase/KGraphQL'
-            websiteUrl = 'https://kgraphql.in'
+            websiteUrl = 'https://kgraphql.io'
             issueTrackerUrl = 'https://github.com/aPureBase/KGraphQL/issues'
             version {
                 name = project.version
