@@ -19,8 +19,20 @@ KgraphQL.schema {
         type<UnionMember1>()
         type<UnionMember2>()
     }
+
+    type<MyType> {
+        unionProperty("unionExample") {
+            returnType = unionExample
+            resolver { _, isOne: Boolean ->
+                if (isOne) UnionMember1(one = "Hello")
+                else UnionMember2(two = "World")
+            }
+        }
+    }
 }
 ```
+
+*Currently there is a limitation on union return types for `query` definitions. This is currently only supported via sealed classes. See more information below.*
 
 ### Sealed Class
 
@@ -34,6 +46,24 @@ sealed class UnionExample {
 
 KgraphQL.schema {
     unionType<UnionExample>()
+
+    // Query definition example:
+    query("unionQuery") {
+        resolver { isOne: Boolean ->
+            if (isOne) UnionMember1(one = "Hello")
+            else UnionMember2(two = "World")
+        }
+    }
+
+    // Type property example:
+    type<MyType> {
+        property<UnionExample>("unionProperty") {
+            resolver { _, isOne: Boolean ->
+                if (isOne) UnionMember1(one = "Hello")
+                else UnionMember2(two = "World")
+            }
+        }
+    }
 }
 ```
 
