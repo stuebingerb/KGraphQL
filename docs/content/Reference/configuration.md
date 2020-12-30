@@ -1,8 +1,3 @@
----
-title: Configuration
-weight: 4
----
-
 KGraphQL schema allows configuration of following properties:
 
 | Property | Description | Default value |

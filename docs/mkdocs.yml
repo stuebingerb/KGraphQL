@@ -82,6 +82,7 @@ nav:
     - 'Configuration': 'Reference/configuration.md'
     - 'Resolver': 'Reference/resolver.md'
     - 'Deprecation': 'Reference/deprecation.md'
+    - 'Access Rule': 'Reference/accessRule.md'
     - 'Type System':
       - 'Overview': 'Reference/Type System/overview.md'
       - 'Scalars': 'Reference/Type System/scalars.md'
