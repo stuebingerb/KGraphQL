@@ -54,7 +54,7 @@ KGraphQL.schema {
 
 ## Kotlin Properties
 
-Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring and [deprecation](/docs/Reference/deprecation) of kotlin properties
+Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring and [deprecation](/Reference/deprecation) of kotlin properties
 
 *Example*
 
@@ -77,7 +77,7 @@ KGraphQL.schema {
 Extension properties allow schema creator to easily attach additional field to any type. It is separately evaluated after main entity is resolved.
 
 ## property { }
-`property` method accepts [resolver](/docs/Reference/resolver) and can be subject of [deprecation](/docs/Reference/deprecation).
+`property` method accepts [resolver](/Reference/resolver) and can be subject of [deprecation](/Reference/deprecation).
 
 *Example*
 
@@ -94,7 +94,7 @@ KGraphQL.schema {
 ```
 
 ## Union Properties
-As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union property requires defining [resolver](/docs/Reference/resolver) and return type. Return Type is reference returned by creation of [union type](/docs/Reference/Type%20System/unions/).
+As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union property requires defining [resolver](/Reference/resolver) and return type. Return Type is reference returned by creation of [union type](/Reference/Type%20System/unions/).
 
 Union type resolver is not type checked. Invalid resolver implementation which would return value of type other than members of union type will fail in runtime.
 
