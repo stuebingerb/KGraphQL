@@ -3,7 +3,7 @@ GraphQL Objects and Interfaces represent a list of named fields, each of which y
 
 
 **type { }**
-`type` method is entry point to Type DSL. See [Extension Properties](/reference/type-system/objects-and-interfaces/extension-properties), [Kotlin Properties](/reference/type-system/objects-and-interfaces/kotlin-properties), [Union Properties](/reference/type-system/objects-and-interfaces/union-properties).
+`type` method is entry point to Type DSL. See [Extension Properties](/Reference/Type%20System/objects-and-interfaces/#extension-properties), [Kotlin Properties](/Reference/Type%20System/objects-and-interfaces/#kotlin-properties), [Union Properties](/Reference/Type%20System/objects-and-interfaces/#union-properties).
 
 *Example*
 ```kotlin
@@ -54,7 +54,7 @@ KGraphQL.schema {
 
 ## Kotlin Properties
 
-Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring and [deprecation](/docs/reference/deprecation) of kotlin properties
+Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring and [deprecation](/docs/Reference/deprecation) of kotlin properties
 
 *Example*
 
@@ -77,7 +77,7 @@ KGraphQL.schema {
 Extension properties allow schema creator to easily attach additional field to any type. It is separately evaluated after main entity is resolved.
 
 ## property { }
-`property` method accepts [resolver](/docs/reference/resolver) and can be subject of [deprecation](/docs/reference/deprecation).
+`property` method accepts [resolver](/docs/Reference/resolver) and can be subject of [deprecation](/docs/Reference/deprecation).
 
 *Example*
 
@@ -94,7 +94,7 @@ KGraphQL.schema {
 ```
 
 ## Union Properties
-As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union property requires defining [resolver](/docs/reference/resolver) and return type. Return Type is reference returned by creation of [union type](/docs/reference/type-system/unions).
+As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union property requires defining [resolver](/docs/Reference/resolver) and return type. Return Type is reference returned by creation of [union type](/docs/Reference/Type%20System/unions/).
 
 Union type resolver is not type checked. Invalid resolver implementation which would return value of type other than members of union type will fail in runtime.
 
