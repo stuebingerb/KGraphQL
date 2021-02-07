@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.request.CachingDocumentParser
 import com.apurebase.kgraphql.request.VariablesJson

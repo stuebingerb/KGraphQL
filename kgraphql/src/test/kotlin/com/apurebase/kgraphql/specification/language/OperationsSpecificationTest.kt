@@ -1,16 +1,12 @@
 package com.apurebase.kgraphql.specification.language
 
-import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.executeEqualQueries
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
 import com.apurebase.kgraphql.schema.execution.Executor
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.*
 import org.junit.jupiter.api.Test
 
 data class Actor(var name : String? = "", var age: Int? = 0)
@@ -105,8 +101,11 @@ class OperationsSpecificationTest {
 
     @Test
     fun `Subscription return type must be the same as the publisher's`(){
-        expect<SchemaException>("Subscription return type must be the same as the publisher's"){
+        invoking {
             newSchema(Executor.Parallel).executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
+        } shouldThrow GraphQLError::class with {
+            originalError shouldBeInstanceOf SchemaException::class
+            message shouldBeEqualTo "Subscription return type must be the same as the publisher's"
         }
     }
 }

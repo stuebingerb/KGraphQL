@@ -17,6 +17,7 @@ open class SchemaConfigurationDSL {
     var documentParserCacheMaximumSize: Long = 1000L
     var acceptSingleValueAsArray: Boolean = true
     var coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
+    var wrapErrors: Boolean = true
     var executor: Executor = Executor.Parallel
     var timeout: Long? = null
 
@@ -38,6 +39,7 @@ open class SchemaConfigurationDSL {
             objectMapper,
             useDefaultPrettyPrinter,
             coroutineDispatcher,
+            wrapErrors,
             executor,
             timeout,
             plugins

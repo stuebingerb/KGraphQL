@@ -15,6 +15,8 @@ data class SchemaConfiguration(
         //execution
         val coroutineDispatcher: CoroutineDispatcher,
 
+        val wrapErrors: Boolean,
+
         val executor: Executor,
         val timeout: Long?,
         val plugins: MutableMap<KClass<*>, Any>

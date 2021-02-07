@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
@@ -412,9 +413,13 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             ctx.requestContext
         )
 
-        return when {
-            hasReceiver -> invoke(receiver, *transformedArgs.toTypedArray())
-            else -> invoke(*transformedArgs.toTypedArray())
+        return try {
+            if (hasReceiver) invoke(receiver, *transformedArgs.toTypedArray())
+            else invoke(*transformedArgs.toTypedArray())
+        } catch (e: Throwable) {
+            if (schema.configuration.wrapErrors && e !is GraphQLError) {
+                throw GraphQLError(e.message ?: "", nodes = listOf(executionNode.selectionNode), originalError = e)
+            } else throw e
         }
     }
 }

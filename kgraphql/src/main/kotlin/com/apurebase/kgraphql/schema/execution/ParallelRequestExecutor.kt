@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql.schema.execution
 
-import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
@@ -329,13 +328,19 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
     ): T? {
         val transformedArgs = argumentsHandler.transformArguments(funName, inputValues, args, ctx.variables, executionNode, ctx.requestContext)
         //exceptions are not caught on purpose to pass up business logic errors
-        return when {
-            hasReceiver -> invoke(receiver, *transformedArgs.toTypedArray())
-            isSubscription -> {
-                val subscriptionArgs = children.map { (it as Execution.Node).aliasOrKey }
-                invoke(transformedArgs, subscriptionArgs, objectWriter)
+        return try {
+            when {
+                hasReceiver -> invoke(receiver, *transformedArgs.toTypedArray())
+                isSubscription -> {
+                    val subscriptionArgs = children.map { (it as Execution.Node).aliasOrKey }
+                    invoke(transformedArgs, subscriptionArgs, objectWriter)
+                }
+                else -> invoke(*transformedArgs.toTypedArray())
             }
-            else -> invoke(*transformedArgs.toTypedArray())
+        } catch (e: Throwable) {
+            if (schema.configuration.wrapErrors && e !is GraphQLError ) {
+                throw GraphQLError(e.message ?: "", nodes = listOf(executionNode.selectionNode), originalError = e)
+            } else throw e
         }
     }
 

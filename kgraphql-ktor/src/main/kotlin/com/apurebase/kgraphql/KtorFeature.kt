@@ -3,12 +3,13 @@ package com.apurebase.kgraphql
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.SchemaConfigurationDSL
 import io.ktor.application.*
-import io.ktor.http.ContentType
-import io.ktor.request.receiveText
-import io.ktor.response.respond
-import io.ktor.response.respondBytes
+import io.ktor.http.*
+import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.AttributeKey
+import io.ktor.util.*
+import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.json.*
 import kotlinx.serialization.json.Json.Default.decodeFromString
 
 class GraphQL {
@@ -75,7 +76,38 @@ class GraphQL {
 
             pipeline.featureOrNull(Routing)?.apply(routing) ?: pipeline.install(Routing, routing)
 
+            pipeline.intercept(ApplicationCallPipeline.Monitoring) {
+                try {
+                    coroutineScope {
+                        proceed()
+                    }
+                } catch (e: Throwable) {
+                    if (e is GraphQLError) {
+                        context.respond(HttpStatusCode.OK, e.serialize())
+                    } else throw e
+                }
+            }
             return GraphQL()
         }
+
+        private fun GraphQLError.serialize(): String = buildJsonObject {
+            put("errors", buildJsonArray {
+                addJsonObject {
+                    put("message", message)
+                    put("locations", buildJsonArray {
+                        locations?.forEach {
+                            addJsonObject {
+                                put("line", it.line)
+                                put("column", it.column)
+                            }
+                        }
+                    })
+                    put("path", buildJsonArray {
+                        // TODO: Build this path. https://spec.graphql.org/June2018/#example-90475
+                    })
+                }
+            })
+        }.toString()
     }
+
 }

@@ -18,8 +18,10 @@ class NonNullSpecificationTest {
                 resolver { string : String? -> string!! }
             }
         }
-        expect<NullPointerException> {
+        invoking {
             schema.executeBlocking("{nonNull}")
+        } shouldThrow GraphQLError::class with {
+            originalError shouldBeInstanceOf java.lang.NullPointerException::class
         }
     }
 
