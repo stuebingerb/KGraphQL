@@ -85,7 +85,7 @@ interface FunctionWrapper <T> : Publisher {
         private fun createArgumentsDescriptor(): Map<String, KType> {
             return valueParameters().associate { parameter ->
                 val parameterName = parameter.name
-                        ?: throw SchemaException("Cannot handle nameless argument on function: $kFunction")
+                    ?: throw SchemaException("Cannot handle nameless argument on function: $kFunction")
 
                 validateName(parameterName)
                 parameterName to parameter.type
@@ -142,7 +142,10 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
+
         override fun arity(): Int = 0
 
         override suspend fun invoke(vararg args: Any?): T? {
@@ -186,7 +189,9 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
 
         override fun arity(): Int = 1
 
@@ -221,7 +226,10 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
 
         override fun arity(): Int = 2
 
@@ -255,7 +263,9 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
 
         override fun arity(): Int = 3
 
@@ -289,7 +299,9 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
 
         override fun arity(): Int = 4
 
@@ -323,7 +335,9 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
 
         override fun arity(): Int = 5
 
@@ -357,7 +371,10 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
+
         override fun arity(): Int = 6
 
         override suspend fun invoke(vararg args: Any?): T? {
@@ -390,7 +407,10 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
+
         override fun arity(): Int = 7
 
         override suspend fun invoke(vararg args: Any?): T? {
@@ -423,7 +443,10 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
+
         override fun arity(): Int = 8
 
         override suspend fun invoke(vararg args: Any?): T? {
@@ -456,7 +479,10 @@ interface FunctionWrapper <T> : Publisher {
             subscribers[subscription] = subscriber
         }
 
-        override val kFunction: KFunction<T> by lazy { implementation.reflect()!! }
+        override val kFunction: KFunction<T>
+            @Synchronized
+            get() = implementation.reflect()!!
+
         override fun arity(): Int = 9
 
         override suspend fun invoke(vararg args: Any?): T? {
