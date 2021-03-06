@@ -21,7 +21,7 @@ open class ArgumentTransformer(val schema : DefaultSchema) {
 
         return when {
             value is ValueNode.VariableNode -> {
-                variables.get(kType.jvmErasure, kType, typeName, value) { subValue ->
+                variables.get(kType.jvmErasure, type, kType, typeName, value) { subValue ->
                     transformValue(type, subValue, variables)
                 }
             }

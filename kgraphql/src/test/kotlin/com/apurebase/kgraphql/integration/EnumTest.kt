@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.assertNoErrors
-import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.*
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert
@@ -24,5 +23,29 @@ class EnumTest : BaseSchemaTest() {
         assertNoErrors(map)
         assertThat(map.extract<String>("data/films[0]/type"), equalTo("FULL_LENGTH"))
         assertThat(map.extract<String>("data/films[1]/type"), equalTo("FULL_LENGTH"))
+    }
+
+    @Test
+    fun `query with enum array variables`() {
+        val schema = defaultSchema {
+            configure {
+                wrapErrors = false
+            }
+            enum<FilmType>()
+            query("search") {
+                description = "film categorized by type"
+                resolver { types: List<FilmType> ->
+                    "You searched for: ${types.joinToString { it.name }}"
+                }
+            }
+        }
+
+        val map = schema.executeBlocking(
+            request = "query Search(${'$'}types: [FilmType!]!) { search(types: ${'$'}types)}",
+            variables = "{\"types\":[\"FULL_LENGTH\"]}"
+        ).deserialize()
+
+        assertNoErrors(map)
+        assertThat(map.extract<String>("data/search"), equalTo("You searched for: FULL_LENGTH"))
     }
 }
