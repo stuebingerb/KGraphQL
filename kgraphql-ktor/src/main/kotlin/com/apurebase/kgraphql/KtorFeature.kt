@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql
 
+import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.SchemaConfigurationDSL
 import io.ktor.application.*
@@ -12,8 +13,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.*
 import kotlinx.serialization.json.Json.Default.decodeFromString
 
-class GraphQL {
-
+class GraphQL(val schema: Schema) {
 
     class Configuration: SchemaConfigurationDSL() {
         fun schema(block: SchemaBuilder.() -> Unit) {
@@ -37,7 +37,7 @@ class GraphQL {
 
         internal var contextSetup: (ContextBuilder.(ApplicationCall) -> Unit)? = null
         internal var wrapWith: (Route.(next: Route.() -> Unit) -> Unit)? = null
-        internal lateinit var schemaBlock: SchemaBuilder.() -> Unit
+        internal var schemaBlock: (SchemaBuilder.() -> Unit)? = null
 
     }
 
@@ -48,8 +48,8 @@ class GraphQL {
         override fun install(pipeline: Application, configure: Configuration.() -> Unit): GraphQL {
             val config = Configuration().apply(configure)
             val schema = KGraphQL.schema {
-                configure(config)
-                config.schemaBlock(this)
+                configuration = config
+                config.schemaBlock?.invoke(this)
             }
 
             val routing: Routing.() -> Unit = {
@@ -87,7 +87,7 @@ class GraphQL {
                     } else throw e
                 }
             }
-            return GraphQL()
+            return GraphQL(schema)
         }
 
         private fun GraphQLError.serialize(): String = buildJsonObject {

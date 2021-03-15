@@ -25,7 +25,7 @@ class SchemaBuilder internal constructor() {
 
     private val model = MutableSchemaDefinition()
 
-    private var configuration = SchemaConfigurationDSL()
+    var configuration = SchemaConfigurationDSL()
 
     fun build(): Schema {
         return runBlocking {

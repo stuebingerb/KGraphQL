@@ -1,54 +1,15 @@
 package com.apurebase.kgraphql
 
-import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
-import io.ktor.application.ApplicationCall
-import io.ktor.application.install
+import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.routing.routing
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
-import io.ktor.util.KtorExperimentalAPI
-import me.lazmaid.kraph.Kraph
+import io.ktor.util.*
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
-class KtorFeatureTest {
+class KtorFeatureTest : KtorTest() {
 
-    data class User(val id: Int = -1, val name: String = ""): Principal
+    data class User(val id: Int = -1, val name: String = "") : Principal
 
-    @KtorExperimentalAPI
-    private fun withServer(ctxBuilder: ContextBuilder.(ApplicationCall) -> Unit = {}, block: SchemaBuilder.() -> Unit): (Kraph.() -> Unit) -> String {
-        return {
-            withTestApplication({
-                install(Authentication) {
-                    basic {
-                        realm = "ktor"
-                        validate {
-                            User(4, it.name)
-                        }
-                    }
-                }
-                install(GraphQL) {
-                    context(ctxBuilder)
-                    wrap { next ->
-                        authenticate(optional = true) { next() }
-                    }
-                    schema(block)
-                }
-            }) {
-                handleRequest {
-                    uri = "graphql"
-                    method = HttpMethod.Post
-                    addHeader(HttpHeaders.ContentType, "application/json;charset=UTF-8")
-                    setBody(Kraph { it(this) }.toRequestString())
-                }.response.content!!
-            }
-        }
-    }
-
-    @KtorExperimentalAPI
     @Test
     fun `Simple query test`() {
         val server = withServer {
@@ -65,7 +26,6 @@ class KtorFeatureTest {
 
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Simple mutation test`() {
         val server = withServer {
@@ -82,32 +42,31 @@ class KtorFeatureTest {
 
     }
 
-    data class Actor(val name : String, val age: Int)
+    data class Actor(val name: String, val age: Int)
     data class UserData(val username: String, val stuff: String)
 
-    @KtorExperimentalAPI
     @Test
     fun `Simple context test`() {
         val georgeName = "George"
         val contextSetup: ContextBuilder.(ApplicationCall) -> Unit = { _ ->
-            + UserData(georgeName, "STUFF")
+            +UserData(georgeName, "STUFF")
             inject("ADA")
         }
 
         val server = withServer(contextSetup) {
-                query("actor") {
-                    resolver { -> Actor("George", 23) }
+            query("actor") {
+                resolver { -> Actor("George", 23) }
+            }
+
+            type<Actor> {
+                property<String>("nickname") {
+                    resolver { _: Actor, ctx: Context -> "Hodor and ${ctx.get<UserData>()?.username}" }
                 }
 
-                type<Actor> {
-                    property<String>("nickname"){
-                        resolver { _: Actor, ctx: Context -> "Hodor and ${ctx.get<UserData>()?.username}" }
-                    }
-
-                    transformation(Actor::name) { name: String, addStuff: Boolean?, ctx: Context ->
-                        if(addStuff == true) name + ctx[UserData::class]?.stuff  else name
-                    }
+                transformation(Actor::name) { name: String, addStuff: Boolean?, ctx: Context ->
+                    if (addStuff == true) name + ctx[UserData::class]?.stuff else name
                 }
+            }
         }
 
         server {
@@ -129,17 +88,16 @@ class KtorFeatureTest {
 
     enum class MockEnum { M1, M2 }
 
-    data class InputOne(val enum: MockEnum, val id : String)
+    data class InputOne(val enum: MockEnum, val id: String)
 
-    data class InputTwo(val one : InputOne, val quantity : Int, val tokens : List<String>)
+    data class InputTwo(val one: InputOne, val quantity: Int, val tokens: List<String>)
 
-    @KtorExperimentalAPI
     @Test
     fun `Simple variables test`() {
         val server = withServer {
             enum<MockEnum>()
             inputType<InputTwo>()
-            query("test"){ resolver { input: InputTwo -> "success: $input" } }
+            query("test") { resolver { input: InputTwo -> "success: $input" } }
         }
 
         val variables = """
