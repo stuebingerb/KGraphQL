@@ -34,8 +34,6 @@ internal class ArgumentsHandler(schema : DefaultSchema) : ArgumentTransformer(sc
         return inputValues.map { parameter ->
             val value = args?.get(parameter.name)
 
-            parameter.type.isInstance(requestContext)
-
             when {
                 //inject request context
                 parameter.type.isInstance(requestContext) -> requestContext

@@ -61,7 +61,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
         for (operation in plan) {
             if (resultMap[operation] != null) { // Remove all by skip/include directives
-                data.set(operation.aliasOrKey, resultMap[operation])
+                data.set<JsonNode>(operation.aliasOrKey, resultMap[operation])
             }
         }
 
@@ -174,7 +174,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         val objectNode = jsonNodeFactory.objectNode()
         for (child in node.children) {
             when (child) {
-                is Execution.Fragment -> objectNode.setAll(handleFragment(ctx, value, child))
+                is Execution.Fragment -> objectNode.setAll<JsonNode>(handleFragment(ctx, value, child))
                 else -> {
                     val (key, jsonNode) = handleProperty(ctx, value, child, type, node.children.size)
                     objectNode.set(key, jsonNode)

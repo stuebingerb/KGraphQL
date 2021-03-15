@@ -21,7 +21,7 @@ data class Variables(
     /**
      * map and return object of requested class
      */
-    fun <T : Any> get(kClass: KClass<T>, type: Type, kType: KType, typeName: String?, keyNode: ValueNode.VariableNode, transform: (value: ValueNode) -> Any?): T? {
+    fun <T : Any> get(kClass: KClass<T>, kType: KType, typeName: String?, keyNode: ValueNode.VariableNode, transform: (value: ValueNode) -> Any?): T? {
         val variable = variables?.find { keyNode.name.value == it.variable.name.value }
                 ?: throw IllegalArgumentException("Variable '$${keyNode.name.value}' was not declared for this operation")
 
@@ -33,12 +33,6 @@ data class Variables(
         if(value == null && variable.defaultValue != null){
             value = transformDefaultValue(transform, variable.defaultValue, kClass)
         }
-        if (isIterable && type.unwrapped().kind == TypeKind.ENUM && value is Collection<*>) value = transform(
-            ValueNode.ListValueNode(value.map {
-                if (it is String) ValueNode.EnumValueNode(it, keyNode.loc)
-                else throw GraphQLError("Can't extract enum type '$it' as ${type.unwrapped().name} from variables", keyNode)
-            }, keyNode.loc
-        )) as T?
 
         value?.let {
             if (isIterable && kType.getIterableElementType()?.isMarkedNullable == false) {
