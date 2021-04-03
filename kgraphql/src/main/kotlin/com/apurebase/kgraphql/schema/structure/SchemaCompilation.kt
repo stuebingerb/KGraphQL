@@ -147,7 +147,7 @@ class SchemaCompilation(
     )
 
     private suspend fun handleOperation(operation : BaseOperationDef<*, *>) : Field {
-        val returnType = handlePossiblyWrappedType(operation.kFunction.returnType, TypeCategory.QUERY)
+        val returnType = handlePossiblyWrappedType(operation.returnType, TypeCategory.QUERY)
         val inputValues = handleInputValues(operation.name, operation, operation.inputValues)
         return Field.Function(operation, returnType, inputValues)
     }
@@ -159,18 +159,26 @@ class SchemaCompilation(
         return Field.Union(unionProperty, unionProperty.nullable, type, inputValues)
     }
 
-    private suspend fun handlePossiblyWrappedType(kType : KType, typeCategory: TypeCategory) : Type = when {
-        kType.isIterable() -> handleCollectionType(kType, typeCategory)
-        kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
-        kType.jvmErasure == Execution.Node::class && typeCategory == TypeCategory.INPUT -> executionType
-        kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
-        kType.arguments.isNotEmpty() -> throw SchemaException("Generic types are not supported by GraphQL, found $kType")
-        kType.jvmErasure.isSealed -> TypeDef.Union(
-            name = kType.jvmErasure.simpleName!!,
-            members = kType.jvmErasure.sealedSubclasses.toSet(),
-            description = null
-        ).let { handleUnionType(it) }
-        else -> handleSimpleType(kType, typeCategory)
+    private suspend fun handlePossiblyWrappedType(kType : KType, typeCategory: TypeCategory) : Type = try {
+        when {
+            kType.isIterable() -> handleCollectionType(kType, typeCategory)
+            kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
+            kType.jvmErasure == Execution.Node::class && typeCategory == TypeCategory.INPUT -> executionType
+            kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
+            kType.arguments.isNotEmpty() -> throw SchemaException("Generic types are not supported by GraphQL, found $kType")
+            kType.jvmErasure.isSealed -> TypeDef.Union(
+                name = kType.jvmErasure.simpleName!!,
+                members = kType.jvmErasure.sealedSubclasses.toSet(),
+                description = null
+            ).let { handleUnionType(it) }
+            else -> handleSimpleType(kType, typeCategory)
+        }
+    } catch (e: Throwable) {
+        if ("KotlinReflectionInternalError" in e.toString()) {
+            throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with either resolver{ }.returns<T> or resolver{ }.returnsListOf<T>()")
+        } else {
+            throw e
+        }
     }
 
     private suspend fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {

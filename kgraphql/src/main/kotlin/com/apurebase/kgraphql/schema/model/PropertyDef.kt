@@ -18,8 +18,9 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
             override val isDeprecated: Boolean = false,
             override val deprecationReason: String? = null,
             accessRule : ((T?, Context) -> Exception?)? = null,
-            inputValues : List<InputValueDef<*>> = emptyList()
-    ) : BaseOperationDef<T, R>(name, resolver, inputValues, accessRule), PropertyDef<T>
+            inputValues : List<InputValueDef<*>> = emptyList(),
+            explicitReturnType: KType? = null
+    ) : BaseOperationDef<T, R>(name, resolver, inputValues, accessRule, explicitReturnType), PropertyDef<T>
 
     /**
      * [T] -> The Parent Type

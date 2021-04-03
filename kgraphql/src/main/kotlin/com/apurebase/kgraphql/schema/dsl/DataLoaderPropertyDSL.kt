@@ -88,4 +88,8 @@ class DataLoaderPropertyDSL<T, K, R>(
         this.inputValues.addAll(inputValues)
     }
 
+    override fun setReturnType(type: KType) {
+        // NOOP
+    }
+
 }

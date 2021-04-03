@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.schema.dsl.ResolverDSL
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import kotlin.reflect.KFunction
+import kotlin.reflect.KType
 
 
 abstract class AbstractOperationDSL(
@@ -17,10 +18,18 @@ abstract class AbstractOperationDSL(
 
     internal var functionWrapper: FunctionWrapper<*>? = null
 
+    var explicitReturnType: KType? = null
+
     private fun resolver(function: FunctionWrapper<*>): ResolverDSL {
 
-        require(function.hasReturnType()) {
-            "Resolver for '$name' has no return value"
+        try {
+            require(function.hasReturnType()) {
+                "Resolver for '$name' has no return value"
+            }
+        } catch (e: Throwable) {
+            if ("KotlinReflectionInternalError" !in e.toString()) {
+                throw e
+            }
         }
 
         functionWrapper = function
@@ -58,5 +67,8 @@ abstract class AbstractOperationDSL(
         this.inputValues.addAll(inputValues)
     }
 
+    override fun setReturnType(type: KType) {
+        explicitReturnType = type
+    }
 
 }
