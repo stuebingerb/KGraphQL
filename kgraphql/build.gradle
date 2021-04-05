@@ -1,7 +1,0 @@
-dependencies {
-    compile "com.github.ben-manes.caffeine:caffeine:$caffeine_version"
-    compile "de.nidomiro:KDataLoader:$kDataLoader_version"
-
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "org.jetbrains.kotlinx:kotlinx-serialization-core:$serialization_version" // JVM dependency
-}
