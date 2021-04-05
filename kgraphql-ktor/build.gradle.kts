@@ -88,6 +88,13 @@ publishing {
                         url.set("https://github.com/aPureBase/KGraphQL/blob/main/LICENSE.md")
                     }
                 }
+                developers {
+                    developer {
+                        id.set("jeggy")
+                        name.set("Jógvan Olsen")
+                        email.set("jol@apurebase.com")
+                    }
+                }
                 scm {
                     connection.set("scm:git:https://github.com/aPureBase/KGraphQL.git")
                     developerConnection.set("scm:git:https://github.com/aPureBase/KGraphQL.git")

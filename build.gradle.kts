@@ -2,8 +2,8 @@ import de.marcphilipp.gradle.nexus.NexusPublishPlugin
 import java.time.Duration
 
 val version: String by project
-val sonatypeUsername: String? = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypeUsername")
-val sonatypePassword: String? = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypePassword")
+val sonatypeUsername: String? = System.getenv("sonatypeUsername")
+val sonatypePassword: String? = System.getenv("sonatypePassword")
 
 plugins {
     id("com.github.ben-manes.versions") version "0.28.0"
