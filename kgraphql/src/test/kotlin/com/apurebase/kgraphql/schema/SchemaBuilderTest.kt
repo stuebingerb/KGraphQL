@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import com.apurebase.kgraphql.schema.structure.Field
@@ -602,5 +603,46 @@ class SchemaBuilderTest {
         } shouldThrow IllegalArgumentException::class with {
             message shouldBeEqualTo "Resolver for 'main' has no return value"
         }
+    }
+
+    inline fun <reified T: Any> SchemaBuilder.createGenericQuery(x: T) {
+        query("data") {
+            resolver { -> x }.returns<T>()
+        }
+    }
+
+    @Test
+    fun `specifying return type explicitly allows generic query creation`(){
+        val schema = defaultSchema {
+            createGenericQuery(InputOne("generic"))
+        }
+
+        assertThat(schema.typeByKClass(InputOne::class), notNullValue())
+    }
+
+    inline fun <reified T: Any> SchemaBuilder.createGenericQueryWithoutReturns(x: T) {
+        query("data") {
+            resolver { -> x }
+        }
+    }
+
+    @Test
+    fun `not specifying return value explicitly with generic query creation throws exception`(){
+        invoking {
+            defaultSchema {
+                createGenericQueryWithoutReturns(InputOne("generic"))
+            }
+        } shouldThrow SchemaException::class with {
+            message shouldBeEqualTo "If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()"
+        }
+    }
+
+    @Test
+    fun `specifying return type explicitly allows generic query creation that returns List of T`(){
+        val schema = defaultSchema {
+            createGenericQuery(listOf("generic"))
+        }
+        val result = deserialize(schema.executeBlocking("{data}"))
+        assertThat(result.extract("data/data"), equalTo(listOf("generic")))
     }
 }

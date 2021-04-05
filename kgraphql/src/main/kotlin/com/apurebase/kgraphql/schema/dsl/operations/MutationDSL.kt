@@ -18,7 +18,8 @@ class MutationDSL(
             isDeprecated = isDeprecated,
             deprecationReason = deprecationReason,
             inputValues = inputValues,
-            accessRule = accessRuleBlock
+            accessRule = accessRuleBlock,
+            explicitReturnType = explicitReturnType
         )
     }
 
