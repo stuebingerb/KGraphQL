@@ -43,7 +43,7 @@ class GitHubIssue139 {
 
     private inline fun <reified T: Any, reified C: Criteria, R: Repository<T, C>> SchemaBuilder.connection(resourceName: String, repo: R) {
         query("${resourceName}s") {
-            resolver { -> repo.get() }.returns<List<T>>()
+            resolver { criteria: C -> repo.get(criteria) }.returns<List<T>>()
         }
         query("${resourceName}Count") {
             resolver { -> repo.count() }
