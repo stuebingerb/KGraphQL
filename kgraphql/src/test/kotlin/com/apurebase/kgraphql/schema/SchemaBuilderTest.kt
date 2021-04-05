@@ -612,7 +612,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `specifying return value explicitly allows generic query creation`(){
+    fun `specifying return type explicitly allows generic query creation`(){
         val schema = defaultSchema {
             createGenericQuery(InputOne("generic"))
         }
@@ -633,12 +633,12 @@ class SchemaBuilderTest {
                 createGenericQueryWithoutReturns(InputOne("generic"))
             }
         } shouldThrow SchemaException::class with {
-            message shouldBeEqualTo "If you construct a query/mutation generically, you must specify the return type T explicitly with either resolver{ }.returns<T> or resolver{ }.returnsListOf<T>()"
+            message shouldBeEqualTo "If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()"
         }
     }
 
     @Test
-    fun `specifying returnsListOf explicitly allows generic query creation that returns lists`(){
+    fun `specifying return type explicitly allows generic query creation that returns List of T`(){
         val schema = defaultSchema {
             createGenericQuery(listOf("generic"))
         }

@@ -175,7 +175,7 @@ class SchemaCompilation(
         }
     } catch (e: Throwable) {
         if ("KotlinReflectionInternalError" in e.toString()) {
-            throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with either resolver{ }.returns<T> or resolver{ }.returnsListOf<T>()")
+            throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()")
         } else {
             throw e
         }
