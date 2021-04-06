@@ -21,7 +21,7 @@ allprojects {
 
 subprojects {
     group = "com.apurebase"
-    version = "version"
+    version = version
 
     apply<NexusPublishPlugin>()
 
