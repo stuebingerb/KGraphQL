@@ -31,7 +31,6 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
     testImplementation("org.amshove.kluent:kluent:$kluent_version")
-    testImplementation("me.lazmaid.kraph:kraph:0.6.1")
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("io.ktor:ktor-auth:$ktor_version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")

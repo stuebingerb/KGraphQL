@@ -2,7 +2,7 @@ package com.apurebase.kgraphql
 
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.util.*
+import kotlinx.serialization.json.*
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
@@ -18,10 +18,8 @@ class KtorFeatureTest : KtorTest() {
             }
         }
 
-        server {
-            query {
-                field("hello")
-            }
+        server("query") {
+            field("hello")
         } shouldBeEqualTo "{\"data\":{\"hello\":\"World!\"}}"
 
     }
@@ -34,10 +32,8 @@ class KtorFeatureTest : KtorTest() {
             }
         }
 
-        server {
-            mutation {
-                field("hello")
-            }
+        server("mutation") {
+            field("hello")
         } shouldBeEqualTo "{\"data\":{\"hello\":\"World! mutation\"}}"
 
     }
@@ -69,19 +65,15 @@ class KtorFeatureTest : KtorTest() {
             }
         }
 
-        server {
-            query {
-                fieldObject("actor") {
-                    field("name(addStuff: true)")
-                }
+        server("query") {
+            field("actor") {
+                field("name(addStuff: true)")
             }
         } shouldBeEqualTo "{\"data\":{\"actor\":{\"name\":\"${georgeName}STUFF\"}}}"
 
-        server {
-            query {
-                fieldObject("actor") {
-                    field("nickname")
-                }
+        server("query") {
+            field("actor") {
+                field("nickname")
             }
         } shouldBeEqualTo "{\"data\":{\"actor\":{\"nickname\":\"Hodor and $georgeName\"}}}"
     }
@@ -100,14 +92,21 @@ class KtorFeatureTest : KtorTest() {
             query("test") { resolver { input: InputTwo -> "success: $input" } }
         }
 
-        val variables = """
-            {"one":{"enum":"M1","id":"M1"},"quantity":3434,"tokens":["23","34","21","434"]}
-        """.trimIndent()
+        server("query") {
+            field("test(input: \$two)")
 
-        server {
-            query {
-                field("test(input: \$two)")
-                variable("two", "InputTwo!", variables)
+            variable("two", "InputTwo!") {
+                putJsonObject("one") {
+                    put("enum", "M1")
+                    put("id", "M1")
+                }
+                put("quantity", 3434)
+                putJsonArray("tokens") {
+                    add("23")
+                    add("34")
+                    add("21")
+                    add("434")
+                }
             }
         } shouldBeEqualTo "{\"data\":{\"test\":\"success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])\"}}"
     }

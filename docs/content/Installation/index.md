@@ -3,16 +3,16 @@ title: Getting Started
 weight: 1
 ---
 
-[![Bintray](https://api.bintray.com/packages/apurebase/apurebase/kgraphql/images/download.svg)](https://bintray.com/apurebase/apurebase/kgraphql)
+[![Maven Central](https://img.shields.io/maven-central/v/com.apurebase/kgraphql.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.apurebase%22%20AND%20a:%22kgraphql%22)
 
-KGraphQL is pushed to bintray repository and also linked to JCenter. It requires kotlin compiler version 1.3.x and require kotlin runtime of the same version as a dependency.
+KGraphQL is pushed to MavenCentral repository. It requires kotlin compiler version 1.4.x and require kotlin runtime of the same version as a dependency.
 
 === "Kotlin Gradle Script"
-    Add Bintray JCenter repository:
+    Add Maven Central repository:
     
     ```kotlin
     repositories {
-      jcenter()
+      mavenCentral()
     }
     ```
     
@@ -24,11 +24,11 @@ KGraphQL is pushed to bintray repository and also linked to JCenter. It requires
 
 
 === "Gradle"
-    Add Bintray JCenter repository:
+    Add Maven Central repository:
     
     ```groovy
     repositories {
-      jcenter()
+      mavenCentral()
     }
     ```
     
@@ -40,14 +40,14 @@ KGraphQL is pushed to bintray repository and also linked to JCenter. It requires
 
 
 === "Maven"
-    Add Bintray JCenter repository to section:
+    Add Maven Central repository to section:
     
     ```xml
     <repositories>
-      <repository>
-        <id>jcenter</id>
-        <url>https://jcenter.bintray.com/</url>
-      </repository>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+        </repository>
     </repositories>
     ```
     
