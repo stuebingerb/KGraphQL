@@ -5,7 +5,7 @@ weight: 3
 
 GraphQL Unions represent an object that could be one of a list of GraphQL Object types, but provides for no guaranteed fields between those types.
 
-There are 2 ways og defining a union type.
+There are 2 ways of defining a union type.
 
 ### Manual
 *Example*
