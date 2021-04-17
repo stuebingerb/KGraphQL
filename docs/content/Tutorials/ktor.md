@@ -13,7 +13,7 @@ After this we'll press "Next" and fill out the necessary information and then pr
     kgraphql_version=x.x.x
     ```
 
-Replace `x.x.x` with the latest version [![Bintray](https://api.bintray.com/packages/apurebase/apurebase/kgraphql/images/download.svg)](https://bintray.com/apurebase/apurebase/kgraphql).
+Replace `x.x.x` with the latest version [![Maven Central](https://img.shields.io/maven-central/v/com.apurebase/kgraphql.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.apurebase%22%20AND%20a:%22kgraphql%22).
 
 === "Kotlin Gradle Script"
     ```kotlin

@@ -25,13 +25,3 @@ build:
   script:
     - gradle assemble
 
-bintray:publish:
-  stage: publish
-  cache:
-    paths:
-      - build
-      - .gradle
-  script:
-    - ./gradlew bintrayUpload
-  only:
-    - tags
