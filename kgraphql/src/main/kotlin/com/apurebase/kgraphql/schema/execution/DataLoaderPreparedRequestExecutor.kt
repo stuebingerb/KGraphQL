@@ -212,7 +212,11 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                     }
                 }
             }
-        } else {
+        } else if (expectedType.kind == TypeKind.UNION) return handleFragment(
+            ctx,
+            value,
+            container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
+        ) else {
             throw IllegalStateException("fragments can be specified on object types, interfaces, and unions")
         }
     }
