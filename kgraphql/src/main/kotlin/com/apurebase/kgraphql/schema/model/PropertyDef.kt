@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.schema.model
 
 import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.test.factories.DataLoaderFactory
+import nidomiro.kdataloader.factories.DataLoaderFactory
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
 

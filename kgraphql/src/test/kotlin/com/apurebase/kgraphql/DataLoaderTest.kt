@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.execution.Executor
 import kotlinx.coroutines.*
-import com.apurebase.kgraphql.test.ExecutionResult
+import nidomiro.kdataloader.ExecutionResult
 import org.amshove.kluent.shouldBeEqualTo
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
@@ -476,19 +476,19 @@ class DataLoaderTest {
                     abc {
                         value
                         B
-                        children { # 7
+                        children {
                             value
                             B
-                            children { # 49
+                            children {
                                 value
                                 B
-                                children { # 343
+                                children {
                                     value
                                     B
-                                    children { # 2.401
+                                    children {
                                         value
                                         B
-                                        children { # 16.807
+                                        children {
                                             value
                                             B
                                         }

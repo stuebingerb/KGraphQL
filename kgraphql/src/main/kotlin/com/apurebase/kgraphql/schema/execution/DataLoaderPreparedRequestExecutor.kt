@@ -15,8 +15,13 @@ import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
-import com.apurebase.kgraphql.test.DataLoader
+import nidomiro.kdataloader.DataLoader
+import nidomiro.kdataloader.factories.DataLoaderFactory
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KProperty1
 
 
@@ -27,29 +32,43 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     inner class ExecutionContext(
         val variables: Variables,
         val requestContext: Context,
-        val loaders: Map<Field.DataLoader<*, *, *>, DataLoader<Any?, *>>,
-    )
+        private val dataCounters: ConcurrentHashMap<DataLoader<*, *>, AtomicLong> = ConcurrentHashMap(),
+        private val loaders: ConcurrentHashMap<DataLoaderFactory<Any?, *>, DataLoader<Any?, *>> = ConcurrentHashMap()
+    ) : Mutex by Mutex() {
 
-    private suspend fun ExecutionPlan.constructLoaders(job: Job): Map<Field.DataLoader<*, *, *>, DataLoader<Any?, *>> {
-        val loaders = mutableMapOf<Field.DataLoader<*, *, *>, DataLoader<Any?, *>>()
 
-        suspend fun Collection<Execution>.look() {
-            forEach { ex ->
-                ex.selectionNode
-                when (ex) {
-                    is Execution.Fragment -> ex.elements.look()
-                    is Execution.Node -> {
-                        ex.children.look()
-                        if (ex.field is Field.DataLoader<*, *, *>) {
-                            loaders[ex.field] = ex.field.loader.constructNew(job) as DataLoader<Any?, *>
-                        }
-                    }
+        suspend fun get(loader: DataLoader<*, *>): Long = withLock {
+            dataCounters[loader]?.get() ?: throw IllegalArgumentException("Something went wrong with execution")
+        }
+        suspend fun add(loader: DataLoader<*, *>, check: Pair<*, String>, count: Long) = withLock {
+            if (dataCounters[loader] == null) {
+                /** TODO: There shouldn't be a need for Atomic here as we are using [withLock] */
+                dataCounters[loader] = AtomicLong(count)
+            } else {
+                val counter = dataCounters[loader]!!
+                counter.getAndUpdate {
+                    it + count
                 }
             }
         }
 
-        operations.look()
-        return loaders
+        suspend fun load(builder: DeferredJsonMap, loaderfactory: DataLoaderFactory<Any?, Any?>, node: Execution.Node, preparedValue: Any?): Deferred<Any?> {
+            val loader = loaders.getOrPut(loaderfactory) { loaderfactory.constructNew() }
+            add(loader, preparedValue to node.selectionNode.fullPath, 1) // parentCount)
+
+            val value = loader.loadAsync(preparedValue)
+
+            builder.deferredLaunch {
+                val count = get(loader)
+                val stats = loader.createStatisticsSnapshot()
+                if (stats.objectsRequested >= count) {
+                    loader.dispatch()
+                } // else if (stats.objectsRequested > count) throw TODO("This should never happen!!!")
+            }
+
+
+            return value
+        }
     }
 
 
@@ -193,11 +212,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                     }
                 }
             }
-        } else if (expectedType.kind == TypeKind.UNION) return handleFragment(
-            ctx,
-            value,
-            container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
-        ) else {
+        } else {
             throw IllegalStateException("fragments can be specified on object types, interfaces, and unions")
         }
     }
@@ -310,7 +325,8 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             ctx = ctx
         ) // ?: TODO("Nullable prepare functions isn't supported")
 
-        val value = ctx.loaders[field]!!.loadAsync(preparedValue)
+
+        val value = ctx.load(this, field.loader as DataLoaderFactory<Any?, Any?>, node, preparedValue)
 
 
         applyKeyToElement(ctx, value, node, field.returnType, parentCount)
@@ -344,23 +360,19 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     }
 
     override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context) = coroutineScope {
-        val result = deferredJsonBuilder(timeout = plan.options.timeout ?: schema.configuration.timeout) {
+        deferredJsonBuilder(timeout = plan.options.timeout ?: schema.configuration.timeout) {
             val ctx = ExecutionContext(
                 Variables(schema, variables, plan.firstOrNull { it.variables != null }?.variables),
-                context,
-                plan.constructLoaders(job),
+                context
             )
+
 
             "data" toDeferredObj {
                 plan.forEach { node ->
                     if (shouldInclude(ctx, node)) writeOperation(ctx, node, node.field as Field.Function<*, *>)
                 }
             }
-            ctx.loaders.values.map { it.dispatch() }
-        }
-
-
-        result.toString()
+        }.toString()
     }
 
     private fun createNullNode(node: Execution.Node, returnType: Type): JsonNull = if (returnType !is Type.NonNull) {

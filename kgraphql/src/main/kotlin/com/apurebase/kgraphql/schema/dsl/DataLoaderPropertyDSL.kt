@@ -4,10 +4,8 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import com.apurebase.kgraphql.schema.model.PropertyDef
-import com.apurebase.kgraphql.test.BatchLoader
-import com.apurebase.kgraphql.test.TimedAutoDispatcherDataLoaderOptions
-import com.apurebase.kgraphql.test.dsl.dataLoaderFactory
-import com.apurebase.kgraphql.test.factories.TimedAutoDispatcherDataLoaderFactory
+import nidomiro.kdataloader.BatchLoader
+import nidomiro.kdataloader.dsl.dataLoaderFactory
 import kotlin.reflect.KType
 
 class DataLoaderPropertyDSL<T, K, R>(
@@ -82,11 +80,7 @@ class DataLoaderPropertyDSL<T, K, R>(
             inputValues = inputValues,
             returnType = returnType,
             prepare = prepareWrapper!!,
-            loader = TimedAutoDispatcherDataLoaderFactory(
-                { TimedAutoDispatcherDataLoaderOptions() },
-                mapOf(),
-                dataLoader!!
-            )
+            loader = dataLoaderFactory(dataLoader!!)
         )
     }
 

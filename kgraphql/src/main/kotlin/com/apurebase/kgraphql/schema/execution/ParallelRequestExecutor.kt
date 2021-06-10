@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
-import com.apurebase.kgraphql.test.DataLoader
+import nidomiro.kdataloader.DataLoader
 import kotlin.reflect.KProperty1
 
 
