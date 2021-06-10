@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 // This is just for safety, so when the tests fail and
 // end up in an endless waiting state, they'll fail after this amount
-val timeout = ofSeconds(10)!!
+val timeout = ofSeconds(60)!!
 const val repeatTimes = 2
 
 class DataLoaderTest {
@@ -89,6 +89,7 @@ class DataLoaderTest {
                 dataProperty<Int, List<Person>>("colleagues") {
                     prepare { it.id }
                     loader { keys ->
+                        delay(10)
                         println("== Running [colleagues] loader with keys: $keys ==")
                         keys.map { ExecutionResult.Success(colleagues[it] ?: listOf()) }
                     }
@@ -166,7 +167,10 @@ class DataLoaderTest {
                                 "Testing 3" -> "Jógvan" to "Høgni"
                                 else -> "${it}Nest-0" to "${it}Nest-1"
                             }
-                            ExecutionResult.Success(listOf(ABC(a1), ABC(a2)))
+                            delay(1)
+                            ExecutionResult.Success(
+                                (1..7).map { if (it % 2 == 0) ABC(a1) else ABC(a2) }
+                            )
                         }
                     }
                     prepare { parent ->
@@ -291,7 +295,7 @@ class DataLoaderTest {
         return fn(true) + fn(false)
     }
 
-    @RepeatedTest(repeatTimes)
+    @RepeatedTest(repeatTimes, name = "Nested array loaders")
     fun `Nested array loaders`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -313,7 +317,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @RepeatedTest(repeatTimes, name = "Old basic resolvers in new executor")
     fun `Old basic resolvers in new executor`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -334,7 +338,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @RepeatedTest(repeatTimes, name = "Very basic new Level executor")
     fun `Very basic new Level executor`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -358,7 +362,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @RepeatedTest(repeatTimes, name = "dataloader with nullable prepare keys")
     fun `dataloader with nullable prepare keys`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -383,7 +387,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @RepeatedTest(repeatTimes, name = "Basic dataloader test")
     fun `Basic dataloader test`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -409,7 +413,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(2)
+    @RepeatedTest(2, name = "basic data loader")
     fun `basic data loader`() {
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
@@ -437,7 +441,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @RepeatedTest(repeatTimes, name = "data loader cache per request only")
     fun `data loader cache per request only`() {
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
@@ -462,7 +466,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @RepeatedTest(repeatTimes, name = "multiple layers of dataLoaders")
     fun `multiple layers of dataLoaders`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -472,12 +476,24 @@ class DataLoaderTest {
                     abc {
                         value
                         B
-                        children {
+                        children { # 7
                             value
                             B
-                            children {
+                            children { # 49
                                 value
                                 B
+                                children { # 343
+                                    value
+                                    B
+                                    children { # 2.401
+                                        value
+                                        B
+                                        children { # 16.807
+                                            value
+                                            B
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
