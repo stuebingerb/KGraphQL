@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.introspection.*
 import com.apurebase.kgraphql.schema.model.*
-import nidomiro.kdataloader.DataLoader
+import com.apurebase.kgraphql.test.factories.DataLoaderFactory
 import kotlin.reflect.full.findAnnotation
 
 
@@ -44,7 +44,7 @@ sealed class Field : __Field {
 
     class DataLoader<T, K, R>(
         val kql: PropertyDef.DataLoadedFunction<T, K, R>,
-        val loader: nidomiro.kdataloader.factories.DataLoaderFactory<K, R>,
+        val loader: DataLoaderFactory<K, R>,
         override val returnType: Type,
         override val arguments: List<InputValue<*>>
     ): Field() {
