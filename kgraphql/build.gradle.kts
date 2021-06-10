@@ -1,7 +1,7 @@
 
 plugins {
     base
-    kotlin("jvm") version "1.4.31"
+    kotlin("jvm") version "1.5.10"
     id("org.jetbrains.dokka") version "0.10.1"
     signing
 }
@@ -28,7 +28,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:$jackson_version")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeine_version")
-    api("de.nidomiro:KDataLoader:$kDataLoader_version")
+//    api("de.nidomiro:KDataLoader:$kDataLoader_version")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serialization_version") // JVM dependency
 
 
