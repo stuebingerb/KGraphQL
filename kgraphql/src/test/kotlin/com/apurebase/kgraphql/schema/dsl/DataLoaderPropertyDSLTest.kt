@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.execution.Executor
-import nidomiro.kdataloader.ExecutionResult
+import com.apurebase.kgraphql.test.ExecutionResult
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 

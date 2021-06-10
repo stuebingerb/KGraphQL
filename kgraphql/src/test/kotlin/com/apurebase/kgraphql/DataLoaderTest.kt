@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.execution.Executor
 import kotlinx.coroutines.*
-import nidomiro.kdataloader.ExecutionResult
+import com.apurebase.kgraphql.test.ExecutionResult
 import org.amshove.kluent.shouldBeEqualTo
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
