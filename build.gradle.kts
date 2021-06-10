@@ -6,8 +6,8 @@ val sonatypeUsername: String? = System.getenv("sonatypeUsername")
 val sonatypePassword: String? = System.getenv("sonatypePassword")
 
 plugins {
-    id("com.github.ben-manes.versions") version "0.28.0"
-    id("io.codearte.nexus-staging") version "0.21.2"
+    id("com.github.ben-manes.versions") version "0.39.0"
+    id("io.codearte.nexus-staging") version "0.30.0"
     id("de.marcphilipp.nexus-publish") version "0.4.0"
     jacoco
 }

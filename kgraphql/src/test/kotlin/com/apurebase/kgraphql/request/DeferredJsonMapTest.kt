@@ -6,7 +6,6 @@ import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.json
 import org.amshove.kluent.shouldEqualUnordered
 import org.junit.jupiter.api.RepeatedTest
 

@@ -29,7 +29,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeine_version")
     api("de.nidomiro:KDataLoader:$kDataLoader_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serialization_version") // JVM dependency
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version") // JVM dependency
 
 
     testImplementation("io.netty:netty-all:$netty_version")
