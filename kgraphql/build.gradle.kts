@@ -8,6 +8,7 @@ plugins {
 
 val caffeine_version: String by project
 val kDataLoader_version: String by project
+val deferredJsonBuilder_version: String by project
 val kotlin_version: String by project
 val serialization_version: String by project
 val coroutine_version: String by project
@@ -25,11 +26,14 @@ dependencies {
     implementation(kotlin("reflect"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version") // JVM dependency
+
     implementation("com.fasterxml.jackson.core:jackson-databind:$jackson_version")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
+
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeine_version")
+    implementation("com.apurebase:DeferredJsonBuilder:$deferredJsonBuilder_version")
     api("de.nidomiro:KDataLoader:$kDataLoader_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version") // JVM dependency
 
 
     testImplementation("io.netty:netty-all:$netty_version")
