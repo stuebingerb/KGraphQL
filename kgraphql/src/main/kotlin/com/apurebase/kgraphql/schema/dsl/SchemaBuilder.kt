@@ -80,6 +80,16 @@ class SchemaBuilder internal constructor() {
         stringScalar(T::class, block)
     }
 
+    fun <T : Any> shortScalar(kClass: KClass<T>, block: ScalarDSL<T, Short>.() -> Unit) {
+        val scalar = ShortScalarDSL(kClass).apply(block)
+        configuration.appendMapper(scalar, kClass)
+        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
+    }
+
+    inline fun <reified T : Any> shortScalar(noinline block: ScalarDSL<T, Short>.() -> Unit) {
+        shortScalar(T::class, block)
+    }
+
     fun <T : Any> intScalar(kClass: KClass<T>, block: ScalarDSL<T, Int>.() -> Unit) {
         val scalar = IntScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)

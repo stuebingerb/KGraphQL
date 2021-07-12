@@ -26,8 +26,10 @@ data class MutableSchemaDefinition (
         BUILT_IN_TYPE.BOOLEAN,
         BUILT_IN_TYPE.DOUBLE,
         BUILT_IN_TYPE.FLOAT,
+        BUILT_IN_TYPE.SHORT,
         BUILT_IN_TYPE.INT,
-        BUILT_IN_TYPE.LONG
+        BUILT_IN_TYPE.LONG,
+
     ),
     private val mutations: ArrayList<MutationDef<*>> = arrayListOf(),
     private val subscriptions: ArrayList<SubscriptionDef<*>> = arrayListOf(),

@@ -19,6 +19,7 @@ By default, every schema has following built in types:
 
 ### Scalars
 * **String** - represents textual data, represented as UTF‐8 character sequences
+* **Short** - represents a signed 16‐bit numeric non‐fractional value
 * **Int** - represents a signed 32‐bit numeric non‐fractional value
 * **Long** - represents a signed 64‐bit numeric non‐fractional value. Long type is not part of GraphQL specification, but it is built in primitive type in Kotlin language.
 * **Float** - represents signed double‐precision fractional values as specified by IEEE 754. KGraphQL represents Kotlin primitive Double and Float values as GraphQL Float.
