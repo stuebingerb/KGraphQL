@@ -152,6 +152,7 @@ class ScalarsSpecificationTest {
     }
 
     data class Boo(val boolean: Boolean)
+    data class Sho(val short: Short)
     data class Lon(val long: Long)
     data class Dob(val double: Double)
     data class Num(val int: Int)
@@ -192,6 +193,10 @@ class ScalarsSpecificationTest {
                 deserialize = ::Dob
                 serialize = { (double) -> double }
             }
+            shortScalar<Sho> {
+                deserialize = ::Sho
+                serialize = { (short) -> short }
+            }
             intScalar<Num> {
                 deserialize = ::Num
                 serialize = { (num) -> num }
@@ -203,6 +208,7 @@ class ScalarsSpecificationTest {
 
             query("boo") { resolver { boo: Boo -> boo } }
             query("lon") { resolver { lon: Lon -> lon } }
+            query("sho") { resolver { sho: Sho -> sho } }
             query("dob") { resolver { dob: Dob -> dob } }
             query("num") { resolver { num: Num -> num } }
             query("str") { resolver { str: Str -> str } }
@@ -211,14 +217,16 @@ class ScalarsSpecificationTest {
 
         val booValue = true
         val lonValue = 124L
+        val shoValue: Short = 1
         val dobValue = 2.5
         val numValue = 155
         val strValue = "Test"
         val d = '$'
 
         val req = """
-            query Query(${d}boo: Boo!, ${d}lon: Lon!, ${d}dob: Dob!, ${d}num: Num!, ${d}str: Str!){
+            query Query(${d}boo: Boo!,  ${d}sho: Sho!, ${d}lon: Lon!, ${d}dob: Dob!, ${d}num: Num!, ${d}str: Str!){
                 boo(boo: ${d}boo)
+                sho(sho: ${d}sho)
                 lon(lon: ${d}lon)
                 dob(dob: ${d}dob)
                 num(num: ${d}num)
@@ -230,6 +238,7 @@ class ScalarsSpecificationTest {
         val values = """
             {
                 "boo": $booValue,
+                "sho": $shoValue,
                 "lon": $lonValue,
                 "dob": $dobValue,
                 "num": $numValue,
@@ -240,6 +249,7 @@ class ScalarsSpecificationTest {
         try {
             val response = deserialize(schema.executeBlocking(req, values))
             assertThat(response.extract<Boolean>("data/boo"), equalTo(booValue))
+            assertThat(response.extract<Int>("data/sho"), equalTo(shoValue.toInt()))
             assertThat(response.extract<Int>("data/lon"), equalTo(lonValue.toInt()))
             assertThat(response.extract<Double>("data/dob"), equalTo(dobValue))
             assertThat(response.extract<Int>("data/num"), equalTo(numValue))

@@ -15,6 +15,9 @@ import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 private const val STRING_DESCRIPTION =
         "The String scalar type represents textual data, represented as UTF-8 character sequences"
 
+private const val SHORT_DESCRIPTION =
+    "The Short scalar type represents a signed 16-bit numeric non-fractional value"
+
 private const val INT_DESCRIPTION =
         "The Int scalar type represents a signed 32-bit numeric non-fractional value"
 
@@ -33,6 +36,8 @@ private const val BOOLEAN_DESCRIPTION =
 object BUILT_IN_TYPE {
 
     val STRING = TypeDef.Scalar(String::class.defaultKQLTypeName(), String::class, STRING_COERCION, STRING_DESCRIPTION)
+
+    val SHORT = TypeDef.Scalar(Short::class.defaultKQLTypeName(), Short::class, SHORT_COERCION, SHORT_DESCRIPTION)
 
     val INT = TypeDef.Scalar(Int::class.defaultKQLTypeName(), Int::class, INT_COERCION, INT_DESCRIPTION)
 
@@ -108,6 +113,32 @@ object INT_COERCION : StringScalarCoercion<Int>{
                 valueNode
             )
             else -> valueNode.value.toInt()
+        }
+        else -> throw GraphQLError(
+            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
+            valueNode
+        )
+    }
+}
+
+object SHORT_COERCION : StringScalarCoercion<Short>{
+    override fun serialize(instance: Short): String = instance.toString()
+
+    override fun deserialize(raw: String, valueNode: ValueNode?) = when (valueNode) {
+        null -> {
+            if(!raw.isLiteral()) raw.toShort()
+            else throw GraphQLError("Cannot coerce string literal, expected numeric string constant")
+        }
+        is NumberValueNode -> when {
+            valueNode.value > Short.MAX_VALUE -> throw GraphQLError(
+                "Cannot coerce to type of Int as '${valueNode.value}' is greater than (2^-15)-1",
+                valueNode
+            )
+            valueNode.value < Short.MIN_VALUE -> throw GraphQLError(
+                "Cannot coerce to type of Int as '${valueNode.value}' is less than -(2^-15)",
+                valueNode
+            )
+            else -> valueNode.value.toShort()
         }
         else -> throw GraphQLError(
             "Cannot coerce ${valueNode.valueNodeName} to numeric constant",

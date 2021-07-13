@@ -593,6 +593,25 @@ class SchemaBuilderTest {
     }
 
     @Test
+    fun `Short int types are mapped to Short Scalar`(){
+        val schema = defaultSchema {
+            query("shortQuery") {
+                resolver { -> 1 as Short }
+            }
+        }
+
+
+        val typesIntrospection = deserialize(schema.executeBlocking("{__schema{types{name}}}"))
+        val types = typesIntrospection.extract<List<Map<String,String>>>("data/__schema/types")
+        val names = types.map {it["name"]}
+        assertThat(names, hasItem("Short"))
+
+        val response = deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name }}}}}}"))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/type/ofType/kind"), equalTo("SCALAR"))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/type/ofType/name"), equalTo("Short"))
+    }
+
+    @Test
     fun `Resolver cannot return an Unit value`(){
         invoking {
             KGraphQL.schema {

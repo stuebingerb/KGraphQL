@@ -3,16 +3,11 @@ package com.apurebase.kgraphql.schema.scalar
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.dropQuotes
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.apurebase.kgraphql.schema.builtin.BOOLEAN_COERCION
-import com.apurebase.kgraphql.schema.builtin.DOUBLE_COERCION
-import com.apurebase.kgraphql.schema.builtin.FLOAT_COERCION
-import com.apurebase.kgraphql.schema.builtin.INT_COERCION
-import com.apurebase.kgraphql.schema.builtin.LONG_COERCION
-import com.apurebase.kgraphql.schema.builtin.STRING_COERCION
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.schema.builtin.*
 import com.apurebase.kgraphql.schema.structure.Type
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -28,11 +23,13 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value : ValueNode): T {
             STRING_COERCION -> STRING_COERCION.deserialize(value.valueNodeName, value as StringValueNode) as T
             FLOAT_COERCION -> FLOAT_COERCION.deserialize(value.valueNodeName, value) as T
             DOUBLE_COERCION -> DOUBLE_COERCION.deserialize(value.valueNodeName, value) as T
+            SHORT_COERCION -> SHORT_COERCION.deserialize(value.valueNodeName, value) as T
             INT_COERCION -> INT_COERCION.deserialize(value.valueNodeName, value) as T
             BOOLEAN_COERCION -> BOOLEAN_COERCION.deserialize(value.valueNodeName, value) as T
             LONG_COERCION -> LONG_COERCION.deserialize(value.valueNodeName, value) as T
 
             is StringScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.dropQuotes(), value)
+            is ShortScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toShort(), value)
             is IntScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toInt(), value)
             is DoubleScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toDouble(), value)
             is BooleanScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toBoolean(), value)
@@ -57,6 +54,9 @@ fun <T> serializeScalar(jsonNodeFactory: JsonNodeFactory, scalar: Type.Scalar<*>
     is StringScalarCoercion<*> -> {
         jsonNodeFactory.textNode((scalar.coercion as StringScalarCoercion<T>).serialize(value))
     }
+    is ShortScalarCoercion<*> -> {
+        jsonNodeFactory.numberNode((scalar.coercion as ShortScalarCoercion<T>).serialize(value))
+    }
     is IntScalarCoercion<*> -> {
         jsonNodeFactory.numberNode((scalar.coercion as IntScalarCoercion<T>).serialize(value))
     }
@@ -76,6 +76,9 @@ fun <T> serializeScalar(jsonNodeFactory: JsonNodeFactory, scalar: Type.Scalar<*>
 fun <T> serializeScalar(scalar: Type.Scalar<*>, value: T, executionNode: Execution): JsonElement = when (scalar.coercion) {
     is StringScalarCoercion<*> -> {
         JsonPrimitive((scalar.coercion as StringScalarCoercion<T>).serialize(value))
+    }
+    is ShortScalarCoercion<*> -> {
+        JsonPrimitive((scalar.coercion as ShortScalarCoercion<T>).serialize(value))
     }
     is IntScalarCoercion<*> -> {
         JsonPrimitive((scalar.coercion as IntScalarCoercion<T>).serialize(value))
