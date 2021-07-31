@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema.model
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
 
 
 class InputValueDef<T : Any>(
@@ -9,5 +10,6 @@ class InputValueDef<T : Any>(
         val defaultValue : T? = null,
         override val isDeprecated: Boolean = false,
         override val description: String? = null,
-        override val deprecationReason: String? = null
+        override val deprecationReason: String? = null,
+        val kType : KType? = null
 ) : DescribedDef, Depreciable
