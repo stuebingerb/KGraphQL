@@ -195,8 +195,11 @@ class SchemaBuilder internal constructor() {
         if (!T::class.isSealed) throw SchemaException("Can't generate a union type out of a non sealed class. '${T::class.simpleName}'")
 
         return unionType(T::class.simpleName!!) {
-            T::class.sealedSubclasses.forEach { type(it) }
             block()
+            T::class.sealedSubclasses.forEach {
+                type(it, subTypeBlock) // <-- Adds to schema definition
+                type(it) // <-- Adds to possible union type
+            }
         }
     }
 

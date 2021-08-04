@@ -6,7 +6,6 @@ import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.helpers.getFields
 import com.apurebase.kgraphql.schema.execution.Execution
-import kotlinx.coroutines.test.runBlockingTest
 import org.amshove.kluent.*
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
@@ -136,7 +135,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `A Union type must define one or more unique member types`(){
-        expect<SchemaException>("A Union type must define one or more unique member types"){
+        expect<SchemaException>("The union type 'invalid' has no possible types defined, requires at least one. Please refer to https://kgraphql.io/Reference/Type%20System/unions/") {
             KGraphQL.schema {
                 unionType("invalid") {}
             }
@@ -239,6 +238,35 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             extract<Int>("data/returnUnion/i") shouldBeEqualTo 1
             extract<String?>("data/returnUnion/s") shouldBeEqualTo null
             extract<List<String>>("data/returnUnion/fields") shouldBeEqualTo listOf("i", "fields", "s")
+        }
+    }
+
+    @Test
+    fun `union types with custom name def resolver`() {
+        defaultSchema {
+            unionType<WithFields> {
+                subTypeBlock = {
+                    name = "Prefix$name"
+                }
+            }
+
+            query("returnUnion") {
+                resolver { node: Execution.Node ->
+                    listOf(
+                        WithFields.Value1(1, node.getFields()),
+                        WithFields.Value2("key", node.getFields()),
+                    )
+                }
+            }
+        }.executeBlocking("""
+            {
+                returnUnion {
+                    __typename
+                }
+            }
+        """.trimIndent()).also(::println).deserialize().run {
+            extract<String>("data/returnUnion[0]/__typename") shouldBeEqualTo "PrefixValue1"
+            extract<String>("data/returnUnion[1]/__typename") shouldBeEqualTo "PrefixValue2"
         }
     }
 }
