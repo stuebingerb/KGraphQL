@@ -61,7 +61,7 @@ class UFOSightingService {
     }
 
     fun getTopSightings(): MutableList<CountrySightings> {
-        val query = "SELECT state, country, COUNT(state) as numOccurrences FROM ufosighting group by state, country order by COUNT(state) DESC"
+        val query = "SELECT state, country, COUNT(state) as numOccurrences FROM ufosightings group by state, country order by COUNT(state) DESC"
         return query.execAndMap { rs ->
             CountrySightings(
                     state = rs.getString("state"),
@@ -72,7 +72,7 @@ class UFOSightingService {
     }
 
     fun getTopCountrySightings(): MutableList<CountrySightings> {
-        val query = "SELECT country, COUNT(country) as numOccurrences FROM ufosighting group by country order by COUNT(country) DESC"
+        val query = "SELECT country, COUNT(country) as numOccurrences FROM ufosightings group by country order by COUNT(country) DESC"
         return query.execAndMap { rs ->
             CountrySightings(
                     state = rs.getString("state"),
