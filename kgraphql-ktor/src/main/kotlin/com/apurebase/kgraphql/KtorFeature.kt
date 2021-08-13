@@ -61,7 +61,7 @@ class GraphQL(val schema: Schema) {
                                 config.contextSetup?.invoke(this, call)
                             }
                             val result = schema.execute(request.query, request.variables.toString(), ctx)
-                            call.respond(result)
+                            call.respondText(result, contentType = ContentType.Application.Json)
                         }
                         if (config.playground) get {
                             @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
