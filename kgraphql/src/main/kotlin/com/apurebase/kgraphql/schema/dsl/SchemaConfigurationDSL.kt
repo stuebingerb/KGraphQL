@@ -20,6 +20,7 @@ open class SchemaConfigurationDSL {
     var wrapErrors: Boolean = true
     var executor: Executor = Executor.Parallel
     var timeout: Long? = null
+    var introspection: Boolean = true
 
     private val plugins: MutableMap<KClass<*>, Any> = mutableMapOf()
 
@@ -42,6 +43,7 @@ open class SchemaConfigurationDSL {
             wrapErrors,
             executor,
             timeout,
+            introspection,
             plugins
         )
     }

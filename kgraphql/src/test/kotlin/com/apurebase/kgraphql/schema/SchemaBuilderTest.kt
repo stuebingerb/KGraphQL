@@ -338,6 +338,28 @@ class SchemaBuilderTest {
     }
 
     @Test
+    fun `introspections query should be disabled`(){
+        val expectedDescription = "Int Argument"
+        val expectedDefaultValue = 33
+        val schema = defaultSchema {
+
+            configure {
+                introspection = false
+            }
+
+            query("data"){
+                resolver { int: Int -> int }.withArgs {
+                    arg <Int> { name = "int"; defaultValue = expectedDefaultValue; description = expectedDescription }
+                }
+            }
+        }
+
+        expect<GraphQLError> {
+            schema.executeBlocking("{__schema{queryType{fields{name, args{name, description, defaultValue}}}}}")
+        }
+    }
+
+    @Test
     @Suppress("UNUSED_ANONYMOUS_PARAMETER")
     fun `arg name must match exactly one of type property`(){
         expect<SchemaException>("Invalid input values on data: [intss]") {
