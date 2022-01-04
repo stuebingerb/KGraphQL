@@ -147,6 +147,33 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `query extension property with optional annotated argument`() {
+        val map = execute("{actors{name, pictureWithArgs}}")
+        for(i in 0..4){
+            val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
+            assertThat(map.extract<String>("data/actors[$i]/pictureWithArgs"), equalTo("http://picture.server/pic/$name?big=false"))
+        }
+    }
+
+    @Test
+    fun `query with mandatory generic input type`() {
+        val map = execute("""{actorsByTags(tags: ["1", "2", "3"]){name}}""")
+        assertNoErrors(map)
+    }
+
+    @Test
+    fun `query with optional generic input type`() {
+        val map = execute("{actorsByTagsOptional{name}}")
+        assertNoErrors(map)
+    }
+
+    @Test
+    fun `query with nulabble generic input type`() {
+        val map = execute("{actorsByTagsNullable{name}}")
+        assertNoErrors(map)
+    }
+
+    @Test
     fun `query with transformed property`(){
         val map = execute("{scenario{id, content(uppercase: false)}}")
         assertThat(map.extract<String>("data/scenario/content"), equalTo("Very long scenario"))
