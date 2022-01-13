@@ -46,12 +46,13 @@ Replace `x.x.x` with the latest version [![Maven Central](https://img.shields.io
     }
     ```
 
-The only thing left is installing the GraphQL feature onto our server by opening `src/Application.kt` and add these lines to the `Application.module` function
+The only thing left is installing the GraphQL feature onto our server by opening `src/Application.kt` and use these lines as the `Application.module` function
 
 === "Application.kt"
 ```kotlin
 fun Application.module(testing: Boolean = false) {
     install(GraphQL) {
+        configureRouting()
         playground = true
         schema { 
             query("hello") {
