@@ -1,6 +1,6 @@
 package com.apurebase.kgraphql.model
 
-import io.ktor.auth.Principal
+import io.ktor.server.auth.Principal
 
 val users = listOf(
         User(id = 1, name = "Amber"),

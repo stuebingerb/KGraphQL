@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql
 
-import io.ktor.application.*
-import io.ktor.auth.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.Principal
 import kotlinx.serialization.json.*
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
