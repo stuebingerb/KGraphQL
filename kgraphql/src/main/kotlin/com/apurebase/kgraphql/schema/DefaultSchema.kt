@@ -44,6 +44,10 @@ class DefaultSchema (
             ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
             ?: VariablesJson.Empty()
 
+        if (!configuration.introspection && request.isIntrospection()) {
+            throw GraphQLError("GraphQL introspection is not allowed")
+        }
+
         val document = Parser(request).parseDocument()
 
         val executor = options.executor?.let(this@DefaultSchema::getExecutor) ?: defaultRequestExecutor
@@ -54,6 +58,8 @@ class DefaultSchema (
             context = context
         )
     }
+
+    private fun String.isIntrospection() = this.contains("__schema") || this.contains("__type")
 
     override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
 

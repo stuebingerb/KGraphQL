@@ -19,6 +19,7 @@ data class SchemaConfiguration(
 
         val executor: Executor,
         val timeout: Long?,
+        val introspection: Boolean = true,
         val plugins: MutableMap<KClass<*>, Any>
 ) {
         @Suppress("UNCHECKED_CAST")
