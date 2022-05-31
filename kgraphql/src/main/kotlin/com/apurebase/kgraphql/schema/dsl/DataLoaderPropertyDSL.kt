@@ -20,6 +20,8 @@ class DataLoaderPropertyDSL<T, K, R>(
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
 
+    var explicitReturnType: KType? = null
+
     fun loader(block: BatchLoader<K, R>) {
         dataLoader = block
     }
@@ -79,7 +81,7 @@ class DataLoaderPropertyDSL<T, K, R>(
             deprecationReason = deprecationReason,
             isDeprecated = isDeprecated,
             inputValues = inputValues,
-            returnType = returnType,
+            returnType = explicitReturnType ?: returnType,
             prepare = prepareWrapper!!,
             loader = TimedAutoDispatcherDataLoaderFactory(
                 { TimedAutoDispatcherDataLoaderOptions() },
@@ -95,7 +97,7 @@ class DataLoaderPropertyDSL<T, K, R>(
     }
 
     override fun setReturnType(type: KType) {
-        // NOOP
+        explicitReturnType = type
     }
 
 }

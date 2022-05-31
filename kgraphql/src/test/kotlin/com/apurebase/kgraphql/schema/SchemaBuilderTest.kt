@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
+import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import com.apurebase.kgraphql.schema.structure.Field
@@ -12,6 +13,8 @@ import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 /**
  * Tests for SchemaBuilder behaviour, not request execution
@@ -685,5 +688,51 @@ class SchemaBuilderTest {
         }
         val result = deserialize(schema.executeBlocking("{data}"))
         assertThat(result.extract("data/data"), equalTo(listOf("generic")))
+    }
+
+    inline fun <T: Any, reified P: Any> TypeDSL<T>.createGenericProperty(x: P) {
+        property<P>("data") {
+            resolver { _ -> x }.returns<P>()
+        }
+    }
+
+    @Test
+    fun `specifying return type explicitly allows generic property creation`(){
+        val schema = defaultSchema {
+            type<Scenario> {
+                createGenericProperty(InputOne("generic"))
+            }
+        }
+
+        assertThat(schema.typeByKClass(InputOne::class), notNullValue())
+    }
+
+    inline fun <T: Any, reified P: Any> TypeDSL<T>.createGenericPropertyExplicitly(returnType: KType, x: P) {
+        property<P>("data") {
+            resolver { _ -> x }
+            setReturnType(returnType)
+        }
+    }
+
+    data class Prop<T>(val resultType: KType, val resolver: () -> T)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    @Test
+    fun `creation of properties from a list`(){
+
+        val props = listOf(
+            Prop(typeOf<Int>()) { 0 },
+            Prop(typeOf<String>()) { "test" })
+
+        val schema = defaultSchema {
+            type<Scenario> {
+                props.forEach { prop ->
+                    createGenericPropertyExplicitly(prop.resultType, prop.resolver())
+                }
+            }
+        }
+
+        assertThat(schema.typeByKClass(Int::class), notNullValue())
+        assertThat(schema.typeByKClass(String::class), notNullValue())
     }
 }

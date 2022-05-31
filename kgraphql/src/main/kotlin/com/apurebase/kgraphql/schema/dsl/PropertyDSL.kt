@@ -14,6 +14,8 @@ class PropertyDSL<T : Any, R>(val name : String, block : PropertyDSL<T, R>.() ->
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
 
+    var explicitReturnType: KType? = null
+
     init {
         block()
     }
@@ -57,7 +59,8 @@ class PropertyDSL<T : Any, R>(val name : String, block : PropertyDSL<T, R>.() ->
             isDeprecated = isDeprecated,
             deprecationReason = deprecationReason,
             inputValues = inputValues,
-            accessRule = accessRuleBlock
+            accessRule = accessRuleBlock,
+            explicitReturnType = explicitReturnType
     )
 
     override fun addInputValues(inputValues: Collection<InputValueDef<*>>) {
@@ -65,6 +68,6 @@ class PropertyDSL<T : Any, R>(val name : String, block : PropertyDSL<T, R>.() ->
     }
 
     override fun setReturnType(type: KType) {
-        // NOOP
+        explicitReturnType = type
     }
 }

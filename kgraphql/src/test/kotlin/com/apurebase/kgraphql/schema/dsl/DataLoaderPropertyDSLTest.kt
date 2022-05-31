@@ -1,12 +1,19 @@
 package com.apurebase.kgraphql.schema.dsl
 
+import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.schema.SchemaBuilderTest
+import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.Executor
 import nidomiro.kdataloader.ExecutionResult
 import org.amshove.kluent.shouldBeEqualTo
+import org.hamcrest.CoreMatchers
+import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.Test
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 class DataLoaderPropertyDSLTest {
 
@@ -43,4 +50,50 @@ class DataLoaderPropertyDSLTest {
     }
 
     class Parent(val data: String = "")
+
+    inline fun <T: Any, reified P: Any> TypeDSL<T>.createGenericDataProperty(returnType: KType, crossinline resolver: () -> P) {
+        dataProperty<T, P>("data") {
+            prepare { it }
+            loader { it.map { ExecutionResult.Success(resolver()) } }
+            setReturnType(returnType)
+        }
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    @Test
+    fun `specifying return type explicitly allows generic data property creation`(){
+        val schema = defaultSchema {
+            configure{
+                executor = Executor.DataLoaderPrepared
+            }
+            type<Scenario> {
+                createGenericDataProperty(typeOf<SchemaBuilderTest.InputOne>()) { SchemaBuilderTest.InputOne("generic") }
+            }
+        }
+
+        MatcherAssert.assertThat(schema.typeByKClass(SchemaBuilderTest.InputOne::class), CoreMatchers.notNullValue())
+    }
+
+    data class Prop<T>(val resultType: KType, val resolver: () -> T)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    @Test
+    fun `creation of data properties from a list`(){
+
+        val props = listOf(Prop(typeOf<Int>()) { 0 }, Prop(typeOf<String>()) { "test" })
+
+        val schema = defaultSchema {
+            configure{
+                executor = Executor.DataLoaderPrepared
+            }
+            type<Scenario> {
+                props.forEach { prop ->
+                    createGenericDataProperty(prop.resultType, prop.resolver)
+                }
+            }
+        }
+
+        MatcherAssert.assertThat(schema.typeByKClass(Int::class), CoreMatchers.notNullValue())
+        MatcherAssert.assertThat(schema.typeByKClass(String::class), CoreMatchers.notNullValue())
+    }
 }
