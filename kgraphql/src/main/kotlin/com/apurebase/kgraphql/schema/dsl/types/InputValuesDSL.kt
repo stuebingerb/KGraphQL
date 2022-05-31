@@ -9,13 +9,13 @@ class InputValuesDSL {
 
     val inputValues = mutableListOf<InputValueDSL<*>>()
 
-    fun <T : Any> arg(kClass: KClass<T>, kType: KType? = null, block : InputValueDSL<T>.() -> Unit){
+    fun <T : Any> arg(kClass: KClass<T>, kType: KType? = null, block: InputValueDSL<T>.() -> Unit) {
         inputValues.add(InputValueDSL(kClass, kType).apply(block))
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    inline fun <reified T : Any> arg(noinline block : InputValueDSL<T>.() -> Unit){
-        arg(T::class, typeOf<T>(), block)
+    inline fun <reified T : Any> arg(optional: Boolean = false, noinline block: InputValueDSL<T>.() -> Unit) {
+        val kType = if (optional) typeOf<T?>() else typeOf<T>()
+        arg(T::class, kType, block)
     }
-
 }

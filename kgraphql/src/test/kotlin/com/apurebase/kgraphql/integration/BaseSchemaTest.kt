@@ -152,6 +152,28 @@ abstract class BaseSchemaTest {
                 }
             }
         }
+        query("actorsByTags") {
+            description = "testing ktype & jvm erasure problems"
+            resolver { tags: List<String> ->
+                mutableListOf(bradPitt, morganFreeman, kevinSpacey, tomHardy)
+            }
+        }
+        query("actorsByTagsOptional") {
+            description = "testing ktype & jvm erasure problems"
+            resolver { tags: List<String>? ->
+                mutableListOf(bradPitt, morganFreeman, kevinSpacey, tomHardy)
+            }.withArgs {
+                arg<List<String>>(optional = true) { name = "tags"; defaultValue = emptyList() }
+            }
+        }
+        query("actorsByTagsNullable") {
+            description = "testing ktype & jvm erasure problems"
+            resolver { tags: List<String>? ->
+                mutableListOf(bradPitt, morganFreeman, kevinSpacey, tomHardy)
+            }.withArgs {
+                arg<List<String>>(optional = true) { name = "tags"; defaultValue = null }
+            }
+        }
         query("filmByRank") {
             description = "ranked films"
             resolver { rank: Int -> when(rank){
@@ -242,6 +264,20 @@ abstract class BaseSchemaTest {
                     }
                 }
             }
+
+            property<String>("pictureWithArgs") {
+                resolver { actor, big : Boolean? ->
+                    val actorName = actor.name.replace(' ', '_')
+                    if(big == true){
+                        "http://picture.server/pic/$actorName?big=true"
+                    } else {
+                        "http://picture.server/pic/$actorName?big=false"
+                    }
+                }.withArgs {
+                    arg<Boolean>(optional = true) { name = "big"; description = "big or small picture" }
+                }
+            }
+
             unionProperty("favourite") {
                 returnType = favouriteID
                 resolver { actor -> when(actor){
