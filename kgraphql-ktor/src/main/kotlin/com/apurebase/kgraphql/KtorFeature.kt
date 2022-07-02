@@ -9,6 +9,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
+import java.nio.charset.Charset
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.*
 import kotlinx.serialization.json.Json.Default.decodeFromString
@@ -56,7 +57,8 @@ class GraphQL(val schema: Schema) {
                 val routing: Route.() -> Unit = {
                     route(config.endpoint) {
                         post {
-                            val request = decodeFromString(GraphqlRequest.serializer(), call.receiveText())
+                            val bodyAsText = call.receiveTextWithCorrectEncoding()
+                            val request = decodeFromString(GraphqlRequest.serializer(), bodyAsText)
                             val ctx = context {
                                 config.contextSetup?.invoke(this, call)
                             }
@@ -88,6 +90,17 @@ class GraphQL(val schema: Schema) {
                 }
             }
             return GraphQL(schema)
+        }
+
+        private suspend fun ApplicationCall.receiveTextWithCorrectEncoding(): String {
+            fun ContentType.defaultCharset(): Charset = when (this) {
+                ContentType.Application.Json -> Charsets.UTF_8
+                else -> Charsets.ISO_8859_1
+            }
+
+            val contentType = request.contentType()
+            val suitableCharset = contentType.charset() ?: contentType.defaultCharset()
+            return receiveStream().bufferedReader(charset = suitableCharset).readText()
         }
 
         private fun GraphQLError.serialize(): String = buildJsonObject {
