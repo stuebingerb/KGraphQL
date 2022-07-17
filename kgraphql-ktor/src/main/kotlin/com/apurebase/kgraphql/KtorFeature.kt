@@ -46,6 +46,17 @@ class GraphQL(val schema: Schema) {
     companion object Feature: ApplicationFeature<Application, Configuration, GraphQL> {
         override val key = AttributeKey<GraphQL>("KGraphQL")
 
+        private val rootFeature = FeatureInstance("KGraphQL")
+
+        override fun install(pipeline: Application, configure: Configuration.() -> Unit): GraphQL {
+            return rootFeature.install(pipeline, configure)
+        }
+    }
+
+    class FeatureInstance(featureKey: String = "KGraphQL"): ApplicationFeature<Application, Configuration, GraphQL> {
+
+        override val key = AttributeKey<GraphQL>(featureKey)
+
         override fun install(pipeline: Application, configure: Configuration.() -> Unit): GraphQL {
             val config = Configuration().apply(configure)
             val schema = KGraphQL.schema {
@@ -121,6 +132,8 @@ class GraphQL(val schema: Schema) {
                 }
             })
         }.toString()
+
     }
+
 
 }
