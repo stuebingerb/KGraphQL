@@ -1,6 +1,8 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.http.*
@@ -11,7 +13,8 @@ open class KtorTest {
 
     fun withServer(ctxBuilder: ContextBuilder.(ApplicationCall) -> Unit = {}, block: SchemaBuilder.() -> Unit): (String, Kraph.() -> Unit) -> String {
         return { type, kraph ->
-            withTestApplication({
+            var str = ""
+            testApplication {
                 install(Authentication) {
                     basic {
                         realm = "ktor"
@@ -27,18 +30,18 @@ open class KtorTest {
                     }
                     schema(block)
                 }
-            }) {
-                handleRequest {
-                    uri = "graphql"
-                    method = HttpMethod.Post
-                    addHeader(HttpHeaders.ContentType, "application/json;charset=UTF-8")
-                    setBody(when(type.toLowerCase().trim()) {
+
+                str = client.post {
+                    url("graphql")
+                    header(HttpHeaders.ContentType, "application/json;charset=UTF-8")
+                    setBody(when(type.lowercase().trim()) {
                         "query" -> graphqlQuery(kraph).build()
                         "mutation" -> graphqlMutation(kraph).build()
                         else -> throw TODO("$type is not a valid graphql operation type")
                     }.also(::println))
-                }.response.content!!
+                }.bodyAsText()
             }
+            str
         }
     }
 }

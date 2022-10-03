@@ -57,7 +57,7 @@ class GraphQL(val schema: Schema) {
         }
     }
 
-    class FeatureInstance(featureKey: String = "KGraphQL"): ApplicationFeature<Application, Configuration, GraphQL> {
+    class FeatureInstance(featureKey: String = "KGraphQL"): Plugin<Application, Configuration, GraphQL> {
 
         override val key = AttributeKey<GraphQL>(featureKey)
 
