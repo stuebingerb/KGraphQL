@@ -1,8 +1,8 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
-import io.ktor.application.*
-import io.ktor.auth.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 
