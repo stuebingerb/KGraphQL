@@ -57,14 +57,12 @@ fun <K, V> CoroutineScope.dataActor(totalTimes: Int, batchLoader: suspend (List<
     }
 
     for (msg in channel) {
-        when (msg) {
-            is Add<*, *> -> {
-                msg as Add<K, V>
-                if (!promiseMap.containsKey(msg.key)) promiseMap[msg.key] = Stack()
-                promiseMap[msg.key]?.add(msg.result) ?: throw TODO("Couldn't find any '${msg.key}' in map")
-                log("$counter")
-                if (--counter == 0) doJoin()
-            }
+        if (msg is Add<*, *>) {
+            msg as Add<K, V>
+            if (!promiseMap.containsKey(msg.key)) promiseMap[msg.key] = Stack()
+            promiseMap[msg.key]?.add(msg.result) ?: throw TODO("Couldn't find any '${msg.key}' in map")
+            log("$counter")
+            if (--counter == 0) doJoin()
         }
     }
 }

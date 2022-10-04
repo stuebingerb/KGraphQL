@@ -39,8 +39,8 @@ dependencies {
 
 
 tasks {
-    compileKotlin { kotlinOptions { jvmTarget = "1.8" } }
-    compileTestKotlin { kotlinOptions { jvmTarget = "1.8" } }
+    compileKotlin { kotlinOptions { jvmTarget = JavaVersion.VERSION_11.toString() } }
+    compileTestKotlin { kotlinOptions { jvmTarget = JavaVersion.VERSION_11.toString() } }
 
     test {
         useJUnitPlatform()
@@ -49,7 +49,7 @@ tasks {
         outputDirectory.set(buildDir.resolve("javadoc"))
         dokkaSourceSets {
             configureEach {
-                jdkVersion.set(8)
+                jdkVersion.set(11)
                 reportUndocumented.set(true)
                 platform.set(org.jetbrains.dokka.Platform.jvm)
             }
