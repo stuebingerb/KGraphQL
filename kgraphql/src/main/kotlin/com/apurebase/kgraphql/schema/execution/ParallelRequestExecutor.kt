@@ -111,9 +111,15 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
     }
 
     private suspend fun <T> createNode(ctx: ExecutionContext, value: T?, node: Execution.Node, returnType: Type): JsonNode {
-        return when {
-            value == null -> createNullNode(node, returnType)
+        if (value == null) {
+            return createNullNode(node, returnType)
+        }
+        val unboxed = schema.configuration.genericTypeResolver.unbox(value)
+        if (unboxed !== value) {
+            return createNode(ctx, unboxed, node, returnType)
+        }
 
+        return when {
             //check value, not returnType, because this method can be invoked with element value
             value is Collection<*> || value is Array<*> -> {
                 val values: Collection<*> = when (value) {

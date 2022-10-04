@@ -9,7 +9,7 @@ KGraphQL schema allows configuration of following properties:
 |acceptSingleValueAsArray | Schema accepts single argument values as singleton list | `true`
 | coroutineDispatcher | Schema is using CoroutineDispatcher from this property | [CommonPool](https://github.com/Kotlin/kotlinx.coroutines/blob/master/kotlinx-coroutines-core/src/main/kotlin/kotlinx/coroutines/experimental/CommonPool.kt) |
 | executor |  | [Executor.Parallel](https://github.com/aPureBase/KGraphQL/blob/master/kgraphql/src/main/kotlin/com/apurebase/kgraphql/schema/execution/Executor.kt) |
-
+| genericTypeResolver | Schema is using generic type resolver from this property | [GenericTypeResolver.DEFAULT](https://github.com/aPureBase/KGraphQL/blob/master/kgraphql/src/main/kotlin/com/apurebase/kgraphql/schema/execution/GenericTypeResolver.kt) |
 
 *Example*
 

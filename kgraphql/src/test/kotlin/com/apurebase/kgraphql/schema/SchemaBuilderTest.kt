@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
+import com.apurebase.kgraphql.schema.execution.DefaultGenericTypeResolver
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import com.apurebase.kgraphql.schema.structure.Field
@@ -14,6 +15,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.reflect.KType
+import kotlin.reflect.full.isSupertypeOf
 import kotlin.reflect.typeOf
 
 /**
@@ -252,19 +254,6 @@ class SchemaBuilderTest {
         assertThat(result.extract<String>("data/actor/name"), equalTo("Boguś Linda FULL_LENGTH"))
     }
 
-    private data class LambdaWrapper(val lambda : () -> Int)
-
-    @Test
-    fun `function properties cannot be handled`(){
-        expect<SchemaException>("Generic types are not supported by GraphQL, found () -> kotlin.Int"){
-            KGraphQL.schema {
-                query("lambda"){
-                    resolver { -> LambdaWrapper { 1 } }
-                }
-            }
-        }
-    }
-
     @Test
     fun `java arrays should be supported`() {
         KGraphQL.schema {
@@ -306,14 +295,111 @@ class SchemaBuilderTest {
         assertThat(schema.inputTypeByKClass(InputTwo::class), notNullValue())
     }
 
+    private sealed class Maybe<out T> {
+        abstract fun get(): T
+        object Undefined : Maybe<Nothing>() {
+            override fun get() = throw IllegalArgumentException("Requested value is not defined!")
+        }
+        class Defined<U>(val value: U) : Maybe<U>() {
+            override fun get() = value
+        }
+    }
+
     @Test
-    fun `generic types are not supported`(){
-        expect<SchemaException>("Generic types are not supported by GraphQL, found kotlin.Pair<kotlin.Int, kotlin.String>"){
-            defaultSchema {
-                query("data"){
-                    resolver { int: Int, string: String -> int to string }
+    fun `client code can declare custom generic type resolver`(){
+        val typeResolver = object : DefaultGenericTypeResolver() {
+            override fun unbox(obj: Any) = if (obj is Maybe<*>) obj.get() else super.unbox(obj)
+            override fun resolveMonad(type: KType): KType {
+                if (typeOf<Maybe<*>>().isSupertypeOf(type)) {
+                    return type.arguments.first().type
+                        ?: throw SchemaException("Could not get the type of the first argument for the type $type")
                 }
+                return super.resolveMonad(type)
             }
+        }
+
+        data class SomeWithGenericType(val value: Maybe<Int>, val anotherValue: String = "foo")
+
+        val schema = defaultSchema {
+            configure { genericTypeResolver = typeResolver }
+
+            type<SomeWithGenericType>()
+            query("definedValueProp") { resolver<SomeWithGenericType> { SomeWithGenericType(Maybe.Defined(33)) } }
+            query("undefinedValueProp") { resolver<SomeWithGenericType> { SomeWithGenericType(Maybe.Undefined) } }
+
+            query("definedValue") { resolver<Maybe<String>> { Maybe.Defined("good!") } }
+            query("undefinedValue") { resolver<Maybe<String>> { Maybe.Undefined } }
+        }
+
+        deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name fields { type {ofType {kind name}}}}}}}}}")).let {
+            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/kind"), equalTo("OBJECT"))
+            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/name"), equalTo("SomeWithGenericType"))
+            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/kind"), equalTo("SCALAR"))
+            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/name"), equalTo("String"))
+
+            assertThat(it.extract("data/__schema/queryType/fields[1]/type/ofType/kind"), equalTo("OBJECT"))
+            assertThat(it.extract("data/__schema/queryType/fields[1]/type/ofType/name"), equalTo("SomeWithGenericType"))
+            assertThat(it.extract("data/__schema/queryType/fields[1]/type/ofType/fields[0]/type/ofType/kind"), equalTo("SCALAR"))
+            assertThat(it.extract("data/__schema/queryType/fields[1]/type/ofType/fields[0]/type/ofType/name"), equalTo("String"))
+
+            assertThat(it.extract("data/__schema/queryType/fields[2]/type/ofType/kind"), equalTo("SCALAR"))
+            assertThat(it.extract("data/__schema/queryType/fields[2]/type/ofType/name"), equalTo("String"))
+
+            assertThat(it.extract("data/__schema/queryType/fields[3]/type/ofType/kind"), equalTo("SCALAR"))
+            assertThat(it.extract("data/__schema/queryType/fields[3]/type/ofType/name"), equalTo("String"))
+        }
+
+        deserialize(schema.executeBlocking("{definedValueProp {value}}")).let {
+            assertThat(it.extract<String>("data/definedValueProp/value"), equalTo(33))
+        }
+        deserialize(schema.executeBlocking("{undefinedValueProp {anotherValue}}")).let {
+            assertThat(it.extract<String>("data/undefinedValueProp/anotherValue"), equalTo("foo"))
+        }
+        deserialize(schema.executeBlocking("{definedValue}")).let {
+            assertThat(it.extract<String>("data/definedValue"), equalTo("good!"))
+        }
+        expect<IllegalArgumentException>("Requested value is not defined!") {
+            deserialize(schema.executeBlocking("{undefinedValue}"))
+        }
+        expect<IllegalArgumentException>("Requested value is not defined!") {
+            deserialize(schema.executeBlocking("{undefinedValueProp {value}}"))
+        }
+    }
+
+    data class LambdaWrapper(val lambda : () -> Int)
+
+    @Test
+    fun `function properties can be handled by providing generic type resolver`() {
+        val typeResolver = object : DefaultGenericTypeResolver() {
+            override fun unbox(obj: Any) = if (obj is Function0<*>) obj() else super.unbox(obj)
+            override fun resolveMonad(type: KType): KType {
+                if (typeOf<Function0<*>>().isSupertypeOf(type)) {
+                    return type.arguments.first().type
+                        ?: throw SchemaException("Could not get the type of the first argument for the type $type")
+                }
+                return super.resolveMonad(type)
+            }
+        }
+
+        val schema = defaultSchema {
+            configure { genericTypeResolver = typeResolver }
+
+            type<LambdaWrapper>()
+
+            query("lambda"){
+                resolver { -> LambdaWrapper { 1 } }
+            }
+        }
+
+        deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name fields { type {ofType {kind name}}}}}}}}}")).let {
+            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/kind"), equalTo("OBJECT"))
+            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/name"), equalTo("LambdaWrapper"))
+            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/kind"), equalTo("SCALAR"))
+            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/name"), equalTo("Int"))
+        }
+
+        deserialize(schema.executeBlocking("{lambda {lambda}}")).let {
+            assertThat(it.extract<String>("data/lambda/lambda"), equalTo(1))
         }
     }
 
