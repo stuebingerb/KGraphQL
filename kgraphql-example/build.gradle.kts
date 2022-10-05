@@ -1,8 +1,8 @@
 plugins {
     base
     application
-    kotlin("jvm") version "1.6.20"
-    id("org.jetbrains.dokka") version "1.4.32"
+    kotlin("jvm") version "1.7.10"
+    id("org.jetbrains.dokka") version "1.7.10"
     signing
 }
 
@@ -17,7 +17,7 @@ val junit_version: String by project
 val isReleaseVersion = !version.toString().endsWith("SNAPSHOT")
 
 application {
-    mainClassName = "io.ktor.server.netty.EngineMain"
+    mainClass.set("io.ktor.server.netty.EngineMain")
 }
 
 dependencies {
@@ -34,8 +34,8 @@ dependencies {
 
 
 tasks {
-    compileKotlin { kotlinOptions { jvmTarget = "1.8" } }
-    compileTestKotlin { kotlinOptions { jvmTarget = "1.8" } }
+    compileKotlin { kotlinOptions { jvmTarget = JavaVersion.VERSION_11.toString() } }
+    compileTestKotlin { kotlinOptions { jvmTarget = JavaVersion.VERSION_11.toString() } }
 
     test {
         useJUnitPlatform()
@@ -44,7 +44,7 @@ tasks {
         outputDirectory.set(buildDir.resolve("javadoc"))
         dokkaSourceSets {
             configureEach {
-                jdkVersion.set(8)
+                jdkVersion.set(11)
                 reportUndocumented.set(true)
                 platform.set(org.jetbrains.dokka.Platform.jvm)
             }
