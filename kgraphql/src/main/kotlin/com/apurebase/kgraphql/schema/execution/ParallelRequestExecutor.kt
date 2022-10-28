@@ -177,7 +177,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 is Execution.Fragment -> objectNode.setAll<JsonNode>(handleFragment(ctx, value, child))
                 else -> {
                     val (key, jsonNode) = handleProperty(ctx, value, child, type, node.children.size)
-                    objectNode.set(key, jsonNode)
+                    objectNode.merge(key, jsonNode)
                 }
             }
         }
