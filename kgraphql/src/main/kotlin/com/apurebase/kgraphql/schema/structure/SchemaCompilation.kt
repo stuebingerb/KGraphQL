@@ -165,7 +165,8 @@ class SchemaCompilation(
             kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
             kType.jvmErasure == Execution.Node::class && typeCategory == TypeCategory.INPUT -> executionType
             kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
-            kType.arguments.isNotEmpty() -> throw SchemaException("Generic types are not supported by GraphQL, found $kType")
+            kType.arguments.isNotEmpty() -> configuration.genericTypeResolver.resolveMonad(kType)
+                .let { handlePossiblyWrappedType(it, typeCategory) }
             kType.jvmErasure.isSealed -> TypeDef.Union(
                 name = kType.jvmErasure.simpleName!!,
                 members = kType.jvmErasure.sealedSubclasses.toSet(),

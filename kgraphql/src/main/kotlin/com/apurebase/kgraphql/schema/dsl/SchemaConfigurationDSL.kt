@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.Executor
+import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlin.reflect.KClass
@@ -21,6 +22,7 @@ open class SchemaConfigurationDSL {
     var executor: Executor = Executor.Parallel
     var timeout: Long? = null
     var introspection: Boolean = true
+    var genericTypeResolver: GenericTypeResolver = GenericTypeResolver.DEFAULT
 
     private val plugins: MutableMap<KClass<*>, Any> = mutableMapOf()
 
@@ -35,16 +37,17 @@ open class SchemaConfigurationDSL {
     internal fun build(): SchemaConfiguration {
         objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, acceptSingleValueAsArray)
         return SchemaConfiguration(
-            useCachingDocumentParser,
-            documentParserCacheMaximumSize,
-            objectMapper,
-            useDefaultPrettyPrinter,
-            coroutineDispatcher,
-            wrapErrors,
-            executor,
-            timeout,
-            introspection,
-            plugins
+            useCachingDocumentParser = useCachingDocumentParser,
+            documentParserCacheMaximumSize = documentParserCacheMaximumSize,
+            objectMapper = objectMapper,
+            useDefaultPrettyPrinter = useDefaultPrettyPrinter,
+            coroutineDispatcher = coroutineDispatcher,
+            wrapErrors = wrapErrors,
+            executor = executor,
+            timeout = timeout,
+            introspection = introspection,
+            plugins = plugins,
+            genericTypeResolver = genericTypeResolver,
         )
     }
 }
