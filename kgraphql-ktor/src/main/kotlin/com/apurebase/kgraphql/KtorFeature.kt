@@ -77,12 +77,15 @@ class GraphQL(val schema: Schema) {
                             val ctx = context {
                                 config.contextSetup?.invoke(this, call)
                             }
-                            val result = schema.execute(request.query, request.variables.toString(), ctx)
+                            val result =
+                                schema.execute(request.query, request.operationName, request.variables.toString(), ctx)
                             call.respondText(result, contentType = ContentType.Application.Json)
                         }
                         if (config.playground) get {
                             @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-                            val playgroundHtml = KtorGraphQLConfiguration::class.java.classLoader.getResource("playground.html").readBytes()
+                            val playgroundHtml =
+                                KtorGraphQLConfiguration::class.java.classLoader.getResource("playground.html")
+                                    .readBytes()
                             call.respondBytes(playgroundHtml, contentType = ContentType.Text.Html)
                         }
                     }

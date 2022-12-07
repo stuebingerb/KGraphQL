@@ -19,10 +19,10 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
-class DefaultSchema (
-        override val configuration: SchemaConfiguration,
-        internal val model : SchemaModel
-) : Schema , __Schema by model, LookupSchema {
+class DefaultSchema(
+    override val configuration: SchemaConfiguration,
+    internal val model: SchemaModel
+) : Schema, __Schema by model, LookupSchema {
 
     companion object {
         val OPERATION_NAME_PARAM = NameNode("operationName", null)
@@ -35,11 +35,17 @@ class DefaultSchema (
         DataLoaderPrepared -> DataLoaderPreparedRequestExecutor(this)
     }
 
-     private val requestInterpreter : RequestInterpreter = RequestInterpreter(model)
+    private val requestInterpreter: RequestInterpreter = RequestInterpreter(model)
 
     private val cacheParser: CachingDocumentParser by lazy { CachingDocumentParser(configuration.documentParserCacheMaximumSize) }
 
-    override suspend fun execute(request: String, variables: String?, context: Context, options: ExecutionOptions): String = coroutineScope {
+    override suspend fun execute(
+        request: String,
+        operationName: String?,
+        variables: String?,
+        context: Context,
+        options: ExecutionOptions
+    ): String = coroutineScope {
         val parsedVariables = variables
             ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
             ?: VariablesJson.Empty()
@@ -53,7 +59,7 @@ class DefaultSchema (
         val executor = options.executor?.let(this@DefaultSchema::getExecutor) ?: defaultRequestExecutor
 
         executor.suspendExecute(
-            plan = requestInterpreter.createExecutionPlan(document, parsedVariables, options),
+            plan = requestInterpreter.createExecutionPlan(document, operationName, parsedVariables, options),
             variables = parsedVariables,
             context = context
         )
