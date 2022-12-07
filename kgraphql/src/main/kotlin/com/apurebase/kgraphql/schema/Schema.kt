@@ -12,17 +12,17 @@ interface Schema : __Schema {
 
     suspend fun execute(
         @Language("graphql") request: String,
-        operationName: String? = null,
         variables: String? = null,
         context: Context = Context(emptyMap()),
-        options: ExecutionOptions = ExecutionOptions()
+        options: ExecutionOptions = ExecutionOptions(),
+        operationName: String? = null
     ): String
 
     fun executeBlocking(
         @Language("graphql") request: String,
-        operationName: String? = null,
         variables: String? = null,
         context: Context = Context(emptyMap()),
-        options: ExecutionOptions = ExecutionOptions()
-    ) = runBlocking { execute(request, operationName, variables, context, options) }
+        options: ExecutionOptions = ExecutionOptions(),
+        operationName: String? = null,
+    ) = runBlocking { execute(request, variables, context, options, operationName) }
 }

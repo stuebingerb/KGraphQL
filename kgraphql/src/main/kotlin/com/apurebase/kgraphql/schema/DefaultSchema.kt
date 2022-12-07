@@ -4,11 +4,12 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.request.CachingDocumentParser
-import com.apurebase.kgraphql.request.VariablesJson
-import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.request.Parser
+import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.execution.*
-import com.apurebase.kgraphql.schema.execution.Executor.*
+import com.apurebase.kgraphql.schema.execution.Executor.DataLoaderPrepared
+import com.apurebase.kgraphql.schema.execution.Executor.Parallel
+import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.apurebase.kgraphql.schema.structure.LookupSchema
 import com.apurebase.kgraphql.schema.structure.RequestInterpreter
@@ -41,10 +42,10 @@ class DefaultSchema(
 
     override suspend fun execute(
         request: String,
-        operationName: String?,
         variables: String?,
         context: Context,
-        options: ExecutionOptions
+        options: ExecutionOptions,
+        operationName: String?,
     ): String = coroutineScope {
         val parsedVariables = variables
             ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }

@@ -51,11 +51,11 @@ class SchemaProxy(
 
     override suspend fun execute(
         request: String,
-        operationName: String?,
         variables: String?,
         context: Context,
-        options: ExecutionOptions
+        options: ExecutionOptions,
+        operationName: String?
     ): String {
-        return getProxied().execute(request, operationName, variables, context, options)
+        return getProxied().execute(request, variables, context, options, operationName)
     }
 }

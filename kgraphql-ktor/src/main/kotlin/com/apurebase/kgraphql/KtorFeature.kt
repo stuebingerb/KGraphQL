@@ -3,24 +3,19 @@ package com.apurebase.kgraphql
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.SchemaConfigurationDSL
-import io.ktor.server.application.*
 import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
-import io.ktor.server.application.install
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import java.nio.charset.Charset
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.*
 import kotlinx.serialization.json.Json.Default.decodeFromString
 
 class GraphQL(val schema: Schema) {
 
-    class Configuration: SchemaConfigurationDSL() {
+    class Configuration : SchemaConfigurationDSL() {
         fun schema(block: SchemaBuilder.() -> Unit) {
             schemaBlock = block
         }
@@ -47,7 +42,7 @@ class GraphQL(val schema: Schema) {
     }
 
 
-    companion object Feature: Plugin<Application, Configuration, GraphQL> {
+    companion object Feature : Plugin<Application, Configuration, GraphQL> {
         override val key = AttributeKey<GraphQL>("KGraphQL")
 
         private val rootFeature = FeatureInstance("KGraphQL")
@@ -57,7 +52,7 @@ class GraphQL(val schema: Schema) {
         }
     }
 
-    class FeatureInstance(featureKey: String = "KGraphQL"): Plugin<Application, Configuration, GraphQL> {
+    class FeatureInstance(featureKey: String = "KGraphQL") : Plugin<Application, Configuration, GraphQL> {
 
         override val key = AttributeKey<GraphQL>(featureKey)
 
@@ -78,7 +73,12 @@ class GraphQL(val schema: Schema) {
                                 config.contextSetup?.invoke(this, call)
                             }
                             val result =
-                                schema.execute(request.query, request.operationName, request.variables.toString(), ctx)
+                                schema.execute(
+                                    request.query,
+                                    request.variables.toString(),
+                                    ctx,
+                                    operationName = request.operationName
+                                )
                             call.respondText(result, contentType = ContentType.Application.Json)
                         }
                         if (config.playground) get {
