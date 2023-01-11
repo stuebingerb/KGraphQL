@@ -37,8 +37,8 @@ interface VariablesJson {
             require(kClass == kType.jvmErasure) { "kClass and KType must represent same class" }
             return json.let { node -> node[key.value] }?.let { tree ->
                 try {
-                    // Calling [toString] as a hack for now. TODO: Move away from jackson and only depend on kotlinx.serialization
-                    objectMapper.readValue<T>(tree.toString(), kType.toTypeReference())
+                    // TODO: Move away from jackson and only depend on kotlinx.serialization
+                    objectMapper.treeToValue<T>(tree, kType.toTypeReference())
                 } catch(e : Exception) {
                     throw if (e is GraphQLError) e
                     else ExecutionException("Failed to coerce $tree as $kType", key, e)
