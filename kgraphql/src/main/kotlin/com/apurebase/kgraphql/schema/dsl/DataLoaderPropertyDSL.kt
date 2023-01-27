@@ -87,7 +87,6 @@ class DataLoaderPropertyDSL<T, K, R>(
                 { TimedAutoDispatcherDataLoaderOptions() },
                 mapOf(),
                 dataLoader!!,
-                null,
             )
         )
     }

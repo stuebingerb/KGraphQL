@@ -16,9 +16,7 @@ import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import nidomiro.kdataloader.DataLoader
 import kotlin.reflect.KProperty1
@@ -34,25 +32,24 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         val loaders: Map<Field.DataLoader<*, *, *>, DataLoader<Any?, *>>
     )
 
-    private suspend fun ExecutionPlan.constructLoaders(): Map<Field.DataLoader<*, *, *>, DataLoader<Any?, *>> {
+    private suspend fun ExecutionPlan.constructLoaders(): Map<Field.DataLoader<*, *, *>, DataLoader<Any?, *>> = coroutineScope {
         val loaders = mutableMapOf<Field.DataLoader<*, *, *>, DataLoader<Any?, *>>()
 
         suspend fun Collection<Execution>.look() {
             forEach { ex ->
-                ex.selectionNode
                 when (ex) {
                     is Execution.Fragment -> ex.elements.look()
                     is Execution.Node -> {
                         ex.children.look()
                         if (ex.field is Field.DataLoader<*, *, *>) {
-                            loaders[ex.field] = ex.field.loader.constructNew() as DataLoader<Any?, *>
+                            loaders[ex.field] = ex.field.loader.constructNew(coroutineContext.job) as DataLoader<Any?, *>
                         }
                     }
                 }
             }
         }
         operations.look()
-        return loaders
+        loaders
     }
 
     private suspend fun <T> DeferredJsonMap.writeOperation(
