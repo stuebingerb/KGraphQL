@@ -1,8 +1,8 @@
 plugins {
     base
-    kotlin("jvm") version "1.6.20"
-    kotlin("plugin.serialization") version "1.6.20"
-    id("org.jetbrains.dokka") version "1.4.32"
+    kotlin("jvm") version "1.8.0"
+    kotlin("plugin.serialization") version "1.8.0"
+    id("org.jetbrains.dokka") version "1.7.20"
     signing
 }
 

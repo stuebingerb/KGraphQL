@@ -1,8 +1,8 @@
 
 plugins {
     base
-    kotlin("jvm") version "1.7.10"
-    id("org.jetbrains.dokka") version "1.7.10"
+    kotlin("jvm") version "1.8.0"
+    id("org.jetbrains.dokka") version "1.7.20"
     signing
 }
 
@@ -26,6 +26,7 @@ dependencies {
     implementation(kotlin("reflect"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutine_version")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version") // JVM dependency
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jackson_version")
@@ -33,7 +34,8 @@ dependencies {
 
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeine_version")
     implementation("com.apurebase:DeferredJsonBuilder:$deferredJsonBuilder_version")
-    api("de.nidomiro:KDataLoader:$kDataLoader_version")
+
+//    api("de.nidomiro:KDataLoader:$kDataLoader_version")
 
 
     testImplementation("io.netty:netty-all:$netty_version")

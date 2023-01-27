@@ -292,7 +292,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         )
 
         // as this isn't the DataLoaderPreparedRequestExecutor. We'll use this instant workaround instead.
-        val loader = field.loader.constructNew() as DataLoader<Any?, Any?>
+        val loader = field.loader.constructNew(null) as DataLoader<Any?, Any?>
         val value = loader.loadAsync(preparedValue)
         loader.dispatch()
 
