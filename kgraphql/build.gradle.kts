@@ -1,9 +1,14 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     base
-    kotlin("jvm") version "1.8.0"
-    id("org.jetbrains.dokka") version "1.7.20"
+    kotlin("jvm")
+    id("org.jetbrains.dokka") version "1.9.20"
     signing
+}
+
+kotlin {
+    jvmToolchain(11)
 }
 
 val caffeine_version: String by project
@@ -35,9 +40,6 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeine_version")
     implementation("com.apurebase:DeferredJsonBuilder:$deferredJsonBuilder_version")
 
-//    api("de.nidomiro:KDataLoader:$kDataLoader_version")
-
-
     testImplementation("io.netty:netty-all:$netty_version")
     testImplementation("org.hamcrest:hamcrest:$hamcrest_version")
     testImplementation("org.amshove.kluent:kluent:$kluent_version")
@@ -49,14 +51,14 @@ dependencies {
 }
 
 tasks {
-    compileKotlin { kotlinOptions { jvmTarget = JavaVersion.VERSION_11.toString() } }
-    compileTestKotlin { kotlinOptions { jvmTarget = JavaVersion.VERSION_11.toString() } }
+    compileKotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
+    compileTestKotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
 
     test {
         useJUnitPlatform()
     }
     dokkaHtml {
-        outputDirectory.set(buildDir.resolve("javadoc"))
+        outputDirectory.set(layout.buildDirectory.dir("javadoc"))
         dokkaSourceSets {
             configureEach {
                 jdkVersion.set(11)
@@ -68,13 +70,13 @@ tasks {
 }
 
 val sourcesJar by tasks.creating(Jar::class) {
-    classifier = "sources"
+    archiveClassifier = "sources"
     from(sourceSets.main.get().allSource)
 }
 
 val dokkaJar by tasks.creating(Jar::class) {
     group = JavaBasePlugin.DOCUMENTATION_GROUP
-    classifier = "javadoc"
+    archiveClassifier = "javadoc"
     from(tasks.dokkaHtml)
 }
 

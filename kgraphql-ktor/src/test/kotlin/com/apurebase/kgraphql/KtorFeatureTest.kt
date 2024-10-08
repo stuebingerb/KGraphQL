@@ -1,8 +1,11 @@
 package com.apurebase.kgraphql
 
-import io.ktor.server.application.*
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.Principal
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
@@ -55,7 +58,7 @@ class KtorFeatureTest : KtorTest() {
             }
 
             type<Actor> {
-                property<String>("nickname") {
+                property("nickname") {
                     resolver { _: Actor, ctx: Context -> "Hodor and ${ctx.get<UserData>()?.username}" }
                 }
 
