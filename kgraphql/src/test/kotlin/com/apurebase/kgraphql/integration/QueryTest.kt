@@ -1,10 +1,18 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.ValidationException
+import com.apurebase.kgraphql.assertNoErrors
+import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.helpers.getFields
 import com.apurebase.kgraphql.schema.execution.Execution
-import org.amshove.kluent.*
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
@@ -108,6 +116,16 @@ class QueryTest : BaseSchemaTest() {
         invoking {
             execute("{scenario{author, content}}")
         } shouldThrow GraphQLError::class withMessage "Property author on Scenario does not exist"
+    }
+
+    @Test
+    fun `test default error extension`() {
+        invoking {
+            execute("{scenario{author, content}}")
+        } shouldThrow GraphQLError::class with {
+            extensionsErrorType shouldBeEqualTo "INTERNAL_SERVER_ERROR"
+            extensionsErrorDetail shouldBeEqualTo null
+        }
     }
 
     @Test
@@ -381,5 +399,4 @@ class QueryTest : BaseSchemaTest() {
         result.extract<String>("data/root/kids[0]/name") shouldBeEqualTo "kids-Testing"
         result.extract<List<String>>("data/root/kids[0]/fields") shouldBeEqualTo listOf("id", "fields", "name")
     }
-
 }

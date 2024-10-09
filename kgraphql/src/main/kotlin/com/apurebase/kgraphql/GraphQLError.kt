@@ -1,8 +1,13 @@
 package com.apurebase.kgraphql
 
+import com.apurebase.kgraphql.helpers.toJsonElement
 import com.apurebase.kgraphql.schema.model.ast.ASTNode
 import com.apurebase.kgraphql.schema.model.ast.Location.Companion.getLocation
 import com.apurebase.kgraphql.schema.model.ast.Source
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 open class GraphQLError(
 
@@ -33,10 +38,27 @@ open class GraphQLError(
     /**
      * The original error thrown from a field resolver during execution.
      */
-    val originalError: Throwable? = null
+    val originalError: Throwable? = null,
+    val extensionsErrorType: String? = "INTERNAL_SERVER_ERROR",
+    val extensionsErrorDetail: Map<String, Any?>? = null
 ) : Exception(message) {
 
     constructor(message: String, node: ASTNode?) : this(message, nodes = node?.let(::listOf))
+
+    constructor(message: String, extensionsErrorType: String?) : this(
+        message,
+        null,
+        null,
+        null,
+        null,
+        extensionsErrorType
+    )
+
+    constructor(
+        message: String,
+        extensionsErrorType: String?,
+        extensionsErrorDetail: Map<String, Any?>?
+    ) : this(message, null, null, null, null, extensionsErrorType, extensionsErrorDetail)
 
     /**
      * An array of { line, column } locations within the source GraphQL document
@@ -71,4 +93,33 @@ open class GraphQLError(
 
         return output
     }
+
+    open val extensions: Map<String, Any?>? by lazy {
+        val extensions = mutableMapOf<String, Any?>()
+        extensionsErrorType?.let { extensions.put("type", extensionsErrorType) }
+        extensionsErrorDetail?.let { extensions.put("detail", extensionsErrorDetail) }
+        extensions
+    }
+
+    open fun serialize(): String = buildJsonObject {
+        put("errors", buildJsonArray {
+            addJsonObject {
+                put("message", message)
+                put("locations", buildJsonArray {
+                    locations?.forEach {
+                        addJsonObject {
+                            put("liane", it.line)
+                            put("column", it.column)
+                        }
+                    }
+                })
+                put("path", buildJsonArray {
+                    // TODO: Build this path. https://spec.graphql.org/June2018/#example-90475
+                })
+                extensions?.let {
+                    put("extensions", it.toJsonElement())
+                }
+            }
+        })
+    }.toString()
 }
