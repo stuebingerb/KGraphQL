@@ -11,14 +11,14 @@ import org.junit.jupiter.api.Test
 class EnumTest : BaseSchemaTest() {
 
     @Test
-    fun `query with enum field`(){
+    fun `query with enum field`() {
         val map = execute("{film{type}}")
         assertNoErrors(map)
         assertThat(map.extract<String>("data/film/type"), equalTo("FULL_LENGTH"))
     }
 
     @Test
-    fun `query with enum argument`(){
+    fun `query with enum argument`() {
         val map = execute("{ films: filmsByType(type: FULL_LENGTH){title, type}}")
         assertNoErrors(map)
         assertThat(map.extract<String>("data/films[0]/type"), equalTo("FULL_LENGTH"))

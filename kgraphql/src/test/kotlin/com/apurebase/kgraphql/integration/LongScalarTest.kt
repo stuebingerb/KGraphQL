@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test
 class LongScalarTest {
 
     @Test
-    fun testLongField(){
+    fun testLongField() {
         val schema = defaultSchema {
-            query("long"){
+            query("long") {
                 resolver { -> Long.MAX_VALUE }
             }
         }
@@ -22,10 +22,10 @@ class LongScalarTest {
     }
 
     @Test
-    fun testLongArgument(){
+    fun testLongArgument() {
         val schema = defaultSchema {
-            query("isLong"){
-                resolver { long: Long -> if(long > Int.MAX_VALUE) "YES" else "NO" }
+            query("isLong") {
+                resolver { long: Long -> if (long > Int.MAX_VALUE) "YES" else "NO" }
             }
         }
 
@@ -37,15 +37,15 @@ class LongScalarTest {
     data class VeryLong(val long: Long)
 
     @Test
-    fun `Schema may declare custom long scalar type`(){
+    fun `Schema may declare custom long scalar type`() {
         val schema = KGraphQL.schema {
             longScalar<VeryLong> {
                 deserialize = ::VeryLong
                 serialize = { (long) -> long }
             }
 
-            query("number"){
-                resolver { number : VeryLong -> number }
+            query("number") {
+                resolver { number: VeryLong -> number }
             }
         }
 

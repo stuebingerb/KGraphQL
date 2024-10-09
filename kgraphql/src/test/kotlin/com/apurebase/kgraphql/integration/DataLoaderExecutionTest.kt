@@ -41,7 +41,7 @@ class DataLoaderExecutionTest {
                     println("loader:name ${ids.size}")
                     coroutineScope {
                         delay(Random.nextLong(1..15L))
-                        ids.map { ExecutionResult.Success("Name-$it")}
+                        ids.map { ExecutionResult.Success("Name-$it") }
                     }
                 }
             }
@@ -53,7 +53,7 @@ class DataLoaderExecutionTest {
                         val delay = Random.nextLong(1..3L)
                         println("loader:values [size: ${ids.size}, delay: $delay]")
                         ids.map { id ->
-                            ExecutionResult.Success((start..(start+3)).map {
+                            ExecutionResult.Success((start..(start + 3)).map {
                                 ItemValue(
                                     itemId = id,
                                     value = fake.loadValue("delay:$delay,start:$start", delay),
@@ -78,11 +78,12 @@ class DataLoaderExecutionTest {
         }
     }
 
-     @RepeatedTest(50)
-     fun Stress_test_with_dataloaders_and_custom_superviser_jobs() {
+    @RepeatedTest(50)
+    fun Stress_test_with_dataloaders_and_custom_superviser_jobs() {
 //         DebugProbes.install()
 //         withTimeout(60_000) {
-             val result = schema.executeBlocking("""
+        val result = schema.executeBlocking(
+            """
                  {
                      data1: items(amount: 250) { ...Fields }
                      data2: items(amount: 200) { ...Fields }
@@ -101,10 +102,11 @@ class DataLoaderExecutionTest {
                          }
                      }
                  }
-             """.trimIndent())
+             """.trimIndent()
+        )
 
-             println(result)
+        println(result)
 //         }
-     }
+    }
 
 }

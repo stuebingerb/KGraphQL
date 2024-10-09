@@ -73,21 +73,21 @@ nav:
   - 'Installation': 'Installation/index.md'
   - 'Examples': 'Examples/index.md'
   - 'Plugins':
-    - 'Ktor': 'Plugins/ktor.md'
+      - 'Ktor': 'Plugins/ktor.md'
   - 'Tutorials':
-    - 'Star Wars Tutorial': 'Tutorials/starwars.md'
-    - 'Ktor Tutorial': 'Tutorials/ktor.md'
+      - 'Star Wars Tutorial': 'Tutorials/starwars.md'
+      - 'Ktor Tutorial': 'Tutorials/ktor.md'
   - 'Reference':
-    - 'Operations': 'Reference/operations.md'
-    - 'Configuration': 'Reference/configuration.md'
-    - 'Resolver': 'Reference/resolver.md'
-    - 'Deprecation': 'Reference/deprecation.md'
-    - 'Access Rule': 'Reference/accessRule.md'
-    - 'Type System':
-      - 'Overview': 'Reference/Type System/overview.md'
-      - 'Scalars': 'Reference/Type System/scalars.md'
-      - 'Enums': 'Reference/Type System/enums.md'
-      - 'Unions': 'Reference/Type System/unions.md'
-      - 'Input Objects': 'Reference/Type System/input-objects.md'
-      - 'Objects and Interfaces': 'Reference/Type System/objects-and-interfaces.md'
+      - 'Operations': 'Reference/operations.md'
+      - 'Configuration': 'Reference/configuration.md'
+      - 'Resolver': 'Reference/resolver.md'
+      - 'Deprecation': 'Reference/deprecation.md'
+      - 'Access Rule': 'Reference/accessRule.md'
+      - 'Type System':
+          - 'Overview': 'Reference/Type System/overview.md'
+          - 'Scalars': 'Reference/Type System/scalars.md'
+          - 'Enums': 'Reference/Type System/enums.md'
+          - 'Unions': 'Reference/Type System/unions.md'
+          - 'Input Objects': 'Reference/Type System/input-objects.md'
+          - 'Objects and Interfaces': 'Reference/Type System/objects-and-interfaces.md'
 

@@ -47,7 +47,7 @@ open class GraphQLError(
      * single location, the field that produced the error.
      */
     val locations: List<Source.LocationSource>? by lazy {
-            if (positions != null && source != null) {
+        if (positions != null && source != null) {
             positions.map { pos -> getLocation(source, pos) }
         } else nodes?.mapNotNull { node ->
             node.loc?.let { getLocation(it.source, it.start) }

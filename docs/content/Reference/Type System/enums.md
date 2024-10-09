@@ -1,6 +1,7 @@
 # Enums
 
-GraphQL Enums are a variant on the Scalar type, which represents one of a finite set of possible values. They directly map to Kotlin enums
+GraphQL Enums are a variant on the Scalar type, which represents one of a finite set of possible values. They directly
+map to Kotlin enums
 
 *Example*
 

@@ -34,7 +34,8 @@ class GitHubIssue109 {
         }
 
         val result = jacksonObjectMapper().readValue<Result>(
-            schema.executeBlocking("""
+            schema.executeBlocking(
+                """
                 query IntrospectionQuery {
                     __schema {
                         types {
@@ -51,7 +52,8 @@ class GitHubIssue109 {
                         }
                     }
                 }
-            """)
+            """
+            )
         )
 
         result.data.__schema.types.shouldContain(
@@ -80,9 +82,11 @@ class GitHubIssue109 {
         val fields: List<Field>? = null,
         val possibleTypes: List<FieldType>? = null
     )
+
     data class Field(
         val name: String?,
         val type: FieldType
     )
+
     data class FieldType(val name: String? = null)
 }

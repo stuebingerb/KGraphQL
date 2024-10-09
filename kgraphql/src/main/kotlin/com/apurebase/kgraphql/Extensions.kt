@@ -12,9 +12,9 @@ internal fun <T : Any> KClass<T>.defaultKQLTypeName() = this.simpleName!!
 
 internal fun KType.defaultKQLTypeName() = this.jvmErasure.defaultKQLTypeName()
 
-internal fun String.dropQuotes() : String = if(isLiteral()) drop(1).dropLast(1) else this
+internal fun String.dropQuotes(): String = if (isLiteral()) drop(1).dropLast(1) else this
 
-internal fun String.isLiteral() : Boolean = startsWith('\"') && endsWith('\"')
+internal fun String.isLiteral(): Boolean = startsWith('\"') && endsWith('\"')
 
 internal fun KParameter.isNullable() = type.isMarkedNullable
 
@@ -31,7 +31,6 @@ internal fun KType.getIterableElementType(): KType {
 
 
 internal fun not(boolean: Boolean) = !boolean
-
 
 
 internal suspend fun <T, R> Collection<T>.toMapAsync(

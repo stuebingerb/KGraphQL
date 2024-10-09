@@ -11,7 +11,10 @@ import io.ktor.server.testing.*
 
 open class KtorTest {
 
-    fun withServer(ctxBuilder: ContextBuilder.(ApplicationCall) -> Unit = {}, block: SchemaBuilder.() -> Unit): (String, Kraph.() -> Unit) -> String {
+    fun withServer(
+        ctxBuilder: ContextBuilder.(ApplicationCall) -> Unit = {},
+        block: SchemaBuilder.() -> Unit
+    ): (String, Kraph.() -> Unit) -> String {
         return { type, kraph ->
             var str = ""
             testApplication {
@@ -34,11 +37,13 @@ open class KtorTest {
                 str = client.post {
                     url("graphql")
                     header(HttpHeaders.ContentType, "application/json;charset=UTF-8")
-                    setBody(when(type.lowercase().trim()) {
-                        "query" -> graphqlQuery(kraph).build()
-                        "mutation" -> graphqlMutation(kraph).build()
-                        else -> error("$type is not a valid graphql operation type")
-                    }.also(::println))
+                    setBody(
+                        when (type.lowercase().trim()) {
+                            "query" -> graphqlQuery(kraph).build()
+                            "mutation" -> graphqlMutation(kraph).build()
+                            else -> error("$type is not a valid graphql operation type")
+                        }.also(::println)
+                    )
                 }.bodyAsText()
             }
             str

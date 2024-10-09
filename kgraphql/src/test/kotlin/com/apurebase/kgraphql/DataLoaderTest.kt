@@ -333,7 +333,10 @@ class DataLoaderTest {
 
             val result = schema.executeBlocking(query).also(::println).deserialize()
 
-            MatcherAssert.assertThat(result.extract<String>("data/abc[0]/simpleChild/value"), CoreMatchers.equalTo("NewChild!"))
+            MatcherAssert.assertThat(
+                result.extract<String>("data/abc[0]/simpleChild/value"),
+                CoreMatchers.equalTo("NewChild!")
+            )
         }
     }
 

@@ -6,16 +6,16 @@ Date: 2020-04-06
 */
 
 .hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 0.5em;
-  background: #1C1B19;
-  color: #FCE8C3;
+    display: block;
+    overflow-x: auto;
+    padding: 0.5em;
+    background: #1C1B19;
+    color: #FCE8C3;
 }
 
 .hljs-strong,
 .hljs-emphasis {
-  color: #918175;
+    color: #918175;
 }
 
 .hljs-bullet,
@@ -24,16 +24,16 @@ Date: 2020-04-06
 .hljs-number,
 .hljs-regexp,
 .hljs-literal {
-  color: #FF5C8F;
+    color: #FF5C8F;
 }
 
 .hljs-code,
 .hljs-selector-class {
-  color: #68A8E4
+    color: #68A8E4
 }
 
 .hljs-emphasis {
-  font-style: italic;
+    font-style: italic;
 }
 
 .hljs-keyword,
@@ -41,21 +41,21 @@ Date: 2020-04-06
 .hljs-section,
 .hljs-attribute,
 .hljs-variable {
-  color: #EF2F27;
+    color: #EF2F27;
 }
 
 .hljs-name,
 .hljs-title {
-  color: #FBB829;
+    color: #FBB829;
 }
 
 .hljs-type,
 .hljs-params {
-  color: #0AAEB3;
+    color: #0AAEB3;
 }
 
 .hljs-string {
-  color: #98BC37;
+    color: #98BC37;
 }
 
 .hljs-subst,
@@ -68,11 +68,11 @@ Date: 2020-04-06
 .hljs-template-tag,
 .hljs-template-variable,
 .hljs-addition {
-  color: #C07ABE;
+    color: #C07ABE;
 }
 
 .hljs-comment,
 .hljs-deletion,
 .hljs-meta {
-  color: #918175;
+    color: #918175;
 }

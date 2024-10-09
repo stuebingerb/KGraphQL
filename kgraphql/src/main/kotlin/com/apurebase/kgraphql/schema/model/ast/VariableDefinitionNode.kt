@@ -8,4 +8,4 @@ data class VariableDefinitionNode(
     val type: TypeNode,
     val defaultValue: ValueNode?,
     val directives: List<DirectiveNode>?
-): ASTNode()
+) : ASTNode()

@@ -13,13 +13,13 @@ sealed class Execution {
     abstract val directives: Map<Directive, ArgumentNodes?>?
 
     @NotIntrospected
-    open class Node (
+    open class Node(
         override val selectionNode: SelectionNode,
         val field: Field,
         val children: Collection<Execution>,
-        val key : String,
+        val key: String,
         val alias: String? = null,
-        val arguments : ArgumentNodes? = null,
+        val arguments: ArgumentNodes? = null,
         val typeCondition: TypeCondition? = null,
         override val directives: Map<Directive, ArgumentNodes?>? = null,
         val variables: List<VariableDefinitionNode>? = null
@@ -30,19 +30,19 @@ sealed class Execution {
     class Fragment(
         override val selectionNode: SelectionNode,
         val condition: TypeCondition,
-        val elements : List<Execution>,
+        val elements: List<Execution>,
         override val directives: Map<Directive, ArgumentNodes?>?
     ) : Execution()
 
-    class Union (
+    class Union(
         node: SelectionNode,
         val unionField: Field.Union<*>,
         val memberChildren: Map<Type, Collection<Execution>>,
         key: String,
         alias: String? = null,
-        condition : TypeCondition? = null,
+        condition: TypeCondition? = null,
         directives: Map<Directive, ArgumentNodes?>? = null
-    ) : Node (
+    ) : Node(
         selectionNode = node,
         field = unionField,
         children = emptyList(),
@@ -52,10 +52,11 @@ sealed class Execution {
         directives = directives
     ) {
         fun memberExecution(type: Type): Node {
-            return Node (
+            return Node(
                 selectionNode = selectionNode,
                 field = field,
-                children = memberChildren[type] ?: throw IllegalArgumentException("Union ${unionField.name} has no member $type"),
+                children = memberChildren[type]
+                    ?: throw IllegalArgumentException("Union ${unionField.name} has no member $type"),
                 key = key,
                 alias = alias,
                 arguments = arguments,

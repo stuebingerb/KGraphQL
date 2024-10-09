@@ -9,4 +9,4 @@ data class InputValueDefinitionNode(
     val type: TypeNode,
     val defaultValue: ValueNode?,
     val directives: List<DirectiveNode>?
-): ASTNode()
+) : ASTNode()

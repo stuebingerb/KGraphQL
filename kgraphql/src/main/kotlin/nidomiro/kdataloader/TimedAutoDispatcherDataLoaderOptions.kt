@@ -5,4 +5,4 @@ class TimedAutoDispatcherDataLoaderOptions<K, R>(
     cache: Cache<K, R>? = CoroutineMapCache(),
     cacheExceptions: Boolean = true,
     batchMode: BatchMode = BatchMode.LoadInBatch()
-): DataLoaderOptions<K, R>(cache, cacheExceptions, batchMode)
+) : DataLoaderOptions<K, R>(cache, cacheExceptions, batchMode)

@@ -6,7 +6,7 @@ import kotlin.reflect.*
 
 
 class ResolverDSL(val target: Target) {
-    fun withArgs(block : InputValuesDSL.() -> Unit){
+    fun withArgs(block: InputValuesDSL.() -> Unit) {
         val inputValuesDSL = InputValuesDSL().apply(block)
 
         target.addInputValues(inputValuesDSL.inputValues.map { inputValue ->
@@ -14,7 +14,7 @@ class ResolverDSL(val target: Target) {
         })
     }
 
-    inline fun <reified T: Any> returns(): ResolverDSL {
+    inline fun <reified T : Any> returns(): ResolverDSL {
         target.setReturnType(typeOf<T>())
         return this
     }

@@ -55,7 +55,7 @@ class TimedAutoDispatcherImpl<K, R>(
         super.prime(key, value).also { autoChannel.send(Unit) }
     }
 
-    override suspend fun prime(key: K, value: Throwable){
+    override suspend fun prime(key: K, value: Throwable) {
         super.prime(key, value).also { autoChannel.send(Unit) }
     }
 

@@ -4,7 +4,7 @@ import kotlinx.coroutines.*
 import kotlin.random.Random
 import kotlin.random.nextLong
 
-class FakeComplicatedDataLoad: CoroutineScope {
+class FakeComplicatedDataLoad : CoroutineScope {
     override val coroutineContext = SupervisorJob()
 
     private val cache1 = SuspendCache.suspendCache<Pair<Long, String>, String> { (wait, key) ->

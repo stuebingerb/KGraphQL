@@ -41,7 +41,8 @@ class GitHubIssue105 {
                 resolver { -> ContactStatus.Onboarded(userId = "Leopard2A5") }
             }
         }
-        val results = schema.executeBlocking("""{
+        val results = schema.executeBlocking(
+            """{
             contactStatus {
                 ... on NotInvited {
                     dummy
@@ -56,7 +57,8 @@ class GitHubIssue105 {
                 }
                 __typename
             }
-        }""".trimIndent()).also(::println).deserialize()
+        }""".trimIndent()
+        ).also(::println).deserialize()
 
         results.extract<String>("data/contactStatus/userId") shouldBeEqualTo "Leopard2A5"
         results.extract<String>("data/contactStatus/__typename") shouldBeEqualTo "Onboarded"
@@ -75,7 +77,8 @@ class GitHubIssue105 {
             }
         }
 
-        val results = schema.executeBlocking("""{
+        val results = schema.executeBlocking(
+            """{
             carrier {
                 contactStatus {
                     ... on NotInvited {
@@ -92,7 +95,8 @@ class GitHubIssue105 {
                     __typename
                 }
             }
-        }""".trimIndent()).also(::println).deserialize()
+        }""".trimIndent()
+        ).also(::println).deserialize()
 
         results.extract<String>("data/carrier/contactStatus/userId") shouldBeEqualTo "Leopard2A5"
         results.extract<String>("data/carrier/contactStatus/__typename") shouldBeEqualTo "Onboarded"

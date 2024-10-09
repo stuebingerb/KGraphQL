@@ -1,6 +1,8 @@
 *This feature is still in experimental state.*
 
-One issue that you could easily encounter when doing a GraphQL API is the N+1 Problem. You can read more about this problem and solution in depth here: [The GraphQL Dataloader Pattern: Visualized](https://medium.com/@__xuorig__/the-graphql-dataloader-pattern-visualized-3064a00f319f)
+One issue that you could easily encounter when doing a GraphQL API is the N+1 Problem. You can read more about this
+problem and solution in depth
+here: [The GraphQL Dataloader Pattern: Visualized](https://medium.com/@__xuorig__/the-graphql-dataloader-pattern-visualized-3064a00f319f)
 
 Imagine having this query:
 
@@ -18,10 +20,13 @@ Imagine having this query:
 Running this against a Database would execute 11 SQL queries:
 First fetch the 10 people. Then loop through each of them and fetch their first 5 friends one by one.
 
-While what we would like is to fetch the first 10 people in 1 SQL and then fetch the first 5 friends for all those 10 people in the second query. That's what the `dataProperty` will solve for you.
+While what we would like is to fetch the first 10 people in 1 SQL and then fetch the first 5 friends for all those 10
+people in the second query. That's what the `dataProperty` will solve for you.
 
 ## Setting up
+
 Using DataLoaders requires the `DataLoaderPrepared` executor:
+
 ```kotlin
 configure {
     executor = Executor.DataLoaderPrepared
@@ -29,6 +34,7 @@ configure {
 ```
 
 *example*
+
 ```kotlin
 data class Person(val id: Int, val name: String)
 val people = (1..5).map { Person(it, "Name-$it") }
@@ -55,6 +61,7 @@ type<Person> {
 ```
 
 *GraphQL Query example:*
+
 ```graphql
 {
     people {
@@ -67,6 +74,7 @@ type<Person> {
 ```
 
 Returns:
+
 ```json
 {
   "data": {
@@ -102,8 +110,8 @@ Returns:
 }
 ```
 
-
 ## Current known issues
+
 This feature can be used in production but does currently have some issues:
 
 1. The `useDefaultPrettyPrint` doesn't work.

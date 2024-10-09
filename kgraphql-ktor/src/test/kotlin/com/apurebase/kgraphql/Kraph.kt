@@ -9,6 +9,7 @@ import kotlinx.serialization.json.*
 fun graphqlQuery(block: Kraph.() -> Unit): Kraph {
     return Kraph("query").apply(block)
 }
+
 fun graphqlMutation(block: Kraph.() -> Unit): Kraph {
     return Kraph("mutation").apply(block)
 }
@@ -17,7 +18,7 @@ class Kraph(
     private val type: String,
     private val variables: MutableList<Variable> = mutableListOf(),
     private val root: Boolean = true,
-): List<Kraph.Variable> by variables {
+) : List<Kraph.Variable> by variables {
 
     private val fields = mutableListOf<Kraph>()
 
@@ -33,9 +34,11 @@ class Kraph(
     fun variable(name: String, typeName: String, block: JsonObjectBuilder.() -> Unit) = variables.add(
         Variable(name, typeName, buildJsonObject(block))
     )
+
     fun variable(name: String, typeName: String, value: String) = variables.add(
         Variable(name, typeName, JsonPrimitive(value))
     )
+
     fun variable(name: String, typeName: String, value: Int) = variables.add(
         Variable(name, typeName, JsonPrimitive(value))
     )

@@ -1,7 +1,10 @@
-Extension properties allow schema creator to easily attach additional field to any type. It is separately evaluated after main entity is resolved.
+Extension properties allow schema creator to easily attach additional field to any type. It is separately evaluated
+after main entity is resolved.
 
 ## property { }
-`property` method accepts [resolver](/docs/reference/resolver) and can be subject of [deprecation](/docs/reference/deprecation).
+
+`property` method accepts [resolver](/docs/reference/resolver) and can be subject
+of [deprecation](/docs/reference/deprecation).
 
 *Example*
 

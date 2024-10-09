@@ -22,7 +22,7 @@ data class Lexer(
     /** The character offset at which the current line begins.*/
     var lineStart: Int = 0
 ) {
-    constructor(source: String): this (Source(source))
+    constructor(source: String) : this(Source(source))
 
 
     /**
@@ -85,11 +85,12 @@ data class Lexer(
         }
 
 
-        val fail = { code: Int -> throw syntaxError(
-            source,
-            pos,
-            unexpectedCharacterMessage(code)
-        )
+        val fail = { code: Int ->
+            throw syntaxError(
+                source,
+                pos,
+                unexpectedCharacterMessage(code)
+            )
         }
 
         return when (val code = body[pos].code) {
@@ -416,8 +417,8 @@ data class Lexer(
 
     // _ A-Z a-z
     private fun isNameStart(code: Int?) = (
-        code == 95 || (code in 65..90) || (code in 97..122)
-    )
+            code == 95 || (code in 65..90) || (code in 97..122)
+            )
 
     /**
      * Reads a block string token from the source file.

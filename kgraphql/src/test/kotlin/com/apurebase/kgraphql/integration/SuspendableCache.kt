@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.minutes
 open class SuspendCache<K, V>(
     private val cache: AsyncCache<K, V>,
     private val onGet: suspend (K) -> V,
-): CoroutineScope, AsyncCache<K, V> by cache {
+) : CoroutineScope, AsyncCache<K, V> by cache {
     override val coroutineContext = SupervisorJob()
     suspend fun get(key: K): V = supervisorScope {
         try {
@@ -40,13 +40,14 @@ open class SuspendCache<K, V>(
             timeoutDuration: Duration = 2.minutes,
             block: suspend (K) -> V,
         ) = runBlocking { suspendCache(timeoutDuration, block) }
+
         fun <K, V> CoroutineScope.suspendCache(
             timeoutDuration: Duration = 2.minutes,
             block: suspend (K) -> V,
         ) = Caffeine.newBuilder()
             .expireAfterWrite(timeoutDuration.inWholeMilliseconds, TimeUnit.SECONDS)
-            .buildAsync<K, V> { k, _-> future { block(k) } }
-            .let { SuspendCache(it, block)}
+            .buildAsync<K, V> { k, _ -> future { block(k) } }
+            .let { SuspendCache(it, block) }
     }
 }
 

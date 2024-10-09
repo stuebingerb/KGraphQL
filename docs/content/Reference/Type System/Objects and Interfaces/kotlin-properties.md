@@ -3,7 +3,8 @@ title: Kotlin Properties
 weight: 1
 ---
 
-Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring and [deprecation](/docs/reference/deprecation) of kotlin properties
+Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring
+and [deprecation](/docs/reference/deprecation) of kotlin properties
 
 *Example*
 

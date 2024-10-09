@@ -32,9 +32,9 @@ import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
 class SchemaCompilation(
-        val configuration : SchemaConfiguration,
-        val definition : SchemaDefinition
-){
+    val configuration: SchemaConfiguration,
+    val definition: SchemaDefinition
+) {
 
     private val queryTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
 
@@ -69,7 +69,7 @@ class SchemaCompilation(
             introspectInterfaces(kClass, typeProxy)
         }
 
-        val model =  SchemaModel (
+        val model = SchemaModel(
             query = queryType,
             mutation = if (mutationType.fields!!.isEmpty()) null else mutationType,
             subscription = if (subscriptionType.fields!!.isEmpty()) null else subscriptionType,
@@ -105,7 +105,7 @@ class SchemaCompilation(
 
     private fun introspectInterfaces(kClass: KClass<*>, typeProxy: TypeProxy) {
         val proxied = typeProxy.proxied
-        if(proxied is Type.Object<*>){
+        if (proxied is Type.Object<*>) {
             val interfaces = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
                 otherTypeProxy.kind == TypeKind.INTERFACE && otherKClass != kClass && kClass.isSubclassOf(otherKClass)
             }.values.toList()
@@ -114,12 +114,12 @@ class SchemaCompilation(
         }
     }
 
-    private suspend fun handlePartialDirective(directive: Directive.Partial) : Directive {
+    private suspend fun handlePartialDirective(directive: Directive.Partial): Directive {
         val inputValues = handleInputValues(directive.name, directive.execution, emptyList())
         return directive.toDirective(inputValues)
     }
 
-    private suspend fun handleQueries() : Type {
+    private suspend fun handleQueries(): Type {
         return Type.OperationObject(
             name = "Query",
             description = "Query object",
@@ -127,12 +127,15 @@ class SchemaCompilation(
         )
     }
 
-    private suspend fun handleMutations() : Type {
+    private suspend fun handleMutations(): Type {
         return Type.OperationObject("Mutation", "Mutation object", definition.mutations.map { handleOperation(it) })
     }
 
-    private suspend fun handleSubscriptions() : Type {
-        return Type.OperationObject("Subscription", "Subscription object", definition.subscriptions.map { handleOperation(it) })
+    private suspend fun handleSubscriptions(): Type {
+        return Type.OperationObject(
+            "Subscription",
+            "Subscription object",
+            definition.subscriptions.map { handleOperation(it) })
     }
 
     @Suppress("USELESS_CAST") // We are casting as __Schema so we don't get proxied types. https://github.com/aPureBase/KGraphQL/issues/45
@@ -141,25 +144,25 @@ class SchemaCompilation(
     )
 
     private suspend fun introspectionTypeQuery() = handleOperation(
-        QueryDef("__type", FunctionWrapper.on {
-            name : String -> schemaProxy.findTypeByName(name)
+        QueryDef("__type", FunctionWrapper.on { name: String ->
+            schemaProxy.findTypeByName(name)
         })
     )
 
-    private suspend fun handleOperation(operation : BaseOperationDef<*, *>) : Field {
+    private suspend fun handleOperation(operation: BaseOperationDef<*, *>): Field {
         val returnType = handlePossiblyWrappedType(operation.returnType, TypeCategory.QUERY)
         val inputValues = handleInputValues(operation.name, operation, operation.inputValues)
         return Field.Function(operation, returnType, inputValues)
     }
 
-    private suspend fun handleUnionProperty(unionProperty: PropertyDef.Union<*>) : Field {
+    private suspend fun handleUnionProperty(unionProperty: PropertyDef.Union<*>): Field {
         val inputValues = handleInputValues(unionProperty.name, unionProperty, unionProperty.inputValues)
         val type = handleUnionType(unionProperty.union)
 
         return Field.Union(unionProperty, unionProperty.nullable, type, inputValues)
     }
 
-    private suspend fun handlePossiblyWrappedType(kType : KType, typeCategory: TypeCategory) : Type = try {
+    private suspend fun handlePossiblyWrappedType(kType: KType, typeCategory: TypeCategory): Type = try {
         when {
             kType.isIterable() -> handleCollectionType(kType, typeCategory)
             kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
@@ -167,11 +170,13 @@ class SchemaCompilation(
             kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
             kType.arguments.isNotEmpty() -> configuration.genericTypeResolver.resolveMonad(kType)
                 .let { handlePossiblyWrappedType(it, typeCategory) }
+
             kType.jvmErasure.isSealed -> TypeDef.Union(
                 name = kType.jvmErasure.simpleName!!,
                 members = kType.jvmErasure.sealedSubclasses.toSet(),
                 description = null
             ).let { handleUnionType(it) }
+
             else -> handleSimpleType(kType, typeCategory)
         }
     } catch (e: Throwable) {
@@ -201,15 +206,15 @@ class SchemaCompilation(
         }
     }
 
-    private suspend fun handleRawType(kClass: KClass<*>, typeCategory: TypeCategory) : Type {
+    private suspend fun handleRawType(kClass: KClass<*>, typeCategory: TypeCategory): Type {
         when (val type = unions.find { it.name == kClass.simpleName }) {
             null -> Unit
             else -> return type
         }
 
-        if(kClass == Context::class) throw SchemaException("Context type cannot be part of schema")
+        if (kClass == Context::class) throw SchemaException("Context type cannot be part of schema")
 
-        val cachedInstances = when(typeCategory) {
+        val cachedInstances = when (typeCategory) {
             TypeCategory.QUERY -> queryTypeProxies
             TypeCategory.INPUT -> inputTypeProxies
         }
@@ -218,7 +223,7 @@ class SchemaCompilation(
         return cachedInstances[kClass]
             ?: enums[kClass]
             ?: scalars[kClass]
-            ?: when(typeCategory) {
+            ?: when (typeCategory) {
                 TypeCategory.QUERY -> handleObjectType(kClass)
                 TypeCategory.INPUT -> handleInputType(kClass)
             }
@@ -238,33 +243,35 @@ class SchemaCompilation(
         )
     }
 
-    private suspend fun handleObjectType(kClass: KClass<*>) : Type {
+    private suspend fun handleObjectType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
         val objectDefs = definition.objects.filter { it.kClass.isSuperclassOf(kClass) }
         val objectDef = objectDefs.find { it.kClass == kClass } ?: TypeDef.Object(kClass.defaultKQLTypeName(), kClass)
 
         //treat introspection types as objects -> adhere to reference implementation behaviour
-        val kind = if(kClass.isFinal || objectDef.name.startsWith("__")) TypeKind.OBJECT else TypeKind.INTERFACE
+        val kind = if (kClass.isFinal || objectDef.name.startsWith("__")) TypeKind.OBJECT else TypeKind.INTERFACE
 
-        val objectType = if(kind == TypeKind.OBJECT) Type.Object(objectDef) else Type.Interface(objectDef)
+        val objectType = if (kind == TypeKind.OBJECT) Type.Object(objectDef) else Type.Interface(objectDef)
         val typeProxy = TypeProxy(objectType)
         queryTypeProxies[kClass] = typeProxy
 
         val allKotlinProperties = objectDefs.fold(emptyMap<String, PropertyDef.Kotlin<*, *>>()) { acc, def ->
             acc + def.kotlinProperties.mapKeys { (property) -> property.name }
         }
-        val allTransformations= objectDefs.fold(emptyMap<String, Transformation<*, *>>()) { acc, def ->
+        val allTransformations = objectDefs.fold(emptyMap<String, Transformation<*, *>>()) { acc, def ->
             acc + def.transformations.mapKeys { (property) -> property.name }
         }
 
         val kotlinFields = kClass.memberProperties
-                .filter { field -> field.visibility == KVisibility.PUBLIC }
-                .filterNot { field ->  objectDefs.any { it.isIgnored(field.name) } }
-                .map { property -> handleKotlinProperty (
-                        kProperty = property,
-                        kqlProperty = allKotlinProperties[property.name],
-                        transformation = allTransformations[property.name]
-                ) }
+            .filter { field -> field.visibility == KVisibility.PUBLIC }
+            .filterNot { field -> objectDefs.any { it.isIgnored(field.name) } }
+            .map { property ->
+                handleKotlinProperty(
+                    kProperty = property,
+                    kqlProperty = allKotlinProperties[property.name],
+                    transformation = allTransformations[property.name]
+                )
+            }
 
         val extensionFields = objectDefs
             .flatMap(TypeDef.Object<*>::extensionProperties)
@@ -283,13 +290,13 @@ class SchemaCompilation(
             schemaProxy.typeByKClass(value.javaClass.kotlin)?.name ?: typeProxy.name
         }
 
-        val __typenameField = handleOperation (
-                PropertyDef.Function<Nothing, String?> ("__typename", FunctionWrapper.on(typenameResolver, true))
+        val __typenameField = handleOperation(
+            PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on(typenameResolver, true))
         )
 
         val declaredFields = kotlinFields + extensionFields + unionFields + dataloadExtensionFields
 
-        if(declaredFields.isEmpty()){
+        if (declaredFields.isEmpty()) {
             throw SchemaException("An Object type must define one or more fields. Found none on type ${objectDef.name}")
         }
 
@@ -298,14 +305,16 @@ class SchemaCompilation(
         }
 
         val allFields = declaredFields + __typenameField
-        typeProxy.proxied = if(kind == TypeKind.OBJECT) Type.Object(objectDef, allFields) else Type.Interface(objectDef, allFields)
+        typeProxy.proxied =
+            if (kind == TypeKind.OBJECT) Type.Object(objectDef, allFields) else Type.Interface(objectDef, allFields)
         return typeProxy
     }
 
-    private suspend fun handleInputType(kClass: KClass<*>) : Type {
+    private suspend fun handleInputType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
 
-        val inputObjectDef = definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName(), kClass)
+        val inputObjectDef =
+            definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName(), kClass)
         val objectType = Type.Input(inputObjectDef)
         val typeProxy = TypeProxy(objectType)
         inputTypeProxies[kClass] = typeProxy
@@ -318,12 +327,16 @@ class SchemaCompilation(
         return typeProxy
     }
 
-    private suspend fun handleInputValues(operationName : String, operation: FunctionWrapper<*>, inputValues: List<InputValueDef<*>>) : List<InputValue<*>> {
+    private suspend fun handleInputValues(
+        operationName: String,
+        operation: FunctionWrapper<*>,
+        inputValues: List<InputValueDef<*>>
+    ): List<InputValue<*>> {
         val invalidInputValues = inputValues
-                .map { it.name }
-                .filterNot { it in operation.argumentsDescriptor.keys }
+            .map { it.name }
+            .filterNot { it in operation.argumentsDescriptor.keys }
 
-        if(invalidInputValues.isNotEmpty()){
+        if (invalidInputValues.isNotEmpty()) {
             throw SchemaException("Invalid input values on $operationName: $invalidInputValues")
         }
 
@@ -335,18 +348,18 @@ class SchemaCompilation(
         }
     }
 
-    private suspend fun handleUnionType(union : TypeDef.Union) : Type.Union {
+    private suspend fun handleUnionType(union: TypeDef.Union): Type.Union {
         val possibleTypes = union.members.map {
             handleRawType(it, TypeCategory.QUERY)
         }
 
         val invalidPossibleTypes = possibleTypes.filterNot { it.kind == TypeKind.OBJECT }
-        if(invalidPossibleTypes.isNotEmpty()){
+        if (invalidPossibleTypes.isNotEmpty()) {
             throw SchemaException("Invalid union type members")
         }
 
-        val __typenameField = handleOperation (
-            PropertyDef.Function<Nothing, String?> ("__typename", FunctionWrapper.on( { value: Any ->
+        val __typenameField = handleOperation(
+            PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on({ value: Any ->
                 schemaProxy.typeByKClass(value.javaClass.kotlin)?.name
             }, true))
         )
@@ -356,18 +369,18 @@ class SchemaCompilation(
         return unionType
     }
 
-    private suspend fun handleKotlinInputProperty(kProperty: KProperty1<*, *>) : InputValue<*> {
+    private suspend fun handleKotlinInputProperty(kProperty: KProperty1<*, *>): InputValue<*> {
         val type = handlePossiblyWrappedType(kProperty.returnType, TypeCategory.INPUT)
         return InputValue(InputValueDef(kProperty.returnType.jvmErasure, kProperty.name), type)
     }
 
-    private suspend fun <T : Any, R> handleKotlinProperty (
-            kProperty: KProperty1<T, R>,
-            kqlProperty: PropertyDef.Kotlin<*, *>?,
-            transformation: Transformation<*, *>?
-    ) : Field.Kotlin<*, *> {
+    private suspend fun <T : Any, R> handleKotlinProperty(
+        kProperty: KProperty1<T, R>,
+        kqlProperty: PropertyDef.Kotlin<*, *>?,
+        transformation: Transformation<*, *>?
+    ): Field.Kotlin<*, *> {
         val returnType = handlePossiblyWrappedType(kProperty.returnType, TypeCategory.QUERY)
-        val inputValues = if(transformation != null){
+        val inputValues = if (transformation != null) {
             handleInputValues("$kProperty transformation", transformation.transformation, emptyList())
         } else {
             emptyList()
@@ -375,11 +388,11 @@ class SchemaCompilation(
 
         val actualKqlProperty = kqlProperty ?: PropertyDef.Kotlin(kProperty)
 
-        return Field.Kotlin (
-                kql = actualKqlProperty as PropertyDef.Kotlin<T, R>,
-                returnType = returnType,
-                arguments = inputValues,
-                transformation = transformation as Transformation<T, R>?
+        return Field.Kotlin(
+            kql = actualKqlProperty as PropertyDef.Kotlin<T, R>,
+            returnType = returnType,
+            arguments = inputValues,
+            transformation = transformation as Transformation<T, R>?
         )
     }
 }

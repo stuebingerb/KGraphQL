@@ -3,7 +3,8 @@ title: Star Wars Tutorial
 weight: 1
 ---
 
-As example, let's partially reproduce part of Star Wars schema from official GraphQL tutorial. First, we need to define our domain model, by plain kotlin classes:
+As example, let's partially reproduce part of Star Wars schema from official GraphQL tutorial. First, we need to define
+our domain model, by plain kotlin classes:
 
 ```kotlin
 enum class Episode {
@@ -79,6 +80,7 @@ val schema = KGraphQL.schema {
 ```
 
 Now, we can query our schema:
+
 ```kotlin
 // query for hero from episode JEDI and take id, name for any Character, and primaryFunction for Droid or height for Human
 schema.execute("""
@@ -97,7 +99,8 @@ schema.execute("""
 """)
 ```
 
-Returns: 
+Returns:
+
 ```json
 {
   "data" : {
@@ -111,6 +114,7 @@ Returns:
 ```
 
 Query for all heroes:
+
 ```kotlin
 // query for all heroes and take id, name for any Character, and primaryFunction for Droid or height for Human
 schema.execute("""
@@ -130,6 +134,7 @@ schema.execute("""
 ```
 
 Returns:
+
 ```json
 {
   "data" : {

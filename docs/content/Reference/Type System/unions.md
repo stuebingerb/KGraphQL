@@ -3,11 +3,13 @@ title: Unions
 weight: 3
 ---
 
-GraphQL Unions represent an object that could be one of a list of GraphQL Object types, but provides for no guaranteed fields between those types.
+GraphQL Unions represent an object that could be one of a list of GraphQL Object types, but provides for no guaranteed
+fields between those types.
 
 There are 2 ways of defining a union type.
 
 ### Manual
+
 *Example*
 
 ```kotlin
@@ -32,7 +34,8 @@ KgraphQL.schema {
 }
 ```
 
-*Currently there is a limitation on union return types for `query` definitions. This is currently only supported via sealed classes. See more information below.*
+*Currently there is a limitation on union return types for `query` definitions. This is currently only supported via
+sealed classes. See more information below.*
 
 ### Sealed Class
 

@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Test
 class NonNullSpecificationTest {
 
     @Test
-    fun `if the result of non-null type is null, error should be raised`(){
+    fun `if the result of non-null type is null, error should be raised`() {
         val schema = KGraphQL.schema {
-            query("nonNull"){
-                resolver { string : String? -> string!! }
+            query("nonNull") {
+                resolver { string: String? -> string!! }
             }
         }
         invoking {
@@ -26,9 +26,9 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    fun `nullable input types are always optional`(){
+    fun `nullable input types are always optional`() {
         val schema = KGraphQL.schema {
-            query("nullable"){
+            query("nullable") {
                 resolver { input: String? -> input }
             }
         }
@@ -43,7 +43,7 @@ class NonNullSpecificationTest {
     @Test
     fun `non-null types are always required`() {
         val schema = KGraphQL.schema {
-            query("nonNull"){
+            query("nonNull") {
                 resolver { input: String -> input }
             }
         }
@@ -55,9 +55,9 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    fun `variable of a nullable type cannot be provided to a non-null argument`(){
+    fun `variable of a nullable type cannot be provided to a non-null argument`() {
         val schema = KGraphQL.schema {
-            query("nonNull"){
+            query("nonNull") {
                 resolver { input: String -> input }
             }
         }
@@ -67,6 +67,7 @@ class NonNullSpecificationTest {
 
     data class Type1(val value: String)
     data class Type2(val items: List<Type1?>)
+
     @Test
     fun `null within arrays should work`() {
         val schema = KGraphQL.schema {
@@ -85,7 +86,8 @@ class NonNullSpecificationTest {
             }
         }
 
-        schema.executeBlocking("""
+        schema.executeBlocking(
+            """
             {
                 data {
                     items {
@@ -93,13 +95,15 @@ class NonNullSpecificationTest {
                     }
                 }
             }
-        """.trimIndent()).also(::println).deserialize().run {
+        """.trimIndent()
+        ).also(::println).deserialize().run {
             extract<String>("data/data/items[0]/value") shouldBeEqualTo "Stuff"
             extract<String?>("data/data/items[1]").shouldBeNull()
         }
     }
 
     data class MyInput(val value1: String, val value2: String?)
+
     @Test
     fun `nullable values without default values should raise an error`() {
 
@@ -110,17 +114,20 @@ class NonNullSpecificationTest {
         }
 
         invoking {
-            schema.executeBlocking("""
+            schema.executeBlocking(
+                """
                 {
                     main(input: { value1: "Hello" })
                 }
-            """)
+            """
+            )
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "You are missing non optional input fields: value2"
         }
     }
 
     data class MyOptionalInput(val value1: String, val value2: String? = null)
+
     @Test
     fun `nullable values with default values should execute successfully`() {
         val schema = KGraphQL.schema {
@@ -129,11 +136,13 @@ class NonNullSpecificationTest {
             }
         }
 
-        schema.executeBlocking("""
+        schema.executeBlocking(
+            """
             {
                 main(input: { value1: "Hello" })
             }
-        """.trimIndent()).also(::println).deserialize().run {
+        """.trimIndent()
+        ).also(::println).deserialize().run {
             extract<String>("data/main") shouldBeEqualTo "Hello - Nada"
         }
     }

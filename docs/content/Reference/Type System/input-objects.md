@@ -3,7 +3,9 @@ title: Input Objects
 weight: 4
 ---
 
-An GraphQL Input Object defines a set of input fields; the input fields are either scalars, enums, or other input objects. Like Object and Interface types, Input Object types are inferred from defined operations, but can be explicitly declared as well.
+An GraphQL Input Object defines a set of input fields; the input fields are either scalars, enums, or other input
+objects. Like Object and Interface types, Input Object types are inferred from defined operations, but can be explicitly
+declared as well.
 
 ## inputType {}
 

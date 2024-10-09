@@ -57,15 +57,15 @@ object DatabaseFactory {
     }
 
     suspend fun <T> dbQuery(
-            block: suspend () -> T): T =
-            newSuspendedTransaction { block() }
+        block: suspend () -> T
+    ): T =
+        newSuspendedTransaction { block() }
 
 
 }
 
 
-
-fun <T:Any> String.execAndMap(transform : (ResultSet) -> T) : MutableList<T> {
+fun <T : Any> String.execAndMap(transform: (ResultSet) -> T): MutableList<T> {
     val result = arrayListOf<T>()
 
     TransactionManager.currentOrNew(DEFAULT_ISOLATION_LEVEL).exec(this) { rs ->

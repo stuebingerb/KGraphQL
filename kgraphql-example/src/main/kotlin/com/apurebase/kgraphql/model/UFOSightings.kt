@@ -17,20 +17,21 @@ object UFOSightings : Table() {
     val longitude = double("longitude")
 
     override val primaryKey = PrimaryKey(id, name = "PK_UFOSighting_ID")
-    val uniqueIndex = uniqueIndex("IDX_UFOSighting_UNIQUE", dateSighting, city, state, country, shape, duration, comments)
+    val uniqueIndex =
+        uniqueIndex("IDX_UFOSighting_UNIQUE", dateSighting, city, state, country, shape, duration, comments)
 
 }
 
-data class UFOSighting (
-        var id: Int = -1,
-        var dateSighting: LocalDate = LocalDate.now(),
-        var city: String = "",
-        var state: String = "",
-        var country: String = "",
-        var shape: String = "",
-        var duration: Double = 0.0,
-        var comments: String = "",
-        var latitude: Double = 0.0,
-        var longitude: Double = 0.0
+data class UFOSighting(
+    var id: Int = -1,
+    var dateSighting: LocalDate = LocalDate.now(),
+    var city: String = "",
+    var state: String = "",
+    var country: String = "",
+    var shape: String = "",
+    var duration: Double = 0.0,
+    var comments: String = "",
+    var latitude: Double = 0.0,
+    var longitude: Double = 0.0
 )
 

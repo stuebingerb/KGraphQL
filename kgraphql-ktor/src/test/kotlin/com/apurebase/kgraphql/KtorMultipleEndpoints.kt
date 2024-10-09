@@ -7,7 +7,7 @@ import io.ktor.server.testing.*
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
-class KtorMultipleEndpoints: KtorTest() {
+class KtorMultipleEndpoints : KtorTest() {
 
     @Test
     fun `basic multiple endpoints test`() = testApplication {

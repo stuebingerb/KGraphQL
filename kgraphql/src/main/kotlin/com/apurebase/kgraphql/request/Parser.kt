@@ -69,12 +69,12 @@ open class Parser {
                 "extend" -> throw NotImplementedError("Extend is not supported")
                 else -> throw unexpected()
             }
+
             peek(BRACE_L) -> parseOperationDefinition()
             peekDescription() -> parseTypeSystemDefinition()
             else -> throw unexpected()
         }
     }
-
 
 
     /**
@@ -338,6 +338,7 @@ open class Parser {
                     loc = loc(token)
                 )
             }
+
             FLOAT -> {
                 lexer.advance()
                 ValueNode.DoubleValueNode(
@@ -345,6 +346,7 @@ open class Parser {
                     loc = loc(token)
                 )
             }
+
             STRING, BLOCK_STRING -> parseStringLiteral()
             NAME -> {
                 if (token.value == "true" || token.value == "false") {
@@ -364,6 +366,7 @@ open class Parser {
                     )
                 }
             }
+
             DOLLAR -> if (!isConst) parseVariable() else throw unexpected()
             else -> throw unexpected()
         }
@@ -944,9 +947,11 @@ open class Parser {
         throw syntaxError(
             lexer.source,
             token.start,
-            "Expected ${getTokenKindDesc(kind)}, found ${getTokenDesc(
-                token
-            )}."
+            "Expected ${getTokenKindDesc(kind)}, found ${
+                getTokenDesc(
+                    token
+                )
+            }."
         )
     }
 

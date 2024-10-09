@@ -24,11 +24,11 @@ class ArgumentsSpecificationTest {
             resolver { -> Actor("Boguś Linda", age) }
         }
 
-        type<Actor>{
+        type<Actor> {
             property("favDishes") {
                 resolver { _: Actor, size: Int, prefix: String? ->
                     listOf("steak", "burger", "soup", "salad", "bread", "bird").let { dishes ->
-                        if(prefix != null){
+                        if (prefix != null) {
                             dishes.filter { it.startsWith(prefix) }
                         } else {
                             dishes
@@ -40,7 +40,7 @@ class ArgumentsSpecificationTest {
                 resolver { actor -> actor.age }
             }
             property("one") {
-                resolver {actor, one: Int -> actor.age + one }
+                resolver { actor, one: Int -> actor.age + one }
             }
             property("two") {
                 resolver { actor, one: Int, two: Int -> actor.age + one + two }
@@ -64,19 +64,21 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    fun `arguments are unordered`(){
-        executeEqualQueries( schema,
-                mapOf("data" to mapOf("actor" to mapOf("favDishes" to listOf("burger", "bread")))),
-                "{actor{favDishes(size: 2, prefix: \"b\")}}",
-                "{actor{favDishes(prefix: \"b\", size: 2)}}"
+    fun `arguments are unordered`() {
+        executeEqualQueries(
+            schema,
+            mapOf("data" to mapOf("actor" to mapOf("favDishes" to listOf("burger", "bread")))),
+            "{actor{favDishes(size: 2, prefix: \"b\")}}",
+            "{actor{favDishes(prefix: \"b\", size: 2)}}"
         )
     }
 
     @Test
-    fun `many arguments can exist on given field`(){
-        val response = deserialize(schema.executeBlocking("{actor{favDishes(size: 2, prefix: \"b\")}}")) as Map<String, Any>
-        assertThat (
-                response, equalTo(mapOf<String, Any>("data" to mapOf("actor" to mapOf("favDishes" to listOf("burger", "bread")))))
+    fun `many arguments can exist on given field`() {
+        val response = deserialize(schema.executeBlocking("{actor{favDishes(size: 2, prefix: \"b\")}}"))
+        assertThat(
+            response,
+            equalTo(mapOf<String, Any>("data" to mapOf("actor" to mapOf("favDishes" to listOf("burger", "bread")))))
         )
     }
 
@@ -94,17 +96,23 @@ class ArgumentsSpecificationTest {
                 }
             }
         """.trimIndent()
-        val response = deserialize(schema.executeBlocking(request)) as Map<String, Any>
-        assertThat(response, equalTo(mapOf<String, Any>(
-            "data" to mapOf("actor" to mapOf(
-                "none" to age,
-                "one" to age + 1,
-                "two" to age + 2 + 3,
-                "three" to age + 4 + 5 + 6,
-                "four" to age + 7 + 8 + 9 + 10,
-                "five" to age + 11 + 12 + 13 + 14 + 15
-            ))
-        )))
+        val response = deserialize(schema.executeBlocking(request))
+        assertThat(
+            response, equalTo(
+                mapOf<String, Any>(
+                    "data" to mapOf(
+                        "actor" to mapOf(
+                            "none" to age,
+                            "one" to age + 1,
+                            "two" to age + 2 + 3,
+                            "three" to age + 4 + 5 + 6,
+                            "four" to age + 7 + 8 + 9 + 10,
+                            "five" to age + 11 + 12 + 13 + 14 + 15
+                        )
+                    )
+                )
+            )
+        )
     }
 
     @Test
@@ -112,7 +120,8 @@ class ArgumentsSpecificationTest {
         val schema = defaultSchema {
             query("actor") {
                 resolver {
-                    -> Actor("John Doe", age)
+                    ->
+                    Actor("John Doe", age)
                 }
             }
 
@@ -135,13 +144,17 @@ class ArgumentsSpecificationTest {
             }
         """.trimIndent()
 
-        val response = deserialize(schema.executeBlocking(request)) as Map<String, Any>
-        assertThat(response, equalTo(mapOf<String, Any>(
-                "data" to mapOf<String, Any>(
+        val response = deserialize(schema.executeBlocking(request))
+        assertThat(
+            response, equalTo(
+                mapOf<String, Any>(
+                    "data" to mapOf<String, Any>(
                         "actor" to mapOf<String, Any>(
-                                "greeting" to "Hello, John Doe!"
+                            "greeting" to "Hello, John Doe!"
                         )
+                    )
                 )
-        )))
+            )
+        )
     }
 }

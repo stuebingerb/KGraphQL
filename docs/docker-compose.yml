@@ -3,9 +3,9 @@ version: '3.7'
 services:
   docs:
     image: squidfunk/mkdocs-material:5.3.2
-    entrypoint: []
+    entrypoint: [ ]
     command: sh -c "pip3 install --user -r requirements.txt && mkdocs serve --dev-addr=0.0.0.0:8000"
     volumes:
       - .:/docs
     ports:
-     - 8000:8000
+      - 8000:8000

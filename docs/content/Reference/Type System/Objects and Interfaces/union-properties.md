@@ -1,6 +1,9 @@
-As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union property requires defining [resolver](/docs/reference/resolver) and return type. Return Type is reference returned by creation of [union type](/docs/reference/type-system/unions).
+As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union
+property requires defining [resolver](/docs/reference/resolver) and return type. Return Type is reference returned by
+creation of [union type](/docs/reference/type-system/unions).
 
-Union type resolver is not type checked. Invalid resolver implementation which would return value of type other than members of union type will fail in runtime.
+Union type resolver is not type checked. Invalid resolver implementation which would return value of type other than
+members of union type will fail in runtime.
 
 *Example*
 

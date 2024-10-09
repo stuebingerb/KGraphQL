@@ -64,9 +64,9 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
                     }.joinToString(prefix = "[", postfix = "]")
 
                     val operationName = requestedOperationName ?: (
-                        variables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
-                            ?: throw GraphQLError("Must provide an operation name from: $operationNamesFound")
-                        )
+                            variables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
+                                ?: throw GraphQLError("Must provide an operation name from: $operationNamesFound")
+                            )
 
                     operations.firstOrNull { it.name?.value == operationName }
                         ?: throw GraphQLError("Must provide an operation name from: $operationNamesFound, found $operationName")

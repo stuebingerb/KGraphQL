@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 @Specification("2.5 Fields")
 class FieldsSpecificationTest {
 
-    data class ActorWrapper(val id : String, val actualActor: Actor)
+    data class ActorWrapper(val id: String, val actualActor: Actor)
 
     val age = 432
 

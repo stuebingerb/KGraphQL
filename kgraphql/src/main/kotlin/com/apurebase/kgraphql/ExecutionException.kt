@@ -12,5 +12,5 @@ class ExecutionException(
     nodes = node?.let(::listOf),
     originalError = cause
 ) {
-    constructor(message: String, node: Execution, cause: Throwable? = null): this(message, node.selectionNode, cause)
+    constructor(message: String, node: Execution, cause: Throwable? = null) : this(message, node.selectionNode, cause)
 }

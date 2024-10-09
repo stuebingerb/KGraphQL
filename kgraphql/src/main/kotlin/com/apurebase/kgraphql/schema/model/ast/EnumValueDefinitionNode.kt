@@ -7,4 +7,4 @@ data class EnumValueDefinitionNode(
     val name: NameNode,
     val description: StringValueNode?,
     val directives: List<DirectiveNode>?
-): ASTNode()
+) : ASTNode()

@@ -18,7 +18,7 @@ import org.junit.jupiter.api.AfterEach
 abstract class BaseSchemaTest {
 
     companion object {
-        val INTROSPECTION_QUERY = """
+        const val INTROSPECTION_QUERY = """
             query IntrospectionQuery {
                 __schema {
                     queryType { name description kind}

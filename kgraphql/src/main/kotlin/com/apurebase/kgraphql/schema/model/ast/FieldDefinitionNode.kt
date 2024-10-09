@@ -9,4 +9,4 @@ data class FieldDefinitionNode(
     val arguments: List<InputValueDefinitionNode>?,
     val type: TypeNode,
     val directives: List<DirectiveNode>?
-): ASTNode()
+) : ASTNode()

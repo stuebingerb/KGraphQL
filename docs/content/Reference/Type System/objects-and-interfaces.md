@@ -1,11 +1,15 @@
 # Overview
-GraphQL Objects and Interfaces represent a list of named fields, each of which yield a value of a specific type. KGraphQL inspects defined operations to create type system, but schema creator is able to explicitly declare and customize types. Besides, only member properties are inspected.
 
+GraphQL Objects and Interfaces represent a list of named fields, each of which yield a value of a specific type.
+KGraphQL inspects defined operations to create type system, but schema creator is able to explicitly declare and
+customize types. Besides, only member properties are inspected.
 
 **type { }**
-`type` method is entry point to Type DSL. See [Extension Properties](/Reference/Type%20System/objects-and-interfaces/#extension-properties), [Kotlin Properties](/Reference/Type%20System/objects-and-interfaces/#kotlin-properties), [Union Properties](/Reference/Type%20System/objects-and-interfaces/#union-properties).
+`type` method is entry point to Type DSL.
+See [Extension Properties](/Reference/Type%20System/objects-and-interfaces/#extension-properties), [Kotlin Properties](/Reference/Type%20System/objects-and-interfaces/#kotlin-properties), [Union Properties](/Reference/Type%20System/objects-and-interfaces/#union-properties).
 
 *Example*
+
 ```kotlin
 data class Person(val name: String, val age: Int)
 
@@ -33,7 +37,8 @@ KGraphQL.schema {
 
 **transformation(KProperty1<T, R>) {}**
 
-`transformation` method allows schema creator to attach data transformation on any kotlin property of type. Like operations, `transformation` has property `resolver` which is used to declare data transformation.
+`transformation` method allows schema creator to attach data transformation on any kotlin property of type. Like
+operations, `transformation` has property `resolver` which is used to declare data transformation.
 
 *Example*
 
@@ -51,10 +56,10 @@ KGraphQL.schema {
 }
 ```
 
-
 ## Kotlin Properties
 
-Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring and [deprecation](/Reference/deprecation) of kotlin properties
+Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring
+and [deprecation](/Reference/deprecation) of kotlin properties
 
 *Example*
 
@@ -74,9 +79,12 @@ KGraphQL.schema {
 ```
 
 ## Extension Properties
-Extension properties allow schema creator to easily attach additional field to any type. It is separately evaluated after main entity is resolved.
+
+Extension properties allow schema creator to easily attach additional field to any type. It is separately evaluated
+after main entity is resolved.
 
 ## property { }
+
 `property` method accepts [resolver](/Reference/resolver) and can be subject of [deprecation](/Reference/deprecation).
 
 *Example*
@@ -94,9 +102,13 @@ KGraphQL.schema {
 ```
 
 ## Union Properties
-As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union property requires defining [resolver](/Reference/resolver) and return type. Return Type is reference returned by creation of [union type](/Reference/Type%20System/unions/).
 
-Union type resolver is not type checked. Invalid resolver implementation which would return value of type other than members of union type will fail in runtime.
+As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union
+property requires defining [resolver](/Reference/resolver) and return type. Return Type is reference returned by
+creation of [union type](/Reference/Type%20System/unions/).
+
+Union type resolver is not type checked. Invalid resolver implementation which would return value of type other than
+members of union type will fail in runtime.
 
 *Example*
 
@@ -122,9 +134,12 @@ KGraphQL.schema {
 ```
 
 ## Data Loaded Properties
+
 *This feature is still in experimental state.*
 
-One issue that you could easily encounter when doing a GraphQL API is the N+1 Problem. You can read more about this problem and solution in depth here: [The GraphQL Dataloader Pattern: Visualized](https://medium.com/@__xuorig__/the-graphql-dataloader-pattern-visualized-3064a00f319f)
+One issue that you could easily encounter when doing a GraphQL API is the N+1 Problem. You can read more about this
+problem and solution in depth
+here: [The GraphQL Dataloader Pattern: Visualized](https://medium.com/@__xuorig__/the-graphql-dataloader-pattern-visualized-3064a00f319f)
 
 Imagine having this query:
 
@@ -142,10 +157,13 @@ Imagine having this query:
 Running this against a Database would execute 11 SQL queries:
 First fetch the 10 people. Then loop through each of them and fetch their first 5 friends one by one.
 
-While what we would like is to fetch the first 10 people in 1 SQL and then fetch the first 5 friends for all those 10 people in the second query. That's what the `dataProperty` will solve for you.
+While what we would like is to fetch the first 10 people in 1 SQL and then fetch the first 5 friends for all those 10
+people in the second query. That's what the `dataProperty` will solve for you.
 
 ### Setting up
+
 Using DataLoaders requires the `DataLoaderPrepared` executor:
+
 ```kotlin
 configure {
     executor = Executor.DataLoaderPrepared
@@ -153,6 +171,7 @@ configure {
 ```
 
 *example*
+
 ```kotlin
 data class Person(val id: Int, val name: String)
 val people = (1..5).map { Person(it, "Name-$it") }
@@ -179,6 +198,7 @@ type<Person> {
 ```
 
 *GraphQL Query example:*
+
 ```graphql
 {
     people {
@@ -191,6 +211,7 @@ type<Person> {
 ```
 
 Returns:
+
 ```json
 {
   "data": {
@@ -226,8 +247,8 @@ Returns:
 }
 ```
 
-
 ### Current known issues
+
 This feature can be used in production but does currently have some issues:
 
 1. The `useDefaultPrettyPrint` doesn't work.

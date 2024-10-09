@@ -13,24 +13,30 @@ import kotlin.reflect.KType
 
 @Suppress("UNCHECKED_CAST")
 data class Variables(
-        private val typeDefinitionProvider: LookupSchema,
-        private val variablesJson: VariablesJson,
-        private val variables: List<VariableDefinitionNode>?
+    private val typeDefinitionProvider: LookupSchema,
+    private val variablesJson: VariablesJson,
+    private val variables: List<VariableDefinitionNode>?
 ) {
 
     /**
      * map and return object of requested class
      */
-    fun <T : Any> get(kClass: KClass<T>, kType: KType, typeName: String?, keyNode: ValueNode.VariableNode, transform: (value: ValueNode) -> Any?): T? {
+    fun <T : Any> get(
+        kClass: KClass<T>,
+        kType: KType,
+        typeName: String?,
+        keyNode: ValueNode.VariableNode,
+        transform: (value: ValueNode) -> Any?
+    ): T? {
         val variable = variables?.find { keyNode.name.value == it.variable.name.value }
-                ?: throw IllegalArgumentException("Variable '$${keyNode.name.value}' was not declared for this operation")
+            ?: throw IllegalArgumentException("Variable '$${keyNode.name.value}' was not declared for this operation")
 
         val isIterable = kClass.isIterable()
 
         validateVariable(typeDefinitionProvider.typeReference(kType), typeName, variable)
 
         var value = variablesJson.get(kClass, kType, keyNode.name)
-        if(value == null && variable.defaultValue != null){
+        if (value == null && variable.defaultValue != null) {
             value = transformDefaultValue(transform, variable.defaultValue, kClass)
         }
 
@@ -50,7 +56,11 @@ data class Variables(
         return value
     }
 
-    private fun <T : Any> transformDefaultValue(transform: (value: ValueNode) -> Any?, defaultValue: ValueNode, kClass: KClass<T>): T? {
+    private fun <T : Any> transformDefaultValue(
+        transform: (value: ValueNode) -> Any?,
+        defaultValue: ValueNode,
+        kClass: KClass<T>
+    ): T? {
         val transformedDefaultValue = transform.invoke(defaultValue)
         return when {
             transformedDefaultValue == null -> null
@@ -59,19 +69,24 @@ data class Variables(
         }
     }
 
-    private fun validateVariable(expectedType: TypeReference, expectedTypeName: String?, variable: VariableDefinitionNode){
+    private fun validateVariable(
+        expectedType: TypeReference,
+        expectedTypeName: String?,
+        variable: VariableDefinitionNode
+    ) {
         val variableType = variable.type
 
         val invalidName = (expectedTypeName ?: expectedType.name) != variable.type.nameNode.value
         val invalidIsList = expectedType.isList != variableType.isList
-        val invalidNullability = !expectedType.isNullable && variableType !is TypeNode.NonNullTypeNode && variable.defaultValue == null
+        val invalidNullability =
+            !expectedType.isNullable && variableType !is TypeNode.NonNullTypeNode && variable.defaultValue == null
 
         val invalidElementNullability = !expectedType.isElementNullable && when (variableType) {
             is TypeNode.ListTypeNode -> variableType.isElementNullable
             else -> false
         }
 
-        if(invalidName || invalidIsList || invalidNullability || invalidElementNullability){
+        if (invalidName || invalidIsList || invalidNullability || invalidElementNullability) {
             throw GraphQLError(
                 "Invalid variable $${variable.variable.name.value} argument type ${variableType.nameNode.value}, expected $expectedType",
                 variable

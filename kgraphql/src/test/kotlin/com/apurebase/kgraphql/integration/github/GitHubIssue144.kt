@@ -33,7 +33,8 @@ class GitHubIssue144 {
                     arg<List<String>> { name = "tags"; defaultValue = emptyList() }
                 }
             }
-        }.executeBlocking("""
+        }.executeBlocking(
+            """
             {
                 slots {
                     date
@@ -43,7 +44,8 @@ class GitHubIssue144 {
                     }
                 }
             }
-        """.trimIndent()).also(::println)
+        """.trimIndent()
+        ).also(::println)
 
     }
 

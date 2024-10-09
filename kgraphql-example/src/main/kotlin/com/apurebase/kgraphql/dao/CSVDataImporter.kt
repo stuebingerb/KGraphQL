@@ -5,7 +5,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 object CSVDataImporter {
-    fun importFromCsv(inputStream: InputStream?, consumer: (Array<String>)-> Unit) {
+    fun importFromCsv(inputStream: InputStream?, consumer: (Array<String>) -> Unit) {
         inputStream ?: throw RuntimeException("Failed to perform import")
         val bufferedReader = BufferedReader(InputStreamReader(inputStream))
 
