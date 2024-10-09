@@ -13,14 +13,11 @@ class TimedAutoDispatcherImpl<K, R>(
     private val autoChannel = Channel<Unit>()
     override val coroutineContext = Job(parent)
 
-    val dataLoaderDispatcher = newSingleThreadContext("CounterContext")
-
     init {
         launch(CoroutineName("TimedAutoDispatcherImpl:init")) {
             var job: Job? = null
             while (true) {
                 autoChannel.receive()
-//                println("TimedAutoDispatcherImpl:message")
                 if (job?.isActive == true) job.cancelAndJoin()
                 job = launch(CoroutineName("TimedAutoDispatcherImpl:autoChannel") + coroutineContext) {
                     delay(options.waitInterval)

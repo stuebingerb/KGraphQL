@@ -27,4 +27,4 @@ suspend fun <K, V> Cache<K, V>.getOrCreate(
     key: K,
     generator: suspend (key: K) -> CompletableDeferred<V>
 ): CompletableDeferred<V> =
-    getOrCreate(key, generator, {})
+    getOrCreate(key, generator) {}

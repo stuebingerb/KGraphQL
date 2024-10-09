@@ -2,7 +2,6 @@ package nidomiro.kdataloader.factories
 
 import kotlinx.coroutines.Job
 import nidomiro.kdataloader.*
-import kotlin.coroutines.CoroutineContext
 
 typealias DataLoaderFactoryMethod<K, R> = (options: DataLoaderOptions<K, R>, batchLoader: BatchLoader<K, R>, parent: Job?) -> DataLoader<K, R>
 

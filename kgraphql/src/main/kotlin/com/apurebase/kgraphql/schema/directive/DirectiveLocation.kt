@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.schema.directive
 
-
 enum class DirectiveLocation {
     QUERY,
     MUTATION,
@@ -11,8 +10,8 @@ enum class DirectiveLocation {
     INLINE_FRAGMENT;
 
     companion object {
-        fun from(str: String) = str.toLowerCase().let { lowered ->
-            values().firstOrNull { it.name.toLowerCase() == lowered }
+        fun from(str: String) = str.lowercase().let { lowered ->
+            entries.firstOrNull { it.name.lowercase() == lowered }
         }
     }
 }

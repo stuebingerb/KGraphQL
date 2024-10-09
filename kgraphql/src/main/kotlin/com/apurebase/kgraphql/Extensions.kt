@@ -2,7 +2,6 @@ package com.apurebase.kgraphql
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
@@ -25,7 +24,7 @@ internal fun KClass<*>.isIterable() = isSubclassOf(Iterable::class)
 
 internal fun KType.isIterable() = jvmErasure.isIterable() || toString().startsWith("kotlin.Array")
 
-internal fun KType.getIterableElementType(): KType? {
+internal fun KType.getIterableElementType(): KType {
     require(isIterable()) { "KType $this is not collection type" }
     return arguments.firstOrNull()?.type ?: throw NoSuchElementException("KType $this has no type arguments")
 }

@@ -48,7 +48,7 @@ class ObjectsSpecificationTest {
         val schema = schema { // TODO: Update this test to use the new [DataLoaderPrepared] executor!
             query("many") { resolver { -> ManyFields() } }
             type<ManyFields>{
-                property<String>("name") {
+                property("name") {
                     resolver { _ -> "Boguś" }
                 }
             }
@@ -158,14 +158,14 @@ class ObjectsSpecificationTest {
     fun `field resolution order does not affect response field order`(){
         val schema = schema {
             type<Actor> {
-                property<String>("long"){
+                property("long"){
                     resolver {
                         Thread.sleep(20)
                         "FINISHED LONG"
                     }
                 }
 
-                property<String>("short"){
+                property("short"){
                     resolver {
                         "FINISHED SHORT"
                     }

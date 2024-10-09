@@ -31,9 +31,9 @@ data class Droid (
         val primaryFunction : String
 ) : Character
 
-val luke = Human("2000", "Luke Skywalker", emptyList(), Episode.values().toSet(), "Tatooine", 1.72)
+val luke = Human("2000", "Luke Skywalker", emptyList(), Episode.entries.toSet(), "Tatooine", 1.72)
 
-val r2d2 = Droid("2001", "R2-D2", emptyList(), Episode.values().toSet(), "Astromech")
+val r2d2 = Droid("2001", "R2-D2", emptyList(), Episode.entries.toSet(), "Astromech")
 
 fun main() {
     val schema = KGraphQL.schema {

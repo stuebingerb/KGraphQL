@@ -135,7 +135,7 @@ data class MutableSchemaDefinition (
     }
 
     private fun Definition.checkEqualName(vararg collections: List<Definition>) : Boolean {
-        return collections.fold(false, { acc, list -> acc || list.any { it.equalName(this) } })
+        return collections.fold(false) { acc, list -> acc || list.any { it.equalName(this) } }
     }
 
     private fun Definition.equalName(other: Definition): Boolean {
@@ -156,13 +156,13 @@ private fun create__DirectiveDefinition() = TypeDSL(
     emptyList(),
     __Directive::class
 ).apply {
-    property<Boolean>("onField") {
+    property("onField") {
         resolver { dir: __Directive ->
             dir.locations.contains(DirectiveLocation.FIELD)
         }
         deprecate("Use `locations`.")
     }
-    property<Boolean>("onFragment") {
+    property("onFragment") {
         resolver { dir: __Directive ->
             dir.locations.containsAny(
                 DirectiveLocation.FRAGMENT_SPREAD,
@@ -172,7 +172,7 @@ private fun create__DirectiveDefinition() = TypeDSL(
         }
         deprecate("Use `locations`.")
     }
-    property<Boolean>("onOperation") {
+    property("onOperation") {
         resolver { dir: __Directive ->
             dir.locations.containsAny(
                 DirectiveLocation.QUERY,
@@ -184,5 +184,5 @@ private fun create__DirectiveDefinition() = TypeDSL(
     }
 }.toKQLObject()
 
-private fun <T> List<T>.containsAny(vararg elements: T) = elements.filter { this.contains(it) }.any()
+private fun <T> List<T>.containsAny(vararg elements: T) = elements.any { this.contains(it) }
 

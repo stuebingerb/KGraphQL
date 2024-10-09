@@ -72,10 +72,10 @@ class DeprecationSpecificationTest {
             }
 
             type<Sample>{
-                property<String>("add"){
+                property("add"){
                     description = expectedDescription
                     deprecate(expected)
-                    resolver{ (content) -> content.toUpperCase() }
+                    resolver{ (content) -> content.uppercase() }
                 }
             }
         }

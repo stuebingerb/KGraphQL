@@ -89,9 +89,9 @@ class SchemaBuilderTest {
             }
             type<Scenario> {
 
-                transformation(Scenario::content, { content: String, capitalized : Boolean? ->
-                    if(capitalized == true) content.capitalize() else content
-                })
+                transformation(Scenario::content) { content: String, capitalized: Boolean? ->
+                    if (capitalized == true) content.replaceFirstChar { it.uppercase() } else content
+                }
             }
         }
         val scenarioType = testedSchema.model.queryTypes[Scenario::class]
@@ -109,7 +109,7 @@ class SchemaBuilderTest {
             }
 
             type<Scenario> {
-                property<String>("pdf") {
+                property("pdf") {
                     description = "link to pdf representation of scenario"
                     resolver { scenario : Scenario -> "http://scenarios/${scenario.id}" }
                 }
@@ -168,7 +168,7 @@ class SchemaBuilderTest {
             }
 
             type<Actor> {
-                property<Actor>("linked") {
+                property("linked") {
                     resolver { _ -> Actor("BIG John", 3234) }
                 }
             }
@@ -202,7 +202,7 @@ class SchemaBuilderTest {
             }
 
             type<Actor> {
-                property<Actor>("linked") {
+                property("linked") {
                     resolver { _ -> Actor("BIG John", 3234) }
                 }
             }
@@ -227,7 +227,7 @@ class SchemaBuilderTest {
             }
 
             type<Actor>{
-                property<List<String>>("favDishes") {
+                property("favDishes") {
                     resolver { _: Actor, size: Int->
                         listOf("steak", "burger", "soup", "salad", "bread", "bird").take(size)
                     }
@@ -297,7 +297,7 @@ class SchemaBuilderTest {
 
     private sealed class Maybe<out T> {
         abstract fun get(): T
-        object Undefined : Maybe<Nothing>() {
+        data object Undefined : Maybe<Nothing>() {
             override fun get() = throw IllegalArgumentException("Requested value is not defined!")
         }
         class Defined<U>(val value: U) : Maybe<U>() {
@@ -499,7 +499,7 @@ class SchemaBuilderTest {
             }
 
             type<Actor> {
-                property<String>("nickname"){
+                property("nickname"){
                     resolver { _: Actor, ctx: Context -> "Hodor and ${ctx.get<UserData>()?.username}" }
                 }
 
@@ -777,7 +777,7 @@ class SchemaBuilderTest {
     }
 
     inline fun <T: Any, reified P: Any> TypeDSL<T>.createGenericProperty(x: P) {
-        property<P>("data") {
+        property("data") {
             resolver { _ -> x }.returns<P>()
         }
     }
@@ -794,7 +794,7 @@ class SchemaBuilderTest {
     }
 
     inline fun <T: Any, reified P: Any> TypeDSL<T>.createGenericPropertyExplicitly(returnType: KType, x: P) {
-        property<P>("data") {
+        property("data") {
             resolver { _ -> x }
             setReturnType(returnType)
         }
@@ -802,7 +802,6 @@ class SchemaBuilderTest {
 
     data class Prop<T>(val resultType: KType, val resolver: () -> T)
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun `creation of properties from a list`(){
 

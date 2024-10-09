@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.schema
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
-import com.apurebase.kgraphql.request.CachingDocumentParser
 import com.apurebase.kgraphql.request.Parser
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.execution.*
@@ -37,8 +36,6 @@ class DefaultSchema(
     }
 
     private val requestInterpreter: RequestInterpreter = RequestInterpreter(model)
-
-    private val cacheParser: CachingDocumentParser by lazy { CachingDocumentParser(configuration.documentParserCacheMaximumSize) }
 
     override suspend fun execute(
         request: String,

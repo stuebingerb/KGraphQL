@@ -10,7 +10,7 @@ import kotlin.reflect.KType
 
 class PropertyDSL<T : Any, R>(val name : String, block : PropertyDSL<T, R>.() -> Unit) : LimitedAccessItemDSL<T>(), ResolverDSL.Target {
 
-    internal lateinit var functionWrapper : FunctionWrapper<R>
+    private lateinit var functionWrapper : FunctionWrapper<R>
 
     private val inputValues = mutableListOf<InputValueDef<*>>()
 

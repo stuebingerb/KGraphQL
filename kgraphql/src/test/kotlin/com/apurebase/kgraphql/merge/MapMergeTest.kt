@@ -18,7 +18,7 @@ class MapMergeTest {
 
         existing.merge("param2", update)
 
-        assertThat(existing.get("param2"), equalTo(update))
+        assertThat(existing["param2"], equalTo(update))
     }
 
     @Test
@@ -28,7 +28,7 @@ class MapMergeTest {
 
         existing.merge("sub", update)
 
-        assertThat(existing.get("sub"), equalTo(update))
+        assertThat(existing["sub"], equalTo(update))
     }
 
     @Test
@@ -39,7 +39,7 @@ class MapMergeTest {
 
         expect<IllegalStateException>("different simple nodes") { existing.merge("param", update) }
 
-        assertThat(existing.get("param"), equalTo(existingValue))
+        assertThat(existing["param"], equalTo(existingValue))
     }
 
     @Test
@@ -51,7 +51,7 @@ class MapMergeTest {
         expect<IllegalStateException>("merge object with simple node") { existing.merge("param", update) }
 
         val expected: JsonNode? = jsonNodeFactory.textNode("value1")
-        assertThat(existing.get("param"), equalTo(expected))
+        assertThat(existing["param"], equalTo(expected))
     }
 
     @Test
@@ -62,7 +62,7 @@ class MapMergeTest {
 
         expect<IllegalStateException>("merge simple node with object node") { existing.merge("param", update) }
 
-        assertThat(existing.get("param"), equalTo(existingObj))
+        assertThat(existing["param"], equalTo(existingObj))
     }
 
     private fun createMap(vararg pairs: Pair<String, JsonNode?>) = mutableMapOf(*pairs)

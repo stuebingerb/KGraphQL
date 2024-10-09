@@ -10,7 +10,6 @@ import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
-import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure.Field
@@ -84,7 +83,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         this is Boolean -> JsonPrimitive(this)
         this is Long -> JsonPrimitive(this)
         returnType.unwrapped() is Type.Enum<*> -> JsonPrimitive(toString())
-        else -> throw TODO("Whaa? -> $this")
+        else -> error("Whaa? -> $this")
     }
 
     private suspend fun <T> DeferredJsonMap.applyKeyToElement(
@@ -121,7 +120,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                                             parentCount = values.size.toLong()
                                         )
                                     }
-                                    else -> throw TODO("Unknown error!")
+                                    else -> error("Unknown error!")
                                 }
                             }
                         }
@@ -157,7 +156,6 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                 serializeScalar(unwrapped, value, node)
             }
             is Type.Enum<*> -> JsonPrimitive(value.toString())
-            is TypeDef.Object<*> -> throw ExecutionException("Cannot handle object return type, schema structure exception", node)
             else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
         }
     }
@@ -289,7 +287,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                 field as Field.DataLoader<T, *, *>
                 handleDataPropertyAsync(ctx, parentValue, node, field, parentCount)
             }
-            else -> throw TODO("Only Kotlin Fields are supported!")
+            else -> error("Only Kotlin Fields are supported!")
         }
     }
 

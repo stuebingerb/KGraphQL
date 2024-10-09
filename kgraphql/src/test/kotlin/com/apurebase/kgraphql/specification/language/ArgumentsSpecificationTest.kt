@@ -25,7 +25,7 @@ class ArgumentsSpecificationTest {
         }
 
         type<Actor>{
-            property<List<String>>("favDishes") {
+            property("favDishes") {
                 resolver { _: Actor, size: Int, prefix: String? ->
                     listOf("steak", "burger", "soup", "salad", "bread", "bird").let { dishes ->
                         if(prefix != null){
@@ -36,26 +36,26 @@ class ArgumentsSpecificationTest {
                     }.take(size)
                 }
             }
-            property<Int>("none") {
+            property("none") {
                 resolver { actor -> actor.age }
             }
-            property<Int>("one") {
+            property("one") {
                 resolver {actor, one: Int -> actor.age + one }
             }
-            property<Int>("two") {
+            property("two") {
                 resolver { actor, one: Int, two: Int -> actor.age + one + two }
             }
-            property<Int>("three") {
+            property("three") {
                 resolver { actor, one: Int, two: Int, three: Int ->
                     actor.age + one + two + three
                 }
             }
-            property<Int>("four") {
+            property("four") {
                 resolver { actor, one: Int, two: Int, three: Int, four: Int ->
                     actor.age + one + two + three + four
                 }
             }
-            property<Int>("five") {
+            property("five") {
                 resolver { actor, one: Int, two: Int, three: Int, four: Int, five: Int ->
                     actor.age + one + two + three + four + five
                 }
@@ -117,7 +117,7 @@ class ArgumentsSpecificationTest {
             }
 
             type<Actor> {
-                property<String>("greeting") {
+                property("greeting") {
                     resolver { actor: Actor, suffix: String ->
                         "$suffix, ${actor.name}!"
                     }.withArgs {

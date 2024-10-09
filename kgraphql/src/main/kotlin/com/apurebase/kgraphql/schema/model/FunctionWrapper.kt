@@ -1,4 +1,5 @@
 @file:Suppress("UNCHECKED_CAST")
+@file:OptIn(ExperimentalReflectionOnLambdas::class)
 
 package com.apurebase.kgraphql.schema.model
 
@@ -12,6 +13,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.valueParameters
+import kotlin.reflect.jvm.ExperimentalReflectionOnLambdas
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.jvm.reflect
 

@@ -7,7 +7,6 @@ import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
-import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
@@ -65,7 +64,6 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             }
         }
 
-        @Suppress("BlockingMethodInNonBlockingContext")
         objectWriter.writeValueAsString(root)
     }
 
@@ -155,18 +153,16 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         }
     }
 
-    private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonNode {
-        return when (val unwrapped = returnType.unwrapped()) {
+    private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonNode =
+        when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
                 serializeScalar(jsonNodeFactory, unwrapped, value, node)
             }
             is Type.Enum<*> -> {
                 jsonNodeFactory.textNode(value.toString())
             }
-            is TypeDef.Object<*> -> throw ExecutionException("Cannot handle object return type, schema structure exception", node)
             else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
         }
-    }
 
     private fun createNullNode(node: Execution.Node, returnType: Type): NullNode {
         if (returnType !is Type.NonNull) {
@@ -182,7 +178,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             when (child) {
                 is Execution.Fragment -> objectNode.setAll<JsonNode>(handleFragment(ctx, value, child))
                 else -> {
-                    val (key, jsonNode) = handleProperty(ctx, value, child, type, node.children.size)
+                    val (key, jsonNode) = handleProperty(ctx, value, child, type)
                     objectNode.merge(key, jsonNode)
                 }
             }
@@ -190,7 +186,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         return objectNode
     }
 
-    private suspend fun <T> handleProperty(ctx: ExecutionContext, value: T, child: Execution, type: Type, childrenSize: Int): Pair<String, JsonNode?> {
+    private suspend fun <T> handleProperty(ctx: ExecutionContext, value: T, child: Execution, type: Type): Pair<String, JsonNode?> {
         when (child) {
             //Union is subclass of Node so check it first
             is Execution.Union -> {
@@ -205,7 +201,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             is Execution.Node -> {
                 val field = type.unwrapped()[child.key]
                     ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
-                return child.aliasOrKey to createPropertyNode(ctx, value, child, field, childrenSize)
+                return child.aliasOrKey to createPropertyNode(ctx, value, child, field)
             }
             else -> {
                 throw UnsupportedOperationException("Handling containers is not implemented yet")
@@ -223,8 +219,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     return container.elements.flatMap { child ->
                         when (child) {
                             is Execution.Fragment -> handleFragment(ctx, value, child).toList()
-                            // TODO: Should not be 1
-                            else -> listOf(handleProperty(ctx, value, child, expectedType, 1))
+                            else -> listOf(handleProperty(ctx, value, child, expectedType))
                         }
                     }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
                 }
@@ -240,7 +235,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         return emptyMap()
     }
 
-    private suspend fun <T> createPropertyNode(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field, parentTimes: Int): JsonNode? {
+    private suspend fun <T> createPropertyNode(ctx: ExecutionContext, parentValue: T, node: Execution.Node, field: Field): JsonNode? {
         val include = determineInclude(ctx, node)
         node.field.checkAccess(parentValue, ctx.requestContext)
 

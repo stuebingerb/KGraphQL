@@ -14,7 +14,6 @@ class ResolverDSL(val target: Target) {
         })
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     inline fun <reified T: Any> returns(): ResolverDSL {
         target.setReturnType(typeOf<T>())
         return this

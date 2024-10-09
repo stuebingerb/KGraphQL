@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql.specification.language
 
 import com.apurebase.kgraphql.*
-import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe

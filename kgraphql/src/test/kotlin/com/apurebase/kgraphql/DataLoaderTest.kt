@@ -75,7 +75,7 @@ class DataLoaderTest {
             }
 
             type<Person> {
-                property<String>("fullName") {
+                property("fullName") {
                     resolver { "${it.firstName} ${it.lastName}" }
                 }
 
@@ -118,7 +118,7 @@ class DataLoaderTest {
                         println("== Running [B] loader with keys: $keys ==")
                         counters.abcB.loader.incrementAndGet()
                         keys.map {
-                            ExecutionResult.Success(it.map(Char::toInt).fold(0) { a, b -> a + b })
+                            ExecutionResult.Success(it.map(Char::code).fold(0) { a, b -> a + b })
                         }
                     }
                     prepare { parent: ABC ->
@@ -128,7 +128,7 @@ class DataLoaderTest {
                 }
 
                 @Suppress("BlockingMethodInNonBlockingContext")
-                property<ABC>("simpleChild") {
+                property("simpleChild") {
                     resolver {
                         delay((1..5L).random())
                         Thread.sleep((1..5L).random())
@@ -148,7 +148,7 @@ class DataLoaderTest {
                         }
                     }
                 }
-                property<Person?>("personOld") {
+                property("personOld") {
                     resolver {
                         delay(1)
                         if (it.personId == null || it.personId < 1) null else allPeople[it.personId - 1]
@@ -156,7 +156,6 @@ class DataLoaderTest {
                 }
 
                 dataProperty<String, List<ABC>>("children") {
-//                    setReturnType { listOf() }
                     loader { keys ->
                         println("== Running [children] loader with keys: $keys ==")
                         counters.abcChildren.loader.incrementAndGet()
@@ -179,7 +178,7 @@ class DataLoaderTest {
                     }
                 }
 
-                property<List<ABC>>("childrenOld") {
+                property("childrenOld") {
                     resolver { parent ->
                         when (parent.value) {
                             "Testing 1" -> listOf(ABC("Hello"), ABC("World"))

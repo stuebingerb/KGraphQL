@@ -183,12 +183,7 @@ class SchemaCompilation(
     }
 
     private suspend fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {
-        val type = when {
-            kType.getIterableElementType() != null -> kType.getIterableElementType()
-            kType.arguments.size == 1 -> kType.arguments.first().type
-            else -> null
-        } ?: throw throw SchemaException("Cannot handle collection without element type")
-
+        val type = kType.getIterableElementType()
         val nullableListType = Type.AList(handleSimpleType(type, typeCategory))
         return applyNullability(kType, nullableListType)
     }
@@ -199,10 +194,10 @@ class SchemaCompilation(
     }
 
     private fun applyNullability(kType: KType, simpleType: Type): Type {
-        if (!kType.isMarkedNullable) {
-            return Type.NonNull(simpleType)
+        return if (!kType.isMarkedNullable) {
+            Type.NonNull(simpleType)
         } else {
-            return simpleType
+            simpleType
         }
     }
 

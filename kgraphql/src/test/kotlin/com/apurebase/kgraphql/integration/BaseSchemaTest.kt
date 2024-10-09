@@ -1,8 +1,18 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.Actor
+import com.apurebase.kgraphql.ActorCalculateAgeInput
+import com.apurebase.kgraphql.ActorInput
+import com.apurebase.kgraphql.Director
+import com.apurebase.kgraphql.Film
+import com.apurebase.kgraphql.FilmType
+import com.apurebase.kgraphql.Id
+import com.apurebase.kgraphql.IdScalarSupport
+import com.apurebase.kgraphql.Person
+import com.apurebase.kgraphql.Scenario
+import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.deserialize
 import org.junit.jupiter.api.AfterEach
-import java.io.ByteArrayInputStream
 
 
 abstract class BaseSchemaTest {
@@ -138,7 +148,7 @@ abstract class BaseSchemaTest {
 
         query("number") {
             description = "returns little of big number"
-            resolver { big : Boolean -> if(big) 10000 else 0 }
+            resolver { big: Boolean -> if (big) 10000 else 0 }
         }
         query("film") {
             description = "mock film"
@@ -176,15 +186,17 @@ abstract class BaseSchemaTest {
         }
         query("filmByRank") {
             description = "ranked films"
-            resolver { rank: Int -> when(rank){
-                1 -> prestige
-                2 -> se7en
-                else -> null
-            }}
+            resolver { rank: Int ->
+                when (rank) {
+                    1 -> prestige
+                    2 -> se7en
+                    else -> null
+                }
+            }
         }
         query("filmsByType") {
             description = "film categorized by type"
-            resolver {type: FilmType -> listOf(prestige, se7en) }
+            resolver { type: FilmType -> listOf(prestige, se7en) }
         }
         query("people") {
             description = "List of all people"
@@ -192,11 +204,11 @@ abstract class BaseSchemaTest {
         }
         query("randomPerson") {
             description = "not really random person"
-            resolver { -> davidFincher as Person /*not really random*/}
+            resolver { -> davidFincher /*not really random*/ }
         }
         mutation("createActor") {
             description = "create new actor"
-            resolver { name : String, age : Int ->
+            resolver { name: String, age: Int ->
                 val actor = Actor(name, age)
                 createdActors.add(actor)
                 actor
@@ -233,14 +245,14 @@ abstract class BaseSchemaTest {
             description = "unique, concise representation of film"
             coercion = IdScalarSupport()
         }
-        enum<FilmType>{ description = "type of film, base on its length" }
-        type<Person>{ description = "Common data for any person"}
-        type<Scenario>{
-            property(Scenario::author){
+        enum<FilmType> { description = "type of film, base on its length" }
+        type<Person> { description = "Common data for any person" }
+        type<Scenario> {
+            property(Scenario::author) {
                 ignore = true
             }
-            transformation(Scenario::content) { content : String, uppercase: Boolean? ->
-                if(uppercase == true) content.toUpperCase() else content
+            transformation(Scenario::content) { content: String, uppercase: Boolean? ->
+                if (uppercase == true) content.uppercase() else content
             }
         }
         val favouriteID = unionType("Favourite") {
@@ -249,15 +261,15 @@ abstract class BaseSchemaTest {
             type<Director>()
         }
 
-        type<Actor>{
+        type<Actor> {
             description = "An actor is a person who portrays a character in a performance"
             property<Boolean?>("isOld") {
                 resolver { actor -> (actor.age > 500) }
             }
-            property<String>("picture") {
-                resolver { actor, big : Boolean? ->
+            property("picture") {
+                resolver { actor, big: Boolean? ->
                     val actorName = actor.name.replace(' ', '_')
-                    if(big == true){
+                    if (big == true) {
                         "http://picture.server/pic/$actorName?big=true"
                     } else {
                         "http://picture.server/pic/$actorName?big=false"
@@ -265,10 +277,10 @@ abstract class BaseSchemaTest {
                 }
             }
 
-            property<String>("pictureWithArgs") {
-                resolver { actor, big : Boolean? ->
+            property("pictureWithArgs") {
+                resolver { actor, big: Boolean? ->
                     val actorName = actor.name.replace(' ', '_')
-                    if(big == true){
+                    if (big == true) {
                         "http://picture.server/pic/$actorName?big=true"
                     } else {
                         "http://picture.server/pic/$actorName?big=false"
@@ -280,24 +292,28 @@ abstract class BaseSchemaTest {
 
             unionProperty("favourite") {
                 returnType = favouriteID
-                resolver { actor -> when(actor){
-                    bradPitt -> tomHardy
-                    tomHardy -> christopherNolan
-                    morganFreeman -> Scenario(Id("234", 33), "Paulo Coelho", "DUMB")
-                    rickyGervais -> null
-                    else -> christianBale
-                }}
+                resolver { actor ->
+                    when (actor) {
+                        bradPitt -> tomHardy
+                        tomHardy -> christopherNolan
+                        morganFreeman -> Scenario(Id("234", 33), "Paulo Coelho", "DUMB")
+                        rickyGervais -> null
+                        else -> christianBale
+                    }
+                }
             }
             unionProperty("nullableFavourite") {
                 returnType = favouriteID
                 nullable = true
-                resolver { actor -> when(actor){
-                    bradPitt -> tomHardy
-                    tomHardy -> christopherNolan
-                    morganFreeman -> Scenario(Id("234", 33), "Paulo Coelho", "DUMB")
-                    rickyGervais -> null
-                    else -> christianBale
-                }}
+                resolver { actor ->
+                    when (actor) {
+                        bradPitt -> tomHardy
+                        tomHardy -> christopherNolan
+                        morganFreeman -> Scenario(Id("234", 33), "Paulo Coelho", "DUMB")
+                        rickyGervais -> null
+                        else -> christianBale
+                    }
+                }
             }
         }
 
@@ -317,7 +333,7 @@ abstract class BaseSchemaTest {
     @AfterEach
     fun cleanup() = createdActors.clear()
 
-    fun execute(query: String, variables : String? = null) = testedSchema
+    fun execute(query: String, variables: String? = null) = testedSchema
         .executeBlocking(query, variables)
         .also(::println)
         .deserialize()

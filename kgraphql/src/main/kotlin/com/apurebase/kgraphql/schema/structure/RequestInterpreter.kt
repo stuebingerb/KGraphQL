@@ -84,7 +84,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         }
 
         val fragmentDefinitionNode = test.filterIsInstance<FragmentDefinitionNode>()
-        val fragmentDefinitions = fragmentDefinitionNode.map { fragmentDef ->
+        val fragmentDefinitions = fragmentDefinitionNode.associate { fragmentDef ->
             val type = schemaModel.allTypesByName.getValue(fragmentDef.typeCondition.name.value)
             val name = fragmentDef.name!!.value
 
@@ -93,7 +93,7 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
             }
 
             name to (type to fragmentDef.selectionSet)
-        }.toMap()
+        }
 
         val ctx = InterpreterContext(fragmentDefinitions)
 

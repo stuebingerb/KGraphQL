@@ -1021,7 +1021,7 @@ internal class LexerTest {
             endToken = lexer.advance()
             // Lexer advances over ignored comment tokens to make writing parsers
             // easier, but will include them in the linked list result.
-            endToken.kind shouldNotEqual COMMENT
+            endToken.kind shouldNotBeEqualTo COMMENT
         } while (endToken?.kind != EOF)
 
         startToken.prev shouldBeEqualTo null
@@ -1037,7 +1037,7 @@ internal class LexerTest {
             }
         }
 
-        tokens.map { it.kind } shouldEqual listOf(
+        tokens.map { it.kind } shouldBeEqualTo listOf(
             SOF,
             BRACE_L,
             COMMENT,

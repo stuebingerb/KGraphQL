@@ -586,7 +586,7 @@ class ParserTest {
             this shouldBeInstanceOf ListTypeNode::class
             loc!!.run {
                 start shouldBeEqualTo 0
-                end shouldEqualTo 8
+                end shouldBeEqualTo 8
             }
             (type as NamedTypeNode).run {
                 this shouldBeInstanceOf NamedTypeNode::class

@@ -14,5 +14,4 @@ fun Execution.getFields(): List<String> = when (this) {
             .flatMap(Execution::getFields)
 
     }
-    else -> listOf()
 }.distinct()

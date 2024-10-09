@@ -37,7 +37,7 @@ open class KtorTest {
                     setBody(when(type.lowercase().trim()) {
                         "query" -> graphqlQuery(kraph).build()
                         "mutation" -> graphqlMutation(kraph).build()
-                        else -> throw TODO("$type is not a valid graphql operation type")
+                        else -> error("$type is not a valid graphql operation type")
                     }.also(::println))
                 }.bodyAsText()
             }

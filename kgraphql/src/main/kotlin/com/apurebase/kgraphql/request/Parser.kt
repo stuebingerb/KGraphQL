@@ -134,7 +134,6 @@ open class Parser {
     /**
      * VariableDefinition : Variable : Type DefaultValue? Directives{Const}?
      */
-    @Suppress("ComplexRedundantLet")
     private fun parseVariableDefinition(): VariableDefinitionNode {
         val start = lexer.token
         return VariableDefinitionNode(
@@ -239,7 +238,6 @@ open class Parser {
         )
     }
 
-    @Suppress("ComplexRedundantLet")
     private fun parseConstArgument(): ArgumentNode {
         val start = lexer.token
         return ArgumentNode(
@@ -287,7 +285,6 @@ open class Parser {
      *
      * TypeCondition : NamedType
      */
-    @Suppress("ComplexRedundantLet")
     private fun parseFragmentDefinition(): DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode {
         val start = lexer.token
         expectKeyword("fragment")

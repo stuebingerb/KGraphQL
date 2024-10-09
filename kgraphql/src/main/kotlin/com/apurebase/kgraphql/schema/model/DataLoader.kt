@@ -5,7 +5,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.actor
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 
 class DataLoader<K, V>(private val batchLoader: suspend (List<K>) -> Map<K, V?>) {
 
@@ -60,7 +59,7 @@ fun <K, V> CoroutineScope.dataActor(totalTimes: Int, batchLoader: suspend (List<
         if (msg is Add<*, *>) {
             msg as Add<K, V>
             if (!promiseMap.containsKey(msg.key)) promiseMap[msg.key] = Stack()
-            promiseMap[msg.key]?.add(msg.result) ?: throw TODO("Couldn't find any '${msg.key}' in map")
+            promiseMap[msg.key]?.add(msg.result) ?: error("Couldn't find any '${msg.key}' in map")
             log("$counter")
             if (--counter == 0) doJoin()
         }

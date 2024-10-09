@@ -15,7 +15,7 @@ fun graphqlMutation(block: Kraph.() -> Unit): Kraph {
 
 class Kraph(
     private val type: String,
-    private val variables: MutableList<Kraph.Variable> = mutableListOf(),
+    private val variables: MutableList<Variable> = mutableListOf(),
     private val root: Boolean = true,
 ): List<Kraph.Variable> by variables {
 

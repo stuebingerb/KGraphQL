@@ -24,9 +24,9 @@ import java.util.logging.Logger
 @ChannelHandler.Sharable
 class HttpRequestHandler(val schema : DefaultSchema) : SimpleChannelInboundHandler<FullHttpRequest>() {
 
-    val logger : Logger = Logger.getLogger( HttpRequestHandler::class.qualifiedName )
+    private val logger : Logger = Logger.getLogger( HttpRequestHandler::class.qualifiedName )
 
-    val objectMapper = ObjectMapper()
+    private val objectMapper = ObjectMapper()
 
     override fun channelRead0(ctx: ChannelHandlerContext, msg: FullHttpRequest) {
         when{
@@ -54,7 +54,7 @@ class HttpRequestHandler(val schema : DefaultSchema) : SimpleChannelInboundHandl
 
     private fun writeResponse(ctx: ChannelHandlerContext, response: String, contentType: AsciiString = HttpHeaderValues.APPLICATION_JSON) {
 
-        val httpResponse = io.netty.handler.codec.http.DefaultFullHttpResponse(
+        val httpResponse = DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
                 HttpResponseStatus.OK,
                 Unpooled.wrappedBuffer(response.toByteArray())

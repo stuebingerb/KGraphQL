@@ -89,7 +89,7 @@ interface Type : __Type {
 
         override val possibleTypes: List<__Type>? = null
 
-        override val interfaces: List<Type.Interface<*>>? = emptyList()
+        override val interfaces: List<Interface<*>> = emptyList()
 
         override fun isInstance(value: Any?): Boolean = false
     }
@@ -104,7 +104,7 @@ interface Type : __Type {
 
         override val kind: TypeKind = TypeKind.OBJECT
 
-        override val name: String? = definition.name
+        override val name: String = definition.name
 
         override val description: String = definition.description ?: ""
 
@@ -129,7 +129,7 @@ interface Type : __Type {
 
         override val kind: TypeKind = TypeKind.INTERFACE
 
-        override val name: String? = definition.name
+        override val name: String = definition.name
 
         override val description: String = definition.description ?: ""
 
@@ -152,7 +152,7 @@ interface Type : __Type {
 
         override val kind: TypeKind = TypeKind.SCALAR
 
-        override val name: String? = kqlType.name
+        override val name: String = kqlType.name
 
         override val description: String = kqlType.description ?: ""
 
@@ -181,11 +181,11 @@ interface Type : __Type {
 
         override val kind: TypeKind = TypeKind.ENUM
 
-        override val name: String? = kqlType.name
+        override val name: String = kqlType.name
 
         override val description: String = kqlType.description ?: ""
 
-        override val enumValues: List<__EnumValue>? = values
+        override val enumValues: List<__EnumValue> = values
 
         override val inputFields: List<__InputValue>? = null
 
@@ -207,7 +207,7 @@ interface Type : __Type {
 
         override val kind: TypeKind = TypeKind.INPUT_OBJECT
 
-        override val name: String? = kqlType.name
+        override val name: String = kqlType.name
 
         override val description: String = kqlType.description ?: ""
 
@@ -231,7 +231,7 @@ interface Type : __Type {
 
         override val kind: TypeKind = TypeKind.UNION
 
-        override val name: String? = kqlType.name
+        override val name: String = kqlType.name
 
         override val description: String = kqlType.description ?: ""
 
@@ -249,7 +249,7 @@ interface Type : __Type {
     }
 
     class _Context : Type {
-        override val kClass: KClass<*>? = Context::class
+        override val kClass: KClass<*> = Context::class
 
         override val kind: TypeKind = TypeKind.OBJECT
 
@@ -271,7 +271,7 @@ interface Type : __Type {
     }
 
     class _ExecutionNode : Type {
-        override val kClass: KClass<*>? = Execution.Node::class
+        override val kClass: KClass<*> = Execution.Node::class
 
         override val kind: TypeKind = TypeKind.OBJECT
 
@@ -317,11 +317,11 @@ interface Type : __Type {
         override fun isInstance(value: Any?): Boolean = false
     }
 
-    class AList(val elementType: Type) : Type {
+    class AList(elementType: Type) : Type {
 
         override val kClass: KClass<*>? = null
 
-        override val ofType: __Type? = elementType
+        override val ofType: __Type = elementType
 
         override val kind: TypeKind = TypeKind.LIST
 

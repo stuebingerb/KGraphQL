@@ -41,7 +41,7 @@ open class SimpleDataLoaderImpl<K, R>(
         }
 
         return if (options.cache != null) {
-            options.cache!!.getOrCreate(key, block, { statisticsCollector.incCacheHitCountAsync() })
+            options.cache!!.getOrCreate(key, block) { statisticsCollector.incCacheHitCountAsync() }
         } else {
             block(key)
         }

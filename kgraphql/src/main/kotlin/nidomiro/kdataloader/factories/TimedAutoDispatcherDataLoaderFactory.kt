@@ -1,13 +1,10 @@
 package nidomiro.kdataloader.factories
 
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.job
 import nidomiro.kdataloader.BatchLoader
 import nidomiro.kdataloader.DataLoaderOptions
 import nidomiro.kdataloader.ExecutionResult
 import nidomiro.kdataloader.TimedAutoDispatcherImpl
 import nidomiro.kdataloader.TimedAutoDispatcherDataLoaderOptions
-import kotlin.coroutines.CoroutineContext
 
 class TimedAutoDispatcherDataLoaderFactory<K, R>(
     optionsFactory: () -> TimedAutoDispatcherDataLoaderOptions<K, R>,

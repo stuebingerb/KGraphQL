@@ -151,7 +151,7 @@ class IntrospectionSpecificationTest {
             }
 
             type<IntString>{
-                property<Double>("float"){
+                property("float"){
                     resolver { (int), doubleIt : Boolean -> int.toDouble() * if(doubleIt) 2 else 1 }
                 }
             }
@@ -213,7 +213,7 @@ class IntrospectionSpecificationTest {
 
     data class Book(val id: String)
 
-    val unionSchema = defaultSchema {
+    private val unionSchema = defaultSchema {
         query("interface"){
             resolver { -> Face("~~MOCK~~") }
         }
@@ -225,7 +225,7 @@ class IntrospectionSpecificationTest {
                     type<Book>()
                 }
 
-                resolver { it -> Book(it.value) }
+                resolver { Book(it.value) }
             }
         }
     }
@@ -272,7 +272,7 @@ class IntrospectionSpecificationTest {
         val typenames = types.map { type -> type["name"] as String }.sorted()
 
         for(i in typenames.indices){
-            typenames[i] shouldNotEqual typenames.getOrNull(i + 1)
+            typenames[i] shouldNotBeEqualTo typenames.getOrNull(i + 1)
         }
     }
 

@@ -26,7 +26,7 @@ class AccessRulesTest {
             property(Player::id){
                 accessRule(accessRuleBlock)
             }
-            property<String>("item") {
+            property("item") {
                 accessRule(accessRuleBlock)
                 resolver { "item" }
             }

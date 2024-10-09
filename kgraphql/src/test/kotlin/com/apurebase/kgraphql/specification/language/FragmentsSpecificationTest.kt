@@ -8,9 +8,7 @@ import com.apurebase.kgraphql.GraphQLError
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.*
-import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 
@@ -82,12 +80,12 @@ class FragmentsSpecificationTest {
             val name = map.extract<String>("data/people[$i]/name")
             when (name) {
                 "David Fincher" /* director */ -> {
-                    MatcherAssert.assertThat(map.extract<List<*>>("data/people[$i]/favActors"), CoreMatchers.notNullValue())
-                    MatcherAssert.assertThat(extractOrNull<Boolean>(map, "data/people[$i]/isOld"), CoreMatchers.nullValue())
+                    assertThat(map.extract<List<*>>("data/people[$i]/favActors"), notNullValue())
+                    assertThat(extractOrNull<Boolean>(map, "data/people[$i]/isOld"), nullValue())
                 }
                 "Brad Pitt" /* actor */ -> {
-                    MatcherAssert.assertThat(map.extract<Boolean>("data/people[$i]/isOld"), CoreMatchers.notNullValue())
-                    MatcherAssert.assertThat(extractOrNull<List<*>>(map, "data/people[$i]/favActors"), CoreMatchers.nullValue())
+                    assertThat(map.extract<Boolean>("data/people[$i]/isOld"), notNullValue())
+                    assertThat(extractOrNull<List<*>>(map, "data/people[$i]/favActors"), nullValue())
                 }
             }
         }
@@ -101,12 +99,12 @@ class FragmentsSpecificationTest {
             val name = map.extract<String>("data/people[$i]/name")
             when (name) {
                 "David Fincher" /* director */ -> {
-                    MatcherAssert.assertThat(map.extract<List<*>>("data/people[$i]/favActors"), CoreMatchers.notNullValue())
-                    MatcherAssert.assertThat(extractOrNull<Boolean>(map, "data/people[$i]/isOld"), CoreMatchers.nullValue())
+                    assertThat(map.extract<List<*>>("data/people[$i]/favActors"), notNullValue())
+                    assertThat(extractOrNull<Boolean>(map, "data/people[$i]/isOld"), nullValue())
                 }
                 "Brad Pitt" /* actor */ -> {
-                    MatcherAssert.assertThat(map.extract<Boolean>("data/people[$i]/isOld"), CoreMatchers.notNullValue())
-                    MatcherAssert.assertThat(extractOrNull<List<*>>(map, "data/people[$i]/favActors"), CoreMatchers.nullValue())
+                    assertThat(map.extract<Boolean>("data/people[$i]/isOld"), notNullValue())
+                    assertThat(extractOrNull<List<*>>(map, "data/people[$i]/favActors"), nullValue())
                 }
             }
         }

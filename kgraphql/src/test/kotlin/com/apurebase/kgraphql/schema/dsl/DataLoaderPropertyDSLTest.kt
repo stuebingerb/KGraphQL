@@ -51,7 +51,7 @@ class DataLoaderPropertyDSLTest {
 
     class Parent(val data: String = "")
 
-    inline fun <T: Any, reified P: Any> TypeDSL<T>.createGenericDataProperty(returnType: KType, crossinline resolver: () -> P) {
+    private inline fun <T: Any, reified P: Any> TypeDSL<T>.createGenericDataProperty(returnType: KType, crossinline resolver: () -> P) {
         dataProperty<T, P>("data") {
             prepare { it }
             loader { it.map { ExecutionResult.Success(resolver()) } }
@@ -59,7 +59,6 @@ class DataLoaderPropertyDSLTest {
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun `specifying return type explicitly allows generic data property creation`(){
         val schema = defaultSchema {
@@ -76,7 +75,6 @@ class DataLoaderPropertyDSLTest {
 
     data class Prop<T>(val resultType: KType, val resolver: () -> T)
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun `creation of data properties from a list`(){
 

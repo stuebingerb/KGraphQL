@@ -42,18 +42,18 @@ data class Directive (
          * The @skip directive may be provided for fields, fragment spreads, and inline fragments.
          * Allows for conditional exclusion during execution as described by the if argument.
          */
-        val SKIP = Directive.Partial( "skip",
+        val SKIP = Partial( "skip",
                 listOf(FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT),
-                DirectiveExecution(FunctionWrapper.on({ `if` : Boolean -> DirectiveResult(!`if`) }))
+                DirectiveExecution(FunctionWrapper.on { `if`: Boolean -> DirectiveResult(!`if`) })
         )
 
         /**
          * The @include directive may be provided for fields, fragment spreads, and inline fragments.
          * Allows for conditional inclusion during execution as described by the if argument.
          */
-        val INCLUDE = Directive.Partial( "include",
+        val INCLUDE = Partial( "include",
                 listOf(FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT),
-                DirectiveExecution(FunctionWrapper.on({ `if` : Boolean -> DirectiveResult(`if`) }))
+                DirectiveExecution(FunctionWrapper.on { `if`: Boolean -> DirectiveResult(`if`) })
         )
     }
 }

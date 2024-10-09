@@ -15,9 +15,8 @@ class DataLoaderPropertyDSL<T, K, R>(
     private val block : DataLoaderPropertyDSL<T, K, R>.() -> Unit
 ): LimitedAccessItemDSL<T>(), ResolverDSL.Target {
 
-    internal var dataLoader: BatchLoader<K, R>? = null
-    internal var prepareWrapper: FunctionWrapper<K>? = null
-
+    private var dataLoader: BatchLoader<K, R>? = null
+    private var prepareWrapper: FunctionWrapper<K>? = null
     private val inputValues = mutableListOf<InputValueDef<*>>()
 
     var explicitReturnType: KType? = null

@@ -9,5 +9,5 @@ sealed class BatchMode {
     /**
      * Load everything immediately
      */
-    object LoadImmediately : BatchMode()
+    data object LoadImmediately : BatchMode()
 }

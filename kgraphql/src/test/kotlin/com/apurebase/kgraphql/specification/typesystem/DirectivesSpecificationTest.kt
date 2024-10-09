@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.specification.typesystem
 import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldEqual
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
