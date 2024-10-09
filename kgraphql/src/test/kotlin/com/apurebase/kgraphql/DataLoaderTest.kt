@@ -28,8 +28,7 @@ class DataLoaderTest {
     private val beinisson = Person(2, "Høgni", "Beinisson")
     private val juul = Person(3, "Høgni", "Juul")
     private val otherOne = Person(4, "The other one", "??")
-
-    val allPeople = listOf(jogvan, beinisson, juul, otherOne)
+    private val allPeople = listOf(jogvan, beinisson, juul, otherOne)
 
     private val colleagues = mapOf(
         jogvan.id to listOf(beinisson, juul),
@@ -159,12 +158,12 @@ class DataLoaderTest {
                     loader { keys ->
                         println("== Running [children] loader with keys: $keys ==")
                         counters.abcChildren.loader.incrementAndGet()
-                        keys.map {
-                            val (a1, a2) = when (it) {
+                        keys.map { key ->
+                            val (a1, a2) = when (key) {
                                 "Testing 1" -> "Hello" to "World"
                                 "Testing 2" -> "Fizz" to "Buzz"
                                 "Testing 3" -> "Jógvan" to "Høgni"
-                                else -> "${it}Nest-0" to "${it}Nest-1"
+                                else -> "${key}Nest-0" to "${key}Nest-1"
                             }
                             delay(1)
                             ExecutionResult.Success(
@@ -384,7 +383,7 @@ class DataLoaderTest {
             val result = schema.executeBlocking(query).also(::println).deserialize()
 
             result.extract<String>("data/abc[0]/person/fullName") shouldBeEqualTo "${jogvan.firstName} ${jogvan.lastName}"
-            extractOrNull<String>(result, "data/abc[1]/person") shouldBeEqualTo null
+            result.extract<String?>("data/abc[1]/person") shouldBeEqualTo null
             result.extract<String>("data/abc[2]/person/fullName") shouldBeEqualTo "${juul.firstName} ${juul.lastName}"
         }
     }

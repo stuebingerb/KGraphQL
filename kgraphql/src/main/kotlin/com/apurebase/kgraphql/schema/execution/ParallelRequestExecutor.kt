@@ -204,7 +204,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             when (child) {
                 is Execution.Fragment -> objectNode.setAll<JsonNode>(handleFragment(ctx, value, child))
                 else -> {
-                    val (key, jsonNode) = handleProperty(ctx, value, child, type)
+                    val (key, jsonNode) = handleProperty(ctx, value, child, type) ?: continue
                     objectNode.merge(key, jsonNode)
                 }
             }
@@ -217,7 +217,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         value: T,
         child: Execution,
         type: Type
-    ): Pair<String, JsonNode?> {
+    ): Pair<String, JsonNode?>? {
         when (child) {
             //Union is subclass of Node so check it first
             is Execution.Union -> {
@@ -233,7 +233,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             is Execution.Node -> {
                 val field = type.unwrapped()[child.key]
                     ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
-                return child.aliasOrKey to createPropertyNode(ctx, value, child, field)
+                return child.aliasOrKey to (createPropertyNode(ctx, value, child, field) ?: return null)
             }
 
             else -> {
@@ -256,7 +256,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     return container.elements.flatMap { child ->
                         when (child) {
                             is Execution.Fragment -> handleFragment(ctx, value, child).toList()
-                            else -> listOf(handleProperty(ctx, value, child, expectedType))
+                            else -> listOfNotNull(handleProperty(ctx, value, child, expectedType))
                         }
                     }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
                 }

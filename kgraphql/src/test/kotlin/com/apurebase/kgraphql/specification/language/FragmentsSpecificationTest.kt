@@ -11,13 +11,14 @@ import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 @Specification("2.8 Fragments")
 class FragmentsSpecificationTest {
 
     val age = 232
 
-    val actorName = "Boguś Linda"
+    private val actorName = "Boguś Linda"
 
     val id = "BLinda"
 
@@ -29,7 +30,7 @@ class FragmentsSpecificationTest {
         }
     }
 
-    val BaseTestSchema = object : BaseSchemaTest() {}
+    private val baseTestSchema = object : BaseSchemaTest() {}
 
     @Test
     fun `fragment's fields are added to the query at the same level as the fragment invocation`() {
@@ -76,25 +77,25 @@ class FragmentsSpecificationTest {
             )
         )
         assertNoErrors(response)
-        assertThat(extractOrNull(response, "data/actor/actualActor/name"), equalTo("Boguś Linda"))
-        assertThat(extractOrNull(response, "data/actor/actualActor/age"), nullValue())
+        assertThat(response.extract("data/actor/actualActor/name"), equalTo("Boguś Linda"))
+        assertThrows<IllegalArgumentException> { response.extract("data/actor/actualActor/age") }
     }
 
     @Test
     fun `query with inline fragment with type condition`() {
-        val map = BaseTestSchema.execute("{people{name, age, ... on Actor {isOld} ... on Director {favActors{name}}}}")
+        val map = baseTestSchema.execute("{people{name, age, ... on Actor {isOld} ... on Director {favActors{name}}}}")
         assertNoErrors(map)
         for (i in map.extract<List<*>>("data/people").indices) {
             val name = map.extract<String>("data/people[$i]/name")
             when (name) {
                 "David Fincher" /* director */ -> {
                     assertThat(map.extract<List<*>>("data/people[$i]/favActors"), notNullValue())
-                    assertThat(extractOrNull<Boolean>(map, "data/people[$i]/isOld"), nullValue())
+                    assertThrows<IllegalArgumentException> { map.extract("data/people[$i]/isOld") }
                 }
 
                 "Brad Pitt" /* actor */ -> {
                     assertThat(map.extract<Boolean>("data/people[$i]/isOld"), notNullValue())
-                    assertThat(extractOrNull<List<*>>(map, "data/people[$i]/favActors"), nullValue())
+                    assertThrows<IllegalArgumentException> { map.extract("data/people[$i]/favActors") }
                 }
             }
         }
@@ -103,19 +104,19 @@ class FragmentsSpecificationTest {
     @Test
     fun `query with external fragment with type condition`() {
         val map =
-            BaseTestSchema.execute("{people{name, age ...act ...dir}} fragment act on Actor {isOld} fragment dir on Director {favActors{name}}")
+            baseTestSchema.execute("{people{name, age ...act ...dir}} fragment act on Actor {isOld} fragment dir on Director {favActors{name}}")
         assertNoErrors(map)
         for (i in map.extract<List<*>>("data/people").indices) {
             val name = map.extract<String>("data/people[$i]/name")
             when (name) {
                 "David Fincher" /* director */ -> {
                     assertThat(map.extract<List<*>>("data/people[$i]/favActors"), notNullValue())
-                    assertThat(extractOrNull<Boolean>(map, "data/people[$i]/isOld"), nullValue())
+                    assertThrows<IllegalArgumentException> { map.extract("data/people[$i]/isOld") }
                 }
 
                 "Brad Pitt" /* actor */ -> {
                     assertThat(map.extract<Boolean>("data/people[$i]/isOld"), notNullValue())
-                    assertThat(extractOrNull<List<*>>(map, "data/people[$i]/favActors"), nullValue())
+                    assertThrows<IllegalArgumentException> { map.extract("data/people[$i]/favActors") }
                 }
             }
         }
@@ -123,7 +124,7 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `multiple nested fragments are handled`() {
-        val map = BaseTestSchema.execute(INTROSPECTION_QUERY)
+        val map = baseTestSchema.execute(INTROSPECTION_QUERY)
         val fields = map.extract<List<Map<String, *>>>("data/__schema/types[0]/fields")
 
         fields.forEach { field ->
@@ -134,7 +135,7 @@ class FragmentsSpecificationTest {
     @Test
     fun `queries with recursive fragments are denied`() {
         invoking {
-            BaseTestSchema.execute(
+            baseTestSchema.execute(
                 """
             query IntrospectionQuery {
                 __schema {
@@ -160,7 +161,7 @@ class FragmentsSpecificationTest {
     @Test
     fun `queries with duplicated fragments are denied`() {
         invoking {
-            BaseTestSchema.execute(
+            baseTestSchema.execute(
                 """
             {
                 film {

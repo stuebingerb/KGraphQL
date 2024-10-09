@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.ActorCalculateAgeInput
 import com.apurebase.kgraphql.ActorInput
+import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.Director
 import com.apurebase.kgraphql.Film
 import com.apurebase.kgraphql.FilmType
@@ -12,6 +13,7 @@ import com.apurebase.kgraphql.Person
 import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import org.junit.jupiter.api.AfterEach
 
 
@@ -333,9 +335,14 @@ abstract class BaseSchemaTest {
     @AfterEach
     fun cleanup() = createdActors.clear()
 
-    fun execute(query: String, variables: String? = null) = testedSchema
-        .executeBlocking(query, variables)
+    fun execute(
+        query: String,
+        variables: String? = null,
+        context: Context = Context(emptyMap()),
+        options: ExecutionOptions = ExecutionOptions(),
+        operationName: String? = null,
+    ) = testedSchema
+        .executeBlocking(query, variables, context, options, operationName)
         .also(::println)
         .deserialize()
-
 }

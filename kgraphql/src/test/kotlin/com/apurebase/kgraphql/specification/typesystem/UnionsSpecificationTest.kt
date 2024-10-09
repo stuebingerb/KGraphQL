@@ -20,6 +20,7 @@ import org.amshove.kluent.with
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 
 @Specification("3.1.4 Unions")
@@ -277,7 +278,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         """.trimIndent()
         ).also(::println).deserialize().run {
             extract<Int>("data/returnUnion/i") shouldBeEqualTo 1
-            extract<String?>("data/returnUnion/s") shouldBeEqualTo null
+            assertThrows<IllegalArgumentException> { extract("data/returnUnion/s") }
             extract<List<String>>("data/returnUnion/fields") shouldBeEqualTo listOf("i", "fields", "s")
         }
     }
