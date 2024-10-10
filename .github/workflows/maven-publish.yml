@@ -15,11 +15,12 @@
 #          java-version: 11
 #          distribution: 'temurin'
 #          cache: 'gradle'
-#      - name: Publish
-#        uses: eskatos/gradle-command-action@v1
+#      - name: Setup Gradle
+#        uses: gradle/actions/setup-gradle@v3
 #        with:
-#          gradle-version: 8.10.2
-#          arguments: publish --stacktrace
+#          gradle-version: "8.10.2"
+#      - name: Publish
+#        run: ./gradlew publish --stacktrace
 #        env:
 #          sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
 #          sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
