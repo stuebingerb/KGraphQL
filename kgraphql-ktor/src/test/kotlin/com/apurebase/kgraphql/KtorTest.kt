@@ -14,9 +14,9 @@ open class KtorTest {
     fun withServer(
         ctxBuilder: ContextBuilder.(ApplicationCall) -> Unit = {},
         block: SchemaBuilder.() -> Unit
-    ): (String, Kraph.() -> Unit) -> String {
+    ): (String, Kraph.() -> Unit) -> HttpResponse {
         return { type, kraph ->
-            var str = ""
+            var response: HttpResponse? = null
             testApplication {
                 install(Authentication) {
                     basic {
@@ -34,7 +34,7 @@ open class KtorTest {
                     schema(block)
                 }
 
-                str = client.post {
+                response = client.post {
                     url("graphql")
                     header(HttpHeaders.ContentType, "application/json;charset=UTF-8")
                     setBody(
@@ -44,9 +44,9 @@ open class KtorTest {
                             else -> error("$type is not a valid graphql operation type")
                         }.also(::println)
                     )
-                }.bodyAsText()
+                }
             }
-            str
+            checkNotNull(response)
         }
     }
 }

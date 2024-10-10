@@ -1,7 +1,11 @@
 package com.apurebase.kgraphql
 
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.Principal
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -21,10 +25,13 @@ class KtorFeatureTest : KtorTest() {
             }
         }
 
-        server("query") {
+        val response = server("query") {
             field("hello")
-        } shouldBeEqualTo "{\"data\":{\"hello\":\"World!\"}}"
-
+        }
+        runBlocking {
+            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"hello\":\"World!\"}}"
+            response.contentType() shouldBeEqualTo ContentType.Application.Json
+        }
     }
 
     @Test
@@ -35,10 +42,13 @@ class KtorFeatureTest : KtorTest() {
             }
         }
 
-        server("mutation") {
+        val response = server("mutation") {
             field("hello")
-        } shouldBeEqualTo "{\"data\":{\"hello\":\"World! mutation\"}}"
-
+        }
+        runBlocking {
+            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"hello\":\"World! mutation\"}}"
+            response.contentType() shouldBeEqualTo ContentType.Application.Json
+        }
     }
 
     data class Actor(val name: String, val age: Int)
@@ -68,17 +78,25 @@ class KtorFeatureTest : KtorTest() {
             }
         }
 
-        server("query") {
+        var response = server("query") {
             field("actor") {
                 field("name(addStuff: true)")
             }
-        } shouldBeEqualTo "{\"data\":{\"actor\":{\"name\":\"${georgeName}STUFF\"}}}"
+        }
+        runBlocking {
+            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"actor\":{\"name\":\"${georgeName}STUFF\"}}}"
+            response.contentType() shouldBeEqualTo ContentType.Application.Json
+        }
 
-        server("query") {
+        response = server("query") {
             field("actor") {
                 field("nickname")
             }
-        } shouldBeEqualTo "{\"data\":{\"actor\":{\"nickname\":\"Hodor and $georgeName\"}}}"
+        }
+        runBlocking {
+            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"actor\":{\"nickname\":\"Hodor and $georgeName\"}}}"
+            response.contentType() shouldBeEqualTo ContentType.Application.Json
+        }
     }
 
     enum class MockEnum { M1, M2 }
@@ -95,7 +113,7 @@ class KtorFeatureTest : KtorTest() {
             query("test") { resolver { input: InputTwo -> "success: $input" } }
         }
 
-        server("query") {
+        val response = server("query") {
             field("test(input: \$two)")
 
             variable("two", "InputTwo!") {
@@ -111,6 +129,29 @@ class KtorFeatureTest : KtorTest() {
                     add("434")
                 }
             }
-        } shouldBeEqualTo "{\"data\":{\"test\":\"success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])\"}}"
+        }
+        runBlocking {
+            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"test\":\"success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])\"}}"
+            response.contentType() shouldBeEqualTo ContentType.Application.Json
+        }
+    }
+
+    @Test
+    fun `Error response test`() {
+        val server = withServer {
+            query("actor") {
+                resolver { -> Actor("George", 23) }
+            }
+        }
+
+        val response = server("query") {
+            field("actor") {
+                field("nickname")
+            }
+        }
+        runBlocking {
+            response.bodyAsText() shouldBeEqualTo "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"liane\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.contentType() shouldBeEqualTo ContentType.Application.Json
+        }
     }
 }

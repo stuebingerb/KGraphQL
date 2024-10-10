@@ -103,7 +103,7 @@ class GraphQL(val schema: Schema) {
                     }
                 } catch (e: Throwable) {
                     if (e is GraphQLError) {
-                        context.respond(HttpStatusCode.OK, e.serialize())
+                        context.respondText(e.serialize(), ContentType.Application.Json, HttpStatusCode.OK)
                     } else throw e
                 }
             }
