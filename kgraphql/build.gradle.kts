@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     id("library-conventions")
     id("org.jetbrains.dokka") version "1.9.20"
@@ -45,12 +43,6 @@ dependencies {
 }
 
 tasks {
-    compileKotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
-    compileTestKotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
-
-    test {
-        useJUnitPlatform()
-    }
     dokkaHtml {
         outputDirectory.set(layout.buildDirectory.dir("javadoc"))
         dokkaSourceSets {

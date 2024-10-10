@@ -1,14 +1,8 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     id("library-conventions")
     kotlin("plugin.serialization") version "2.0.21"
     id("org.jetbrains.dokka") version "1.9.20"
     signing
-}
-
-kotlin {
-    jvmToolchain(11)
 }
 
 val caffeine_version: String by project
@@ -42,12 +36,6 @@ dependencies {
 }
 
 tasks {
-    compileKotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
-    compileTestKotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
-
-    test {
-        useJUnitPlatform()
-    }
     dokkaHtml {
         outputDirectory.set(layout.buildDirectory.dir("javadoc"))
         dokkaSourceSets {
