@@ -1,25 +1,26 @@
-name: Maven Publish
-
-on:
-  release:
-    types:
-      - released
-
-jobs:
-  maven-publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - name: Publish
-        uses: eskatos/gradle-command-action@v1
-        with:
-          gradle-version: 8.10.2
-          arguments: publish --stacktrace
-        env:
-          sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
-          sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+#name: Maven Publish
+#
+#on:
+#  release:
+#    types:
+#      - released
+#
+#jobs:
+#  maven-publish:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-java@v4
+#        with:
+#          java-version: 11
+#          cache: 'gradle'
+#      - name: Publish
+#        uses: eskatos/gradle-command-action@v1
+#        with:
+#          gradle-version: 8.10.2
+#          arguments: publish --stacktrace
+#        env:
+#          sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
+#          sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
+#          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+#          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
