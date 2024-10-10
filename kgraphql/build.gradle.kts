@@ -1,14 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    base
-    kotlin("jvm")
+    id("library-conventions")
     id("org.jetbrains.dokka") version "1.9.20"
     signing
-}
-
-kotlin {
-    jvmToolchain(11)
 }
 
 val caffeine_version: String by project

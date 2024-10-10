@@ -1,7 +1,6 @@
 import de.marcphilipp.gradle.nexus.NexusPublishPlugin
 import java.time.Duration
 
-val version: String by project
 val sonatypeUsername: String? = System.getenv("sonatypeUsername")
 val sonatypePassword: String? = System.getenv("sonatypePassword")
 
@@ -9,20 +8,10 @@ plugins {
     id("com.github.ben-manes.versions") version "0.51.0"
     id("io.codearte.nexus-staging") version "0.30.0"
     id("de.marcphilipp.nexus-publish") version "0.4.0"
-    kotlin("jvm") version "2.0.21"
     jacoco
 }
 
-allprojects {
-    repositories {
-        mavenCentral()
-    }
-}
-
 subprojects {
-    group = "de.stuebingerb"
-    version = version
-
     apply<NexusPublishPlugin>()
 
     nexusPublishing {
@@ -43,6 +32,7 @@ nexusStaging {
 
 tasks {
     wrapper {
+        // todo: BIN is enough and significantly smaller
         distributionType = Wrapper.DistributionType.ALL
     }
     closeRepository {
