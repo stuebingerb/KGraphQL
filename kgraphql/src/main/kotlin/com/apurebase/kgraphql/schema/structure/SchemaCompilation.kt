@@ -120,15 +120,21 @@ class SchemaCompilation(
     }
 
     private suspend fun handleQueries(): Type {
+        val __typenameField = handleOperation(
+            PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on { -> "Query" })
+        )
         return Type.OperationObject(
             name = "Query",
             description = "Query object",
-            fields = definition.queries.map { handleOperation(it) } + introspectionSchemaQuery() + introspectionTypeQuery()
+            fields = definition.queries.map { handleOperation(it) } + introspectionSchemaQuery() + introspectionTypeQuery() + __typenameField
         )
     }
 
     private suspend fun handleMutations(): Type {
-        return Type.OperationObject("Mutation", "Mutation object", definition.mutations.map { handleOperation(it) })
+        val __typenameField = handleOperation(
+            PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on { -> "Mutation" })
+        )
+        return Type.OperationObject("Mutation", "Mutation object", definition.mutations.map { handleOperation(it) } + __typenameField)
     }
 
     private suspend fun handleSubscriptions(): Type {

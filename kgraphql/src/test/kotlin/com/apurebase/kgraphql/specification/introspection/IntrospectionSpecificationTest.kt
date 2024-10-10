@@ -1,11 +1,21 @@
 package com.apurebase.kgraphql.specification.introspection
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest.Companion.INTROSPECTION_QUERY
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.GraphQLError
-import org.amshove.kluent.*
-import org.hamcrest.CoreMatchers.*
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldNotBeEqualTo
+import org.amshove.kluent.shouldNotContain
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
+import org.hamcrest.CoreMatchers.anyOf
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.not
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.collection.IsEmptyCollection.empty
 import org.junit.jupiter.api.Test
@@ -35,6 +45,26 @@ class IntrospectionSpecificationTest {
 
         val response = deserialize(schema.executeBlocking("{sample{string, __typename}}"))
         assertThat(response.extract("data/sample/__typename"), equalTo("Data"))
+    }
+
+    @Test
+    fun `__typename field can be used to obtain type of query`() {
+        val schema = defaultSchema {}
+
+        val response = deserialize(schema.executeBlocking("{__typename}"))
+        assertThat(response.extract("data/__typename"), equalTo("Query"))
+    }
+
+    @Test
+    fun `__typename field can be used to obtain type of mutation`() {
+        val schema = defaultSchema {
+            mutation("sample") {
+                resolver { -> Data("Ronaldingo") }
+            }
+        }
+
+        val response = deserialize(schema.executeBlocking("mutation {__typename}"))
+        assertThat(response.extract("data/__typename"), equalTo("Mutation"))
     }
 
     @Test
