@@ -20,7 +20,7 @@ allprojects {
 }
 
 subprojects {
-    group = "com.apurebase"
+    group = "de.stuebingerb"
     version = version
 
     apply<NexusPublishPlugin>()
@@ -34,7 +34,7 @@ subprojects {
 }
 
 nexusStaging {
-    packageGroup = "com.apurebase"
+    packageGroup = "de.stuebingerb"
     username = sonatypeUsername
     password = sonatypePassword
     numberOfRetries = 360 // 1 hour if 10 seconds delay

@@ -1,7 +1,11 @@
 package com.apurebase.kgraphql
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
@@ -29,9 +33,7 @@ internal fun KType.getIterableElementType(): KType {
     return arguments.firstOrNull()?.type ?: throw NoSuchElementException("KType $this has no type arguments")
 }
 
-
 internal fun not(boolean: Boolean) = !boolean
-
 
 internal suspend fun <T, R> Collection<T>.toMapAsync(
     dispatcher: CoroutineDispatcher = Dispatchers.Default,

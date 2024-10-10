@@ -1,12 +1,13 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.*
-import org.hamcrest.CoreMatchers
+import com.apurebase.kgraphql.FilmType
+import com.apurebase.kgraphql.assertNoErrors
+import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
-
 
 class EnumTest : BaseSchemaTest() {
 

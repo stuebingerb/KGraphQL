@@ -1,6 +1,9 @@
 package com.apurebase.kgraphql.specification.language
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.assertNoErrors
+import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat

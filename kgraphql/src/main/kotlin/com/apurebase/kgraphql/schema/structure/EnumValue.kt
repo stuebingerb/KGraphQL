@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.schema.introspection.__EnumValue
 import com.apurebase.kgraphql.schema.model.EnumValueDef
 
-
 class EnumValue<T : Enum<T>>(definition: EnumValueDef<T>) : __EnumValue {
 
     val value = definition.value

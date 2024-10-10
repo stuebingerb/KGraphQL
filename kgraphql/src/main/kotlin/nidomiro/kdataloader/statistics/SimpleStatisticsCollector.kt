@@ -1,6 +1,7 @@
 package nidomiro.kdataloader.statistics
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 
 class SimpleStatisticsCollector : StatisticsCollector {
 
@@ -36,7 +37,6 @@ class SimpleStatisticsCollector : StatisticsCollector {
         objectsRequested += objectCount
         return CompletableDeferred(objectsRequested)
     }
-
 
     override suspend fun incBatchCallsExecutedAsync() =
         CompletableDeferred(++batchCallsExecuted)

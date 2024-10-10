@@ -1,8 +1,16 @@
 package com.apurebase.kgraphql.specification.language
 
-import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.GraphQLError
-import org.amshove.kluent.*
+import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.d
+import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.extract
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test

@@ -6,7 +6,6 @@ import com.apurebase.kgraphql.extract
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
-
 class GitHubIssue137 {
 
     data class InputType(val id: Int, val id2: Int, val value: String)
@@ -38,5 +37,4 @@ class GitHubIssue137 {
             .deserialize()
             .extract<String>("data/search") shouldBeEqualTo "1_2: Search"
     }
-
 }

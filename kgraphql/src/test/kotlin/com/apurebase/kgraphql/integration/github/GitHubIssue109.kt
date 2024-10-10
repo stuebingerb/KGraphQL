@@ -1,11 +1,8 @@
 package com.apurebase.kgraphql.integration.github
 
 import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.objectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.amshove.kluent.`should contain`
-import org.amshove.kluent.should
 import org.amshove.kluent.shouldContain
 import org.junit.jupiter.api.Test
 

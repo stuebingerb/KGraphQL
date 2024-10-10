@@ -14,7 +14,6 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 
-
 interface Type : __Type {
 
     fun hasField(name: String): Boolean {

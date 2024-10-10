@@ -10,7 +10,6 @@ class KtorConfigurationDSL {
 
     var endpoint: String = "graphql"
 
-
     internal fun build() = KtorGraphQLConfiguration(
         playground = playground,
         endpoint = endpoint

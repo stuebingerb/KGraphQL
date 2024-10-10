@@ -3,7 +3,28 @@ package com.apurebase.kgraphql.request
 import com.apurebase.kgraphql.schema.model.ast.Source
 import com.apurebase.kgraphql.schema.model.ast.Token
 import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum
-import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.*
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.AMP
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.AT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BANG
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BLOCK_STRING
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACE_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACE_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACKET_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACKET_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.COLON
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.COMMENT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.DOLLAR
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.EOF
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.EQUALS
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.FLOAT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.INT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.NAME
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PAREN_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PAREN_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PIPE
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SOF
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SPREAD
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.STRING
 import com.apurebase.kgraphql.schema.structure.dedentBlockStringValue
 
 data class Lexer(
@@ -23,7 +44,6 @@ data class Lexer(
     var lineStart: Int = 0
 ) {
     constructor(source: String) : this(Source(source))
-
 
     /**
      * Advances the token stream to the next non-ignored token.
@@ -83,7 +103,6 @@ data class Lexer(
         if (pos >= bodyLength) {
             return tok(EOF, bodyLength, bodyLength)
         }
-
 
         val fail = { code: Int ->
             throw syntaxError(

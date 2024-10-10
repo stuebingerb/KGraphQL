@@ -1,16 +1,18 @@
-@file:Suppress("ClassName", "RemoveRedundantQualifierName")
+@file:Suppress("ClassName")
 
 package com.apurebase.kgraphql.schema.builtin
 
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.dropQuotes
 import com.apurebase.kgraphql.isLiteral
-import com.apurebase.kgraphql.schema.model.ast.ValueNode
-import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
-import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.schema.model.TypeDef
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.BooleanValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.DoubleValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.NumberValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.StringValueNode
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
-
 
 private const val STRING_DESCRIPTION =
     "The String scalar type represents textual data, represented as UTF-8 character sequences"

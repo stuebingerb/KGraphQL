@@ -1,11 +1,18 @@
 package com.apurebase.kgraphql.specification.language
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.executeEqualQueries
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
 import com.apurebase.kgraphql.schema.execution.Executor
-import org.amshove.kluent.*
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeInstanceOf
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
 import org.junit.jupiter.api.Test
 
 data class Actor(var name: String? = "", var age: Int? = 0)
@@ -14,9 +21,9 @@ data class Actress(var name: String? = "", var age: Int? = 0)
 @Specification("2.3 Operations")
 class OperationsSpecificationTest {
 
-    var subscriptionResult = ""
+    private var subscriptionResult = ""
 
-    fun newSchema(executor: Executor = Executor.DataLoaderPrepared) = defaultSchema {
+    private fun newSchema(executor: Executor = Executor.DataLoaderPrepared) = defaultSchema {
         configure {
             this@configure.executor = executor
         }
@@ -97,7 +104,6 @@ class OperationsSpecificationTest {
         subscriptionResult = ""
         schema.executeBlocking("mutation{createActor(name : \"Kurt Russel\"){name}}")
         subscriptionResult shouldBeEqualTo ""
-
     }
 
     @Test

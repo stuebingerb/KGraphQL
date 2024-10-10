@@ -1,12 +1,15 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.GraphQLError
-import org.amshove.kluent.*
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue

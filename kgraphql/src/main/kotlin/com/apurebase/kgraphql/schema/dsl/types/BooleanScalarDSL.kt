@@ -6,7 +6,6 @@ import com.apurebase.kgraphql.schema.scalar.BooleanScalarCoercion
 import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
 import kotlin.reflect.KClass
 
-
 class BooleanScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, Boolean>(kClass) {
 
     override fun createCoercionFromFunctions(): ScalarCoercion<T, Boolean> {

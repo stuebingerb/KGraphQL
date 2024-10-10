@@ -1,24 +1,30 @@
 package com.apurebase.kgraphql.schema.structure
 
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema.Companion.OPERATION_NAME_PARAM
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.execution.Execution
+import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import com.apurebase.kgraphql.schema.execution.ExecutionPlan
 import com.apurebase.kgraphql.schema.execution.TypeCondition
-import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.*
+import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
+import com.apurebase.kgraphql.schema.model.ast.DirectiveNode
+import com.apurebase.kgraphql.schema.model.ast.DocumentNode
+import com.apurebase.kgraphql.schema.model.ast.NameNode
+import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode
+import com.apurebase.kgraphql.schema.model.ast.SelectionNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FieldNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode.FragmentSpreadNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode.InlineFragmentNode
-import com.apurebase.kgraphql.GraphQLError
-import com.apurebase.kgraphql.schema.execution.ExecutionOptions
-import com.apurebase.kgraphql.schema.model.ast.*
-import java.util.*
+import com.apurebase.kgraphql.schema.model.ast.SelectionSetNode
+import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
+import com.apurebase.kgraphql.schema.model.ast.toArguments
+import java.util.Stack
 import kotlin.reflect.full.starProjectedType
-
 
 class RequestInterpreter(val schemaModel: SchemaModel) {
 
@@ -255,5 +261,4 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         return directivesByName[invocation.name.value.removePrefix("@")]
             ?: throw GraphQLError("Directive ${invocation.name.value} does not exist", invocation)
     }
-
 }

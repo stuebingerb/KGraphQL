@@ -42,5 +42,4 @@ open class TypeProxy(var proxied: Type) : Type {
         get() = proxied.ofType
 
     override fun get(name: String) = proxied[name]
-
 }

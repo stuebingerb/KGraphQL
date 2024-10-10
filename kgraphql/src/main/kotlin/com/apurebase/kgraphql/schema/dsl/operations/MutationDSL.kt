@@ -6,7 +6,6 @@ class MutationDSL(
     name: String
 ) : AbstractOperationDSL(name) {
 
-
     internal fun toKQLMutation(): MutationDef<out Any?> {
         val function =
             functionWrapper ?: throw IllegalArgumentException("resolver has to be specified for mutation [$name]")
@@ -22,5 +21,4 @@ class MutationDSL(
             explicitReturnType = explicitReturnType
         )
     }
-
 }

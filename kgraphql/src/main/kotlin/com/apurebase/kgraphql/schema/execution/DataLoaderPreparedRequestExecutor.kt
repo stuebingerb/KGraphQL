@@ -15,11 +15,16 @@ import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
-import kotlinx.coroutines.*
-import kotlinx.serialization.json.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.job
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import nidomiro.kdataloader.DataLoader
 import kotlin.reflect.KProperty1
-
 
 class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
@@ -67,7 +72,6 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             executionNode = node,
             ctx = ctx
         )
-
 
         applyKeyToElement(ctx, result, node, node.field.returnType, 1)
     }
@@ -168,7 +172,6 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
         }
     }
-
 
     private suspend fun <T> DeferredJsonMap.applyObjectProperties(
         ctx: ExecutionContext,
@@ -280,8 +283,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         parentCount: Long
     ) {
         node.field.checkAccess(parentValue, ctx.requestContext)
-        if (!shouldInclude(ctx, node)) return
-
+        if (!shouldInclude(ctx, node)) {
+            return
+        }
 
         when (field) {
             is Field.Kotlin<*, *> -> {
@@ -331,10 +335,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             ctx = ctx
         ) // ?: TODO("Nullable prepare functions isn't supported")
 
-
         val value = ctx.loaders[field]!!.loadAsync(preparedValue)
-
-
         applyKeyToElement(ctx, value, node, field.returnType, parentCount)
     }
 
@@ -374,7 +375,6 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                     plan.constructLoaders(),
                 )
 
-
                 "data" toDeferredObj {
                     plan.forEach { node ->
                         if (shouldInclude(ctx, node)) writeOperation(ctx, node, node.field as Field.Function<*, *>)
@@ -393,7 +393,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     }
 
     private suspend fun shouldInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {
-        if (executionNode.directives?.isEmpty() == true) return true
+        if (executionNode.directives?.isEmpty() == true) {
+            return true
+        }
         return executionNode.directives?.map { (directive, arguments) ->
             directive.execution.invoke(
                 funName = directive.name,
@@ -425,12 +427,17 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         )
 
         return try {
-            if (hasReceiver) invoke(receiver, *transformedArgs.toTypedArray())
-            else invoke(*transformedArgs.toTypedArray())
+            if (hasReceiver) {
+                invoke(receiver, *transformedArgs.toTypedArray())
+            } else {
+                invoke(*transformedArgs.toTypedArray())
+            }
         } catch (e: Throwable) {
             if (schema.configuration.wrapErrors && e !is GraphQLError) {
                 throw GraphQLError(e.message ?: "", nodes = listOf(executionNode.selectionNode), originalError = e)
-            } else throw e
+            } else {
+                throw e
+            }
         }
     }
 }

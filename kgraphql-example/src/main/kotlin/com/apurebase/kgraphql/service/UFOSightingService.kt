@@ -31,7 +31,6 @@ class UFOSightingService {
         return uFOSighting
     }
 
-
     suspend fun findAll(size: Int): List<UFOSighting> = dbQuery {
         UFOSightings.selectAll().limit(size, offset = 1).map { toUFOSighting(it) }
     }
@@ -49,7 +48,6 @@ class UFOSightingService {
             longitude = row[UFOSightings.longitude]
         )
     }
-
 
     suspend fun findById(id: Int): UFOSighting? {
         return dbQuery {

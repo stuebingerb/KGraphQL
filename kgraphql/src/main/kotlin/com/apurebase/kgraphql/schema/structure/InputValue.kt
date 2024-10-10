@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.model.InputValueDef
 
-
 class InputValue<T : Any>(
     valueDef: InputValueDef<T>,
     override val type: Type,

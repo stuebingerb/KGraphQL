@@ -22,7 +22,6 @@ import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-
 @Specification("3.1.4 Unions")
 class UnionsSpecificationTest : BaseSchemaTest() {
 

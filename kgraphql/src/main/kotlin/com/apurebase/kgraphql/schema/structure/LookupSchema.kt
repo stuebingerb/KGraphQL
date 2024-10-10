@@ -8,7 +8,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
-
 interface LookupSchema : Schema {
 
     fun typeByKClass(kClass: KClass<*>): Type?

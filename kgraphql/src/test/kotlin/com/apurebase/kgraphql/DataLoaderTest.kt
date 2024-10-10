@@ -3,7 +3,11 @@ package com.apurebase.kgraphql
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.execution.Executor
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import nidomiro.kdataloader.ExecutionResult
 import org.amshove.kluent.shouldBeEqualTo
 import org.hamcrest.CoreMatchers
@@ -12,12 +16,13 @@ import org.junit.jupiter.api.Assertions.assertTimeoutPreemptively
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.TestFactory
+import java.time.Duration
 import java.time.Duration.ofSeconds
 import java.util.concurrent.atomic.AtomicInteger
 
 // This is just for safety, so when the tests fail and
 // end up in an endless waiting state, they'll fail after this amount
-val timeout = ofSeconds(60)!!
+val timeout: Duration = ofSeconds(60)
 const val repeatTimes = 2
 
 class DataLoaderTest {

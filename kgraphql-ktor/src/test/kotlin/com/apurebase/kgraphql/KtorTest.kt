@@ -1,13 +1,17 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
-
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.request.url
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpHeaders
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.basic
+import io.ktor.server.testing.testApplication
 
 open class KtorTest {
 

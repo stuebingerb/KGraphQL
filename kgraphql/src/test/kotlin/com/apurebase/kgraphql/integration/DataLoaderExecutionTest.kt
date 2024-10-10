@@ -3,10 +3,7 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.schema.execution.Executor
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.debug.DebugProbes
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import nidomiro.kdataloader.ExecutionResult
 import org.junit.jupiter.api.RepeatedTest
 import kotlin.random.Random
@@ -80,8 +77,6 @@ class DataLoaderExecutionTest {
 
     @RepeatedTest(50)
     fun Stress_test_with_dataloaders_and_custom_superviser_jobs() {
-//         DebugProbes.install()
-//         withTimeout(60_000) {
         val result = schema.executeBlocking(
             """
                  {
@@ -106,7 +101,5 @@ class DataLoaderExecutionTest {
         )
 
         println(result)
-//         }
     }
-
 }

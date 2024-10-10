@@ -22,7 +22,6 @@ fun Execution.getFields(): List<String> = when (this) {
     }
 }.distinct()
 
-
 /**
  * Collection : Convert to JsonElement
  */

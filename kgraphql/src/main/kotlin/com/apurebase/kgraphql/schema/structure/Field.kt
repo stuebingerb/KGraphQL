@@ -1,12 +1,18 @@
 package com.apurebase.kgraphql.schema.structure
 
 import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.schema.introspection.*
-import com.apurebase.kgraphql.schema.model.*
+import com.apurebase.kgraphql.schema.introspection.NotIntrospected
+import com.apurebase.kgraphql.schema.introspection.__Field
+import com.apurebase.kgraphql.schema.introspection.__InputValue
+import com.apurebase.kgraphql.schema.introspection.__Type
+import com.apurebase.kgraphql.schema.model.BaseOperationDef
+import com.apurebase.kgraphql.schema.model.FunctionWrapper
+import com.apurebase.kgraphql.schema.model.PropertyDef
+import com.apurebase.kgraphql.schema.model.Transformation
 import nidomiro.kdataloader.factories.DataLoaderFactory
 import kotlin.reflect.full.findAnnotation
 
-
+@Suppress("UNCHECKED_CAST")
 sealed class Field : __Field {
 
     abstract val arguments: List<InputValue<*>>

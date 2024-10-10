@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.request
 import com.apurebase.kgraphql.schema.model.ast.DocumentNode
 import com.github.benmanes.caffeine.cache.Caffeine
 
-
 class CachingDocumentParser(cacheMaximumSize: Long = 1000L) {
 
     sealed class Result {

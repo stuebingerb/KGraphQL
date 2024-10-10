@@ -4,7 +4,7 @@ site_url: https://kgraphql.io
 dev_addr: 0.0.0.0:8000
 
 repo_name: 'GitHub'
-repo_url: 'https://github.com/apurebase/kgraphql'
+repo_url: 'https://github.com/stuebingerb/kgraphql'
 
 docs_dir: 'content'
 edit_uri: 'edit/main/docs/content'
@@ -64,9 +64,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/aPureBase/KGraphQL
-    - icon: fontawesome/brands/slack
-      link: https://kotlinlang.slack.com/messages/kgraphql
+      link: https://github.com/stuebingerb/KGraphQL
 
 nav:
   - 'Overview': 'index.md'

@@ -15,9 +15,7 @@ data class SchemaConfiguration(
     val useDefaultPrettyPrinter: Boolean,
     //execution
     val coroutineDispatcher: CoroutineDispatcher,
-
     val wrapErrors: Boolean,
-
     val executor: Executor,
     val timeout: Long?,
     val introspection: Boolean = true,

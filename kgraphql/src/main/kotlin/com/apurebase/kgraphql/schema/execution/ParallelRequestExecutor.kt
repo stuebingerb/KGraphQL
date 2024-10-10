@@ -1,12 +1,14 @@
 package com.apurebase.kgraphql.schema.execution
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
+import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
@@ -16,10 +18,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import kotlinx.coroutines.*
+import kotlinx.coroutines.coroutineScope
 import nidomiro.kdataloader.DataLoader
 import kotlin.reflect.KProperty1
-
 
 @Suppress("UNCHECKED_CAST") // For valid structure there is no risk of ClassCastException
 class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
@@ -34,7 +35,6 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
     private val jsonNodeFactory = JsonNodeFactory.instance
 
     private val dispatcher = schema.configuration.coroutineDispatcher
-
 
     private val objectWriter = schema.configuration.objectMapper.writer().let {
         if (schema.configuration.useDefaultPrettyPrinter) {
@@ -411,5 +411,4 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             } else throw e
         }
     }
-
 }

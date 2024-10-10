@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.schema.introspection
 
-
 enum class TypeKind {
     SCALAR,
     OBJECT,

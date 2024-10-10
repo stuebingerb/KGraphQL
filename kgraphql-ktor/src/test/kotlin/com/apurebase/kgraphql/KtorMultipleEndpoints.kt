@@ -1,9 +1,11 @@
 package com.apurebase.kgraphql
 
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
+import io.ktor.server.testing.testApplication
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
@@ -41,7 +43,5 @@ class KtorMultipleEndpoints : KtorTest() {
             header(HttpHeaders.ContentType, "application/json;charset=UTF-8")
             setBody(query)
         }.bodyAsText() shouldBeEqualTo "{\"data\":{\"check\":\"Closed\"}}"
-
     }
-
 }

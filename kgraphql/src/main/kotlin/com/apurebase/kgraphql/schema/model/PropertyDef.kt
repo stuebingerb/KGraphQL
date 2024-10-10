@@ -6,9 +6,7 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
 
 interface PropertyDef<T> : Depreciable, DescribedDef {
-
     val accessRule: ((T?, Context) -> Exception?)?
-
     val name: String
 
     open class Function<T, R>(

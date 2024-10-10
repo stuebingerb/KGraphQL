@@ -9,7 +9,6 @@ data class ArgumentNode(
 fun List<ArgumentNode>.toArguments() =
     ArgumentNodes(this)
 
-
 class ArgumentNodes() : HashMap<String, ValueNode>() {
     constructor(argumentNodes: List<ArgumentNode>) : this() {
         argumentNodes.forEach {

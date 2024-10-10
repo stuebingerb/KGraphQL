@@ -4,7 +4,6 @@ import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.schema.dsl.ItemDSL
 import kotlin.reflect.KClass
 
-
 class EnumDSL<T : Enum<T>>(kClass: KClass<T>) : ItemDSL() {
 
     var name = kClass.defaultKQLTypeName()
@@ -20,5 +19,4 @@ class EnumDSL<T : Enum<T>>(kClass: KClass<T>) : ItemDSL() {
             description = content
         }
     }
-
 }

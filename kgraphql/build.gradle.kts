@@ -18,7 +18,6 @@ val kotlin_version: String by project
 val serialization_version: String by project
 val coroutine_version: String by project
 val jackson_version: String by project
-
 val netty_version: String by project
 val hamcrest_version: String by project
 val kluent_version: String by project
@@ -92,26 +91,26 @@ publishing {
                 description.set("KGraphQL is a Kotlin implementation of GraphQL. It provides a rich DSL to set up the GraphQL schema.")
                 url.set("https://kgraphql.io/")
                 organization {
-                    name.set("aPureBase")
-                    url.set("http://apurebase.com/")
+                    name.set("stuebingerb")
+                    url.set("https://github.com/stuebingerb")
                 }
                 licenses {
                     license {
                         name.set("MIT License")
-                        url.set("https://github.com/aPureBase/KGraphQL/blob/main/LICENSE.md")
+                        url.set("https://github.com/stuebingerb/KGraphQL/blob/main/LICENSE.md")
                     }
                 }
                 developers {
                     developer {
-                        id.set("jeggy")
-                        name.set("Jógvan Olsen")
-                        email.set("jol@apurebase.com")
+                        id.set("stuebingerb")
+                        name.set("stuebingerb")
+                        email.set("41049452+stuebingerb@users.noreply.github.com")
                     }
                 }
                 scm {
-                    connection.set("scm:git:https://github.com/aPureBase/KGraphQL.git")
-                    developerConnection.set("scm:git:https://github.com/aPureBase/KGraphQL.git")
-                    url.set("https://github.com/aPureBase/KGraphQL/")
+                    connection.set("scm:git:https://github.com/stuebingerb/KGraphQL.git")
+                    developerConnection.set("scm:git:https://github.com/stuebingerb/KGraphQL.git")
+                    url.set("https://github.com/stuebingerb/KGraphQL/")
                     tag.set("HEAD")
                 }
             }

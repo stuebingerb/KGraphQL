@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.schema.dsl
 
-
 abstract class DepreciableItemDSL : ItemDSL() {
 
     internal var isDeprecated = false

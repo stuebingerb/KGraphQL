@@ -50,12 +50,10 @@ interface DataLoader<K, R> {
      */
     suspend fun prime(key: K, value: Throwable)
 
-
     /**
      * Returns a snapshot of the statistics at the point of calling
      */
     suspend fun createStatisticsSnapshot(): DataLoaderStatistics
-
 }
 
 /**

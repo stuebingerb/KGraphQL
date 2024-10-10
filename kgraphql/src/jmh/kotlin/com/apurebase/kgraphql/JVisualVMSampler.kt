@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql
 
-
 val schema = BenchmarkSchema.create { }
 
 fun main(vararg args: String) {

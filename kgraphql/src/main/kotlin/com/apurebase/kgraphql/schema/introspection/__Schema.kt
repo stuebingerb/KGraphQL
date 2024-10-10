@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.schema.introspection
 
-
 interface __Schema {
 
     val types: List<__Type>

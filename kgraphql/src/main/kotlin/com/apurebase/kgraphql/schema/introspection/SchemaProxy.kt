@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
-
 class SchemaProxy(
     override val configuration: SchemaConfiguration,
     var proxiedSchema: LookupSchema? = null

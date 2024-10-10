@@ -46,7 +46,5 @@ class GitHubIssue144 {
             }
         """.trimIndent()
         ).also(::println)
-
     }
-
 }

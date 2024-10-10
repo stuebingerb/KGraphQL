@@ -12,7 +12,6 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
-
 open class ArgumentTransformer(val schema: DefaultSchema) {
 
     private fun transformValue(type: Type, value: ValueNode, variables: Variables): Any? {

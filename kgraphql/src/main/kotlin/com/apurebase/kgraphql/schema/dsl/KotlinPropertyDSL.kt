@@ -5,7 +5,6 @@ import com.apurebase.kgraphql.schema.model.PropertyDef
 import java.lang.IllegalArgumentException
 import kotlin.reflect.KProperty1
 
-
 class KotlinPropertyDSL<T : Any, R>(
     private val kProperty: KProperty1<T, R>,
     block: KotlinPropertyDSL<T, R>.() -> Unit

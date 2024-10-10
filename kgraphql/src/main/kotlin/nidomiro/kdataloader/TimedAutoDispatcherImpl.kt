@@ -1,7 +1,14 @@
 package nidomiro.kdataloader
 
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import nidomiro.kdataloader.statistics.SimpleStatisticsCollector
 
 class TimedAutoDispatcherImpl<K, R>(
@@ -58,5 +65,4 @@ class TimedAutoDispatcherImpl<K, R>(
     override suspend fun prime(key: K, value: Throwable) {
         super.prime(key, value).also { autoChannel.send(Unit) }
     }
-
 }

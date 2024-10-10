@@ -1,8 +1,7 @@
 package com.apurebase.kgraphql.schema.model.ast
 
 import com.apurebase.kgraphql.schema.model.ast.TypeNode.NamedTypeNode
-import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
-
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.StringValueNode
 
 sealed class DefinitionNode(override val loc: Location?) : ASTNode() {
 

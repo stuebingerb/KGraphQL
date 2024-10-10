@@ -1,14 +1,20 @@
 package com.apurebase.kgraphql.schema.scalar
 
 import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.dropQuotes
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.apurebase.kgraphql.schema.builtin.BOOLEAN_COERCION
+import com.apurebase.kgraphql.schema.builtin.DOUBLE_COERCION
+import com.apurebase.kgraphql.schema.builtin.FLOAT_COERCION
+import com.apurebase.kgraphql.schema.builtin.INT_COERCION
+import com.apurebase.kgraphql.schema.builtin.LONG_COERCION
+import com.apurebase.kgraphql.schema.builtin.SHORT_COERCION
+import com.apurebase.kgraphql.schema.builtin.STRING_COERCION
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
-import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
-import com.apurebase.kgraphql.GraphQLError
-import com.apurebase.kgraphql.schema.builtin.*
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.StringValueNode
 import com.apurebase.kgraphql.schema.structure.Type
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -112,4 +118,3 @@ fun <T> serializeScalar(scalar: Type.Scalar<*>, value: T, executionNode: Executi
 
         else -> throw ExecutionException("Unsupported coercion for scalar type ${scalar.name}", executionNode)
     }
-

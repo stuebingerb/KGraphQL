@@ -10,7 +10,5 @@ abstract class BaseOperationDef<T, R>(
     val accessRule: ((T?, Context) -> Exception?)?,
     private val explicitReturnType: KType?
 ) : Definition(name), OperationDef<R>, FunctionWrapper<R> by operationWrapper {
-
     val returnType: KType get() = explicitReturnType ?: kFunction.returnType
-
 }

@@ -6,9 +6,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 interface TypeDef {
-
     val name: String
-
     val description: String?
 
     abstract class BaseKQLType(name: String, override val description: String?) : TypeDef, Definition(name)

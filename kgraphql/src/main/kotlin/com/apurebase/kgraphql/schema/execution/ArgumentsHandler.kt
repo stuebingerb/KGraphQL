@@ -10,7 +10,6 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode.ListValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.ObjectValueNode
 import com.apurebase.kgraphql.schema.structure.InputValue
 
-
 internal class ArgumentsHandler(schema: DefaultSchema) : ArgumentTransformer(schema) {
 
     fun transformArguments(

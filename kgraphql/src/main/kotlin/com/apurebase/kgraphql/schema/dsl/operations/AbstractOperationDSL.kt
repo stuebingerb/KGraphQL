@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.schema.model.InputValueDef
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 
-
 abstract class AbstractOperationDSL(
     val name: String
 ) : LimitedAccessItemDSL<Nothing>(),
@@ -21,7 +20,6 @@ abstract class AbstractOperationDSL(
     var explicitReturnType: KType? = null
 
     private fun resolver(function: FunctionWrapper<*>): ResolverDSL {
-
         try {
             require(function.hasReturnType()) {
                 "Resolver for '$name' has no return value"
@@ -74,5 +72,4 @@ abstract class AbstractOperationDSL(
     override fun setReturnType(type: KType) {
         explicitReturnType = type
     }
-
 }

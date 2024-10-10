@@ -25,7 +25,6 @@ class GitHubIssue141 {
                     else TopUnion.Union2(listOf(1, 2))
                 }
             }
-
         }.executeBlocking(
             """
             {
@@ -43,5 +42,4 @@ class GitHubIssue141 {
             .deserialize()
             .extract<List<String>>("data/unions/names") shouldBeEqualTo listOf("name1", "name2")
     }
-
 }

@@ -50,8 +50,6 @@ interface VariablesJson {
     fun KType.toTypeReference(): JavaType {
         return if (jvmErasure.isIterable()) {
             val elementType = getIterableElementType()
-                ?: throw ExecutionException("Cannot handle collection without element type")
-
             TypeFactory.defaultInstance().constructCollectionType(List::class.java, elementType.jvmErasure.java)
         } else {
             TypeFactory.defaultInstance().constructSimpleType(jvmErasure.java, emptyArray())

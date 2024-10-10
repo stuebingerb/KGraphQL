@@ -12,7 +12,6 @@ import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 import java.util.concurrent.TimeUnit
 
-
 @State(Scope.Benchmark)
 @Warmup(iterations = 10)
 @Measurement(iterations = 5)

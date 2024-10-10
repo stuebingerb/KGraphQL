@@ -1,6 +1,11 @@
 package com.apurebase.kgraphql.access
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.context
+import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.extract
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
@@ -32,7 +37,6 @@ class AccessRulesTest {
             }
         }
     }
-
 
     @Test
     fun `allow when matching`() {
@@ -68,5 +72,4 @@ class AccessRulesTest {
     }
 
     //TODO: MORE TESTS
-
 }

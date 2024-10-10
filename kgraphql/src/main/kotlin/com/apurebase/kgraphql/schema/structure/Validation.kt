@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FieldNode
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
-
 fun validatePropertyArguments(parentType: Type, field: Field, requestNode: FieldNode) {
     val argumentValidationExceptions = field.validateArguments(requestNode.arguments, parentType.name)
 
@@ -56,7 +55,6 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
 
     return exceptions
 }
-
 
 /**
  * validate that only typed fragments or __typename are present

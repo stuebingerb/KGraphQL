@@ -9,16 +9,16 @@ data class TypeReference(
     val isList: Boolean = false,
     val isElementNullable: Boolean = isList
 ) {
-    override fun toString(): String {
-        return buildString {
-            if (isList) {
-                append("[").append(name)
-                if (!isElementNullable) append("!")
-                append("]")
-            } else {
-                append(name)
-            }
-            if (!isNullable) append("!")
+    override fun toString(): String = buildString {
+        if (isList) {
+            append("[").append(name)
+            if (!isElementNullable) append("!")
+            append("]")
+        } else {
+            append(name)
+        }
+        if (!isNullable) {
+            append("!")
         }
     }
 }

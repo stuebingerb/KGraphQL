@@ -3,7 +3,6 @@ package com.apurebase.kgraphql
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 
-
 data class ModelOne(val name: String, val quantity: Int = 1, val active: Boolean = true)
 
 data class ModelTwo(val one: ModelOne, val range: IntRange)

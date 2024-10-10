@@ -1,16 +1,22 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.GraphQLError
-import org.amshove.kluent.*
+import com.apurebase.kgraphql.ValidationException
+import com.apurebase.kgraphql.assertNoErrors
+import com.apurebase.kgraphql.extract
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 
-
 class MutationTest : BaseSchemaTest() {
 
-    val testActor = Actor("Michael Caine", 72)
+    private val testActor = Actor("Michael Caine", 72)
 
     @Test
     fun `simple mutation multiple fields`() {

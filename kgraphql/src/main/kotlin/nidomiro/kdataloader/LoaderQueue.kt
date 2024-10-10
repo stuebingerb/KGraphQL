@@ -11,9 +11,7 @@ interface LoaderQueue<K, V> {
      * (Coroutine-Save)
      */
     suspend fun getAllItemsAsList(): List<LoaderQueueEntry<K, CompletableDeferred<V>>>
-
 }
-
 
 data class LoaderQueueEntry<K, V>(
     val key: K,

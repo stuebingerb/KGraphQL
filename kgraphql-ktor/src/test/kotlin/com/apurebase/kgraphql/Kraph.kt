@@ -1,10 +1,12 @@
 package com.apurebase.kgraphql
 
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 
 // MARK: Using this is a temporary solution as JCenter is closed down.
 //       We should either create our own GraphQL client or find some other active library to do this for us.
-
 
 fun graphqlQuery(block: Kraph.() -> Unit): Kraph {
     return Kraph("query").apply(block)

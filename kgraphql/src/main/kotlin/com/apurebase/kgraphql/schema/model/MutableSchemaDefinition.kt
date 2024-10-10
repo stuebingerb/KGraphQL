@@ -6,7 +6,12 @@ import com.apurebase.kgraphql.schema.builtin.BUILT_IN_TYPE
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.directive.DirectiveLocation
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
-import com.apurebase.kgraphql.schema.introspection.*
+import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Directive
+import com.apurebase.kgraphql.schema.introspection.__EnumValue
+import com.apurebase.kgraphql.schema.introspection.__Field
+import com.apurebase.kgraphql.schema.introspection.__Schema
+import com.apurebase.kgraphql.schema.introspection.__Type
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -198,4 +203,3 @@ private fun create__DirectiveDefinition() = TypeDSL(
 }.toKQLObject()
 
 private fun <T> List<T>.containsAny(vararg elements: T) = elements.any { this.contains(it) }
-

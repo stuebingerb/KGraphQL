@@ -7,7 +7,6 @@ import com.apurebase.kgraphql.schema.introspection.__Type
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 
-
 data class SchemaModel(
     val query: Type,
     val mutation: Type?,

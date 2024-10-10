@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.schema.model.TypeDef
 import java.lang.IllegalArgumentException
 import kotlin.reflect.KType
 
-
 class UnionPropertyDSL<T : Any>(val name: String, block: UnionPropertyDSL<T>.() -> Unit) : LimitedAccessItemDSL<T>(),
     ResolverDSL.Target {
 

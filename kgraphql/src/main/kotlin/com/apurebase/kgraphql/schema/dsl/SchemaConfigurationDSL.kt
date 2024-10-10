@@ -32,7 +32,6 @@ open class SchemaConfigurationDSL {
         plugins[kClass] = plugin
     }
 
-
     internal fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
     internal fun build(): SchemaConfiguration {
         objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, acceptSingleValueAsArray)

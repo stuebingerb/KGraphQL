@@ -35,5 +35,4 @@ class KtorConfigurationTest : KtorTest() {
         }
         checked shouldBeEqualTo true
     }
-
 }

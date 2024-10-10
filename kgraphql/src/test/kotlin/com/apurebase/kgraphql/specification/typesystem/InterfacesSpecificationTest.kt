@@ -1,7 +1,10 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.*
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.extract
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage

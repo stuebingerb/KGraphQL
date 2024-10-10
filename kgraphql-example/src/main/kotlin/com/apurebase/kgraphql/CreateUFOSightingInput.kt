@@ -10,10 +10,10 @@ fun CreateUFOSightingInput.toUFOSighting(): UFOSighting {
         state = this.country[0].state,
         country = this.country[0].country,
         shape = this.shape,
-        duration = this.duration ?: 0.0,
+        duration = this.duration,
         comments = this.country[0].comments,
-        latitude = this.latitude ?: 0.0,
-        longitude = this.longitude ?: 0.0
+        latitude = this.latitude,
+        longitude = this.longitude
     )
 }
 

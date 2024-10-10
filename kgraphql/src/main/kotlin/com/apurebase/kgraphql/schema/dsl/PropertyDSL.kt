@@ -7,7 +7,6 @@ import com.apurebase.kgraphql.schema.model.PropertyDef
 import java.lang.IllegalArgumentException
 import kotlin.reflect.KType
 
-
 class PropertyDSL<T : Any, R>(val name: String, block: PropertyDSL<T, R>.() -> Unit) : LimitedAccessItemDSL<T>(),
     ResolverDSL.Target {
 

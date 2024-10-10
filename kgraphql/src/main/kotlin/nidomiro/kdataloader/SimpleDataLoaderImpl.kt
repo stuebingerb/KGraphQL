@@ -1,6 +1,11 @@
 package nidomiro.kdataloader
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import nidomiro.kdataloader.statistics.SimpleStatisticsCollector
 import nidomiro.kdataloader.statistics.StatisticsCollector
 
@@ -166,5 +171,4 @@ open class SimpleDataLoaderImpl<K, R>(
     }
 
     override suspend fun createStatisticsSnapshot() = statisticsCollector.createStatisticsSnapshot()
-
 }

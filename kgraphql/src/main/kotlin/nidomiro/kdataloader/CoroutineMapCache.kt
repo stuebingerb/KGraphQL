@@ -9,7 +9,6 @@ class CoroutineMapCache<K, V>(
 ) : Cache<K, V> {
     private val mutex = Mutex()
 
-
     override suspend fun store(key: K, value: CompletableDeferred<V>): CompletableDeferred<V> {
         mutex.withLock {
             cacheMap[key] = value
@@ -39,7 +38,6 @@ class CoroutineMapCache<K, V>(
             }
         }
 
-
     override suspend fun clear(key: K): CompletableDeferred<V>? =
         mutex.withLock {
             cacheMap.remove(key)
@@ -49,6 +47,4 @@ class CoroutineMapCache<K, V>(
         mutex.withLock {
             cacheMap.clear()
         }
-
-
 }

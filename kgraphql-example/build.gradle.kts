@@ -17,7 +17,6 @@ val logback_version: String by project
 val exposed_version: String by project
 val h2_version: String by project
 val hikari_version: String by project
-
 val junit_version: String by project
 
 val isReleaseVersion = !version.toString().endsWith("SNAPSHOT")
@@ -37,7 +36,6 @@ dependencies {
     implementation("com.h2database:h2:$h2_version")
     implementation("com.zaxxer:HikariCP:$hikari_version")
 }
-
 
 tasks {
     compileKotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
@@ -81,26 +79,26 @@ publishing {
                 description.set("KGraphQL is a Kotlin implementation of GraphQL. It provides a rich DSL to set up the GraphQL schema.")
                 url.set("https://kgraphql.io/")
                 organization {
-                    name.set("aPureBase")
-                    url.set("http://apurebase.com/")
+                    name.set("stuebingerb")
+                    url.set("https://github.com/stuebingerb")
                 }
                 licenses {
                     license {
                         name.set("MIT License")
-                        url.set("https://github.com/aPureBase/KGraphQL/blob/main/LICENSE.md")
+                        url.set("https://github.com/stuebingerb/KGraphQL/blob/main/LICENSE.md")
                     }
                 }
                 developers {
                     developer {
-                        id.set("jeggy")
-                        name.set("Jógvan Olsen")
-                        email.set("jol@apurebase.com")
+                        id.set("stuebingerb")
+                        name.set("stuebingerb")
+                        email.set("41049452+stuebingerb@users.noreply.github.com")
                     }
                 }
                 scm {
-                    connection.set("scm:git:https://github.com/aPureBase/KGraphQL.git")
-                    developerConnection.set("scm:git:https://github.com/aPureBase/KGraphQL.git")
-                    url.set("https://github.com/aPureBase/KGraphQL/")
+                    connection.set("scm:git:https://github.com/stuebingerb/KGraphQL.git")
+                    developerConnection.set("scm:git:https://github.com/stuebingerb/KGraphQL.git")
+                    url.set("https://github.com/stuebingerb/KGraphQL/")
                     tag.set("HEAD")
                 }
             }

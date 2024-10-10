@@ -27,7 +27,10 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
 import kotlin.reflect.KVisibility
-import kotlin.reflect.full.*
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.isSuperclassOf
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
@@ -134,7 +137,10 @@ class SchemaCompilation(
         val __typenameField = handleOperation(
             PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on { -> "Mutation" })
         )
-        return Type.OperationObject("Mutation", "Mutation object", definition.mutations.map { handleOperation(it) } + __typenameField)
+        return Type.OperationObject(
+            "Mutation",
+            "Mutation object",
+            definition.mutations.map { handleOperation(it) } + __typenameField)
     }
 
     private suspend fun handleSubscriptions(): Type {
@@ -327,7 +333,9 @@ class SchemaCompilation(
 
         val fields = if (kClass.findAnnotation<NotIntrospected>() == null) {
             kClass.memberProperties.map { property -> handleKotlinInputProperty(property) }
-        } else listOf()
+        } else {
+            listOf()
+        }
 
         typeProxy.proxied = Type.Input(inputObjectDef, fields)
         return typeProxy

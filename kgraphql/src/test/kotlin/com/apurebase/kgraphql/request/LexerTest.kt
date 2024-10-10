@@ -1,10 +1,34 @@
 package com.apurebase.kgraphql.request
 
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.schema.model.ast.Source
 import com.apurebase.kgraphql.schema.model.ast.Token
-import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.*
-import com.apurebase.kgraphql.GraphQLError
-import org.amshove.kluent.*
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.AT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BANG
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BLOCK_STRING
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACE_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACE_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACKET_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACKET_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.COLON
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.COMMENT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.DOLLAR
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.EOF
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.EQUALS
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.FLOAT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.INT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.NAME
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PAREN_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PAREN_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PIPE
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SOF
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SPREAD
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.STRING
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.junit.jupiter.api.Test
 
 internal class LexerTest {

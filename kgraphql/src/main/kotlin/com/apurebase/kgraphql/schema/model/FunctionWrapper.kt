@@ -17,7 +17,6 @@ import kotlin.reflect.jvm.ExperimentalReflectionOnLambdas
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.jvm.reflect
 
-
 private val subscribers = mutableMapOf<String, Subscriber?>()
 
 /**
@@ -232,7 +231,6 @@ interface FunctionWrapper<T> : Publisher {
         override fun subscribe(subscription: String, subscriber: Subscriber) {
             subscribers[subscription] = subscriber
         }
-
 
         override val kFunction: KFunction<T>
             @Synchronized

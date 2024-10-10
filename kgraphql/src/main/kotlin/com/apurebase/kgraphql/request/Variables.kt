@@ -1,13 +1,13 @@
 package com.apurebase.kgraphql.request
 
-import com.apurebase.kgraphql.*
+import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.getIterableElementType
+import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.schema.model.ast.TypeNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
-import com.apurebase.kgraphql.GraphQLError
-import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.structure.LookupSchema
-import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -41,7 +41,7 @@ data class Variables(
         }
 
         value?.let {
-            if (isIterable && kType.getIterableElementType()?.isMarkedNullable == false) {
+            if (isIterable && !kType.getIterableElementType().isMarkedNullable) {
                 for (element in value as Iterable<*>) {
                     if (element == null) {
                         throw GraphQLError(

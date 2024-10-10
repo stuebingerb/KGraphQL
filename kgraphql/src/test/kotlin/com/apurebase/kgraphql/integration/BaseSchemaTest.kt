@@ -16,7 +16,6 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import org.junit.jupiter.api.AfterEach
 
-
 abstract class BaseSchemaTest {
 
     companion object {

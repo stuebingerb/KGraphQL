@@ -2,9 +2,13 @@ package com.apurebase.kgraphql.integration
 
 import com.github.benmanes.caffeine.cache.AsyncCache
 import com.github.benmanes.caffeine.cache.Caffeine
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 import java.util.concurrent.CompletionException
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration

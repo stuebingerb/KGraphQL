@@ -100,5 +100,4 @@ class DataLoaderPropertyDSL<T, K, R>(
     override fun setReturnType(type: KType) {
         explicitReturnType = type
     }
-
 }

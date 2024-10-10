@@ -13,5 +13,4 @@ class Context(private val map: Map<Any, Any>) {
     }
 
     inline fun <reified T : Any> get(): T? = get(T::class)
-
 }

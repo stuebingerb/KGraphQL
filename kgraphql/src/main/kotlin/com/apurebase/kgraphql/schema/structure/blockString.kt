@@ -33,7 +33,6 @@ internal fun dedentBlockStringValue(rawString: String): String {
     return lines.joinToString("\n")
 }
 
-
 internal fun getBlockStringIndentation(lines: List<String>): Int {
     var commonIndent: Int? = null
 

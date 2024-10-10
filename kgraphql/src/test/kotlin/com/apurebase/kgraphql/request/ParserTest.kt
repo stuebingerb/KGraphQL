@@ -1,19 +1,30 @@
 package com.apurebase.kgraphql.request
 
-import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
-import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode.QUERY
-import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FieldNode
-import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.EOF
-import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SOF
-import com.apurebase.kgraphql.schema.model.ast.TypeNode.NonNullTypeNode
-import com.apurebase.kgraphql.schema.model.ast.TypeNode.ListTypeNode
-import com.apurebase.kgraphql.schema.model.ast.TypeNode.NamedTypeNode
-import com.apurebase.kgraphql.schema.model.ast.ValueNode.*
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.ResourceFiles.kitchenSinkQuery
 import com.apurebase.kgraphql.d
-import com.apurebase.kgraphql.schema.model.ast.*
-import org.amshove.kluent.*
+import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
+import com.apurebase.kgraphql.schema.model.ast.DocumentNode
+import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode.QUERY
+import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FieldNode
+import com.apurebase.kgraphql.schema.model.ast.SelectionSetNode
+import com.apurebase.kgraphql.schema.model.ast.Source
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.EOF
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SOF
+import com.apurebase.kgraphql.schema.model.ast.TypeNode
+import com.apurebase.kgraphql.schema.model.ast.TypeNode.ListTypeNode
+import com.apurebase.kgraphql.schema.model.ast.TypeNode.NamedTypeNode
+import com.apurebase.kgraphql.schema.model.ast.TypeNode.NonNullTypeNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.ListValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.NullValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.NumberValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.StringValueNode
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeInstanceOf
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
 import org.junit.jupiter.api.Test
 
 class ParserTest {
@@ -679,5 +690,4 @@ class ParserTest {
             }
         }
     }
-
 }

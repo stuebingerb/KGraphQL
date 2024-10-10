@@ -1,9 +1,49 @@
 package com.apurebase.kgraphql.request
 
 import com.apurebase.kgraphql.schema.directive.DirectiveLocation
-import com.apurebase.kgraphql.schema.model.ast.*
-import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode.*
-import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.*
+import com.apurebase.kgraphql.schema.model.ast.ArgumentNode
+import com.apurebase.kgraphql.schema.model.ast.DefinitionNode
+import com.apurebase.kgraphql.schema.model.ast.DirectiveNode
+import com.apurebase.kgraphql.schema.model.ast.DocumentNode
+import com.apurebase.kgraphql.schema.model.ast.EnumValueDefinitionNode
+import com.apurebase.kgraphql.schema.model.ast.FieldDefinitionNode
+import com.apurebase.kgraphql.schema.model.ast.InputValueDefinitionNode
+import com.apurebase.kgraphql.schema.model.ast.Location
+import com.apurebase.kgraphql.schema.model.ast.NameNode
+import com.apurebase.kgraphql.schema.model.ast.OperationTypeDefinitionNode
+import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode
+import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode.MUTATION
+import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode.QUERY
+import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode.SUBSCRIPTION
+import com.apurebase.kgraphql.schema.model.ast.SelectionNode
+import com.apurebase.kgraphql.schema.model.ast.SelectionSetNode
+import com.apurebase.kgraphql.schema.model.ast.Source
+import com.apurebase.kgraphql.schema.model.ast.Token
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.AMP
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.AT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BANG
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BLOCK_STRING
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACE_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACE_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACKET_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.BRACKET_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.COLON
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.DOLLAR
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.EOF
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.EQUALS
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.FLOAT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.INT
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.NAME
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PAREN_L
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PAREN_R
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.PIPE
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SOF
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SPREAD
+import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.STRING
+import com.apurebase.kgraphql.schema.model.ast.TypeNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 
 open class Parser {
     private val options: Options
@@ -75,7 +115,6 @@ open class Parser {
             else -> throw unexpected()
         }
     }
-
 
     /**
      * OperationDefinition :
@@ -531,7 +570,9 @@ open class Parser {
      */
     private fun parseDescription() = if (peekDescription()) {
         parseStringLiteral()
-    } else null
+    } else {
+        null
+    }
 
     /**
      * SchemaDefinition : schema Directives{Const}? { OperationTypeDefinition+ }

@@ -4,11 +4,12 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.actor
-import java.util.*
+import java.util.Stack
 
 class DataLoader<K, V>(private val batchLoader: suspend (List<K>) -> Map<K, V?>) {
 
     inner class DataScope(totalTimes: Int, scope: CoroutineScope) : CoroutineScope by scope {
+        @OptIn(ObsoleteCoroutinesApi::class)
         private val actor = dataActor(totalTimes, batchLoader)
 
         suspend fun load(key: K, valueResult: CompletableDeferred<Any?>) {
@@ -49,7 +50,11 @@ fun <K, V> CoroutineScope.dataActor(totalTimes: Int, batchLoader: suspend (List<
             var promise: CompletableDeferred<V?>? = promises.pop()
             while (promise != null) {
                 promise.complete(cache[key])
-                promise = if (promises.isNotEmpty()) promises.pop() else null
+                promise = if (promises.isNotEmpty()) {
+                    promises.pop()
+                } else {
+                    null
+                }
             }
         }
         promiseMap.clear()
@@ -57,14 +62,18 @@ fun <K, V> CoroutineScope.dataActor(totalTimes: Int, batchLoader: suspend (List<
 
     for (msg in channel) {
         if (msg is Add<*, *>) {
+            @Suppress("UNCHECKED_CAST")
             msg as Add<K, V>
-            if (!promiseMap.containsKey(msg.key)) promiseMap[msg.key] = Stack()
+            if (!promiseMap.containsKey(msg.key)) {
+                promiseMap[msg.key] = Stack()
+            }
             promiseMap[msg.key]?.add(msg.result) ?: error("Couldn't find any '${msg.key}' in map")
             log("$counter")
-            if (--counter == 0) doJoin()
+            if (--counter == 0) {
+                doJoin()
+            }
         }
     }
 }
-
 
 fun log(str: String) = println("DATALOADER: $str")
