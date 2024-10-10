@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     base
     kotlin("jvm")
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.21"
     id("org.jetbrains.dokka") version "1.9.20"
     signing
 }
