@@ -14,6 +14,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           java-version: 11
+          distribution: 'temurin'
           cache: 'gradle'
       - name: Run Tests
         uses: eskatos/gradle-command-action@v1

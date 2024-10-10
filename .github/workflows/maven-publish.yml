@@ -13,6 +13,7 @@
 #      - uses: actions/setup-java@v4
 #        with:
 #          java-version: 11
+#          distribution: 'temurin'
 #          cache: 'gradle'
 #      - name: Publish
 #        uses: eskatos/gradle-command-action@v1
