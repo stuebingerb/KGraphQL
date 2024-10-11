@@ -1,6 +1,5 @@
 plugins {
     id("library-conventions")
-    id("org.jetbrains.dokka") version "1.9.20"
     signing
 }
 
@@ -42,37 +41,10 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 }
 
-tasks {
-    dokkaHtml {
-        outputDirectory.set(layout.buildDirectory.dir("javadoc"))
-        dokkaSourceSets {
-            configureEach {
-                jdkVersion.set(11)
-                reportUndocumented.set(true)
-                platform.set(org.jetbrains.dokka.Platform.jvm)
-            }
-        }
-    }
-}
-
-val sourcesJar by tasks.creating(Jar::class) {
-    archiveClassifier = "sources"
-    from(sourceSets.main.get().allSource)
-}
-
-val dokkaJar by tasks.creating(Jar::class) {
-    group = JavaBasePlugin.DOCUMENTATION_GROUP
-    archiveClassifier = "javadoc"
-    from(tasks.dokkaHtml)
-}
-
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = project.name
             from(components["java"])
-            artifact(sourcesJar)
-            artifact(dokkaJar)
             pom {
                 name.set("KGraphQL")
                 description.set("KGraphQL is a Kotlin implementation of GraphQL. It provides a rich DSL to set up the GraphQL schema.")

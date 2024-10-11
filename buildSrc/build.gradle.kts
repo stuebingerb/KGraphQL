@@ -10,4 +10,5 @@ plugins {
 
 dependencies {
     implementation(kotlin("gradle-plugin", "2.0.21"))
+    implementation("dev.adamko.dokkatoo:dokkatoo-plugin:2.4.0")
 }
