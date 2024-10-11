@@ -32,8 +32,7 @@ nexusStaging {
 
 tasks {
     wrapper {
-        // todo: BIN is enough and significantly smaller
-        distributionType = Wrapper.DistributionType.ALL
+        distributionType = Wrapper.DistributionType.BIN
     }
     closeRepository {
         mustRunAfter(subprojects.map { it.tasks.getByName("publishToSonatype") }.toTypedArray())
