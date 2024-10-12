@@ -1,3 +1,5 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
@@ -19,11 +21,6 @@ kotlin {
     }
 }
 
-java {
-    withSourcesJar()
-    withJavadocJar()
-}
-
 dokkatoo {
     dokkaGeneratorIsolation.set(
         ProcessIsolation {
@@ -32,12 +29,8 @@ dokkatoo {
     )
 }
 
-tasks
-    .named<Jar>("javadocJar") {
-        from(tasks.dokkatooGeneratePublicationHtml)
-    }
-
 mavenPublishing {
+    configure(KotlinJvm(JavadocJar.Dokka("dokkatooGeneratePublicationHtml")))
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
     pom {
