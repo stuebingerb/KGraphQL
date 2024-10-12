@@ -1,7 +1,6 @@
 plugins {
     id("library-conventions")
     kotlin("plugin.serialization") version "2.0.21"
-    signing
 }
 
 val caffeine_version: String by project
@@ -32,49 +31,4 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("io.ktor:ktor-server-auth:$ktor_version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            pom {
-                name.set("KGraphQL")
-                description.set("KGraphQL is a Kotlin implementation of GraphQL. It provides a rich DSL to set up the GraphQL schema.")
-                url.set("https://kgraphql.io/")
-                organization {
-                    name.set("stuebingerb")
-                    url.set("https://github.com/stuebingerb")
-                }
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://github.com/stuebingerb/KGraphQL/blob/main/LICENSE.md")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("stuebingerb")
-                        name.set("stuebingerb")
-                        email.set("41049452+stuebingerb@users.noreply.github.com")
-                    }
-                }
-                scm {
-                    connection.set("scm:git:https://github.com/stuebingerb/KGraphQL.git")
-                    developerConnection.set("scm:git:https://github.com/stuebingerb/KGraphQL.git")
-                    url.set("https://github.com/stuebingerb/KGraphQL/")
-                    tag.set("HEAD")
-                }
-            }
-        }
-    }
-}
-
-signing {
-    isRequired = isReleaseVersion
-    useInMemoryPgpKeys(
-        System.getenv("ORG_GRADLE_PROJECT_signingKey"),
-        System.getenv("ORG_GRADLE_PROJECT_signingPassword")
-    )
-    sign(publishing.publications["maven"])
 }
