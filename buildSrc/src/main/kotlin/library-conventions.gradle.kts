@@ -47,7 +47,7 @@ mavenPublishing {
         developers {
             developer {
                 id.set("stuebingerb")
-                name.set("Bernd Stuebinger")
+                name.set("Bernd Stübinger")
                 email.set("41049452+stuebingerb@users.noreply.github.com")
                 url.set("https://github.com/stuebingerb/")
             }
