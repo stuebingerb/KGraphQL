@@ -14,5 +14,9 @@ class InputValue<T : Any>(
 
     override val description: String? = valueDef.description
 
+    override val isDeprecated: Boolean = valueDef.isDeprecated
+
+    override val deprecationReason: String? = valueDef.deprecationReason
+
     val default: T? = valueDef.defaultValue
 }

@@ -340,7 +340,12 @@ class SchemaCompilation(
         inputTypeProxies[kClass] = typeProxy
 
         val fields = if (kClass.findAnnotation<NotIntrospected>() == null) {
-            kClass.memberProperties.map { property -> handleKotlinInputProperty(property) }
+            kClass.memberProperties.map { property ->
+                handleKotlinInputProperty(
+                    kProperty = property,
+                    kqlProperty = inputObjectDef.kotlinProperties[property]
+                )
+            }
         } else {
             listOf()
         }
@@ -391,9 +396,24 @@ class SchemaCompilation(
         return unionType
     }
 
-    private suspend fun handleKotlinInputProperty(kProperty: KProperty1<*, *>): InputValue<*> {
+    private suspend fun <T : Any, R> handleKotlinInputProperty(
+        kProperty: KProperty1<T, R>,
+        kqlProperty: PropertyDef.Kotlin<*, *>?
+    ): InputValue<*> {
         val type = handlePossiblyWrappedType(kProperty.returnType, TypeCategory.INPUT)
-        return InputValue(InputValueDef(kProperty.returnType.jvmErasure, kProperty.name), type)
+        val actualKqlProperty = kqlProperty ?: PropertyDef.Kotlin(kProperty)
+        if (actualKqlProperty.isDeprecated && !type.isNullable()) {
+            throw SchemaException("Required fields cannot be marked as deprecated")
+        }
+        return InputValue(
+            InputValueDef(
+                kProperty.returnType.jvmErasure,
+                kProperty.name,
+                description = actualKqlProperty.description,
+                isDeprecated = actualKqlProperty.isDeprecated,
+                deprecationReason = actualKqlProperty.deprecationReason
+            ), type
+        )
     }
 
     private suspend fun <T : Any, R> handleKotlinProperty(

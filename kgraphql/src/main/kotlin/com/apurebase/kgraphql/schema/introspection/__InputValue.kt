@@ -1,6 +1,8 @@
 package com.apurebase.kgraphql.schema.introspection
 
-interface __InputValue : __Described {
+import com.apurebase.kgraphql.schema.model.Depreciable
+
+interface __InputValue :  Depreciable, __Described {
 
     val type: __Type
 

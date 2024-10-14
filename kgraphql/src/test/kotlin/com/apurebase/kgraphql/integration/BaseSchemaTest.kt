@@ -42,7 +42,6 @@ abstract class BaseSchemaTest {
                 }
             }
 
-
             fragment FullType on __Type {
                 fields(includeDeprecated: true) {
                     name
@@ -56,7 +55,7 @@ abstract class BaseSchemaTest {
                     isDeprecated
                     deprecationReason
                 }
-                inputFields {
+                inputFields(includeDeprecated: true) {
                     ...InputValue
                 }
                 interfaces {
@@ -78,6 +77,8 @@ abstract class BaseSchemaTest {
                 description
                 type { ...TypeRef }
                 defaultValue
+                isDeprecated
+                deprecationReason
             }
 
             fragment TypeRef on __Type {

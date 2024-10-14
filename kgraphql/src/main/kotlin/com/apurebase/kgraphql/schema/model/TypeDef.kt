@@ -34,6 +34,7 @@ interface TypeDef {
     class Input<T : Any>(
         name: String,
         override val kClass: KClass<T>,
+        val kotlinProperties: Map<KProperty1<T, *>, PropertyDef.Kotlin<T, *>> = emptyMap(),
         description: String? = null
     ) : BaseKQLType(name, description), Kotlin<T>
 
