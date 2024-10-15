@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.schema.SchemaException
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
+import kotlin.reflect.typeOf
 
 class DeprecationSpecificationTest {
 
@@ -171,5 +172,65 @@ class DeprecationSpecificationTest {
         assertThat(response.extract("data/__type/inputFields[0]/isDeprecated"), equalTo(false))
         // oldOptional should not be returned
         assertThat(response.contains("data/__type/inputFields[1]"), equalTo(false))
+    }
+
+    @Test
+    fun `optional field args may be deprecated`() {
+        val expected = "deprecated field arg"
+        @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+        val schema = defaultSchema {
+            query("data") {
+                resolver { oldOptional: String?, new: String -> "" }.withArgs {
+                    arg(String::class, typeOf<String?>()) { name = "oldOptional"; deprecate(expected) }
+                    arg<String> { name = "new" }
+                }
+            }
+        }
+
+        val response =
+            deserialize(schema.executeBlocking("{__schema{queryType{fields{name, args(includeDeprecated: true){name deprecationReason isDeprecated}}}}}"))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[0]/name"), equalTo("oldOptional"))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[0]/deprecationReason"), equalTo(expected))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[0]/isDeprecated"), equalTo(true))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[1]/name"), equalTo("new"))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[1]/deprecationReason"), equalTo(null))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[1]/isDeprecated"), equalTo(false))
+    }
+
+    @Test
+    fun `required field args may not be deprecated`() {
+        @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+        expect<SchemaException>("Required arguments cannot be marked as deprecated") {
+            defaultSchema {
+                query("data") {
+                    resolver { oldRequired: String, new: String -> "" }.withArgs {
+                        arg<String> { name = "oldRequired"; deprecate("deprecated field arg") }
+                        arg<String> { name = "new" }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `deprecated field args should not be returned by default`() {
+        val expected = "deprecated input value"
+        @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+        val schema = defaultSchema {
+            query("data") {
+                resolver { oldOptional: String?, new: String -> "" }.withArgs {
+                    arg(String::class, typeOf<String?>()) { name = "oldOptional"; deprecate(expected) }
+                    arg<String> { name = "new" }
+                }
+            }
+        }
+
+        val response =
+            deserialize(schema.executeBlocking("{__schema{queryType{fields{name, args{name deprecationReason isDeprecated}}}}}"))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[0]/name"), equalTo("new"))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[0]/deprecationReason"), equalTo(null))
+        assertThat(response.extract("data/__schema/queryType/fields[0]/args[0]/isDeprecated"), equalTo(false))
+        // oldOptional should not be returned
+        assertThat(response.contains("data/__schema/queryType/fields[0]/args[1]"), equalTo(false))
     }
 }

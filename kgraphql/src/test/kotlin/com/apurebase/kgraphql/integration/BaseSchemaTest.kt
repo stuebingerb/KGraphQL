@@ -46,7 +46,7 @@ abstract class BaseSchemaTest {
                 fields(includeDeprecated: true) {
                     name
                     description
-                    args {
+                    args(includeDeprecated: true) {
                         ...InputValue
                     }
                     type {

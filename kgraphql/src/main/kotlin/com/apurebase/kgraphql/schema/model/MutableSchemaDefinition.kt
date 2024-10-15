@@ -24,7 +24,8 @@ data class MutableSchemaDefinition(
     private val objects: ArrayList<TypeDef.Object<*>> = arrayListOf(
         TypeDef.Object(__Schema::class.defaultKQLTypeName(), __Schema::class),
         create__TypeDefinition(),
-        create__DirectiveDefinition()
+        create__DirectiveDefinition(),
+        create__FieldDefinition()
     ),
     private val queries: ArrayList<QueryDef<*>> = arrayListOf(),
     private val scalars: ArrayList<TypeDef.Scalar<*>> = arrayListOf(
@@ -161,6 +162,16 @@ data class MutableSchemaDefinition(
         return this.name.equals(other.name, true)
     }
 }
+
+private fun create__FieldDefinition() = TypeDSL(emptyList(), __Field::class).apply {
+    transformation(__Field::args) { args: List<__InputValue>, includeDeprecated: Boolean? ->
+        if (includeDeprecated == true) {
+            args
+        } else {
+            args.filterNot { it.isDeprecated }
+        }
+    }
+}.toKQLObject()
 
 private fun create__TypeDefinition() = TypeDSL(emptyList(), __Type::class).apply {
     transformation(__Type::fields) { fields: List<__Field>?, includeDeprecated: Boolean? ->

@@ -371,6 +371,9 @@ class SchemaCompilation(
             val inputValue = inputValues.find { it.name == name }
             val kqlInput = inputValue ?: InputValueDef(kType.jvmErasure, name)
             val inputType = handlePossiblyWrappedType(inputValue?.kType ?: kType, TypeCategory.INPUT)
+            if (kqlInput.isDeprecated && !inputType.isNullable()) {
+                throw SchemaException("Required arguments cannot be marked as deprecated")
+            }
             InputValue(kqlInput, inputType)
         }
     }
