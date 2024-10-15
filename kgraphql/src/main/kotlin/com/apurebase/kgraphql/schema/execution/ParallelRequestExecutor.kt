@@ -51,16 +51,21 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
             val resultMap = plan.toMapAsync(dispatcher) {
                 val ctx = ExecutionContext(Variables(schema, variables, it.variables), context)
-                if (determineInclude(ctx, it)) writeOperation(
-                    isSubscription = plan.isSubscription,
-                    ctx = ctx,
-                    node = it,
-                    operation = it.field as Field.Function<*, *>
-                ) else null
+                if (shouldInclude(ctx, it)) {
+                    writeOperation(
+                        isSubscription = plan.isSubscription,
+                        ctx = ctx,
+                        node = it,
+                        operation = it.field as Field.Function<*, *>
+                    )
+                } else {
+                    null
+                }
             }
 
             for (operation in plan) {
-                if (resultMap[operation] != null) { // Remove all by skip/include directives
+                // Remove all by skip/include directives
+                if (resultMap[operation] != null) {
                     data.set<JsonNode>(operation.aliasOrKey, resultMap[operation])
                 }
             }
@@ -221,8 +226,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         when (child) {
             //Union is subclass of Node so check it first
             is Execution.Union -> {
-                val field = type.unwrapped()[child.key]
-                    ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
+                val field = checkNotNull(type.unwrapped()[child.key]) {
+                    "Execution unit ${child.key} is not contained by operation return type"
+                }
                 if (field is Field.Union<*>) {
                     return child.aliasOrKey to createUnionOperationNode(ctx, value, child, field as Field.Union<T>)
                 } else {
@@ -231,8 +237,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             }
 
             is Execution.Node -> {
-                val field = type.unwrapped()[child.key]
-                    ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
+                val field = checkNotNull(type.unwrapped()[child.key]) {
+                    "Execution unit ${child.key} is not contained by operation return type"
+                }
                 return child.aliasOrKey to (createPropertyNode(ctx, value, child, field) ?: return null)
             }
 
@@ -248,7 +255,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         container: Execution.Fragment
     ): Map<String, JsonNode?> {
         val expectedType = container.condition.type
-        val include = determineInclude(ctx, container)
+        val include = shouldInclude(ctx, container)
 
         if (include) {
             if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
@@ -265,7 +272,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 value,
                 container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
             ) else {
-                throw IllegalStateException("fragments can be specified on object types, interfaces, and unions")
+                error("fragments can be specified on object types, interfaces, and unions")
             }
         }
         //not included, or type condition is not matched
@@ -278,7 +285,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         node: Execution.Node,
         field: Field
     ): JsonNode? {
-        val include = determineInclude(ctx, node)
+        val include = shouldInclude(ctx, node)
         node.field.checkAccess(parentValue, ctx.requestContext)
 
         if (include) {
@@ -361,8 +368,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         return createNode(ctx, result, node, field.returnType)
     }
 
-    private suspend fun determineInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {
-        if (executionNode.directives?.isEmpty() == true) return true
+    private suspend fun shouldInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {
+        if (executionNode.directives?.isEmpty() == true) {
+            return true
+        }
         return executionNode.directives?.map { (directive, arguments) ->
             directive.execution.invoke(
                 funName = directive.name,
@@ -394,7 +403,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             executionNode,
             ctx.requestContext
         )
-        //exceptions are not caught on purpose to pass up business logic errors
+        // exceptions are not caught on purpose to pass up business logic errors
         return try {
             when {
                 hasReceiver -> invoke(receiver, *transformedArgs.toTypedArray())
@@ -408,7 +417,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         } catch (e: Throwable) {
             if (schema.configuration.wrapErrors && e !is GraphQLError) {
                 throw GraphQLError(e.message ?: "", nodes = listOf(executionNode.selectionNode), originalError = e)
-            } else throw e
+            } else {
+                throw e
+            }
         }
     }
 }

@@ -45,9 +45,10 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode): T {
                 value
             )
         }
+    } catch (e: GraphQLError) {
+        throw e
     } catch (e: Exception) {
-        throw if (e is GraphQLError) e
-        else GraphQLError(
+        throw GraphQLError(
             message = "argument '${value.valueNodeName}' is not valid value of type ${scalar.name}",
             nodes = listOf(value),
             originalError = e

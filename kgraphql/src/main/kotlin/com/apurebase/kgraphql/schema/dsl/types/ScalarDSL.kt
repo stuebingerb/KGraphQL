@@ -5,9 +5,7 @@ import com.apurebase.kgraphql.schema.dsl.ItemDSL
 import com.apurebase.kgraphql.schema.scalar.ScalarCoercion
 import kotlin.reflect.KClass
 
-abstract class ScalarDSL<T : Any, Raw : Any>(
-    kClass: KClass<T>
-) : ItemDSL() {
+abstract class ScalarDSL<T : Any, Raw : Any>(kClass: KClass<T>) : ItemDSL() {
 
     companion object {
         const val PLEASE_SPECIFY_COERCION =

@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.server
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.apurebase.kgraphql.schema.DefaultSchema
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandler
@@ -23,9 +23,7 @@ import java.util.logging.Logger
  */
 @ChannelHandler.Sharable
 class HttpRequestHandler(val schema: DefaultSchema) : SimpleChannelInboundHandler<FullHttpRequest>() {
-
     private val logger: Logger = Logger.getLogger(HttpRequestHandler::class.qualifiedName)
-
     private val objectMapper = ObjectMapper()
 
     override fun channelRead0(ctx: ChannelHandlerContext, msg: FullHttpRequest) {
@@ -37,8 +35,9 @@ class HttpRequestHandler(val schema: DefaultSchema) : SimpleChannelInboundHandle
 
     private fun handleQuery(ctx: ChannelHandlerContext, msg: FullHttpRequest) {
         val content = msg.content().toString(Charset.defaultCharset())
-        val query = objectMapper.readTree(content)["query"].textValue()
-            ?: throw IllegalArgumentException("Please specify only one query")
+        val query = requireNotNull(objectMapper.readTree(content)["query"].textValue()) {
+            "Please specify only one query"
+        }
         try {
             val response = schema.executeBlocking(query, null)
             writeResponse(ctx, response)
@@ -65,7 +64,6 @@ class HttpRequestHandler(val schema: DefaultSchema) : SimpleChannelInboundHandle
         response: String,
         contentType: AsciiString = HttpHeaderValues.APPLICATION_JSON
     ) {
-
         val httpResponse = DefaultFullHttpResponse(
             HttpVersion.HTTP_1_1,
             HttpResponseStatus.OK,
@@ -74,7 +72,6 @@ class HttpRequestHandler(val schema: DefaultSchema) : SimpleChannelInboundHandle
 
         httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, httpResponse.content().readableBytes())
         httpResponse.headers().set(HttpHeaderNames.CONTENT_TYPE, contentType)
-
         ctx.writeAndFlush(httpResponse)
     }
 

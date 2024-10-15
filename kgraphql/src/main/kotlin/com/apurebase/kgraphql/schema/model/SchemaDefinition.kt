@@ -6,9 +6,9 @@ import com.apurebase.kgraphql.schema.directive.Directive
  * [SchemaDefinition] represents unstructured schema components
  *
  * [SchemaDefinition] does not contain all nodes in schema, only these,
- * which have been directly declared via [SchemaBuilder].
+ * which have been directly declared via [com.apurebase.kgraphql.schema.dsl.SchemaBuilder].
  *
- * [SchemaStructure] contains full schema tree, with all types
+ * [SchemaDefinition] contains full schema tree, with all types
  */
 data class SchemaDefinition(
     val objects: List<TypeDef.Object<*>>,

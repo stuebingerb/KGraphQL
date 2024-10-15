@@ -75,7 +75,7 @@ class ListsSpecificationTest {
         } shouldThrow GraphQLError::class with {
             println(prettyPrint())
             message shouldBeEqualTo "Invalid argument value [GAGA, null, DADA, PADA] from variable \$list, " +
-                    "expected list with non null arguments"
+                    "expected list with non-null arguments"
         }
     }
 

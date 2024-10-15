@@ -66,7 +66,9 @@ data class Lexer(
                     val nextToken = readToken(token)
                     token.next = nextToken
                     nextToken
-                } else token.next!!
+                } else {
+                    token.next!!
+                }
             } while (token.kind === COMMENT)
         }
         return token
@@ -128,7 +130,9 @@ data class Lexer(
             // .
             46 -> if (body.getOrNull(pos + 1)?.code == 46 && body.getOrNull(pos + 2)?.code == 46) {
                 tok(SPREAD, start = pos, end = pos + 3)
-            } else fail(code)
+            } else {
+                fail(code)
+            }
             // :
             58 -> tok(COLON)
             // =
@@ -150,10 +154,10 @@ data class Lexer(
             // - 0-9
             45, in (48..57) -> readNumber(pos, code, col, prev)
             // "
-            34 -> {
-                if (body.getOrNull(pos + 1)?.code == 34 && body.getOrNull(pos + 2)?.code == 34)
-                    readBlockString(pos, col, prev)
-                else readString(pos, col, prev)
+            34 -> if (body.getOrNull(pos + 1)?.code == 34 && body.getOrNull(pos + 2)?.code == 34) {
+                readBlockString(pos, col, prev)
+            } else {
+                readString(pos, col, prev)
             }
 
             else -> fail(code)
@@ -361,7 +365,9 @@ data class Lexer(
         while (position < body.length) {
             code = body.getOrNull(position)?.code ?: break
             // not LineTerminator
-            if (code == 0x00a || code == 0x00d) break
+            if (code == 0x00a || code == 0x00d) {
+                break
+            }
 
             // Closing Quote (")
             if (code == 34) {
@@ -543,31 +549,34 @@ data class Lexer(
     }
 
     private fun printCharCode(code: Int?) =
-        if (code == null) EOF.str
-        else StringBuilder().apply {
-            append("\"")
-            when (val char = code.toChar()) {
-                '\\' -> append("\\\\")
-                '"' -> append("\\\"")
-                '\b' -> append("\\b")
-                '\n' -> append("\\n")
-                '\r' -> append("\\r")
-                '\t' -> append("\\t")
-                else ->
-                    if (code < 0x007f && char > ' ') {
-                        // Refer: https://utf8-chartable.de/unicode-utf8-table.pl?number=128
-                        append(char)
-                    } else {
-                        append("\\u")
-                        val hex = Integer.toHexString(code)
-                        for (i in hex.length..3) {
-                            append('0')
+        if (code == null) {
+            EOF.str
+        } else {
+            StringBuilder().apply {
+                append("\"")
+                when (val char = code.toChar()) {
+                    '\\' -> append("\\\\")
+                    '"' -> append("\\\"")
+                    '\b' -> append("\\b")
+                    '\n' -> append("\\n")
+                    '\r' -> append("\\r")
+                    '\t' -> append("\\t")
+                    else ->
+                        if (code < 0x007f && char > ' ') {
+                            // Refer: https://utf8-chartable.de/unicode-utf8-table.pl?number=128
+                            append(char)
+                        } else {
+                            append("\\u")
+                            val hex = Integer.toHexString(code)
+                            for (i in hex.length..3) {
+                                append('0')
+                            }
+                            append(hex.uppercase())
                         }
-                        append(hex.uppercase())
-                    }
-            }
-            append("\"")
-        }.toString()
+                }
+                append("\"")
+            }.toString()
+        }
 
     /**
      * Report a message that an unexpected character was encountered.

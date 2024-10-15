@@ -207,13 +207,15 @@ class IntrospectionSpecificationTest {
     fun `__typename returns actual type of object`() {
         val schema = defaultSchema {
             query("interface") {
-                resolver { -> Face("~~MOCK~~") as Inter }
+                resolver { ->
+                    @Suppress("USELESS_CAST")
+                    Face("~~MOCK~~") as Inter
+                }
             }
 
             type<Inter>()
             type<Face>()
         }
-
 
         val response = deserialize(schema.executeBlocking("{interface{value, __typename ... on Face{value2}}}"))
         assertThat(response.extract("data/interface/__typename"), equalTo("Face"))
@@ -235,7 +237,6 @@ class IntrospectionSpecificationTest {
             type<InterInter>()
             type<Face>()
         }
-
 
         val possibleTypes = schema.findTypeByName("Inter")?.possibleTypes?.map { it.name }
         assertThat(possibleTypes, equalTo(listOf<String?>("Face")))

@@ -63,7 +63,7 @@ class DefaultSchema(
         )
     }
 
-    private fun String.isIntrospection() = this.contains("__schema") || this.contains("__type")
+    private fun String.isIntrospection() = contains("__schema") || contains("__type")
 
     override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
 

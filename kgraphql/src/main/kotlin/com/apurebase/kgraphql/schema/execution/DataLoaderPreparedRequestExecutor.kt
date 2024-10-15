@@ -211,7 +211,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             value,
             container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
         ) else {
-            throw IllegalStateException("fragments can be specified on object types, interfaces, and unions")
+            error("fragments can be specified on object types, interfaces, and unions")
         }
     }
 
@@ -224,8 +224,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     ) {
         when (child) {
             is Execution.Union -> {
-                val field = type.unwrapped()[child.key]
-                    ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
+                val field = checkNotNull(type.unwrapped()[child.key]) {
+                    "Execution unit ${child.key} is not contained by operation return type"
+                }
                 if (field is Field.Union<*>) {
                     createUnionOperationNode(ctx, value, child, field as Field.Union<T>, parentCount)
                 } else {
@@ -234,8 +235,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             }
 
             is Execution.Node -> {
-                val field = type.unwrapped()[child.key]
-                    ?: throw IllegalStateException("Execution unit ${child.key} is not contained by operation return type")
+                val field = checkNotNull(type.unwrapped()[child.key]) {
+                    "Execution unit ${child.key} is not contained by operation return type"
+                }
                 createPropertyNodeAsync(ctx, value, child, field, parentCount)
             }
 

@@ -22,14 +22,14 @@ fun merge(key: String, node: JsonNode?, get: (String) -> JsonNode?, set: (String
     val existingNode = get(key)
     if (existingNode != null) {
         when {
-            node == null -> throw IllegalStateException("trying to merge null with non-null for $key")
+            node == null -> error("trying to merge null with non-null for $key")
             node is ObjectNode -> {
                 check(existingNode is ObjectNode) { "trying to merge object with simple node for $key" }
                 existingNode.merge(node)
             }
 
-            existingNode is ObjectNode -> throw IllegalStateException("trying to merge simple node with object node for $key")
-            node != existingNode -> throw IllegalStateException("trying to merge different simple nodes for $key")
+            existingNode is ObjectNode -> error("trying to merge simple node with object node for $key")
+            node != existingNode -> error("trying to merge different simple nodes for $key")
         }
     } else {
         set(key, node)

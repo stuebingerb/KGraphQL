@@ -2,7 +2,6 @@ package com.apurebase.kgraphql.schema.dsl
 
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.model.PropertyDef
-import java.lang.IllegalArgumentException
 import kotlin.reflect.KProperty1
 
 class KotlinPropertyDSL<T : Any, R>(
@@ -22,10 +21,12 @@ class KotlinPropertyDSL<T : Any, R>(
             if (parent != null) rule(
                 parent,
                 ctx
-            ) else IllegalArgumentException("Unexpected null parent of kotlin property")
+            ) else {
+                IllegalArgumentException("Unexpected null parent of kotlin property")
+            }
         }
 
-        this.accessRuleBlock = accessRuleAdapter
+        accessRuleBlock = accessRuleAdapter
     }
 
     fun toKQLProperty() = PropertyDef.Kotlin(

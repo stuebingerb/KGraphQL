@@ -26,7 +26,7 @@ interface TypeDef {
         description: String? = null
     ) : BaseKQLType(name, description), Kotlin<T> {
 
-        val propertiesByName = kotlinProperties.mapKeys { entry -> entry.key.name }
+        private val propertiesByName = kotlinProperties.mapKeys { entry -> entry.key.name }
 
         fun isIgnored(property: String): Boolean = propertiesByName[property]?.isIgnored ?: false
     }

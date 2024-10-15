@@ -28,8 +28,9 @@ data class Variables(
         keyNode: ValueNode.VariableNode,
         transform: (value: ValueNode) -> Any?
     ): T? {
-        val variable = variables?.find { keyNode.name.value == it.variable.name.value }
-            ?: throw IllegalArgumentException("Variable '$${keyNode.name.value}' was not declared for this operation")
+        val variable = requireNotNull(variables?.firstOrNull { keyNode.name.value == it.variable.name.value }) {
+            "Variable '$${keyNode.name.value}' was not declared for this operation"
+        }
 
         val isIterable = kClass.isIterable()
 
@@ -45,7 +46,7 @@ data class Variables(
                 for (element in value as Iterable<*>) {
                     if (element == null) {
                         throw GraphQLError(
-                            "Invalid argument value $value from variable $${keyNode.name.value}, expected list with non null arguments",
+                            "Invalid argument value $value from variable $${keyNode.name.value}, expected list with non-null arguments",
                             keyNode
                         )
                     }

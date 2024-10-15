@@ -6,9 +6,7 @@ import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 class KGraphQL {
     companion object {
         fun schema(init: SchemaBuilder.() -> Unit): Schema {
-            return SchemaBuilder()
-                .apply(init)
-                .build()
+            return SchemaBuilder().apply(init).build()
         }
     }
 }

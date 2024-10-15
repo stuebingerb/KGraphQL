@@ -16,7 +16,11 @@ internal fun dedentBlockStringValue(rawString: String): String {
     if (commonIndent != 0) {
         for (index in lines.drop(1).indices) {
             val line = lines[index + 1]
-            val toRemove = if (line.length <= commonIndent - 1) line.length else commonIndent
+            val toRemove = if (line.length <= commonIndent - 1) {
+                line.length
+            } else {
+                commonIndent
+            }
             lines[index + 1] = line.removeRange(0, toRemove)
         }
     }
