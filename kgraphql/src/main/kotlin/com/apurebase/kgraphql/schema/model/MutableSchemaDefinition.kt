@@ -227,6 +227,13 @@ private fun create__DirectiveDefinition() = TypeDSL(
         }
         deprecate("Use `locations`.")
     }
+    transformation(__Directive::args) { args: List<__InputValue>, includeDeprecated: Boolean? ->
+        if (includeDeprecated == true) {
+            args
+        } else {
+            args.filterNot { it.isDeprecated }
+        }
+    }
 }.toKQLObject()
 
 private fun <T> List<T>.containsAny(vararg elements: T) = elements.any { this.contains(it) }

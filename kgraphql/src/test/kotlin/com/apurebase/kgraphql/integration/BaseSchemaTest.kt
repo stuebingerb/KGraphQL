@@ -35,7 +35,7 @@ abstract class BaseSchemaTest {
                         name
                         description
                         locations
-                        args {
+                        args(includeDeprecated: true) {
                             ...InputValue
                         }
                     }
