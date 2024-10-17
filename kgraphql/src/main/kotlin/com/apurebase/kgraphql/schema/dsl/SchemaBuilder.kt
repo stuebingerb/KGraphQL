@@ -209,7 +209,7 @@ class SchemaBuilder internal constructor() {
 
     fun <T : Any> inputType(kClass: KClass<T>, block: InputTypeDSL<T>.() -> Unit) {
         val input = InputTypeDSL(kClass).apply(block)
-        model.addInputObject(TypeDef.Input(input.name, kClass, input.description))
+        model.addInputObject(input.toKQLObject())
     }
 
     inline fun <reified T : Any> inputType(noinline block: InputTypeDSL<T>.() -> Unit = {}) {

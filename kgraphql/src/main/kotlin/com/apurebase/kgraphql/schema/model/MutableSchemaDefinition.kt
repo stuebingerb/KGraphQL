@@ -10,6 +10,7 @@ import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Directive
 import com.apurebase.kgraphql.schema.introspection.__EnumValue
 import com.apurebase.kgraphql.schema.introspection.__Field
+import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.__Type
 import kotlin.reflect.KClass
@@ -23,7 +24,8 @@ data class MutableSchemaDefinition(
     private val objects: ArrayList<TypeDef.Object<*>> = arrayListOf(
         TypeDef.Object(__Schema::class.defaultKQLTypeName(), __Schema::class),
         create__TypeDefinition(),
-        create__DirectiveDefinition()
+        create__DirectiveDefinition(),
+        create__FieldDefinition()
     ),
     private val queries: ArrayList<QueryDef<*>> = arrayListOf(),
     private val scalars: ArrayList<TypeDef.Scalar<*>> = arrayListOf(
@@ -161,12 +163,37 @@ data class MutableSchemaDefinition(
     }
 }
 
+private fun create__FieldDefinition() = TypeDSL(emptyList(), __Field::class).apply {
+    transformation(__Field::args) { args: List<__InputValue>, includeDeprecated: Boolean? ->
+        if (includeDeprecated == true) {
+            args
+        } else {
+            args.filterNot { it.isDeprecated }
+        }
+    }
+}.toKQLObject()
+
 private fun create__TypeDefinition() = TypeDSL(emptyList(), __Type::class).apply {
     transformation(__Type::fields) { fields: List<__Field>?, includeDeprecated: Boolean? ->
-        if (includeDeprecated == true) fields else fields?.filterNot { it.isDeprecated }
+        if (includeDeprecated == true) {
+            fields
+        } else {
+            fields?.filterNot { it.isDeprecated }
+        }
+    }
+    transformation(__Type::inputFields) { fields: List<__InputValue>?, includeDeprecated: Boolean? ->
+        if (includeDeprecated == true) {
+            fields
+        } else {
+            fields?.filterNot { it.isDeprecated }
+        }
     }
     transformation(__Type::enumValues) { enumValues: List<__EnumValue>?, includeDeprecated: Boolean? ->
-        if (includeDeprecated == true) enumValues else enumValues?.filterNot { it.isDeprecated }
+        if (includeDeprecated == true) {
+            enumValues
+        } else {
+            enumValues?.filterNot { it.isDeprecated }
+        }
     }
 }.toKQLObject()
 
@@ -199,6 +226,13 @@ private fun create__DirectiveDefinition() = TypeDSL(
             )
         }
         deprecate("Use `locations`.")
+    }
+    transformation(__Directive::args) { args: List<__InputValue>, includeDeprecated: Boolean? ->
+        if (includeDeprecated == true) {
+            args
+        } else {
+            args.filterNot { it.isDeprecated }
+        }
     }
 }.toKQLObject()
 

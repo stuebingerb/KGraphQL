@@ -724,12 +724,13 @@ open class Parser {
 
     /**
      * InputValueDefinition :
-     *   - Description? Name : Type DefaultValue? Directives{Const}?
+     *   - Description? Name ArgumentsDefinition? : Type DefaultValue? Directives{Const}?
      */
     private fun parseInputValueDef(): InputValueDefinitionNode {
         val start = lexer.token
         val description = parseDescription()
         val name = parseName()
+        val args = parseArgumentDefs()
         expectToken(COLON)
         val type = parseTypeReference()
         val defaultValue = expectOptionalToken(EQUALS)?.let { parseValueLiteral(true) }
@@ -737,6 +738,7 @@ open class Parser {
 
         return InputValueDefinitionNode(
             description = description,
+            arguments = args,
             name = name,
             type = type,
             defaultValue = defaultValue,
