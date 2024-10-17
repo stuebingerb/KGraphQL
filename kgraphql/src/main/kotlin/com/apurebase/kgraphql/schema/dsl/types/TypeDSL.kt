@@ -22,13 +22,13 @@ open class TypeDSL<T : Any>(
 
     var name = kClass.defaultKQLTypeName()
 
-    internal val transformationProperties = mutableSetOf<Transformation<T, *>>()
+    private val transformationProperties = mutableSetOf<Transformation<T, *>>()
 
-    internal val extensionProperties = mutableSetOf<PropertyDef.Function<T, *>>()
+    private val extensionProperties = mutableSetOf<PropertyDef.Function<T, *>>()
 
-    internal val unionProperties = mutableSetOf<PropertyDef.Union<T>>()
+    private val unionProperties = mutableSetOf<PropertyDef.Union<T>>()
 
-    internal val describedKotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
+    private val describedKotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
 
     val dataloadedExtensionProperties = mutableSetOf<PropertyDef.DataLoadedFunction<T, *, *>>()
 
@@ -73,7 +73,6 @@ open class TypeDSL<T : Any>(
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     inline fun <KEY, reified TYPE> dataProperty(
         name: String,
         noinline block: DataLoaderPropertyDSL<T, KEY, TYPE>.() -> Unit
@@ -108,7 +107,6 @@ open class TypeDSL<T : Any>(
 
         unionProperties.add(property.toKQLProperty(union))
     }
-
 
     internal fun toKQLObject(): TypeDef.Object<T> {
         return TypeDef.Object(

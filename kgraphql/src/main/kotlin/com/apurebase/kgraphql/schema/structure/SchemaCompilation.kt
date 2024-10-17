@@ -74,13 +74,19 @@ class SchemaCompilation(
 
         val model = SchemaModel(
             query = queryType,
-            mutation = if (mutationType.fields!!.isEmpty()) null else mutationType,
-            subscription = if (subscriptionType.fields!!.isEmpty()) null else subscriptionType,
-
+            mutation = if (mutationType.fields!!.isEmpty()) {
+                null
+            } else {
+                mutationType
+            },
+            subscription = if (subscriptionType.fields!!.isEmpty()) {
+                null
+            } else {
+                subscriptionType
+            },
             enums = enums,
             scalars = scalars,
             unions = unions,
-
             queryTypes = queryTypeProxies + enums + scalars,
             inputTypes = inputTypeProxies + enums + scalars,
             allTypes = queryTypeProxies.values
@@ -170,7 +176,6 @@ class SchemaCompilation(
     private suspend fun handleUnionProperty(unionProperty: PropertyDef.Union<*>): Field {
         val inputValues = handleInputValues(unionProperty.name, unionProperty, unionProperty.inputValues)
         val type = handleUnionType(unionProperty.union)
-
         return Field.Union(unionProperty, unionProperty.nullable, type, inputValues)
     }
 
@@ -231,7 +236,6 @@ class SchemaCompilation(
             TypeCategory.INPUT -> inputTypeProxies
         }
 
-
         return cachedInstances[kClass]
             ?: enums[kClass]
             ?: scalars[kClass]
@@ -260,7 +264,7 @@ class SchemaCompilation(
         val objectDefs = definition.objects.filter { it.kClass.isSuperclassOf(kClass) }
         val objectDef = objectDefs.find { it.kClass == kClass } ?: TypeDef.Object(kClass.defaultKQLTypeName(), kClass)
 
-        //treat introspection types as objects -> adhere to reference implementation behaviour
+        // treat introspection types as objects -> adhere to reference implementation behaviour
         val kind = if (kClass.isFinal || objectDef.name.startsWith("__")) TypeKind.OBJECT else TypeKind.INTERFACE
 
         val objectType = if (kind == TypeKind.OBJECT) Type.Object(objectDef) else Type.Interface(objectDef)
@@ -318,7 +322,11 @@ class SchemaCompilation(
 
         val allFields = declaredFields + __typenameField
         typeProxy.proxied =
-            if (kind == TypeKind.OBJECT) Type.Object(objectDef, allFields) else Type.Interface(objectDef, allFields)
+            if (kind == TypeKind.OBJECT) {
+                Type.Object(objectDef, allFields)
+            } else {
+                Type.Interface(objectDef, allFields)
+            }
         return typeProxy
     }
 

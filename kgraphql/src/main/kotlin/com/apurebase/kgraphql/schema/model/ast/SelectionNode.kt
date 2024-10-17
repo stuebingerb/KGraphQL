@@ -28,7 +28,6 @@ sealed class SelectionNode(val parent: SelectionNode?) : ASTNode() {
         val aliasOrName get() = alias ?: name
 
         override val fullPath get() = (parent?.fullPath?.let { "$it." } ?: "") + aliasOrName.value
-
     }
 
     sealed class FragmentNode(parent: SelectionNode?, val directives: List<DirectiveNode>?) : SelectionNode(parent) {
@@ -68,5 +67,4 @@ sealed class SelectionNode(val parent: SelectionNode?) : ASTNode() {
             }
         }
     }
-
 }

@@ -29,15 +29,20 @@ data class SchemaModel(
     override val types: List<__Type> = toTypeList()
 
     private fun toTypeList(): List<__Type> {
-        var list = allTypes.toList()
-            //workaround on the fact that Double and Float are treated as GraphQL Float
+        val list = allTypes
+            // workaround on the fact that Double and Float are treated as GraphQL Float
             .filterNot { it is Type.Scalar<*> && it.kClass == Float::class }
             .filterNot { it.kClass?.findAnnotation<NotIntrospected>() != null }
-            //query and mutation must be present in introspection 'types' field for introspection tools
+            // query and mutation must be present in introspection 'types' field for introspection tools
             .plus(query)
-        if (mutation != null) list = list.plus(mutation)
-        if (subscription != null) list = list.plus(subscription)
-        return list
+            .toMutableList()
+        if (mutation != null) {
+            list += mutation
+        }
+        if (subscription != null) {
+            list += subscription
+        }
+        return list.toList()
     }
 
     override val queryType: __Type = query

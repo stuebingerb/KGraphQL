@@ -89,6 +89,7 @@ class DeprecationSpecificationTest {
         assertThat(response.extract("data/__type/fields[1]/isDeprecated"), equalTo(true))
     }
 
+    @Suppress("unused")
     enum class SampleEnum { ONE, TWO, THREE }
 
     @Test

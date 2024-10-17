@@ -19,7 +19,7 @@ fun validatePropertyArguments(parentType: Type, field: Field, requestNode: Field
 }
 
 fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: String?): List<ValidationException> {
-    if (!(this.arguments.isNotEmpty() || selectionArgs?.isNotEmpty() != true)) {
+    if (!(arguments.isNotEmpty() || selectionArgs?.isNotEmpty() != true)) {
         return listOf(
             ValidationException(
                 message = "Property $name on type $parentTypeName has no arguments, found: ${selectionArgs.map { it.name.value }}",
@@ -36,8 +36,7 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
     if (!invalidArguments.isNullOrEmpty()) {
         exceptions.add(
             ValidationException(
-                message = "$name does support arguments ${arguments.map { it.name }}. " +
-                        "Found arguments ${selectionArgs.map { it.name.value }}"
+                message = "$name does support arguments $parameterNames. Found arguments ${selectionArgs.map { it.name.value }}"
             )
         )
     }

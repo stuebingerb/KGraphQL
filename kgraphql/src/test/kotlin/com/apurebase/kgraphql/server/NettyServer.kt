@@ -12,9 +12,7 @@ import io.netty.handler.logging.LoggingHandler
 class NettyServer {
 
     companion object {
-
         fun run(schema: Schema, port: Int) {
-
             val workerGroup = NioEventLoopGroup()
             try {
                 val channel = ServerBootstrap()

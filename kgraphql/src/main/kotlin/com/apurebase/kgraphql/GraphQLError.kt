@@ -71,8 +71,10 @@ open class GraphQLError(
     val locations: List<Source.LocationSource>? by lazy {
         if (positions != null && source != null) {
             positions.map { pos -> getLocation(source, pos) }
-        } else nodes?.mapNotNull { node ->
-            node.loc?.let { getLocation(it.source, it.start) }
+        } else {
+            nodes?.mapNotNull { node ->
+                node.loc?.let { getLocation(it.source, it.start) }
+            }
         }
     }
 

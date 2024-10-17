@@ -26,7 +26,7 @@ internal class ArgumentsHandler(schema: DefaultSchema) : ArgumentTransformer(sch
 
         if (unsupportedArguments?.isNotEmpty() == true) {
             throw GraphQLError(
-                "$funName does support arguments ${inputValues.map { it.name }}. found arguments ${args.keys}",
+                "$funName does support arguments ${inputValues.map { it.name }}. Found arguments ${args.keys}",
                 executionNode.selectionNode
             )
         }
@@ -35,7 +35,7 @@ internal class ArgumentsHandler(schema: DefaultSchema) : ArgumentTransformer(sch
             val value = args?.get(parameter.name)
 
             when {
-                //inject request context
+                // inject request context
                 parameter.type.isInstance(requestContext) -> requestContext
                 parameter.type.isInstance(executionNode) -> executionNode
                 value == null && parameter.type.kind != TypeKind.NON_NULL -> parameter.default

@@ -55,8 +55,9 @@ sealed class Execution {
             return Node(
                 selectionNode = selectionNode,
                 field = field,
-                children = memberChildren[type]
-                    ?: throw IllegalArgumentException("Union ${unionField.name} has no member $type"),
+                children = requireNotNull(memberChildren[type]) {
+                    "Union ${unionField.name} has no member $type"
+                },
                 key = key,
                 alias = alias,
                 arguments = arguments,

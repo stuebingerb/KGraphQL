@@ -7,8 +7,9 @@ class QueryDSL(
 ) : AbstractOperationDSL(name) {
 
     internal fun toKQLQuery(): QueryDef<out Any?> {
-        val function =
-            functionWrapper ?: throw IllegalArgumentException("resolver has to be specified for query [$name]")
+        val function = requireNotNull(functionWrapper) {
+            "resolver has to be specified for query [$name]"
+        }
 
         return QueryDef(
             name = name,

@@ -9,9 +9,11 @@ class ResolverDSL(val target: Target) {
     fun withArgs(block: InputValuesDSL.() -> Unit) {
         val inputValuesDSL = InputValuesDSL().apply(block)
 
-        target.addInputValues(inputValuesDSL.inputValues.map { inputValue ->
-            (inputValue.toKQLInputValue())
-        })
+        target.addInputValues(
+            inputValuesDSL.inputValues.map { inputValue ->
+                inputValue.toKQLInputValue()
+            }
+        )
     }
 
     inline fun <reified T : Any> returns(): ResolverDSL {

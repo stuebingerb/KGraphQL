@@ -49,8 +49,9 @@ interface Type : __Type {
     fun isInstance(value: Any?): Boolean = kClass?.isInstance(value) ?: false
 
     fun toKType(): KType {
-        val unwrappedKClass: KClass<*> =
-            unwrapped().kClass ?: throw IllegalArgumentException("This type cannot be represented as KType")
+        val unwrappedKClass: KClass<*> = requireNotNull(unwrapped().kClass) {
+            "This type cannot be represented as KType"
+        }
 
         return if (isList()) {
             List::class.createType(

@@ -39,9 +39,10 @@ interface VariablesJson {
                 try {
                     // TODO: Move away from jackson and only depend on kotlinx.serialization
                     objectMapper.treeToValue<T>(tree, kType.toTypeReference())
+                } catch (e: GraphQLError) {
+                    throw e
                 } catch (e: Exception) {
-                    throw if (e is GraphQLError) e
-                    else ExecutionException("Failed to coerce $tree as $kType", key, e)
+                    throw ExecutionException("Failed to coerce $tree as $kType", key, e)
                 }
             }
         }

@@ -17,7 +17,7 @@ class SchemaProxy(
         const val ILLEGAL_STATE_MESSAGE = "Missing proxied __Schema instance"
     }
 
-    private fun getProxied() = proxiedSchema ?: throw IllegalStateException(ILLEGAL_STATE_MESSAGE)
+    private fun getProxied() = checkNotNull(proxiedSchema) { ILLEGAL_STATE_MESSAGE }
 
     override val types: List<__Type>
         get() = getProxied().types

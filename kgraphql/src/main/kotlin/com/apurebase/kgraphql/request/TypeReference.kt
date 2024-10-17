@@ -12,7 +12,9 @@ data class TypeReference(
     override fun toString(): String = buildString {
         if (isList) {
             append("[").append(name)
-            if (!isElementNullable) append("!")
+            if (!isElementNullable) {
+                append("!")
+            }
             append("]")
         } else {
             append(name)

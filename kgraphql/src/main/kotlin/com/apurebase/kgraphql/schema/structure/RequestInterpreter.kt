@@ -26,7 +26,7 @@ import com.apurebase.kgraphql.schema.model.ast.toArguments
 import java.util.Stack
 import kotlin.reflect.full.starProjectedType
 
-class RequestInterpreter(val schemaModel: SchemaModel) {
+class RequestInterpreter(private val schemaModel: SchemaModel) {
 
     private val directivesByName = schemaModel.directives.associateBy { it.name }
 
@@ -36,10 +36,9 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
         fun get(node: FragmentSpreadNode): Execution.Fragment? {
-            if (fragmentsStack.contains(node.name.value)) throw GraphQLError(
-                "Fragment spread circular references are not allowed",
-                node
-            )
+            if (fragmentsStack.contains(node.name.value)) {
+                throw GraphQLError("Fragment spread circular references are not allowed", node)
+            }
 
             val (conditionType, selectionSet) = fragments[node.name.value] ?: return null
             val condition = TypeCondition(conditionType)
@@ -66,7 +65,9 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
                 1 -> operations.first()
                 else -> {
                     val operationNamesFound = operations.mapNotNull { it.name?.value }.also {
-                        if (it.size != operations.size) throw GraphQLError("anonymous operation must be the only defined operation")
+                        if (it.size != operations.size) {
+                            throw GraphQLError("anonymous operation must be the only defined operation")
+                        }
                     }.joinToString(prefix = "[", postfix = "]")
 
                     val operationName = requestedOperationName ?: (
@@ -147,14 +148,14 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
         enclosingType: Type
     ): Execution.Fragment = when (fragment) {
         is FragmentSpreadNode -> {
-            ctx.get(fragment) ?: throw throwUnknownFragmentTypeEx(fragment)
+            ctx.get(fragment) ?: throw unknownFragmentTypeException(fragment)
         }
 
         is InlineFragmentNode -> {
             val type = if (fragment.directives?.isNotEmpty() == true) {
                 enclosingType
             } else {
-                schemaModel.queryTypesByName[fragment.typeCondition?.name?.value] ?: throw throwUnknownFragmentTypeEx(
+                schemaModel.queryTypesByName[fragment.typeCondition?.name?.value] ?: throw unknownFragmentTypeException(
                     fragment
                 )
             }
@@ -247,8 +248,8 @@ class RequestInterpreter(val schemaModel: SchemaModel) {
 
     }
 
-    private fun throwUnknownFragmentTypeEx(fragment: FragmentNode) = when (fragment) {
-        is FragmentSpreadNode -> throw IllegalArgumentException("This should never happen")
+    private fun unknownFragmentTypeException(fragment: FragmentNode) = when (fragment) {
+        is FragmentSpreadNode -> IllegalStateException("This should never happen")
         is InlineFragmentNode -> GraphQLError(
             message = "Unknown type ${fragment.typeCondition?.name?.value} in type condition on fragment ${fragment.typeCondition?.name?.value}",
             node = fragment

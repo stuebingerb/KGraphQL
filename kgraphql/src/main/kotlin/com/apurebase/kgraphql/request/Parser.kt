@@ -133,10 +133,10 @@ open class Parser {
                 loc = loc(start)
             )
         }
-        val operation = this.parseOperationType()
+        val operation = parseOperationType()
         var name: NameNode? = null
         if (peek(NAME)) {
-            name = this.parseName()
+            name = parseName()
         }
         return DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode(
             operation = operation,
@@ -295,10 +295,10 @@ open class Parser {
      */
     private fun parseFragment(parent: SelectionNode?): SelectionNode.FragmentNode {
         val start = lexer.token
-        this.expectToken(SPREAD)
+        expectToken(SPREAD)
 
         val hasTypeCondition = expectOptionalKeyword("on")
-        if (!hasTypeCondition && this.peek(NAME)) {
+        if (!hasTypeCondition && peek(NAME)) {
             return SelectionNode.FragmentNode.FragmentSpreadNode(
                 parent = parent,
                 name = parseFragmentName(),
@@ -428,7 +428,7 @@ open class Parser {
      */
     private fun parseList(isConst: Boolean): ValueNode.ListValueNode {
         val start = lexer.token
-        val item = { this.parseValueLiteral(isConst) }
+        val item = { parseValueLiteral(isConst) }
 
         return ValueNode.ListValueNode(
             values = any(BRACKET_L, item, BRACKET_R),
@@ -506,7 +506,7 @@ open class Parser {
                 loc = loc(start)
             )
         } else {
-            type = this.parseNamedType()
+            type = parseNamedType()
         }
 
         if (expectOptionalToken(BANG) != null) {
@@ -655,7 +655,7 @@ open class Parser {
      */
     private fun parseImplementsInterfaces(): MutableList<TypeNode.NamedTypeNode> {
         val types = mutableListOf<TypeNode.NamedTypeNode>()
-        if (this.expectOptionalKeyword("implements")) {
+        if (expectOptionalKeyword("implements")) {
             // Optional leading ampersand
             expectOptionalToken(AMP)
             do {
@@ -1084,7 +1084,7 @@ open class Parser {
             val nodes = mutableListOf<T>()
             do {
                 nodes.add(parseFn())
-            } while (this.expectOptionalToken(closeKind) == null)
+            } while (expectOptionalToken(closeKind) == null)
             return nodes
         }
         return mutableListOf()

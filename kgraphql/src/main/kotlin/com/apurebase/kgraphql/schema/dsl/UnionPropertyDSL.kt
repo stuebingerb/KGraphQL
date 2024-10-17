@@ -15,7 +15,7 @@ class UnionPropertyDSL<T : Any>(val name: String, block: UnionPropertyDSL<T>.() 
         block()
     }
 
-    internal lateinit var functionWrapper: FunctionWrapper<Any?>
+    private lateinit var functionWrapper: FunctionWrapper<Any?>
 
     lateinit var returnType: TypeID
 

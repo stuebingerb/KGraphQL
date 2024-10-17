@@ -24,20 +24,21 @@ interface LookupSchema : Schema {
 
     fun typeReference(kType: KType): TypeReference {
         if (kType.jvmErasure.isIterable()) {
-            val elementKType = kType.arguments.first().type
-                ?: throw IllegalArgumentException("Cannot transform kotlin collection type $kType to KGraphQL TypeReference")
+            val elementKType = requireNotNull(kType.arguments.first().type) {
+                "Cannot transform kotlin collection type $kType to KGraphQL TypeReference"
+            }
             val elementKTypeErasure = elementKType.jvmErasure
 
             val kqlType = typeByKClass(elementKTypeErasure) ?: inputTypeByKClass(elementKTypeErasure)
             ?: throw IllegalArgumentException("$kType has not been registered in this schema")
-            val name = kqlType.name ?: throw IllegalArgumentException("Cannot create type reference to unnamed type")
+            val name = requireNotNull(kqlType.name) { "Cannot create type reference to unnamed type" }
 
             return TypeReference(name, kType.isMarkedNullable, true, elementKType.isMarkedNullable)
         } else {
             val erasure = kType.jvmErasure
             val kqlType = typeByKClass(erasure) ?: inputTypeByKClass(erasure)
             ?: throw IllegalArgumentException("$kType has not been registered in this schema")
-            val name = kqlType.name ?: throw IllegalArgumentException("Cannot create type reference to unnamed type")
+            val name = requireNotNull(kqlType.name) { "Cannot create type reference to unnamed type" }
 
             return TypeReference(name, kType.isMarkedNullable)
         }
