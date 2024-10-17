@@ -4,7 +4,7 @@ weight: 1
 ---
 
 Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring
-and [deprecation](/docs/reference/deprecation) of kotlin properties
+and [deprecation](/docs/reference/deprecation) of kotlin properties.
 
 *Example*
 
@@ -12,12 +12,12 @@ and [deprecation](/docs/reference/deprecation) of kotlin properties
 data class Person(val name: String, val age: Int)
 
 KGraphQL.schema {
-    type<Person>{
-        property(Person::age){
+    type<Person> {
+        property(Person::age) {
             ignore = true
         }
-        property(Person::name){
-            deprecate("Person need no name")
+        property(Person::name) {
+            deprecate("Person needs no name")
         }
     }
 }

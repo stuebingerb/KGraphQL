@@ -12,9 +12,9 @@ of [deprecation](/docs/reference/deprecation).
 data class Person(val name: String, val age: Int)
 
 KGraphQL.schema {
-    type<Person>{
-        property<Boolean>("isChild"){
-            resolver { person -> (person.age <= 18) }
+    type<Person> {
+        property<Boolean>("isChild") {
+            resolver { person -> person.age <= 18 }
         }
     }
 }

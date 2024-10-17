@@ -19,9 +19,9 @@ either Object or Interface. Rules are following:
 * if Interface in schema is implemented by any Class in schema, it is interpreted as GraphQL Interface type.
 * if Interface in schema is NOT implemented by any Class in schema, it is interpreted as GraphQL Object type.
 
-## Built in types
+## Built-in Types
 
-By default, every schema has following built in types:
+By default, every schema has following built-in types:
 
 ### Scalars
 
@@ -36,4 +36,5 @@ By default, every schema has following built in types:
 
 ## Introspection types
 
-Introspection interface aligns to [GraphQL specification](http://facebook.github.io/graphql/#sec-Schema-Introspection).
+Introspection interface aligns to [GraphQL specification](https://spec.graphql.org/October2021/#sec-Introspection) with
+additions from the current working draft (deprecated input fields and repeatable directives).

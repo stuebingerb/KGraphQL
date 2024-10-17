@@ -6,8 +6,8 @@ weight: 1
 As defined by specification, scalar represents a primitive value in GraphQL. In KGraphQL, besides built-in scalar types,
 client code can declare custom scalar type, which can coerce to String, Boolean, Int, Long or Float (Kotlin Double).
 
-KGraphQL provides group of DSL methods: `stringScalar { }`, `booleanScalar { }`, `intScalar{ }`, `longScalar{ }`,
-`floatScalar{ }`. They differ only by Kotlin primitive type they coerce to.
+KGraphQL provides a group of DSL methods: `stringScalar { }`, `booleanScalar { }`, `intScalar{ }`, `longScalar{ }`,
+`floatScalar{ }`. They differ only by the Kotlin primitive type they coerce to.
 
 Scalar has to define its coercion functions `deserialize` and `serialize` or coercion object which implements correct
 subtype of `com.apurebase.kgraphql.schema.scalar.ScalarCoercion`.
@@ -16,7 +16,7 @@ subtype of `com.apurebase.kgraphql.schema.scalar.ScalarCoercion`.
 
 ```kotlin
 stringScalar<UUID> {
-  deserialize = { uuid : String -> UUID.fromString(uuid) }
+  deserialize = { uuid: String -> UUID.fromString(uuid) }
   serialize = UUID::toString
 }
 ```

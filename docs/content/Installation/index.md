@@ -3,7 +3,7 @@ title: Getting Started
 weight: 1
 ---
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.apurebase/kgraphql.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.apurebase%22%20AND%20a:%22kgraphql%22)
+[![Maven Central](https://img.shields.io/maven-central/v/de.stuebingerb/kgraphql.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22de.stuebingerb%22%20AND%20a:%22kgraphql%22)
 
 KGraphQL is pushed to MavenCentral repository. It requires kotlin compiler version 1.4.x and require kotlin runtime of
 the same version as a dependency.
@@ -20,7 +20,7 @@ Add Maven Central repository:
     Add dependencies:
     
     ```kotlin
-    implementation("com.apurebase:kgraphql:$KGraphQLVersion")
+    implementation("de.stuebingerb:kgraphql:$KGraphQLVersion")
     ```
 
 === "Gradle"
@@ -35,7 +35,7 @@ Add Maven Central repository:
     Add dependencies (you can also add other modules that you need):
     
     ```groovy
-    implementation 'com.apurebase:kgraphql:${KGraphQLVersion}'
+    implementation 'de.stuebingerb:kgraphql:${KGraphQLVersion}'
     ```
 
 === "Maven"
@@ -54,7 +54,7 @@ Add Maven Central repository to section:
     
     ```xml
     <dependency>
-      <groupId>com.apurebase</groupId>
+      <groupId>de.stuebingerb</groupId>
       <artifactId>kgraphql</artifactId>
       <version>${KGraphQLVersion}</version>
     </dependency>
