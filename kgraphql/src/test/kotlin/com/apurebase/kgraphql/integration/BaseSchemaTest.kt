@@ -38,6 +38,7 @@ abstract class BaseSchemaTest {
                         args(includeDeprecated: true) {
                             ...InputValue
                         }
+                        isRepeatable
                     }
                 }
             }
