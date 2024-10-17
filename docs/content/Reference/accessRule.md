@@ -1,6 +1,8 @@
 # Access Rule
 
-It's possible to add restriction unto your resolvers by using the `accessRule`. Example shown below.
+It's possible to add restriction unto your resolvers by using the `accessRule`.
+
+*Example*
 
 ```kotlin
 type<MyType> {
@@ -10,8 +12,11 @@ type<MyType> {
         
         // Return an exception or null
         accessRule { item: MyType, ctx: Content ->
-            if (item.ownerId != ctx.userId) IncorrectOwnerException()
-            else null 
+            if (item.ownerId != ctx.userId) {
+              IncorrectOwnerException()
+            } else {
+              null
+            }
         }
     }
 }

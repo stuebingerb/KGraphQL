@@ -8,21 +8,27 @@ members of union type will fail in runtime.
 *Example*
 
 ```kotlin
-data class UnionMember1(val one : String)
+data class UnionMember1(val one: String)
 
-data class UnionMember2(val two : String)
+data class UnionMember2(val two: String)
 
 data class Person(val name: String, val age: Int)
 
 KGraphQL.schema {
-    type<Person>{
-        unionProperty("union"){
+    type<Person> {
+        unionProperty("union") {
             nullable = true // Defaults to false
-            returnType = unionType("UnionExample"){
+            returnType = unionType("UnionExample") {
                  type<UnionMember1>()
                  type<UnionMember2>()
             }
-            resolver { person -> if (person.age <= 18) UnionMember1("one") else UnionMember2("two") }
+            resolver { person ->
+                if (person.age <= 18) {
+                  UnionMember1("one")
+                } else {
+                  UnionMember2("two")
+                }
+            }
         }
     }
 }

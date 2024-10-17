@@ -13,7 +13,7 @@ See [Extension Properties](/docs/reference/type-system/objects-and-interfaces/ex
 data class Person(val name: String, val age: Int)
 
 KGraphQL.schema {
-    type<Person>{
+    type<Person> {
         description = "Human"
     }
 }
@@ -29,7 +29,7 @@ extension function `ignore()` makes KGraphQL ignore its receiver property.
 data class Person(val name: String, val age: Int)
 
 KGraphQL.schema {
-    type<Person>{
+    type<Person> {
         Person::age.ignore()
     }
 }
@@ -46,11 +46,11 @@ operations, `transformation` has property `resolver` which is used to declare da
 data class Person(val name: String, val age: Int)
 
 KGraphQL.schema {
-    type<Person>{
+    type<Person> {
         transformation(Person::age) {
-            //inMonths is nullable, so client can fetch age property without passing any value to this argument
-            //if(null == true) evaluates to false, if(null) is invalid kotlin code
-            age: Int , inMonths : Boolean? -> if(inMonths == true) age * 12 else age
+            // inMonths is nullable, so client can fetch age property without passing any value to this argument
+            // if(null == true) evaluates to false, if(null) is invalid kotlin code
+            age: Int, inMonths: Boolean? -> if (inMonths == true) { age * 12 } else { age }
         }
     }
 }

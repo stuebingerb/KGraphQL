@@ -1,7 +1,7 @@
 # Enums
 
 GraphQL Enums are a variant on the Scalar type, which represents one of a finite set of possible values. They directly
-map to Kotlin enums
+map to Kotlin enums.
 
 *Example*
 
@@ -11,17 +11,31 @@ enum class Coolness {
 }
 
 val schema = KGraphQL.schema {
-    enum<Coolness>{
+    enum<Coolness> {
         description = "State of coolness"
-        value(Coolness.COOL){
+        value(Coolness.COOL) {
             description = "really cool"
         }
     }
     
-    query("cool"){
-        resolver{ cool: Coolness -> cool.toString() }
+    query("cool") {
+        resolver { cool: Coolness -> cool.toString() }
     }
 }
 ```
 
-Enum values can be [deprecated](/Reference/deprecation).
+Enum values can be [deprecated](/Reference/deprecation):
+
+*Example*
+
+```kotlin
+enum class SampleEnum { ONE, TWO, THREE }
+
+val schema = defaultSchema {
+    enum<SampleEnum> {
+        value(SampleEnum.ONE) {
+            deprecate("deprecated enum value")
+        }
+    }
+}
+```

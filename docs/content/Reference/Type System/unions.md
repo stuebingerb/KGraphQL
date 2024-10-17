@@ -26,8 +26,11 @@ KgraphQL.schema {
         unionProperty("unionExample") {
             returnType = unionExample
             resolver { _, isOne: Boolean ->
-                if (isOne) UnionMember1(one = "Hello")
-                else UnionMember2(two = "World")
+                if (isOne) {
+                  UnionMember1(one = "Hello")
+                } else {
+                  UnionMember2(two = "World")
+                }
             }
         }
     }

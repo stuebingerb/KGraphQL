@@ -1,6 +1,6 @@
 # Ktor
 
-If you are running a ktor server. There is a separate package that makes it easy to set up a fully functional GraphQL
+If you are running a ktor server, there is a separate package that makes it easy to set up a fully functional GraphQL
 server.
 
 You first need to add the KGraphQL-ktor package to your dependency

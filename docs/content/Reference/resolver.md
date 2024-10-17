@@ -28,9 +28,9 @@ provide any. it is matched by argument name.
 
 ```kotlin
 KGraphQL.schema {
-    query("data"){
+    query("data") {
         resolver { int: Int, string: String? -> int }.withArgs {
-            arg <Int> { name = "int"; defaultValue = 33 }
+            arg<Int> { name = "int"; defaultValue = 33 }
         }
     }
 }

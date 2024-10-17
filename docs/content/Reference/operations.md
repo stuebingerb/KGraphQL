@@ -30,9 +30,9 @@ Subscription is not supported yet.
 *Example*
 
 ```kotlin
-data class Hero(val name : String, val age : Int)
+data class Hero(val name: String, val age: Int)
 
-query("hero"){
+query("hero") {
     description = "returns formatted name of R2-D2"
     resolver { -> Hero("R2-D2", 40) } 
 }
@@ -48,9 +48,9 @@ for name or age, example query: `{hero{name, age}}`
 *Example*
 
 ```kotlin
-mutation("createHero"){
+mutation("createHero") {
     description = "Creates hero with specified name"
-    resolver { name : String -> name } 
+    resolver { name: String -> name } 
 }
 ```
 
