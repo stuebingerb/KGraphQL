@@ -5,21 +5,22 @@ server.
 
 You first need to add the KGraphQL-ktor package to your dependency
 
-```kotlin tab="Kotlin Gradle Script"
-implementation("com.apurebase:kgraphql-ktor:$KGraphQLVersion")
-```
-
-```groovy tab="Gradle"
-implementation 'com.apurebase:kgraphql-ktor:${KGraphQLVersion}'
-```
-
-```xml tab="Maven"
-<dependency>
-    <groupId>com.apurebase</groupId>
-    <artifactId>kgraphql-ktor</artifactId>
-    <version>${KGraphQLVersion}</version>
-</dependency>
-```
+=== "Kotlin Gradle Script"
+    ```kotlin
+    implementation("com.apurebase:kgraphql-ktor:$KGraphQLVersion")
+    ```
+=== "Gradle"
+    ```groovy
+    implementation 'com.apurebase:kgraphql-ktor:${KGraphQLVersion}'
+    ```
+=== "Maven"
+    ```xml
+    <dependency>
+        <groupId>com.apurebase</groupId>
+        <artifactId>kgraphql-ktor</artifactId>
+        <version>${KGraphQLVersion}</version>
+    </dependency>
+    ```
 
 ## Initial setup
 
