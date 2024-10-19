@@ -7,16 +7,16 @@ You first need to add the KGraphQL-ktor package to your dependency
 
 === "Kotlin Gradle Script"
     ```kotlin
-    implementation("com.apurebase:kgraphql-ktor:$KGraphQLVersion")
+    implementation("de.stuebingerb:kgraphql-ktor:$KGraphQLVersion")
     ```
 === "Gradle"
     ```groovy
-    implementation 'com.apurebase:kgraphql-ktor:${KGraphQLVersion}'
+    implementation 'de.stuebingerb:kgraphql-ktor:${KGraphQLVersion}'
     ```
 === "Maven"
     ```xml
     <dependency>
-        <groupId>com.apurebase</groupId>
+        <groupId>de.stuebingerb</groupId>
         <artifactId>kgraphql-ktor</artifactId>
         <version>${KGraphQLVersion}</version>
     </dependency>
