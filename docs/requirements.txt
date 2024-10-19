@@ -1,6 +1,6 @@
-mkdocs==1.1.2
-pymdown-extensions==10.0
+mkdocs==1.6.1
+pymdown-extensions==10.11.2
 mkdocs-bootswatch==1.1
-mkdocs-material==5.3.2
-markdown-include==0.5.1
+mkdocs-material==9.5.41
+markdown-include==0.8.1
 mkdocs-exclude==1.0.2
