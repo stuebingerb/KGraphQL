@@ -15,7 +15,6 @@ dependencies {
     implementation(libs.caffeine)
     implementation(libs.deferredJsonBuilder)
 
-    testImplementation(libs.netty)
     testImplementation(libs.hamcrest)
     testImplementation(libs.kluent)
     testImplementation(libs.junit.jupiter.api)

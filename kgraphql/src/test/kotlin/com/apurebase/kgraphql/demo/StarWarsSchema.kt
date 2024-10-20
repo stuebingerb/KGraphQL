@@ -35,9 +35,8 @@ val luke = Human("2000", "Luke Skywalker", emptyList(), Episode.entries.toSet(),
 
 val r2d2 = Droid("2001", "R2-D2", emptyList(), Episode.entries.toSet(), "Astromech")
 
-fun main() {
+suspend fun main() {
     val schema = KGraphQL.schema {
-
         configure {
             useDefaultPrettyPrinter = true
             objectMapper = jacksonObjectMapper()
@@ -63,6 +62,6 @@ fun main() {
         enum<Episode>()
     }
 
-    println(schema.executeBlocking("{hero(episode: JEDI){id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
-    println(schema.executeBlocking("{heroes {id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
+    println(schema.execute("{hero(episode: JEDI){id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
+    println(schema.execute("{heroes {id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))
 }

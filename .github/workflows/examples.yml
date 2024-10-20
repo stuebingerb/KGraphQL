@@ -1,16 +1,17 @@
-name: Tests (Library)
+name: Tests (Examples)
 
 on:
   push:
-    paths-ignore:
-      - 'docs/**'
+    paths:
       - 'examples/**'
+      - '.github/workflows/examples.yml'
 
 jobs:
-  test:
+  ktor:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/setup-gradle@v4
       - name: Run Tests
         run: ./gradlew check
+        working-directory: ./examples/ktor

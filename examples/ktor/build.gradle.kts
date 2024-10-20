@@ -1,6 +1,10 @@
 plugins {
-    id("kotlin-conventions")
+    alias(libs.plugins.kotlin.jvm)
     application
+}
+
+repositories {
+    mavenCentral()
 }
 
 kotlin {
@@ -12,7 +16,7 @@ application {
 }
 
 dependencies {
-    implementation(project(":kgraphql-ktor"))
+    implementation("de.stuebingerb:kgraphql-ktor")
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.auth)
     implementation(libs.logback.classic)
