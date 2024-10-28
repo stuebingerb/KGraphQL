@@ -34,7 +34,7 @@ junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", vers
 
 #region kgraphql-example
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
-logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.8" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.5.12" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-javaTime = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
