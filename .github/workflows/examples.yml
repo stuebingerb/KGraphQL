@@ -2,10 +2,8 @@ name: Tests (Examples)
 
 on:
   push:
-    paths:
-      - '**/*.kt'
-      - '**/*.kts'
-      - '.github/workflows/examples.yml'
+    paths-ignore:
+      - 'docs/**'
 
 jobs:
   ktor:
