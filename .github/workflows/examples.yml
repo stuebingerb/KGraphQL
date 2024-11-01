@@ -3,7 +3,8 @@ name: Tests (Examples)
 on:
   push:
     paths:
-      - 'examples/**'
+      - '**/*.kt'
+      - '**/*.kts'
       - '.github/workflows/examples.yml'
 
 jobs:
