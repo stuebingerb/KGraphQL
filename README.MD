@@ -8,7 +8,7 @@ on [aPureBase/KGraphQL](https://github.com/aPureBase/KGraphQL). It provides a ri
 ```kotlin
 data class Article(val id: Int, val text: String)
 
-fun main() {
+suspend fun main() {
     val schema = KGraphQL.schema {
         query("article") {
             resolver { id: Int?, text: String ->
@@ -52,6 +52,12 @@ To build KGraphQL you only need to have JDK 11 installed. Invoke
 ```
 
 To perform local build.
+
+## Examples
+
+Working examples are located [here](examples). Every example is its own project, separated from the library build.
+To build and/or run it, move into the folder of the example (e.g. [here](examples/ktor))
+and execute Gradle tasks from here.
 
 ## Versioning
 
