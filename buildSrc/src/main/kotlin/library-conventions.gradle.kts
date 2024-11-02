@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "de.stuebingerb"
-version = "0.21.0"
+version = "0.22.0"
 
 kotlin {
     jvmToolchain(11)
