@@ -4,7 +4,7 @@ kotlinx-coroutines = "1.9.0"
 kotlinx-serialization = "1.7.3"
 jackson = "2.18.0"
 ktor = "2.3.12"
-junit-jupiter = "5.11.2"
+junit-jupiter = "5.11.3"
 
 [plugins]
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
