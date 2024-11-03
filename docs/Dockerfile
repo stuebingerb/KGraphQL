@@ -1,4 +1,4 @@
-FROM squidfunk/mkdocs-material:5.3.2@sha256:a2193c0f9450252a9d63225180326f1f6ef73b1a7072be6247b4fd1a97bb96e3
+FROM squidfunk/mkdocs-material:5.5.14@sha256:49dfcd6bc822a10a5072ac96d20ad7065c7ac414ac43aeb1358c718b5bc2895b
 
 COPY . /docs
 
