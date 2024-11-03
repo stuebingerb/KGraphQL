@@ -1,122 +1,91 @@
 package com.apurebase.kgraphql
 
-import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.SchemaConfigurationDSL
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.ApplicationCallPipeline
-import io.ktor.server.application.Plugin
 import io.ktor.server.application.call
-import io.ktor.server.application.install
-import io.ktor.server.application.pluginOrNull
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.hooks.CallFailed
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
-import io.ktor.util.AttributeKey
-import kotlinx.coroutines.coroutineScope
+import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json.Default.decodeFromString
 
-class GraphQL(val schema: Schema) {
-
-    class Configuration : SchemaConfigurationDSL() {
-        fun schema(block: SchemaBuilder.() -> Unit) {
-            schemaBlock = block
-        }
-
-        /**
-         * This adds support for opening the graphql route within the browser
-         */
-        var playground: Boolean = false
-
-        var endpoint: String = "/graphql"
-
-        fun context(block: ContextBuilder.(ApplicationCall) -> Unit) {
-            contextSetup = block
-        }
-
-        fun wrap(block: Route.(next: Route.() -> Unit) -> Unit) {
-            wrapWith = block
-        }
-
-        internal var contextSetup: (ContextBuilder.(ApplicationCall) -> Unit)? = null
-        internal var wrapWith: (Route.(next: Route.() -> Unit) -> Unit)? = null
-        internal var schemaBlock: (SchemaBuilder.() -> Unit)? = null
+class Configuration : SchemaConfigurationDSL() {
+    fun schema(block: SchemaBuilder.() -> Unit) {
+        schemaBlock = block
     }
 
-    companion object Feature : Plugin<Application, Configuration, GraphQL> {
-        override val key = AttributeKey<GraphQL>("KGraphQL")
+    /**
+     * This adds support for opening the graphql route within the browser
+     */
+    var playground: Boolean = false
 
-        private val rootFeature = FeatureInstance("KGraphQL")
+    var endpoint: String = "/graphql"
 
-        override fun install(pipeline: Application, configure: Configuration.() -> Unit): GraphQL {
-            return rootFeature.install(pipeline, configure)
-        }
+    fun context(block: ContextBuilder.(ApplicationCall) -> Unit) {
+        contextSetup = block
     }
 
-    class FeatureInstance(featureKey: String = "KGraphQL") : Plugin<Application, Configuration, GraphQL> {
+    fun wrap(block: Route.(next: Route.() -> Unit) -> Unit) {
+        wrapWith = block
+    }
 
-        override val key = AttributeKey<GraphQL>(featureKey)
+    internal var contextSetup: (ContextBuilder.(ApplicationCall) -> Unit)? = null
+    internal var wrapWith: (Route.(next: Route.() -> Unit) -> Unit)? = null
+    internal var schemaBlock: (SchemaBuilder.() -> Unit)? = null
+}
 
-        override fun install(pipeline: Application, configure: Configuration.() -> Unit): GraphQL {
-            val config = Configuration().apply(configure)
-            val schema = KGraphQL.schema {
-                configuration = config
-                config.schemaBlock?.invoke(this)
-            }
-
-            val routing: Routing.() -> Unit = {
-                val routing: Route.() -> Unit = {
-                    route(config.endpoint) {
-                        post {
-                            val bodyAsText = call.receiveText()
-                            val request = decodeFromString(GraphqlRequest.serializer(), bodyAsText)
-                            val ctx = context {
-                                config.contextSetup?.invoke(this, call)
-                            }
-                            val result =
-                                schema.execute(
-                                    request.query,
-                                    request.variables.toString(),
-                                    ctx,
-                                    operationName = request.operationName
-                                )
-                            call.respondText(result, contentType = ContentType.Application.Json)
-                        }
-                        if (config.playground) get {
-                            @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-                            val playgroundHtml =
-                                KtorGraphQLConfiguration::class.java.classLoader.getResource("playground.html")
-                                    .readBytes()
-                            call.respondBytes(playgroundHtml, contentType = ContentType.Text.Html)
-                        }
-                    }
+internal fun createPlugin(name: String) = createApplicationPlugin(createConfiguration = ::Configuration, name = name) {
+    val schema = KGraphQL.schema {
+        configuration = pluginConfig
+        pluginConfig.schemaBlock?.invoke(this)
+    }
+    application.routing {
+        val routing: Route.() -> Unit = {
+            post {
+                val bodyAsText = call.receiveText()
+                val request = decodeFromString(GraphqlRequest.serializer(), bodyAsText)
+                val ctx = context {
+                    this@createApplicationPlugin.pluginConfig.contextSetup?.invoke(this, call)
                 }
-
-                config.wrapWith?.invoke(this, routing) ?: routing(this)
+                val result = schema.execute(
+                    request = request.query,
+                    variables = request.variables.toString(),
+                    context = ctx,
+                    operationName = request.operationName
+                )
+                call.respondText(result, contentType = ContentType.Application.Json)
             }
-
-            pipeline.pluginOrNull(Routing)?.apply(routing) ?: pipeline.install(Routing, routing)
-
-            pipeline.intercept(ApplicationCallPipeline.Monitoring) {
-                try {
-                    coroutineScope {
-                        proceed()
-                    }
-                } catch (e: Throwable) {
-                    if (e is GraphQLError) {
-                        context.respondText(e.serialize(), ContentType.Application.Json, HttpStatusCode.OK)
-                    } else throw e
+            if (this@createApplicationPlugin.pluginConfig.playground) {
+                get {
+                    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+                    val playgroundHtml =
+                        KtorGraphQLConfiguration::class.java.classLoader.getResource("playground.html")
+                            .readBytes()
+                    call.respondBytes(playgroundHtml, contentType = ContentType.Text.Html)
                 }
             }
-            return GraphQL(schema)
+        }
+        val wrapped: Route.() -> Unit = {
+            this@createApplicationPlugin.pluginConfig.wrapWith?.invoke(this, routing) ?: routing(this)
+        }
+        route(this@createApplicationPlugin.pluginConfig.endpoint, wrapped)
+    }
+    on(CallFailed) { call, cause ->
+        if (cause is GraphQLError) {
+            call.respondText(cause.serialize(), ContentType.Application.Json, HttpStatusCode.OK)
+        } else {
+            throw cause
         }
     }
 }
+
+val GraphQL = createPlugin("KGraphQL")
