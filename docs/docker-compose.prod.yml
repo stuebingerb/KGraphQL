@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   docs:
-    image: jeggy/kgraphql-docs
+    image: jeggy/kgraphql-docs@sha256:96ec0247bf0926766fcff23add522633e02265eab2c5b5b5d3f82713b680949f
     networks:
       - public
     deploy:
