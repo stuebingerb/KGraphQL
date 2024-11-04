@@ -1,6 +1,6 @@
 services:
   docs:
-    image: python:latest
+    image: python:3.10.15-alpine
     entrypoint: [ ]
     command: sh -c "cd docs && pip install -r requirements.txt && mkdocs serve --dev-addr=0.0.0.0:8000"
     volumes:
