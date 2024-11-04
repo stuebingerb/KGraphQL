@@ -9,7 +9,7 @@ KGraphQL is pushed to MavenCentral repository. It requires kotlin compiler versi
 the same version as a dependency.
 
 === "Kotlin Gradle Script"
-Add Maven Central repository:
+    Add Maven Central repository:
 
     ```kotlin
     repositories {
@@ -22,24 +22,23 @@ Add Maven Central repository:
     ```kotlin
     implementation("de.stuebingerb:kgraphql:$KGraphQLVersion")
     ```
-
 === "Gradle"
-Add Maven Central repository:
+    Add Maven Central repository:
 
     ```groovy
     repositories {
       mavenCentral()
     }
     ```
-    
+
     Add dependencies (you can also add other modules that you need):
-    
+
     ```groovy
     implementation 'de.stuebingerb:kgraphql:${KGraphQLVersion}'
     ```
 
 === "Maven"
-Add Maven Central repository to section:
+    Add Maven Central repository to section:
 
     ```xml
     <repositories>
