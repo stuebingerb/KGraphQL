@@ -27,10 +27,6 @@ theme:
     prev: 'Previous'
     next: 'Next'
 
-google_analytics:
-  - UA-164594051-1
-  - auto
-
 extra_css:
   - assets/hljs/styles/atom-one-light.css # HightlightJS's CSS theme
 
