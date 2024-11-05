@@ -1,10 +1,8 @@
-version: '3.7'
-
 services:
   docs:
-    image: squidfunk/mkdocs-material:9.5.43@sha256:2c2802b4d26154eb2c30238ba8ed3aab3a6276009334fd99613e4c01e97cd420
+    image: python:3.10.15-alpine
     entrypoint: [ ]
-    command: sh -c "pip3 install --user -r requirements.txt && mkdocs serve --dev-addr=0.0.0.0:8000"
+    command: sh -c "cd docs && pip install -r requirements.txt && mkdocs serve --dev-addr=0.0.0.0:8000"
     volumes:
       - .:/docs
     ports:
