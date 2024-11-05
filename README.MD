@@ -38,7 +38,7 @@ suspend fun main() {
 
 ## Documentation
 
-See the [documentation](https://kgraphql.io/) for a more detailed explanation of the library.
+See the [documentation](https://stuebingerb.github.io/KGraphQL/) for a more detailed explanation of the library.
 
 ## Contributing
 
