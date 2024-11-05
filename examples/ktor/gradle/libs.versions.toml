@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.0.21"
-ktor = "2.3.12"
+ktor = "3.0.1"
 exposed = "0.32.1"
 
 [plugins]

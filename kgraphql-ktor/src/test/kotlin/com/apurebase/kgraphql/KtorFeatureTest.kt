@@ -2,9 +2,9 @@ package com.apurebase.kgraphql
 
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.Principal
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.put
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 
 class KtorFeatureTest : KtorTest() {
 
-    data class User(val id: Int = -1, val name: String = "") : Principal
+    data class User(val id: Int = -1, val name: String = "")
 
     @Test
     fun `Simple query test`() {
@@ -152,6 +152,24 @@ class KtorFeatureTest : KtorTest() {
         runBlocking {
             response.bodyAsText() shouldBeEqualTo "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"liane\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
             response.contentType() shouldBeEqualTo ContentType.Application.Json
+        }
+    }
+
+    @Test
+    fun `route wrapping should work`() {
+        val server = withServer(authHeader = "Basic foo") {
+            query("actor") {
+                resolver { -> Actor("George", 23) }
+            }
+        }
+
+        val response = server("query") {
+            field("actor") {
+                field("nickname")
+            }
+        }
+        runBlocking {
+            response.status shouldBeEqualTo HttpStatusCode.Unauthorized
         }
     }
 }
