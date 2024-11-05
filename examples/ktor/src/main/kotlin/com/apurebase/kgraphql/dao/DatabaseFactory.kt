@@ -18,7 +18,10 @@ import java.time.format.DateTimeFormatter
 
 object DatabaseFactory {
 
-    private fun Thread.asResourceStream(): InputStream? = this.contextClassLoader.getResourceAsStream(CSV_FILE_NAME)
+    private fun Thread.asResourceStream(): InputStream =
+        checkNotNull(contextClassLoader.getResourceAsStream(CSV_FILE_NAME)) {
+            "Unable to open $CSV_FILE_NAME"
+        }
 
     private const val CSV_FILE_NAME = "ufo_sightings_2013_2014"
     private const val DATE_FORMAT = "M/d/yyyy"
@@ -56,14 +59,8 @@ object DatabaseFactory {
         return HikariDataSource(config)
     }
 
-    suspend fun <T> dbQuery(
-        block: suspend () -> T
-    ): T =
-        newSuspendedTransaction { block() }
-
-
+    suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction { block() }
 }
-
 
 fun <T : Any> String.execAndMap(transform: (ResultSet) -> T): MutableList<T> {
     val result = arrayListOf<T>()

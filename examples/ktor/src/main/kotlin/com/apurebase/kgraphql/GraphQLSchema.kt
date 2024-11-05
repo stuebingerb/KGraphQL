@@ -51,7 +51,7 @@ fun SchemaBuilder.ufoSchema() {
     type<User> {
         description = "A User who has reported a UFO sighting"
 
-        property<UFOSighting?>("sighting") {
+        property("sighting") {
             resolver { user -> service.findById(user.id) }
         }
     }
@@ -94,9 +94,9 @@ fun SchemaBuilder.ufoSchema() {
             description = "The date of the sighting"
         }
 
-        property<User>("user") {
+        property("user") {
             resolver {
-                users[(0..2).shuffled().last()]
+                users.random()
             }
         }
     }

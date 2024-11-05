@@ -17,6 +17,7 @@ open class KtorTest {
 
     fun withServer(
         ctxBuilder: ContextBuilder.(ApplicationCall) -> Unit = {},
+        authHeader: String? = null,
         block: SchemaBuilder.() -> Unit
     ): (String, Kraph.() -> Unit) -> HttpResponse {
         return { type, kraph ->
@@ -33,13 +34,16 @@ open class KtorTest {
                 install(GraphQL) {
                     context(ctxBuilder)
                     wrap { next ->
-                        authenticate(optional = true) { next() }
+                        authenticate(optional = (authHeader == null)) { next() }
                     }
                     schema(block)
                 }
 
                 response = client.post {
                     url("graphql")
+                    authHeader?.let {
+                        header(HttpHeaders.Authorization, authHeader)
+                    }
                     header(HttpHeaders.ContentType, "application/json;charset=UTF-8")
                     setBody(
                         when (type.lowercase().trim()) {

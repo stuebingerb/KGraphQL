@@ -9,7 +9,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.Plugin
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.request.receiveText
@@ -17,6 +16,7 @@ import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.Routing
+import io.ktor.server.routing.RoutingRoot
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
@@ -25,7 +25,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json.Default.decodeFromString
 
 class GraphQL(val schema: Schema) {
-
     class Configuration : SchemaConfigurationDSL() {
         fun schema(block: SchemaBuilder.() -> Unit) {
             schemaBlock = block
@@ -62,7 +61,6 @@ class GraphQL(val schema: Schema) {
     }
 
     class FeatureInstance(featureKey: String = "KGraphQL") : Plugin<Application, Configuration, GraphQL> {
-
         override val key = AttributeKey<GraphQL>(featureKey)
 
         override fun install(pipeline: Application, configure: Configuration.() -> Unit): GraphQL {
@@ -81,13 +79,12 @@ class GraphQL(val schema: Schema) {
                             val ctx = context {
                                 config.contextSetup?.invoke(this, call)
                             }
-                            val result =
-                                schema.execute(
-                                    request.query,
-                                    request.variables.toString(),
-                                    ctx,
-                                    operationName = request.operationName
-                                )
+                            val result = schema.execute(
+                                request = request.query,
+                                variables = request.variables.toString(),
+                                context = ctx,
+                                operationName = request.operationName
+                            )
                             call.respondText(result, contentType = ContentType.Application.Json)
                         }
                         if (config.playground) get {
@@ -103,17 +100,15 @@ class GraphQL(val schema: Schema) {
                 config.wrapWith?.invoke(this, routing) ?: routing(this)
             }
 
-            pipeline.pluginOrNull(Routing)?.apply(routing) ?: pipeline.install(Routing, routing)
+            pipeline.pluginOrNull(RoutingRoot)?.apply(routing) ?: pipeline.install(RoutingRoot, routing)
 
             pipeline.intercept(ApplicationCallPipeline.Monitoring) {
                 try {
                     coroutineScope {
                         proceed()
                     }
-                } catch (e: Throwable) {
-                    if (e is GraphQLError) {
-                        context.respondText(e.serialize(), ContentType.Application.Json, HttpStatusCode.OK)
-                    } else throw e
+                } catch (e: GraphQLError) {
+                    context.respondText(e.serialize(), ContentType.Application.Json, HttpStatusCode.OK)
                 }
             }
             return GraphQL(schema)
