@@ -21,5 +21,4 @@ dependencies {
     testImplementation(libs.junit.jupiter.params)
     testImplementation(libs.kotlinx.coroutines.debug)
     testImplementation(libs.kotlinx.coroutines.test)
-    testRuntimeOnly(libs.junit.jupiter.engine)
 }

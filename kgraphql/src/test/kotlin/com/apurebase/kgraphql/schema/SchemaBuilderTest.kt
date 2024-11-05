@@ -41,9 +41,9 @@ import kotlin.reflect.typeOf
  * Tests for SchemaBuilder behaviour, not request execution
  */
 class SchemaBuilderTest {
+    @Suppress("UNCHECKED_CAST")
     @Test
     fun `DSL created UUID scalar support`() {
-
         val testedSchema = defaultSchema {
             stringScalar<UUID> {
                 description = "unique identifier of object"

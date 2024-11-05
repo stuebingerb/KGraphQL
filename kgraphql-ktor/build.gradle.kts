@@ -15,5 +15,4 @@ dependencies {
     testImplementation(libs.kluent)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.server.auth)
-    testRuntimeOnly(libs.junit.jupiter.engine)
 }
