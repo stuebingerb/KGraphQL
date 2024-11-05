@@ -51,7 +51,7 @@ set of configuration as described in the table below.
 
 | Property   | Description                                                                                                                                                                    | Default value  |
 |------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
-| playground | Gives you out of the box access to a [GraphQL playground](https://github.com/prisma-labs/graphql-playground)                                                                   | `false`        |
+| playground | Gives you out of the box access to a [GraphQL playground](https://github.com/graphql/graphiql)                                                                  | `false`        |
 | endpoint   | This specifies what route will be delivering the GraphQL endpoint. When `playground` is enabled, it will use this endpoint also.                                               | `/graphql`     |
 | context    | Refer to example below                                                                                                                                                         |                |
 | wrap       | If you want to wrap the route into something before KGraphQL will install the GraphQL route. You can use this wrapper. See example below for a more in depth on how to use it. |                |
