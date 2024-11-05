@@ -8,3 +8,5 @@
 # Gradle
 .gradle
 build/
+
+docs/out
