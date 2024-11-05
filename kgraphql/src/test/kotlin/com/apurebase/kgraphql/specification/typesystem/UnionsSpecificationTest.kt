@@ -169,7 +169,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `A Union type must define one or more unique member types`() {
-        expect<SchemaException>("The union type 'invalid' has no possible types defined, requires at least one. Please refer to https://kgraphql.io/Reference/Type%20System/unions/") {
+        expect<SchemaException>("The union type 'invalid' has no possible types defined, requires at least one. Please refer to https://stuebingerb.github.io/KGraphQL/Reference/Type%20System/unions/") {
             KGraphQL.schema {
                 unionType("invalid") {}
             }

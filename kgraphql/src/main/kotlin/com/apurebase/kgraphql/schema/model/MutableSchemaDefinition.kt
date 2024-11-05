@@ -68,7 +68,7 @@ data class MutableSchemaDefinition(
 
         unions.forEach { union ->
             if (union.members.isEmpty()) {
-                throw SchemaException("The union type '${union.name}' has no possible types defined, requires at least one. Please refer to https://kgraphql.io/Reference/Type%20System/unions/")
+                throw SchemaException("The union type '${union.name}' has no possible types defined, requires at least one. Please refer to https://stuebingerb.github.io/KGraphQL/Reference/Type%20System/unions/")
             }
             union.members.forEach { member ->
                 validateUnionMember(union, member, compiledObjects)
