@@ -7,7 +7,6 @@ plugins {
     id("kotlin-conventions")
     id("dev.adamko.dokkatoo-html")
     id("com.vanniktech.maven.publish")
-    `java-library`
 }
 
 group = "de.stuebingerb"
