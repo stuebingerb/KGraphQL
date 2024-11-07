@@ -16,6 +16,6 @@ interface ScalarCoercion<Scalar, Raw> {
     /**
      * strategy for scalar deserialization
      */
-    fun deserialize(raw: Raw, valueNode: ValueNode? = null): Scalar
+    fun deserialize(raw: Raw, valueNode: ValueNode): Scalar
 }
 

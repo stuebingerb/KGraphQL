@@ -33,7 +33,7 @@ class ScalarsSpecificationTest {
                 coercion = object : StringScalarCoercion<UUID> {
                     override fun serialize(instance: UUID): String = instance.toString()
 
-                    override fun deserialize(raw: String, valueNode: ValueNode?): UUID = UUID.fromString(raw)
+                    override fun deserialize(raw: String, valueNode: ValueNode): UUID = UUID.fromString(raw)
                 }
             }
             query("person") {
@@ -88,7 +88,7 @@ class ScalarsSpecificationTest {
             stringScalar<UUID> {
                 name = "ID"
                 description = "the unique identifier of object"
-                deserialize = { uuid: String -> UUID.fromString(uuid) }
+                deserialize = UUID::fromString
                 serialize = UUID::toString
             }
             query("personById") {
@@ -285,8 +285,6 @@ class ScalarsSpecificationTest {
             mutation("addPart") {
                 description = "Adds a new part in the parts inventory database"
                 resolver { newPart: NewPart ->
-                    println(newPart)
-
                     newPart
                 }
             }
@@ -295,21 +293,25 @@ class ScalarsSpecificationTest {
         }
 
         val manufacturer = """Joe Bloggs"""
+        val addedDate = "2001-09-01"
 
         val response = deserialize(
             schema.executeBlocking(
-                "mutation Mutation(\$newPart : NewPart!){ addPart(newPart: \$newPart) {manufacturer} }",
+                "mutation Mutation(\$newPart: NewPart!) { addPart(newPart: \$newPart) { addedDate manufacturer } }",
                 """
-                    { "newPart" : {
-                      "manufacturer":"$manufacturer",
-                      "name":"Front bumper",
-                      "oem":true,
-                      "addedDate":"2001-09-01"
-                    }}
+                {
+                  "newPart": {
+                    "manufacturer": "$manufacturer",
+                    "name": "Front bumper",
+                    "oem": true,
+                    "addedDate": "$addedDate"
+                  }
+                }
                 """.trimIndent()
             )
         )
 
         assertThat(response.extract<String>("data/addPart/manufacturer"), equalTo(manufacturer))
+        assertThat(response.extract<String>("data/addPart/addedDate"), equalTo(addedDate))
     }
 }

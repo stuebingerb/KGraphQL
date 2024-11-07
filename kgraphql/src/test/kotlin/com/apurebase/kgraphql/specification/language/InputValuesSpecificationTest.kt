@@ -15,6 +15,7 @@ import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 
 @Specification("2.9 Input Values")
@@ -76,12 +77,26 @@ class InputValuesSpecificationTest {
         assertThat(response.extract<Double>("data/Double"), equalTo(input))
     }
 
-    @Test
+    @ParameterizedTest
+    @CsvSource(
+        value = [
+            "true, true",
+            "false, false",
+            "\"true\", true",
+            "\"false\", false",
+            "\"TRUE\", true",
+            "\"FALSE\", false",
+            "\"tRuE\", true",
+            "\"faLSe\", false",
+            "1, true",
+            "0, false",
+            "-1, false"
+        ]
+    )
     @Specification("2.9.3 Boolean Value")
-    fun `Boolean input value`() {
-        val input = true
+    fun `Boolean input value`(input: String, expected: Boolean) {
         val response = deserialize(schema.executeBlocking("{ Boolean(value: $input) }"))
-        assertThat(response.extract<Boolean>("data/Boolean"), equalTo(input))
+        assertThat(response.extract<Boolean>("data/Boolean"), equalTo(expected))
     }
 
     @ParameterizedTest

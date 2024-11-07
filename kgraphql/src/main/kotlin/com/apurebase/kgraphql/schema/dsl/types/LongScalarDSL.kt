@@ -17,7 +17,7 @@ class LongScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, Long>(kClass) {
 
             override fun serialize(instance: T): Long = serializeImpl(instance)
 
-            override fun deserialize(raw: Long, valueNode: ValueNode?): T = deserializeImpl(raw)
+            override fun deserialize(raw: Long, valueNode: ValueNode): T = deserializeImpl(raw)
         }
     }
 }

@@ -17,7 +17,7 @@ class DoubleScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, Double>(kClass)
 
             override fun serialize(instance: T): Double = serializeImpl(instance)
 
-            override fun deserialize(raw: Double, valueNode: ValueNode?): T = deserializeImpl(raw)
+            override fun deserialize(raw: Double, valueNode: ValueNode): T = deserializeImpl(raw)
         }
     }
 }
