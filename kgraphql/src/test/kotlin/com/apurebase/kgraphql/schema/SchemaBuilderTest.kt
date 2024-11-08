@@ -8,11 +8,13 @@ import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Scenario
+import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.context
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.integration.github.LatLng
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.DefaultGenericTypeResolver
@@ -860,5 +862,21 @@ class SchemaBuilderTest {
 
         assertThat(schema.typeByKClass(Int::class), notNullValue())
         assertThat(schema.typeByKClass(String::class), notNullValue())
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/106
+    @Test
+    fun `Java class as inputType should throw an appropriate exception`() {
+        invoking {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { radius: Double, location: LatLng ->
+                        "Hello $radius. ${location.lat} ${location.lng}"
+                    }
+                }
+            }
+        } shouldThrow SchemaException::class with {
+            message shouldBeEqualTo "Java class 'LatLng' as inputType is not supported"
+        }
     }
 }

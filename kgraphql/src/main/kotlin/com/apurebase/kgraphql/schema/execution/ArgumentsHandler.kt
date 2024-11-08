@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
@@ -25,7 +25,7 @@ internal class ArgumentsHandler(schema: DefaultSchema) : ArgumentTransformer(sch
         }
 
         if (unsupportedArguments?.isNotEmpty() == true) {
-            throw GraphQLError(
+            throw InvalidInputValueException(
                 "$funName does support arguments ${inputValues.map { it.name }}. Found arguments ${args.keys}",
                 executionNode.selectionNode
             )
@@ -40,7 +40,7 @@ internal class ArgumentsHandler(schema: DefaultSchema) : ArgumentTransformer(sch
                 parameter.type.isInstance(executionNode) -> executionNode
                 value == null && parameter.type.kind != TypeKind.NON_NULL -> parameter.default
                 value == null && parameter.type.kind == TypeKind.NON_NULL -> {
-                    parameter.default ?: throw GraphQLError(
+                    parameter.default ?: throw InvalidInputValueException(
                         "argument '${parameter.name}' of type ${schema.typeReference(parameter.type)} on field '$funName' is not nullable, value cannot be null",
                         executionNode.selectionNode
                     )
@@ -59,7 +59,7 @@ internal class ArgumentsHandler(schema: DefaultSchema) : ArgumentTransformer(sch
                 else -> {
                     val transformedValue = transformPropertyValue(parameter, value!!, variables)
                     if (transformedValue == null && parameter.type.isNotNullable()) {
-                        throw GraphQLError(
+                        throw InvalidInputValueException(
                             "argument ${parameter.name} is not optional, value cannot be null",
                             executionNode.selectionNode
                         )

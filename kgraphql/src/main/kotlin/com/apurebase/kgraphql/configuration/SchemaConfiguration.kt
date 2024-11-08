@@ -7,20 +7,19 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlin.reflect.KClass
 
 data class SchemaConfiguration(
-    //document parser caching mechanisms
+    // document parser caching mechanisms
     val useCachingDocumentParser: Boolean,
     val documentParserCacheMaximumSize: Long,
-    //jackson features
+    // jackson features
     val objectMapper: ObjectMapper,
     val useDefaultPrettyPrinter: Boolean,
-    //execution
+    // execution
     val coroutineDispatcher: CoroutineDispatcher,
     val wrapErrors: Boolean,
     val executor: Executor,
     val timeout: Long?,
     val introspection: Boolean = true,
     val plugins: MutableMap<KClass<*>, Any>,
-
     val genericTypeResolver: GenericTypeResolver,
 ) {
     @Suppress("UNCHECKED_CAST")

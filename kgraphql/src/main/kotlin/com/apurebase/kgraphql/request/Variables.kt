@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.request
 
 import com.apurebase.kgraphql.ExecutionException
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.getIterableElementType
 import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.schema.model.ast.TypeNode
@@ -45,7 +45,7 @@ data class Variables(
             if (isIterable && !kType.getIterableElementType().isMarkedNullable) {
                 for (element in value as Iterable<*>) {
                     if (element == null) {
-                        throw GraphQLError(
+                        throw InvalidInputValueException(
                             "Invalid argument value $value from variable $${keyNode.name.value}, expected list with non-null arguments",
                             keyNode
                         )
@@ -88,7 +88,7 @@ data class Variables(
         }
 
         if (invalidName || invalidIsList || invalidNullability || invalidElementNullability) {
-            throw GraphQLError(
+            throw InvalidInputValueException(
                 "Invalid variable $${variable.variable.name.value} argument type ${variableType.nameNode.value}, expected $expectedType",
                 variable
             )

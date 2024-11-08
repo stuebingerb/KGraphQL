@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.schema.scalar
 
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.dropQuotes
 import com.apurebase.kgraphql.schema.builtin.BOOLEAN_COERCION
 import com.apurebase.kgraphql.schema.builtin.DOUBLE_COERCION
@@ -40,7 +41,7 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode): T {
             is DoubleScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toDouble(), value)
             is BooleanScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toBoolean(), value)
             is LongScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toLong(), value)
-            else -> throw GraphQLError(
+            else -> throw InvalidInputValueException(
                 "Unsupported coercion for scalar type ${scalar.name}",
                 value
             )
@@ -48,9 +49,9 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode): T {
     } catch (e: GraphQLError) {
         throw e
     } catch (e: Exception) {
-        throw GraphQLError(
+        throw InvalidInputValueException(
             message = "argument '${value.valueNodeName}' is not valid value of type ${scalar.name}",
-            nodes = listOf(value),
+            node = value,
             originalError = e
         )
     }

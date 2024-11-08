@@ -150,7 +150,7 @@ class KtorFeatureTest : KtorTest() {
             }
         }
         runBlocking {
-            response.bodyAsText() shouldBeEqualTo "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"liane\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.bodyAsText() shouldBeEqualTo "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"liane\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"GRAPHQL_VALIDATION_FAILED\"}}]}"
             response.contentType() shouldBeEqualTo ContentType.Application.Json
         }
     }

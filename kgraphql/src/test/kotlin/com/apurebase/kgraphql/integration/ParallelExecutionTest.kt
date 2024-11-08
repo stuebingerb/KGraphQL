@@ -1,9 +1,8 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.KGraphQL
-import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.extract
 import kotlinx.coroutines.delay
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
@@ -41,7 +40,7 @@ class ParallelExecutionTest {
             resolver { -> (0..999).map { AType(it) } }
         }
         type<AType> {
-            property<List<AType>>("children") {
+            property("children") {
                 resolver { parent ->
                     (0..50).map {
                         delay(Random.nextLong(1, 100))
@@ -80,17 +79,11 @@ class ParallelExecutionTest {
 
     @Test
     fun `1000 suspending resolvers sleeping with suspending delay`() {
-        try {
-
-            val map = deserialize(suspendResolverSchema.executeBlocking(query))
-            MatcherAssert.assertThat(map.extract<String>("data/automated_0"), CoreMatchers.equalTo("0"))
-            MatcherAssert.assertThat(map.extract<String>("data/automated_271"), CoreMatchers.equalTo("271"))
-            MatcherAssert.assertThat(map.extract<String>("data/automated_314"), CoreMatchers.equalTo("314"))
-            MatcherAssert.assertThat(map.extract<String>("data/automated_500"), CoreMatchers.equalTo("500"))
-            MatcherAssert.assertThat(map.extract<String>("data/automated_999"), CoreMatchers.equalTo("999"))
-        } catch (e: GraphQLError) {
-            println(e.prettyPrint())
-            throw e
-        }
+        val map = deserialize(suspendResolverSchema.executeBlocking(query))
+        MatcherAssert.assertThat(map.extract<String>("data/automated_0"), CoreMatchers.equalTo("0"))
+        MatcherAssert.assertThat(map.extract<String>("data/automated_271"), CoreMatchers.equalTo("271"))
+        MatcherAssert.assertThat(map.extract<String>("data/automated_314"), CoreMatchers.equalTo("314"))
+        MatcherAssert.assertThat(map.extract<String>("data/automated_500"), CoreMatchers.equalTo("500"))
+        MatcherAssert.assertThat(map.extract<String>("data/automated_999"), CoreMatchers.equalTo("999"))
     }
 }

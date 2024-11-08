@@ -31,6 +31,7 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
@@ -332,6 +333,10 @@ class SchemaCompilation(
 
     private suspend fun handleInputType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
+
+        if (kClass.primaryConstructor == null) {
+            throw SchemaException("Java class '${kClass.simpleName}' as inputType is not supported")
+        }
 
         val inputObjectDef =
             definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName(), kClass)

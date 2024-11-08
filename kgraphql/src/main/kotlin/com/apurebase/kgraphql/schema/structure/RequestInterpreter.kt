@@ -1,6 +1,6 @@
 package com.apurebase.kgraphql.schema.structure
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema.Companion.OPERATION_NAME_PARAM
 import com.apurebase.kgraphql.schema.directive.Directive
@@ -37,7 +37,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         private val fragmentsStack = Stack<String>()
         fun get(node: FragmentSpreadNode): Execution.Fragment? {
             if (fragmentsStack.contains(node.name.value)) {
-                throw GraphQLError("Fragment spread circular references are not allowed", node)
+                throw ValidationException("Fragment spread circular references are not allowed", node)
             }
 
             val (conditionType, selectionSet) = fragments[node.name.value] ?: return null
@@ -61,22 +61,22 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
         val operation = test.filterIsInstance<OperationDefinitionNode>().let { operations ->
             when (operations.size) {
-                0 -> throw GraphQLError("Must provide any operation")
+                0 -> throw ValidationException("Must provide any operation")
                 1 -> operations.first()
                 else -> {
                     val operationNamesFound = operations.mapNotNull { it.name?.value }.also {
                         if (it.size != operations.size) {
-                            throw GraphQLError("anonymous operation must be the only defined operation")
+                            throw ValidationException("anonymous operation must be the only defined operation")
                         }
                     }.joinToString(prefix = "[", postfix = "]")
 
                     val operationName = requestedOperationName ?: (
-                            variables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
-                                ?: throw GraphQLError("Must provide an operation name from: $operationNamesFound")
-                            )
+                        variables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
+                            ?: throw ValidationException("Must provide an operation name from: $operationNamesFound")
+                        )
 
                     operations.firstOrNull { it.name?.value == operationName }
-                        ?: throw GraphQLError("Must provide an operation name from: $operationNamesFound, found $operationName")
+                        ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found $operationName")
                 }
             }
         }
@@ -84,10 +84,10 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         val root = when (operation.operation) {
             OperationTypeNode.QUERY -> schemaModel.query
             OperationTypeNode.MUTATION -> schemaModel.mutation
-                ?: throw GraphQLError("Mutations are not supported on this schema")
+                ?: throw ValidationException("Mutations are not supported on this schema")
 
             OperationTypeNode.SUBSCRIPTION -> schemaModel.subscription
-                ?: throw GraphQLError("Subscriptions are not supported on this schema")
+                ?: throw ValidationException("Subscriptions are not supported on this schema")
         }
 
         val fragmentDefinitionNode = test.filterIsInstance<FragmentDefinitionNode>()
@@ -96,7 +96,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             val name = fragmentDef.name!!.value
 
             if (fragmentDefinitionNode.count { it.name!!.value == name } > 1) {
-                throw GraphQLError("There can be only one fragment named $name.", fragmentDef)
+                throw ValidationException("There can be only one fragment named $name.", fragmentDef)
             }
 
             name to (type to fragmentDef.selectionSet)
@@ -130,7 +130,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                 handleReturnTypeChildOrFragment(it, type, ctx)
             }
         } else if (type.unwrapped().fields?.isNotEmpty() == true) {
-            throw GraphQLError(
+            throw ValidationException(
                 "Missing selection set on property ${propertyName?.value} of type ${type.unwrapped().name}",
                 selectionSet
             )
@@ -180,7 +180,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         variables: List<VariableDefinitionNode>? = null
     ): Execution.Node {
         return when (val field = this[node.name.value]) {
-            null -> throw GraphQLError(
+            null -> throw ValidationException(
                 "Property ${node.name.value} on $name does not exist",
                 node
             )
@@ -230,7 +230,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
                 if (b != null) return@associateWith handleReturnType(ctx, possibleType, b.selectionSet)
 
-                throw GraphQLError(
+                throw ValidationException(
                     "Missing type argument for type ${possibleType.name}",
                     selectionNode
                 )
@@ -249,8 +249,8 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     }
 
     private fun unknownFragmentTypeException(fragment: FragmentNode) = when (fragment) {
-        is FragmentSpreadNode -> IllegalStateException("This should never happen")
-        is InlineFragmentNode -> GraphQLError(
+        is FragmentSpreadNode -> error("This should never happen")
+        is InlineFragmentNode -> ValidationException(
             message = "Unknown type ${fragment.typeCondition?.name?.value} in type condition on fragment ${fragment.typeCondition?.name?.value}",
             node = fragment
         )
@@ -260,6 +260,6 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
     private fun findDirective(invocation: DirectiveNode): Directive {
         return directivesByName[invocation.name.value.removePrefix("@")]
-            ?: throw GraphQLError("Directive ${invocation.name.value} does not exist", invocation)
+            ?: throw ValidationException("Directive ${invocation.name.value} does not exist", invocation)
     }
 }

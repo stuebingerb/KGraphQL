@@ -10,7 +10,6 @@ import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.with
-import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
@@ -105,7 +104,10 @@ class InputValuesSpecificationTest {
     fun `Invalid Boolean input value`(value: String) {
         invoking {
             deserialize(schema.executeBlocking("{ Boolean(value: $value) }"))
-        } shouldThrow GraphQLError::class withMessage "argument '$value' is not valid value of type Boolean"
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "argument '$value' is not valid value of type Boolean"
+            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+        }
     }
 
     @Test
@@ -132,7 +134,10 @@ class InputValuesSpecificationTest {
     fun `Invalid String input value`(value: String) {
         invoking {
             deserialize(schema.executeBlocking("{ String(value: $value) }"))
-        } shouldThrow GraphQLError::class withMessage "argument '$value' is not valid value of type String"
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "argument '$value' is not valid value of type String"
+            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+        }
     }
 
     @Test
@@ -155,7 +160,10 @@ class InputValuesSpecificationTest {
     fun `Invalid Enum input value`(value: String) {
         invoking {
             deserialize(schema.executeBlocking("{ Enum(value: $value) }"))
-        } shouldThrow GraphQLError::class withMessage "Invalid enum ${FakeEnum::class.simpleName} value. Expected one of [ENUM1, ENUM2]"
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "Invalid enum ${FakeEnum::class.simpleName} value. Expected one of [ENUM1, ENUM2]"
+            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+        }
     }
 
     @Test
@@ -171,7 +179,10 @@ class InputValuesSpecificationTest {
     fun `Invalid List input value`(value: String) {
         invoking {
             deserialize(schema.executeBlocking("{ List(value: $value) }"))
-        } shouldThrow GraphQLError::class withMessage "argument '$value' is not valid value of type List"
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "argument '$value' is not valid value of type List"
+            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+        }
     }
 
     @Test
@@ -189,7 +200,10 @@ class InputValuesSpecificationTest {
     fun `Invalid Literal object input value`(value: String) {
         invoking {
             schema.executeBlocking("{ Object(value: { number: 232, description: \"little number\", list: $value }) }")
-        } shouldThrow GraphQLError::class withMessage "argument '$value' is not valid value of type List"
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "argument '$value' is not valid value of type List"
+            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+        }
     }
 
     @Test
@@ -270,8 +284,8 @@ class InputValuesSpecificationTest {
         invoking {
             schema.executeBlocking("query(\$object: FakeDate) { Object(value: \$object) }")
         } shouldThrow GraphQLError::class with {
-            println(prettyPrint())
             message shouldBeEqualTo "Invalid variable \$object argument type FakeDate, expected FakeData!"
+            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
         }
     }
 }
