@@ -130,7 +130,7 @@ class NonNullSpecificationTest {
             """
             )
         } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "You are missing non optional input fields: value2"
+            message shouldBeEqualTo "You are missing non-optional input fields: value2"
         }
     }
 

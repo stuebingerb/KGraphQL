@@ -39,9 +39,8 @@ sealed class ValueNode(override val loc: Location?) : ASTNode() {
             is BooleanValueNode -> "$value"
             is NullValueNode -> "null"
             is EnumValueNode -> value
-            is ListValueNode -> values.joinToString(prefix = "[", postfix = "]")
+            is ListValueNode -> values.joinToString(prefix = "[", postfix = "]") { it.valueNodeName }
             is ObjectValueNode -> fields.joinToString { "${it.name.value}: ${it.value.valueNodeName}" }
             is ObjectValueNode.ObjectFieldNode -> value.valueNodeName
         }
-
 }
