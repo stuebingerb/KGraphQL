@@ -17,7 +17,7 @@ class BooleanScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, Boolean>(kClas
 
             override fun serialize(instance: T): Boolean = serializeImpl(instance)
 
-            override fun deserialize(raw: Boolean, valueNode: ValueNode?): T = deserializeImpl(raw)
+            override fun deserialize(raw: Boolean, valueNode: ValueNode): T = deserializeImpl(raw)
         }
     }
 }

@@ -25,7 +25,7 @@ private typealias JsonValueNode = com.fasterxml.jackson.databind.node.ValueNode
 fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode): T {
     try {
         return when (scalar.coercion) {
-            //built in scalars
+            // built-in scalars
             STRING_COERCION -> STRING_COERCION.deserialize(value.valueNodeName, value as StringValueNode) as T
             FLOAT_COERCION -> FLOAT_COERCION.deserialize(value.valueNodeName, value) as T
             DOUBLE_COERCION -> DOUBLE_COERCION.deserialize(value.valueNodeName, value) as T

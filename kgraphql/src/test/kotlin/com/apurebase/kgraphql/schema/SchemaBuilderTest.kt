@@ -17,6 +17,7 @@ import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.DefaultGenericTypeResolver
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import com.apurebase.kgraphql.schema.structure.Field
 import kotlinx.coroutines.Dispatchers
@@ -41,22 +42,6 @@ import kotlin.reflect.typeOf
  * Tests for SchemaBuilder behaviour, not request execution
  */
 class SchemaBuilderTest {
-    @Suppress("UNCHECKED_CAST")
-    @Test
-    fun `DSL created UUID scalar support`() {
-        val testedSchema = defaultSchema {
-            stringScalar<UUID> {
-                description = "unique identifier of object"
-                deserialize = { uuid: String -> UUID.fromString(uuid) }
-                serialize = UUID::toString
-            }
-        }
-
-        val uuidScalar = testedSchema.model.scalars[UUID::class]!!.coercion as StringScalarCoercion<UUID>
-        val testUuid = UUID.randomUUID()
-        assertThat(uuidScalar.serialize(testUuid), equalTo(testUuid.toString()))
-        assertThat(uuidScalar.deserialize(testUuid.toString()), equalTo(testUuid))
-    }
 
     @Test
     fun `ignored property DSL`() {
@@ -107,7 +92,6 @@ class SchemaBuilderTest {
                 resolver { -> Scenario(Id("GKalus", 234234), "Gamil Kalus", "TOO LONG") }
             }
             type<Scenario> {
-
                 transformation(Scenario::content) { content: String, capitalized: Boolean? ->
                     if (capitalized == true) content.replaceFirstChar { it.uppercase() } else content
                 }
@@ -140,7 +124,6 @@ class SchemaBuilderTest {
 
         assertThat(scenarioType.kind, equalTo(TypeKind.OBJECT))
         assertThat(scenarioType["pdf"], notNullValue())
-
     }
 
     @Test
@@ -239,7 +222,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun ` _ is allowed as receiver argument name`() {
+    fun ` _ should be allowed as receiver argument name`() {
         val schema = defaultSchema {
             query("actor") {
                 resolver { -> Actor("Boguś Linda", 4343) }

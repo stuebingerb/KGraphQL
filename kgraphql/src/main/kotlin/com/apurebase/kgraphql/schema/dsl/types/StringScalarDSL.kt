@@ -17,7 +17,7 @@ class StringScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, String>(kClass)
 
             override fun serialize(instance: T): String = serializeImpl(instance)
 
-            override fun deserialize(raw: String, valueNode: ValueNode?): T = deserializeImpl(raw)
+            override fun deserialize(raw: String, valueNode: ValueNode): T = deserializeImpl(raw)
         }
     }
 }

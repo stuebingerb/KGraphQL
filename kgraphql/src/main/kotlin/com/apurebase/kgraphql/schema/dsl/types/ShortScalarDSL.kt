@@ -17,7 +17,7 @@ class ShortScalarDSL<T : Any>(kClass: KClass<T>) : ScalarDSL<T, Short>(kClass) {
 
             override fun serialize(instance: T): Short = serializeImpl(instance)
 
-            override fun deserialize(raw: Short, valueNode: ValueNode?): T = deserializeImpl(raw)
+            override fun deserialize(raw: Short, valueNode: ValueNode): T = deserializeImpl(raw)
         }
     }
 }

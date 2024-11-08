@@ -25,7 +25,7 @@ class Id(val literal: String, val numeric: Int)
 class IdScalarSupport : StringScalarCoercion<Id> {
     override fun serialize(instance: Id): String = "${instance.literal}:${instance.numeric}"
 
-    override fun deserialize(raw: String, valueNode: ValueNode?) = Id(raw.split(':')[0], raw.split(':')[1].toInt())
+    override fun deserialize(raw: String, valueNode: ValueNode) = Id(raw.split(':')[0], raw.split(':')[1].toInt())
 }
 
 enum class FilmType { FULL_LENGTH, SHORT_LENGTH }
