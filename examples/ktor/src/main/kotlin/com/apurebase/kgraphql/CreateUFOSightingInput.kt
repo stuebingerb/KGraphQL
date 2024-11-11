@@ -6,12 +6,12 @@ import java.time.LocalDate
 fun CreateUFOSightingInput.toUFOSighting(): UFOSighting {
     return UFOSighting(
         dateSighting = this.date,
-        city = this.country[0].city,
-        state = this.country[0].state,
-        country = this.country[0].country,
+        city = this.country.city,
+        state = this.country.state,
+        country = this.country.country,
         shape = this.shape,
         duration = this.duration,
-        comments = this.country[0].comments,
+        comments = this.country.comments,
         latitude = this.latitude,
         longitude = this.longitude
     )
@@ -19,7 +19,7 @@ fun CreateUFOSightingInput.toUFOSighting(): UFOSighting {
 
 data class CreateUFOSightingInput(
     var date: LocalDate = LocalDate.now(),
-    var country: List<CountryInput> = emptyList(),
+    var country: CountryInput = CountryInput(),
     var shape: String = "",
     var duration: Double = 0.0,
     var latitude: Double = 0.0,

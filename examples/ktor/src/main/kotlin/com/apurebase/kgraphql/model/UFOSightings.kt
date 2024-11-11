@@ -19,7 +19,6 @@ object UFOSightings : Table() {
     override val primaryKey = PrimaryKey(id, name = "PK_UFOSighting_ID")
     val uniqueIndex =
         uniqueIndex("IDX_UFOSighting_UNIQUE", dateSighting, city, state, country, shape, duration, comments)
-
 }
 
 data class UFOSighting(
