@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.model
 
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.`java-time`.date
+import org.jetbrains.exposed.sql.javatime.date
 import java.time.LocalDate
 
 object UFOSightings : Table() {

@@ -4,10 +4,10 @@ import com.apurebase.kgraphql.dao.CSVDataImporter.importFromCsv
 import com.apurebase.kgraphql.model.UFOSightings
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import com.zaxxer.hikari.util.IsolationLevel
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.DEFAULT_ISOLATION_LEVEL
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -54,7 +54,7 @@ object DatabaseFactory {
         config.jdbcUrl = "jdbc:h2:mem:test"
         config.maximumPoolSize = 3
         config.isAutoCommit = false
-        config.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+        config.transactionIsolation = IsolationLevel.TRANSACTION_REPEATABLE_READ.name
         config.validate()
         return HikariDataSource(config)
     }
@@ -65,7 +65,7 @@ object DatabaseFactory {
 fun <T : Any> String.execAndMap(transform: (ResultSet) -> T): MutableList<T> {
     val result = arrayListOf<T>()
 
-    TransactionManager.currentOrNew(DEFAULT_ISOLATION_LEVEL).exec(this) { rs ->
+    TransactionManager.currentOrNew(IsolationLevel.TRANSACTION_REPEATABLE_READ.levelId).exec(this) { rs ->
         while (rs.next()) {
             result += transform(rs)
         }
