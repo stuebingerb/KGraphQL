@@ -26,8 +26,10 @@ import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SPREAD
 import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.STRING
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeEqualTo
 import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
 import org.amshove.kluent.withMessage
 import org.junit.jupiter.api.Test
 
@@ -188,17 +190,21 @@ internal class LexerTest {
 
     @Test
     fun `updates line numbers in error for file context`() {
-        val result = invoking {
-            val str = listOf("", "", "     ?", "").joinToString("\n")
-            val source = Source(
-                str,
-                "foo.graphql",
-                Source.LocationSource(11, 12)
-            )
-            Lexer(source).advance()
-        } shouldThrow GraphQLError::class
-
-        result.exception.prettyPrint() shouldBeEqualTo """
+        val str = listOf("", "", "     ?", "").joinToString("\n")
+        val testSource = Source(
+            str,
+            "foo.graphql",
+            Source.LocationSource(11, 12)
+        )
+        invoking {
+            Lexer(testSource).advance()
+        } shouldThrow GraphQLError::class with {
+            source shouldBeEqualTo testSource
+            locations shouldNotBeEqualTo null
+            locations!!.shouldHaveSize(1)
+            extensionsErrorType shouldBeEqualTo "GRAPHQL_PARSE_FAILED"
+            extensionsErrorDetail shouldBeEqualTo null
+            prettyPrint() shouldBeEqualTo """
                 Syntax Error: Cannot parse the unexpected character "?".
                 
                 foo.graphql:13:6
@@ -207,7 +213,7 @@ internal class LexerTest {
                    |      ^
                 14 |
             """.trimIndent()
-
+        }
     }
 
     @Test

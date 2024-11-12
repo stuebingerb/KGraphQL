@@ -30,7 +30,7 @@ class GitHubIssue105 {
     )
 
     @Test
-    fun `Sealed classes unions should allow requesting __typename`() {
+    fun `sealed classes unions should allow requesting __typename`() {
         val schema = KGraphQL.schema {
             longScalar<Instant> {
                 serialize = { it.toEpochMilli() }
@@ -58,14 +58,14 @@ class GitHubIssue105 {
                 __typename
             }
         }""".trimIndent()
-        ).also(::println).deserialize()
+        ).deserialize()
 
         results.extract<String>("data/contactStatus/userId") shouldBeEqualTo "Leopard2A5"
         results.extract<String>("data/contactStatus/__typename") shouldBeEqualTo "Onboarded"
     }
 
     @Test
-    fun `Inner sealed classes unions should allow requesting __typename`() {
+    fun `inner sealed classes unions should allow requesting __typename`() {
         val schema = KGraphQL.schema {
             longScalar<Instant> {
                 serialize = { it.toEpochMilli() }
@@ -96,7 +96,7 @@ class GitHubIssue105 {
                 }
             }
         }""".trimIndent()
-        ).also(::println).deserialize()
+        ).deserialize()
 
         results.extract<String>("data/carrier/contactStatus/userId") shouldBeEqualTo "Leopard2A5"
         results.extract<String>("data/carrier/contactStatus/__typename") shouldBeEqualTo "Onboarded"

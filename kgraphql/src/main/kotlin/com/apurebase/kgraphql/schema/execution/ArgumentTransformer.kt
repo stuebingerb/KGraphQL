@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.ExecutionException
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
@@ -26,27 +26,28 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
             }
 
             type.isList() && value !is ValueNode.ListValueNode -> {
-                throw GraphQLError("argument '${value.valueNodeName}' is not valid value of type List", value)
+                throw InvalidInputValueException(
+                    "argument '${value.valueNodeName}' is not valid value of type List",
+                    value
+                )
             }
 
             value is ValueNode.ObjectValueNode -> {
-                val constructor = type.unwrapped().kClass!!.primaryConstructor ?: throw GraphQLError(
-                    "Java class '${type.unwrapped().kClass!!.simpleName}' as inputType are not supported",
-                    value
-                )
+                // SchemaCompilation ensures that input types have a primaryConstructor
+                val constructor = checkNotNull(type.unwrapped().kClass?.primaryConstructor)
                 val params = constructor.parameters.associateBy { it.name }
                 val valueMap = value.fields.associate { valueField ->
                     val inputField = type
                         .unwrapped()
                         .inputFields
                         ?.firstOrNull { it.name == valueField.name.value }
-                        ?: throw GraphQLError(
+                        ?: throw InvalidInputValueException(
                             "Constructor Parameter '${valueField.name.value}' can not be found in '${type.unwrapped().kClass!!.simpleName}'",
                             value
                         )
 
                     val paramType = inputField.type as? Type
-                        ?: throw GraphQLError(
+                        ?: throw InvalidInputValueException(
                             "Something went wrong while searching for the constructor parameter type : '${valueField.name.value}'",
                             value
                         )
@@ -58,7 +59,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
 
                 if (missingNonOptionalInputs.isNotEmpty()) {
                     val inputs = missingNonOptionalInputs.map { it.name }.joinToString(",")
-                    throw GraphQLError("You are missing non-optional input fields: $inputs", value)
+                    throw InvalidInputValueException("You are missing non-optional input fields: $inputs", value)
                 }
 
                 constructor.callBy(valueMap)
@@ -66,7 +67,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
 
             value is ValueNode.NullValueNode -> {
                 if (type.isNotNullable()) {
-                    throw GraphQLError(
+                    throw InvalidInputValueException(
                         "argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}",
                         value
                     )
@@ -77,7 +78,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
 
             value is ValueNode.ListValueNode -> {
                 if (type.isNotList()) {
-                    throw GraphQLError(
+                    throw InvalidInputValueException(
                         "argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}",
                         value
                     )
@@ -97,8 +98,9 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
         val kClass = kType.jvmErasure
 
         fun throwInvalidEnumValue(enumType: Type.Enum<*>) {
-            throw GraphQLError(
-                "Invalid enum ${schema.model.enums[kClass]?.name} value. Expected one of ${enumType.values.map { it.value }}", value
+            throw InvalidInputValueException(
+                "Invalid enum ${schema.model.enums[kClass]?.name} value. Expected one of ${enumType.values.map { it.value }}",
+                value
             )
         }
 
@@ -106,14 +108,14 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
             return if (value is ValueNode.EnumValueNode) {
                 enumType.values.find { it.name == value.value }?.value ?: throwInvalidEnumValue(enumType)
             } else {
-                throw GraphQLError(
+                throw InvalidInputValueException(
                     "String literal '${value.valueNodeName}' is invalid value for enum type ${enumType.name}",
                     value
                 )
             }
         } ?: schema.model.scalars[kClass]?.let { scalarType ->
             return deserializeScalar(scalarType, value)
-        } ?: throw GraphQLError(
+        } ?: throw InvalidInputValueException(
             "Invalid argument value '${value.valueNodeName}' for type ${schema.model.inputTypes[kClass]?.name}",
             value
         )

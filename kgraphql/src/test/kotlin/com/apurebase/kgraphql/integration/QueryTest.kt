@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.GraphQLError
-import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
@@ -12,7 +11,6 @@ import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.with
-import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
@@ -72,7 +70,11 @@ class QueryTest : BaseSchemaTest() {
     fun `query with invalid field name`() {
         invoking {
             execute("{film{title, director{name, favDish}}}")
-        } shouldThrow GraphQLError::class withMessage "Property favDish on Director does not exist"
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "Property favDish on Director does not exist"
+            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
+            extensionsErrorDetail shouldBeEqualTo null
+        }
     }
 
     @Test
@@ -115,15 +117,9 @@ class QueryTest : BaseSchemaTest() {
     fun `query with ignored property`() {
         invoking {
             execute("{scenario{author, content}}")
-        } shouldThrow GraphQLError::class withMessage "Property author on Scenario does not exist"
-    }
-
-    @Test
-    fun `test default error extension`() {
-        invoking {
-            execute("{scenario{author, content}}")
         } shouldThrow GraphQLError::class with {
-            extensionsErrorType shouldBeEqualTo "INTERNAL_SERVER_ERROR"
+            message shouldBeEqualTo "Property author on Scenario does not exist"
+            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
             extensionsErrorDetail shouldBeEqualTo null
         }
     }
@@ -231,8 +227,10 @@ class QueryTest : BaseSchemaTest() {
     fun `query with invalid field arguments`() {
         invoking {
             execute("{scenario{id(uppercase: true), content}}")
-        } shouldThrow ValidationException::class with {
+        } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Property id on type Scenario has no arguments, found: [uppercase]"
+            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
+            extensionsErrorDetail shouldBeEqualTo null
         }
     }
 
@@ -352,7 +350,11 @@ class QueryTest : BaseSchemaTest() {
     fun `query with missing selection set`() {
         invoking {
             execute("{film}")
-        } shouldThrow GraphQLError::class withMessage "Missing selection set on property film of type Film"
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "Missing selection set on property film of type Film"
+            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
+            extensionsErrorDetail shouldBeEqualTo null
+        }
     }
 
     data class SampleNode(val id: Int, val name: String, val fields: List<String>? = null)

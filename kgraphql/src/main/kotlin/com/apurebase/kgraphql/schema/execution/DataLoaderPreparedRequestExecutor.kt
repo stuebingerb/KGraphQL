@@ -436,7 +436,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             }
         } catch (e: Throwable) {
             if (schema.configuration.wrapErrors && e !is GraphQLError) {
-                throw GraphQLError(e.message ?: "", nodes = listOf(executionNode.selectionNode), originalError = e)
+                throw ExecutionException(e.message ?: "", node = executionNode, cause = e)
             } else {
                 throw e
             }

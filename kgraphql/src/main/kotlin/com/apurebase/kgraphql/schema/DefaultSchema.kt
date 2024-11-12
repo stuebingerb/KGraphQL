@@ -1,13 +1,17 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.request.Parser
 import com.apurebase.kgraphql.request.VariablesJson
-import com.apurebase.kgraphql.schema.execution.*
+import com.apurebase.kgraphql.schema.execution.DataLoaderPreparedRequestExecutor
+import com.apurebase.kgraphql.schema.execution.ExecutionOptions
+import com.apurebase.kgraphql.schema.execution.Executor
 import com.apurebase.kgraphql.schema.execution.Executor.DataLoaderPrepared
 import com.apurebase.kgraphql.schema.execution.Executor.Parallel
+import com.apurebase.kgraphql.schema.execution.ParallelRequestExecutor
+import com.apurebase.kgraphql.schema.execution.RequestExecutor
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.apurebase.kgraphql.schema.structure.LookupSchema
@@ -49,7 +53,7 @@ class DefaultSchema(
             ?: VariablesJson.Empty()
 
         if (!configuration.introspection && request.isIntrospection()) {
-            throw GraphQLError("GraphQL introspection is not allowed")
+            throw ValidationException("GraphQL introspection is not allowed")
         }
 
         val document = Parser(request).parseDocument()

@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.helpers.toJsonElement
+import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.model.ast.ASTNode
 import com.apurebase.kgraphql.schema.model.ast.Location.Companion.getLocation
 import com.apurebase.kgraphql.schema.model.ast.Source
@@ -8,6 +9,10 @@ import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+
+enum class BuiltInErrorCodes {
+    GRAPHQL_PARSE_FAILED, GRAPHQL_VALIDATION_FAILED, BAD_USER_INPUT, INTERNAL_SERVER_ERROR
+}
 
 open class GraphQLError(
 
@@ -39,26 +44,20 @@ open class GraphQLError(
      * The original error thrown from a field resolver during execution.
      */
     val originalError: Throwable? = null,
-    val extensionsErrorType: String? = "INTERNAL_SERVER_ERROR",
+
+    /**
+     * The type of the error, based on Apollo Server's built-in error codes:
+     *   https://www.apollographql.com/docs/apollo-server/data/errors#built-in-error-codes
+     *
+     * For supported built-in codes see [BuiltInErrorCodes].
+     */
+    val extensionsErrorType: String,
+
+    /**
+     * Details regarding this error.
+     */
     val extensionsErrorDetail: Map<String, Any?>? = null
 ) : Exception(message) {
-
-    constructor(message: String, node: ASTNode?) : this(message, nodes = node?.let(::listOf))
-
-    constructor(message: String, extensionsErrorType: String?) : this(
-        message,
-        null,
-        null,
-        null,
-        null,
-        extensionsErrorType
-    )
-
-    constructor(
-        message: String,
-        extensionsErrorType: String?,
-        extensionsErrorDetail: Map<String, Any?>?
-    ) : this(message, null, null, null, null, extensionsErrorType, extensionsErrorDetail)
 
     /**
      * An array of { line, column } locations within the source GraphQL document
@@ -97,8 +96,9 @@ open class GraphQLError(
     }
 
     open val extensions: Map<String, Any?>? by lazy {
-        val extensions = mutableMapOf<String, Any?>()
-        extensionsErrorType?.let { extensions.put("type", extensionsErrorType) }
+        val extensions = mutableMapOf<String, Any?>(
+            "type" to extensionsErrorType
+        )
         extensionsErrorDetail?.let { extensions.put("detail", extensionsErrorDetail) }
         extensions
     }
@@ -124,4 +124,35 @@ open class GraphQLError(
             }
         })
     }.toString()
+}
+
+class ExecutionException(message: String, node: ASTNode? = null, cause: Throwable? = null) :
+    GraphQLError(
+        message,
+        nodes = node?.let(::listOf),
+        originalError = cause,
+        extensionsErrorType = BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name
+    ) {
+        constructor(message: String, node: Execution, cause: Throwable? = null) : this(message, node.selectionNode, cause)
+    }
+
+class InvalidInputValueException(message: String, node: ASTNode?, originalError: Throwable? = null) :
+    GraphQLError(
+        message,
+        nodes = node?.let(::listOf),
+        originalError = originalError,
+        extensionsErrorType = BuiltInErrorCodes.BAD_USER_INPUT.name
+    )
+
+class InvalidSyntaxException(message: String, source: Source, positions: List<Int>) :
+    GraphQLError(
+        message,
+        source = source,
+        positions = positions,
+        extensionsErrorType = BuiltInErrorCodes.GRAPHQL_PARSE_FAILED.name
+    )
+
+class ValidationException(message: String, nodes: List<ASTNode>? = null) :
+    GraphQLError(message, nodes = nodes, extensionsErrorType = BuiltInErrorCodes.GRAPHQL_VALIDATION_FAILED.name) {
+    constructor(message: String, node: ASTNode?) : this(message, node?.let(::listOf))
 }

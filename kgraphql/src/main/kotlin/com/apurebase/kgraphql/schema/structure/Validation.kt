@@ -84,7 +84,7 @@ fun validateName(name: String) {
     }
 }
 
-//function before generic, because it is its subset
+// function before generic, because it is its subset
 fun assertValidObjectType(kClass: KClass<*>) = when {
     kClass.isSubclassOf(Function::class) -> throw SchemaException("Cannot handle function $kClass as Object type")
     kClass.isSubclassOf(Enum::class) -> throw SchemaException("Cannot handle enum class $kClass as Object type")

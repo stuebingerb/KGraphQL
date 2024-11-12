@@ -2,7 +2,7 @@
 
 package com.apurebase.kgraphql.schema.builtin
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
@@ -57,7 +57,7 @@ object STRING_COERCION : StringScalarCoercion<String> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is StringValueNode -> valueNode.value
-        else -> throw GraphQLError(
+        else -> throw InvalidInputValueException(
             "Cannot coerce ${valueNode.valueNodeName} to string constant",
             valueNode
         )
@@ -70,7 +70,7 @@ object DOUBLE_COERCION : StringScalarCoercion<Double> {
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is DoubleValueNode -> valueNode.value
         is NumberValueNode -> valueNode.value.toDouble()
-        else -> throw GraphQLError(
+        else -> throw InvalidInputValueException(
             "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
             valueNode
         )
@@ -83,7 +83,7 @@ object FLOAT_COERCION : StringScalarCoercion<Float> {
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is DoubleValueNode -> DOUBLE_COERCION.deserialize(raw, valueNode).toFloat()
         is NumberValueNode -> DOUBLE_COERCION.deserialize(raw, valueNode).toFloat()
-        else -> throw GraphQLError(
+        else -> throw InvalidInputValueException(
             "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
             valueNode
         )
@@ -95,12 +95,12 @@ object INT_COERCION : StringScalarCoercion<Int> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> when {
-            valueNode.value > Integer.MAX_VALUE -> throw GraphQLError(
+            valueNode.value > Integer.MAX_VALUE -> throw InvalidInputValueException(
                 "Cannot coerce to type of Int as '${valueNode.value}' is greater than (2^-31)-1",
                 valueNode
             )
 
-            valueNode.value < Integer.MIN_VALUE -> throw GraphQLError(
+            valueNode.value < Integer.MIN_VALUE -> throw InvalidInputValueException(
                 "Cannot coerce to type of Int as '${valueNode.value}' is less than -(2^-31)",
                 valueNode
             )
@@ -108,7 +108,7 @@ object INT_COERCION : StringScalarCoercion<Int> {
             else -> valueNode.value.toInt()
         }
 
-        else -> throw GraphQLError(
+        else -> throw InvalidInputValueException(
             "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
             valueNode
         )
@@ -120,12 +120,12 @@ object SHORT_COERCION : StringScalarCoercion<Short> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> when {
-            valueNode.value > Short.MAX_VALUE -> throw GraphQLError(
+            valueNode.value > Short.MAX_VALUE -> throw InvalidInputValueException(
                 "Cannot coerce to type of Int as '${valueNode.value}' is greater than (2^-15)-1",
                 valueNode
             )
 
-            valueNode.value < Short.MIN_VALUE -> throw GraphQLError(
+            valueNode.value < Short.MIN_VALUE -> throw InvalidInputValueException(
                 "Cannot coerce to type of Int as '${valueNode.value}' is less than -(2^-15)",
                 valueNode
             )
@@ -133,7 +133,7 @@ object SHORT_COERCION : StringScalarCoercion<Short> {
             else -> valueNode.value.toShort()
         }
 
-        else -> throw GraphQLError(
+        else -> throw InvalidInputValueException(
             "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
             valueNode
         )
@@ -145,7 +145,7 @@ object LONG_COERCION : StringScalarCoercion<Long> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> valueNode.value
-        else -> throw GraphQLError(
+        else -> throw InvalidInputValueException(
             "Cannot coerce ${valueNode.valueNodeName} to expected numeric constant",
             valueNode
         )
@@ -170,7 +170,7 @@ object BOOLEAN_COERCION : StringScalarCoercion<Boolean> {
             else -> throw IllegalArgumentException("${valueNode.value} does not represent valid Boolean value")
         }
 
-        else -> throw GraphQLError(
+        else -> throw InvalidInputValueException(
             "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
             valueNode
         )
