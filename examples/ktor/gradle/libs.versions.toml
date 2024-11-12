@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.0.21"
 ktor = "3.0.1"
-exposed = "0.32.1"
+exposed = "0.56.0"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

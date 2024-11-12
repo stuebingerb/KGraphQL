@@ -7,7 +7,6 @@ import com.apurebase.kgraphql.model.UFOSighting
 import com.apurebase.kgraphql.model.UFOSightings
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 
 class UFOSightingService {
@@ -51,8 +50,8 @@ class UFOSightingService {
 
     suspend fun findById(id: Int): UFOSighting? {
         return dbQuery {
-            UFOSightings.select {
-                (UFOSightings.id eq id)
+            UFOSightings.selectAll().where {
+                UFOSightings.id eq id
             }.mapNotNull { toUFOSighting(it) }
                 .singleOrNull()
         }
