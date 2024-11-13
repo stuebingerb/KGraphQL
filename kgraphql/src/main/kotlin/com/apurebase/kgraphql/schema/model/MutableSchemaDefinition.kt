@@ -2,7 +2,7 @@ package com.apurebase.kgraphql.schema.model
 
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.schema.SchemaException
-import com.apurebase.kgraphql.schema.builtin.BUILT_IN_TYPE
+import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.directive.DirectiveLocation
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
@@ -28,16 +28,7 @@ data class MutableSchemaDefinition(
         create__FieldDefinition()
     ),
     private val queries: ArrayList<QueryDef<*>> = arrayListOf(),
-    private val scalars: ArrayList<TypeDef.Scalar<*>> = arrayListOf(
-        BUILT_IN_TYPE.STRING,
-        BUILT_IN_TYPE.BOOLEAN,
-        BUILT_IN_TYPE.DOUBLE,
-        BUILT_IN_TYPE.FLOAT,
-        BUILT_IN_TYPE.SHORT,
-        BUILT_IN_TYPE.INT,
-        BUILT_IN_TYPE.LONG,
-
-        ),
+    private val scalars: ArrayList<TypeDef.Scalar<*>> = BuiltInScalars.entries.mapTo(ArrayList()) { it.typeDef },
     private val mutations: ArrayList<MutationDef<*>> = arrayListOf(),
     private val subscriptions: ArrayList<SubscriptionDef<*>> = arrayListOf(),
     private val enums: ArrayList<TypeDef.Enumeration<*>> = arrayListOf(
