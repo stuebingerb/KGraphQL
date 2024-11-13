@@ -12,7 +12,7 @@ interface __Type {
     //OBJECT and INTERFACE only
     val fields: List<__Field>?
 
-    //OBJECT only
+    //OBJECT and INTERFACE only
     val interfaces: List<__Type>?
 
     //INTERFACE and UNION only
