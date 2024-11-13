@@ -27,9 +27,9 @@ interface Type : __Type {
         else -> this
     }
 
-    fun isNullable() = this.kind != TypeKind.NON_NULL
+    fun isNullable() = kind != TypeKind.NON_NULL
 
-    fun isNotNullable() = this.kind == TypeKind.NON_NULL
+    fun isNotNullable() = kind == TypeKind.NON_NULL
 
     fun unwrapList(): Type = when (kind) {
         TypeKind.LIST -> ofType as Type
@@ -120,13 +120,14 @@ interface Type : __Type {
 
         override val possibleTypes: List<__Type>? = null
 
-        fun withInterfaces(interfaces: List<Type>) = Object(this.definition, this.allFields, interfaces)
+        fun withInterfaces(interfaces: List<Type>) = Object(definition, allFields, interfaces)
     }
 
     class Interface<T : Any>(
         private val definition: TypeDef.Object<T>,
         fields: List<Field> = emptyList(),
-        override val possibleTypes: List<Type>? = emptyList()
+        override val possibleTypes: List<Type>? = emptyList(),
+        override val interfaces: List<Type>? = emptyList()
     ) : ComplexType(fields) {
 
         override val kClass = definition.kClass
@@ -143,9 +144,9 @@ interface Type : __Type {
 
         override val ofType: __Type? = null
 
-        override val interfaces: List<__Type>? = null
+        fun withPossibleTypes(possibleTypes: List<Type>) = Interface(definition, allFields, possibleTypes)
 
-        fun withPossibleTypes(possibleTypes: List<Type>) = Interface(this.definition, this.allFields, possibleTypes)
+        fun withInterfaces(interfaces: List<Type>) = Interface(definition, allFields, possibleTypes, interfaces)
     }
 
     class Scalar<T : Any>(

@@ -85,7 +85,7 @@ class IntrospectionSpecificationTest {
     data class Union2(val two: String)
 
     @Test
-    fun `__typaname field can be used to obtain type of union member in runtime`() {
+    fun `__typename field can be used to obtain type of union member in runtime`() {
         val schema = defaultSchema {
             type<Data> {
                 unionProperty("union") {
@@ -238,11 +238,20 @@ class IntrospectionSpecificationTest {
             type<Face>()
         }
 
-        val possibleTypes = schema.findTypeByName("Inter")?.possibleTypes?.map { it.name }
-        assertThat(possibleTypes, equalTo(listOf<String?>("Face")))
+        val possibleTypesOfInter = schema.findTypeByName("Inter")?.possibleTypes?.map { it.name }
+        assertThat(possibleTypesOfInter, equalTo(listOf("Face")))
 
-        val interfaces = schema.findTypeByName("Face")?.interfaces?.map { it.name }
-        assertThat(interfaces, equalTo(listOf<String?>("Inter", "InterInter")))
+        val possibleTypesOfInterInter = schema.findTypeByName("InterInter")?.possibleTypes?.map { it.name }
+        assertThat(possibleTypesOfInterInter, equalTo(listOf("Face")))
+
+        val interfacesOfFace = schema.findTypeByName("Face")?.interfaces?.map { it.name }
+        assertThat(interfacesOfFace, equalTo(listOf("Inter", "InterInter")))
+
+        val interfacesOfInterInter = schema.findTypeByName("InterInter")?.interfaces?.map { it.name }
+        assertThat(interfacesOfInterInter, equalTo(listOf("Inter")))
+
+        val interfacesOfInter = schema.findTypeByName("Inter")?.interfaces?.map { it.name }
+        assertThat(interfacesOfInter, equalTo(emptyList()))
     }
 
     data class Book(val id: String)
