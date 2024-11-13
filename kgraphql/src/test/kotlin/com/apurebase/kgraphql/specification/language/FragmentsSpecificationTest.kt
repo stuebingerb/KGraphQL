@@ -9,7 +9,7 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.executeEqualQueries
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
-import com.apurebase.kgraphql.integration.BaseSchemaTest.Companion.INTROSPECTION_QUERY
+import com.apurebase.kgraphql.request.Introspection
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage
@@ -130,7 +130,7 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `multiple nested fragments are handled`() {
-        val map = baseTestSchema.execute(INTROSPECTION_QUERY)
+        val map = baseTestSchema.execute(Introspection.query())
         val fields = map.extract<List<Map<String, *>>>("data/__schema/types[0]/fields")
 
         fields.forEach { field ->

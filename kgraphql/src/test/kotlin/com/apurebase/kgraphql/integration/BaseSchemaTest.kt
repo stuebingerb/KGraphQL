@@ -17,121 +17,13 @@ import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import org.junit.jupiter.api.AfterEach
 
 abstract class BaseSchemaTest {
-
-    companion object {
-        const val INTROSPECTION_QUERY = """
-            query IntrospectionQuery {
-                __schema {
-                    queryType { name description kind}
-                    mutationType { name description kind }
-                    subscriptionType { name description kind }
-                    types {
-                        name
-                        kind
-                        description
-                        ...FullType
-                    }
-                    directives {
-                        name
-                        description
-                        locations
-                        args(includeDeprecated: true) {
-                            ...InputValue
-                        }
-                        isRepeatable
-                    }
-                }
-            }
-
-            fragment FullType on __Type {
-                fields(includeDeprecated: true) {
-                    name
-                    description
-                    args(includeDeprecated: true) {
-                        ...InputValue
-                    }
-                    type {
-                        ...TypeRef
-                    }
-                    isDeprecated
-                    deprecationReason
-                }
-                inputFields(includeDeprecated: true) {
-                    ...InputValue
-                }
-                interfaces {
-                    ...TypeRef
-                }
-                enumValues(includeDeprecated: true) {
-                    name
-                    description
-                    isDeprecated
-                    deprecationReason
-                }
-                possibleTypes {
-                    ...TypeRef
-                }
-            }
-
-            fragment InputValue on __InputValue {
-                name
-                description
-                type { ...TypeRef }
-                defaultValue
-                isDeprecated
-                deprecationReason
-            }
-
-            fragment TypeRef on __Type {
-                kind
-                name
-                description
-                ofType {
-                    kind
-                    name
-                    description
-                    ofType {
-                        kind
-                        name
-                        description
-                        ofType {
-                            kind
-                            name
-                            description
-                            ofType {
-                                kind
-                                name
-                                description
-                                ofType {
-                                    kind
-                                    name
-                                    description
-                                    ofType {
-                                        kind
-                                        name
-                                        description
-                                        ofType {
-                                            kind
-                                            name
-                                            description
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        """
-    }
-
-    //test film 1
+    // test film 1
     val tomHardy = Actor("Tom Hardy", 232)
     val christianBale = Actor("Christian Bale", 232)
     val christopherNolan = Director("Christopher Nolan", 43, listOf(tomHardy, christianBale))
     val prestige = Film(Id("Prestige", 2006), 2006, "Prestige", christopherNolan)
 
-    //test film 2
+    // test film 2
     val bradPitt = Actor("Brad Pitt", 763)
     val morganFreeman = Actor("Morgan Freeman", 1212)
     val kevinSpacey = Actor("Kevin Spacey", 2132)
@@ -141,7 +33,7 @@ abstract class BaseSchemaTest {
 
     val rickyGervais = Actor("Ricky Gervais", 58)
 
-    //new actors created via mutations in schema
+    // new actors created via mutations in schema
     val createdActors = mutableListOf<Actor>()
 
     val testedSchema = defaultSchema {

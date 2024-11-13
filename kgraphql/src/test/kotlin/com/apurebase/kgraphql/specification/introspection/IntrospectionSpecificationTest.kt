@@ -1,10 +1,11 @@
 package com.apurebase.kgraphql.specification.introspection
 
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.integration.BaseSchemaTest.Companion.INTROSPECTION_QUERY
+import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldNotBeEqualTo
@@ -293,7 +294,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val map = deserialize(schema.executeBlocking(INTROSPECTION_QUERY))
+        val map = deserialize(schema.executeBlocking(Introspection.query()))
         val fields = map.extract<List<Map<String, *>>>("data/__schema/types[0]/fields")
 
         fields.forEach { field ->
@@ -309,7 +310,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val map = deserialize(schema.executeBlocking(INTROSPECTION_QUERY))
+        val map = deserialize(schema.executeBlocking(Introspection.query()))
         val types = map.extract<List<Map<Any, *>>>("data/__schema/types")
 
         val typenames = types.map { type -> type["name"] as String }.sorted()
@@ -321,7 +322,7 @@ class IntrospectionSpecificationTest {
 
     @Test
     fun `introspection shouldn't contain LookupSchema nor SchemaProxy`() {
-        unionSchema.executeBlocking(INTROSPECTION_QUERY).run {
+        unionSchema.executeBlocking(Introspection.query()).run {
             this shouldNotContain "LookupSchema"
             this shouldNotContain "SchemaProxy"
         }
@@ -361,6 +362,20 @@ class IntrospectionSpecificationTest {
             assertThat(directive["onField"] as Boolean, equalTo(true))
             assertThat(directive["onFragment"] as Boolean, equalTo(true))
             assertThat(directive["onOperation"] as Boolean, equalTo(false))
+        }
+    }
+
+    @Test
+    fun `all available SpecLevels of the introspection query should return without errors`() {
+        Introspection.SpecLevel.entries.forEach {
+            val schema = defaultSchema {
+                query("sample") {
+                    resolver { -> "Ronaldinho" }
+                }
+            }
+
+            val response = deserialize(schema.executeBlocking(Introspection.query()))
+            assertNoErrors(response)
         }
     }
 }

@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
+import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.request.Parser
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.execution.DataLoaderPreparedRequestExecutor
@@ -52,7 +53,7 @@ class DefaultSchema(
             ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
             ?: VariablesJson.Empty()
 
-        if (!configuration.introspection && request.isIntrospection()) {
+        if (!configuration.introspection && Introspection.isIntrospection(request)) {
             throw ValidationException("GraphQL introspection is not allowed")
         }
 
@@ -66,8 +67,6 @@ class DefaultSchema(
             context = context
         )
     }
-
-    private fun String.isIntrospection() = contains("__schema") || contains("__type")
 
     override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
 
