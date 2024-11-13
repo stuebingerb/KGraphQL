@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Scenario
-import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.context
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
@@ -19,8 +18,6 @@ import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.DefaultGenericTypeResolver
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.model.ast.ValueNode
-import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import com.apurebase.kgraphql.schema.structure.Field
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -28,6 +25,7 @@ import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.with
+import org.amshove.kluent.withMessage
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.CoreMatchers.instanceOf
@@ -35,7 +33,6 @@ import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
-import java.util.UUID
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSupertypeOf
 import kotlin.reflect.typeOf
@@ -749,7 +746,7 @@ class SchemaBuilderTest {
     fun `Short int types are mapped to Short Scalar`() {
         val schema = defaultSchema {
             query("shortQuery") {
-                resolver { -> 1 as Short }
+                resolver { -> 1.toShort() }
             }
         }
 
@@ -773,9 +770,7 @@ class SchemaBuilderTest {
                     resolver { -> Unit }
                 }
             }
-        } shouldThrow IllegalArgumentException::class with {
-            message shouldBeEqualTo "Resolver for 'main' has no return value"
-        }
+        } shouldThrow IllegalArgumentException::class withMessage "Resolver for 'main' has no return value"
     }
 
     private inline fun <reified T : Any> SchemaBuilder.createGenericQuery(x: T) {
