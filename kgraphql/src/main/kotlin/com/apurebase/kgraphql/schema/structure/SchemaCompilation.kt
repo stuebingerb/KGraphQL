@@ -91,10 +91,10 @@ class SchemaCompilation(
             queryTypes = queryTypeProxies + enums + scalars,
             inputTypes = inputTypeProxies + enums + scalars,
             allTypes = queryTypeProxies.values
-                    + inputTypeProxies.values
-                    + enums.values
-                    + scalars.values
-                    + unions.distinctBy(Type.Union::name),
+                + inputTypeProxies.values
+                + enums.values
+                + scalars.values
+                + unions.distinctBy(Type.Union::name),
             directives = definition.directives.map { handlePartialDirective(it) }
         )
         val schema = DefaultSchema(configuration, model)
@@ -116,6 +116,12 @@ class SchemaCompilation(
     private fun introspectInterfaces(kClass: KClass<*>, typeProxy: TypeProxy) {
         val proxied = typeProxy.proxied
         if (proxied is Type.Object<*>) {
+            val interfaces = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
+                otherTypeProxy.kind == TypeKind.INTERFACE && otherKClass != kClass && kClass.isSubclassOf(otherKClass)
+            }.values.toList()
+
+            typeProxy.proxied = proxied.withInterfaces(interfaces)
+        } else if (proxied is Type.Interface<*>) {
             val interfaces = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
                 otherTypeProxy.kind == TypeKind.INTERFACE && otherKClass != kClass && kClass.isSubclassOf(otherKClass)
             }.values.toList()
@@ -230,7 +236,9 @@ class SchemaCompilation(
             else -> return type
         }
 
-        if (kClass == Context::class) throw SchemaException("Context type cannot be part of schema")
+        if (kClass == Context::class) {
+            throw SchemaException("Context type cannot be part of schema")
+        }
 
         val cachedInstances = when (typeCategory) {
             TypeCategory.QUERY -> queryTypeProxies
@@ -268,7 +276,11 @@ class SchemaCompilation(
         // treat introspection types as objects -> adhere to reference implementation behaviour
         val kind = if (kClass.isFinal || objectDef.name.startsWith("__")) TypeKind.OBJECT else TypeKind.INTERFACE
 
-        val objectType = if (kind == TypeKind.OBJECT) Type.Object(objectDef) else Type.Interface(objectDef)
+        val objectType = if (kind == TypeKind.OBJECT) {
+            Type.Object(objectDef)
+        } else {
+            Type.Interface(objectDef)
+        }
         val typeProxy = TypeProxy(objectType)
         queryTypeProxies[kClass] = typeProxy
 
@@ -302,7 +314,6 @@ class SchemaCompilation(
             .flatMap(TypeDef.Object<*>::unionProperties)
             .map { property -> handleUnionProperty(property) }
 
-
         val typenameResolver: suspend (Any) -> String? = { value: Any ->
             schemaProxy.typeByKClass(value.javaClass.kotlin)?.name ?: typeProxy.name
         }
@@ -322,12 +333,11 @@ class SchemaCompilation(
         }
 
         val allFields = declaredFields + __typenameField
-        typeProxy.proxied =
-            if (kind == TypeKind.OBJECT) {
-                Type.Object(objectDef, allFields)
-            } else {
-                Type.Interface(objectDef, allFields)
-            }
+        typeProxy.proxied = if (kind == TypeKind.OBJECT) {
+            Type.Object(objectDef, allFields)
+        } else {
+            Type.Interface(objectDef, allFields)
+        }
         return typeProxy
     }
 
