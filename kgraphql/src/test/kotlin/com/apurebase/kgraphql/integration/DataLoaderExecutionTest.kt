@@ -1,10 +1,14 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.defaultSchema
+import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.execution.Executor
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import nidomiro.kdataloader.ExecutionResult
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.hasSize
 import org.junit.jupiter.api.RepeatedTest
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -25,7 +29,6 @@ class DataLoaderExecutionTest {
 
         query("items") {
             resolver { amount: Int? ->
-                println("query:items")
                 delay(Random.nextLong(50..250L))
                 (1..(amount ?: 1_000)).map(::Item)
             }
@@ -35,7 +38,6 @@ class DataLoaderExecutionTest {
             dataProperty<Int, String>("name") {
                 prepare { it.id }
                 loader { ids ->
-                    println("loader:name ${ids.size}")
                     coroutineScope {
                         delay(Random.nextLong(1..15L))
                         ids.map { ExecutionResult.Success("Name-$it") }
@@ -48,7 +50,6 @@ class DataLoaderExecutionTest {
                     coroutineScope {
                         val start = Random.nextInt(1..1_000_000_000)
                         val delay = Random.nextLong(1..3L)
-                        println("loader:values [size: ${ids.size}, delay: $delay]")
                         ids.map { id ->
                             ExecutionResult.Success((start..(start + 3)).map {
                                 ItemValue(
@@ -65,7 +66,6 @@ class DataLoaderExecutionTest {
             dataProperty<Int, Item>("parent") {
                 prepare { it.itemId }
                 loader { ids ->
-                    println("loader:parent ${ids.size}")
                     delay(5)
                     ids.map {
                         ExecutionResult.Success(Item(it))
@@ -75,10 +75,11 @@ class DataLoaderExecutionTest {
         }
     }
 
-    @RepeatedTest(50)
-    fun Stress_test_with_dataloaders_and_custom_superviser_jobs() {
-        val result = schema.executeBlocking(
-            """
+    @RepeatedTest(10)
+    fun `stress test with dataloaders and custom supervisor jobs`() {
+        val result = deserialize(
+            schema.executeBlocking(
+                """
                  {
                      data1: items(amount: 250) { ...Fields }
                      data2: items(amount: 200) { ...Fields }
@@ -97,9 +98,12 @@ class DataLoaderExecutionTest {
                          }
                      }
                  }
-             """.trimIndent()
+                 """.trimIndent()
+            )
         )
 
-        println(result)
+        assertThat(result.extract<List<*>>("data/data1"), hasSize(250))
+        assertThat(result.extract<List<*>>("data/data2"), hasSize(200))
+        assertThat(result.extract<List<*>>("data/data3"), hasSize(1000))
     }
 }

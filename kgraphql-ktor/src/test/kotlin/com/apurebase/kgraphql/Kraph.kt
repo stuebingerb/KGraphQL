@@ -54,7 +54,9 @@ class Kraph(
             appendLine("{")
             fields.map { appendLine(it.print()) }
             appendLine("}")
-        } else appendLine()
+        } else {
+            appendLine()
+        }
     }
 
     fun build(): String = buildString {

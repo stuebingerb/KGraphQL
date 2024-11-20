@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema.dsl.operations
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.LimitedAccessItemDSL
 import com.apurebase.kgraphql.schema.dsl.ResolverDSL
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
@@ -21,8 +22,8 @@ abstract class AbstractOperationDSL(
 
     private fun resolver(function: FunctionWrapper<*>): ResolverDSL {
         try {
-            require(function.hasReturnType()) {
-                "Resolver for '$name' has no return value"
+            if (!function.hasReturnType()) {
+                throw SchemaException("Resolver for '$name' has no return value")
             }
         } catch (e: Throwable) {
             if ("KotlinReflectionInternalError" !in e.toString()) {

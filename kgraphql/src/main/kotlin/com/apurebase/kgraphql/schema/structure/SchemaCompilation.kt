@@ -76,12 +76,12 @@ class SchemaCompilation(
 
         val model = SchemaModel(
             query = queryType,
-            mutation = if (mutationType.fields!!.isEmpty()) {
+            mutation = if (mutationType.fields.isNullOrEmpty()) {
                 null
             } else {
                 mutationType
             },
-            subscription = if (subscriptionType.fields!!.isEmpty()) {
+            subscription = if (subscriptionType.fields.isNullOrEmpty()) {
                 null
             } else {
                 subscriptionType

@@ -1,4 +1,4 @@
-package com.apurebase.kgraphql.integration.github;
+package com.apurebase.kgraphql.schema;
 
 public class LatLng {
     public double lat;

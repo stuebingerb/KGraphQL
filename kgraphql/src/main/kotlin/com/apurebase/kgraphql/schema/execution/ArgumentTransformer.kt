@@ -42,7 +42,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
                         .inputFields
                         ?.firstOrNull { it.name == valueField.name.value }
                         ?: throw InvalidInputValueException(
-                            "Constructor Parameter '${valueField.name.value}' can not be found in '${type.unwrapped().kClass!!.simpleName}'",
+                            "Constructor parameter '${valueField.name.value}' cannot be found in '${type.unwrapped().kClass!!.simpleName}'",
                             value
                         )
 

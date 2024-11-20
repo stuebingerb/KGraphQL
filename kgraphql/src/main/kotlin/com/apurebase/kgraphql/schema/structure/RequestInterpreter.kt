@@ -57,9 +57,9 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         variables: VariablesJson,
         options: ExecutionOptions
     ): ExecutionPlan {
-        val test = document.definitions.filterIsInstance<ExecutableDefinitionNode>()
+        val executables = document.definitions.filterIsInstance<ExecutableDefinitionNode>()
 
-        val operation = test.filterIsInstance<OperationDefinitionNode>().let { operations ->
+        val operation = executables.filterIsInstance<OperationDefinitionNode>().let { operations ->
             when (operations.size) {
                 0 -> throw ValidationException("Must provide any operation")
                 1 -> operations.first()
@@ -90,7 +90,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                 ?: throw ValidationException("Subscriptions are not supported on this schema")
         }
 
-        val fragmentDefinitionNode = test.filterIsInstance<FragmentDefinitionNode>()
+        val fragmentDefinitionNode = executables.filterIsInstance<FragmentDefinitionNode>()
         val fragmentDefinitions = fragmentDefinitionNode.associate { fragmentDef ->
             val type = schemaModel.allTypesByName.getValue(fragmentDef.typeCondition.name.value)
             val name = fragmentDef.name!!.value
