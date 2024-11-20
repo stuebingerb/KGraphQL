@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.getIterableElementType
 import com.apurebase.kgraphql.isIterable
+import com.apurebase.kgraphql.request.isIntrospectionType
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.directive.Directive
@@ -274,7 +275,11 @@ class SchemaCompilation(
         val objectDef = objectDefs.find { it.kClass == kClass } ?: TypeDef.Object(kClass.defaultKQLTypeName(), kClass)
 
         // treat introspection types as objects -> adhere to reference implementation behaviour
-        val kind = if (kClass.isFinal || objectDef.name.startsWith("__")) TypeKind.OBJECT else TypeKind.INTERFACE
+        val kind = if (kClass.isFinal || objectDef.isIntrospectionType()) {
+            TypeKind.OBJECT
+        } else {
+            TypeKind.INTERFACE
+        }
 
         val objectType = if (kind == TypeKind.OBJECT) {
             Type.Object(objectDef)
