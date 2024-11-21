@@ -13,7 +13,6 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.integration.github.LatLng
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.DefaultGenericTypeResolver
@@ -770,7 +769,7 @@ class SchemaBuilderTest {
                     resolver { -> Unit }
                 }
             }
-        } shouldThrow IllegalArgumentException::class withMessage "Resolver for 'main' has no return value"
+        } shouldThrow SchemaException::class withMessage "Resolver for 'main' has no return value"
     }
 
     private inline fun <reified T : Any> SchemaBuilder.createGenericQuery(x: T) {

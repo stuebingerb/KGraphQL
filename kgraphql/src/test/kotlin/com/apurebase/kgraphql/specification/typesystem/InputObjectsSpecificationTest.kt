@@ -1,9 +1,14 @@
 package com.apurebase.kgraphql.specification.typesystem
 
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.amshove.kluent.invoking
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.with
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.CoreMatchers.startsWith
@@ -61,5 +66,30 @@ class InputObjectsSpecificationTest {
         )
         assertThat(response.extract("data/success"), equalTo("SUCCESS"))
         assertThat(response.extract("data/null"), nullValue())
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/93
+    @Test
+    fun `incorrect input parameter should throw an appropriate exception`() {
+        data class MyInput(val value1: String)
+
+        val schema = KGraphQL.schema {
+            query("main") {
+                resolver { input: MyInput -> input.value1 }
+            }
+        }
+
+        invoking {
+            schema.executeBlocking(
+                """
+                        {
+                            main(input: { valu1: "Hello" })
+                        }
+                        """
+            )
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "Constructor parameter 'valu1' cannot be found in 'MyInput'"
+            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+        }
     }
 }

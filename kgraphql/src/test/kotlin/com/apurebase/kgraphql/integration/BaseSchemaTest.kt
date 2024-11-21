@@ -236,6 +236,5 @@ abstract class BaseSchemaTest {
         operationName: String? = null,
     ) = testedSchema
         .executeBlocking(query, variables, context, options, operationName)
-        .also(::println)
         .deserialize()
 }

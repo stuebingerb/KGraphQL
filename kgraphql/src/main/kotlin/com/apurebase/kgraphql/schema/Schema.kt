@@ -23,6 +23,6 @@ interface Schema : __Schema {
         variables: String? = null,
         context: Context = Context(emptyMap()),
         options: ExecutionOptions = ExecutionOptions(),
-        operationName: String? = null,
+        operationName: String? = null
     ) = runBlocking { execute(request, variables, context, options, operationName) }
 }

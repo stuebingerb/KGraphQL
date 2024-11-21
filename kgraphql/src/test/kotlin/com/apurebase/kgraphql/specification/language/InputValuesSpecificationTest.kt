@@ -208,6 +208,17 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
+    fun `Invalid Literal object input value - null`() {
+        invoking {
+            schema.executeBlocking("{ Object(value: null) }")
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "argument 'null' is not valid value of type FakeData"
+            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+        }
+    }
+
+    @Test
+    @Specification("2.9.8 Object Value")
     fun `Literal object input value with list field`() {
         val response = deserialize(
             schema.executeBlocking(

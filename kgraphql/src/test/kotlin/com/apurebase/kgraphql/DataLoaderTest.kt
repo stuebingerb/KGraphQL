@@ -419,7 +419,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(2, name = "basic data loader")
+    @RepeatedTest(repeatTimes, name = "basic data loader")
     fun `basic data loader`() {
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
