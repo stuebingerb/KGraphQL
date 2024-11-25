@@ -110,7 +110,7 @@ open class GraphQLError(
                 put("locations", buildJsonArray {
                     locations?.forEach {
                         addJsonObject {
-                            put("liane", it.line)
+                            put("line", it.line)
                             put("column", it.column)
                         }
                     }
