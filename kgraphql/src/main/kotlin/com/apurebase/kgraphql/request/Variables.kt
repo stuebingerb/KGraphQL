@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.request
 
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.InvalidInputValueException
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.getIterableElementType
 import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.schema.model.ast.TypeNode
@@ -28,8 +29,9 @@ data class Variables(
         keyNode: ValueNode.VariableNode,
         transform: (value: ValueNode) -> Any?
     ): T? {
-        val variable = requireNotNull(variables?.firstOrNull { keyNode.name.value == it.variable.name.value }) {
-            "Variable '$${keyNode.name.value}' was not declared for this operation"
+        val variable = variables?.firstOrNull { keyNode.name.value == it.variable.name.value }
+        if (variable == null) {
+            throw ValidationException("Variable '$${keyNode.name.value}' was not declared for this operation", listOf(keyNode))
         }
 
         val isIterable = kClass.isIterable()

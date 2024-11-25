@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.specification.language
 
 import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
@@ -83,7 +84,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `fragment with missing variable`() {
-        expect<IllegalArgumentException>("Variable '\$big' was not declared for this operation") {
+        expect<ValidationException>("Variable '\$big' was not declared for this operation") {
             execute(
                 query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!) {createActor(name: \$name, age: \$age){...Linda}}" +
                         "fragment Linda on Actor {picture(big: \$big)}",
@@ -175,7 +176,6 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         """.trimIndent()
 
         val result = execute(request, variables)
-
 
         assertNoErrors(result)
         assertThat(result.extract("data/agesFirst/name"), equalTo("Someone"))
