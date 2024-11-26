@@ -8,5 +8,5 @@ interface __Directive : __Described {
 
     val args: List<__InputValue>
 
-    val isRepeatable: Boolean?
+    val isRepeatable: Boolean
 }
