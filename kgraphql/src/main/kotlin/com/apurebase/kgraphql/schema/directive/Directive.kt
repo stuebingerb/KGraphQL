@@ -17,7 +17,7 @@ data class Directive(
     val execution: DirectiveExecution,
     override val description: String?,
     val arguments: List<InputValue<*>>,
-    override val isRepeatable: Boolean?
+    override val isRepeatable: Boolean
 ) : __Directive {
 
     override val args: List<__InputValue>
@@ -28,7 +28,7 @@ data class Directive(
         val locations: List<DirectiveLocation>,
         val execution: DirectiveExecution,
         val description: String? = null,
-        val isRepeatable: Boolean? = null
+        val isRepeatable: Boolean = false
     ) {
         fun toDirective(inputValues: List<InputValue<*>>) = Directive(
             name = this.name,
