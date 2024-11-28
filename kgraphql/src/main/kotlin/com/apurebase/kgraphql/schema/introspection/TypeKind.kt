@@ -8,7 +8,7 @@ enum class TypeKind {
     ENUM,
     INPUT_OBJECT,
 
-    //wrapper types
+    // Wrapper types
     LIST,
     NON_NULL
 }

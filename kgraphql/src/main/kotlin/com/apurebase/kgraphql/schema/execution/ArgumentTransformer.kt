@@ -26,10 +26,14 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
             }
 
             type.isList() && value !is ValueNode.ListValueNode -> {
-                throw InvalidInputValueException(
-                    "argument '${value.valueNodeName}' is not valid value of type List",
-                    value
-                )
+                if (type.isNullable() && value is ValueNode.NullValueNode) {
+                    null
+                } else {
+                    throw InvalidInputValueException(
+                        "argument '${value.valueNodeName}' is not valid value of type List",
+                        value
+                    )
+                }
             }
 
             value is ValueNode.ObjectValueNode -> {
@@ -48,7 +52,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
 
                     val paramType = inputField.type as? Type
                         ?: throw InvalidInputValueException(
-                            "Something went wrong while searching for the constructor parameter type : '${valueField.name.value}'",
+                            "Something went wrong while searching for the constructor parameter type '${valueField.name.value}'",
                             value
                         )
 
@@ -59,7 +63,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
 
                 if (missingNonOptionalInputs.isNotEmpty()) {
                     val inputs = missingNonOptionalInputs.map { it.name }.joinToString(",")
-                    throw InvalidInputValueException("You are missing non-optional input fields: $inputs", value)
+                    throw InvalidInputValueException("missing non-optional input fields: $inputs", value)
                 }
 
                 constructor.callBy(valueMap)

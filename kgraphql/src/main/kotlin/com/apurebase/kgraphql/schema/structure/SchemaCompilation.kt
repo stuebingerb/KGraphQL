@@ -214,7 +214,7 @@ class SchemaCompilation(
 
     private suspend fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {
         val type = kType.getIterableElementType()
-        val nullableListType = Type.AList(handleSimpleType(type, typeCategory))
+        val nullableListType = Type.AList(handlePossiblyWrappedType(type, typeCategory))
         return applyNullability(kType, nullableListType)
     }
 
