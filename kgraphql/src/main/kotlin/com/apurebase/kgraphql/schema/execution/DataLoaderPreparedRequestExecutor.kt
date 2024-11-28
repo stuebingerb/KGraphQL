@@ -28,7 +28,7 @@ import kotlin.reflect.KProperty1
 
 class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
-    private val argumentsHandler = ArgumentsHandler(schema)
+    private val argumentsHandler = ArgumentTransformer(schema)
 
     inner class ExecutionContext(
         val variables: Variables,

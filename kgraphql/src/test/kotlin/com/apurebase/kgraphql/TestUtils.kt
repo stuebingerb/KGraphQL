@@ -84,6 +84,3 @@ fun Any.getResourceAsFile(name: String): File = this::class.java.classLoader.get
 object ResourceFiles {
     val kitchenSinkQuery = getResourceAsFile("kitchen-sink.graphql").readText()
 }
-
-
-const val d = '$'
