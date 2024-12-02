@@ -12,14 +12,14 @@ Each operation is represented by an operation name and a selection set.
 
 In KGraphQL, operation is declared in `SchemaBuilder` block. Every operation has 2 properties:
 
-| name     | description                     |
-|----------|---------------------------------|
-| name     | name of operation               |
-| resolver | [Resolver](/Reference/resolver) |
+| name     | description             |
+|----------|-------------------------|
+| name     | name of operation       |
+| resolver | [Resolver](resolver.md) |
 
 Selection set is automatically created based on resolver return type. By default, selection set for specific class
 contains all its member properties (without extension properties), but it can be customized (TBD Type wiki page).
-Operations can be [deprecated](/Reference/deprecation)
+Operations can be [deprecated](deprecation.md)
 
 Subscription is not supported yet.
 

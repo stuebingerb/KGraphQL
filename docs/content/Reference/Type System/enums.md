@@ -24,7 +24,7 @@ val schema = KGraphQL.schema {
 }
 ```
 
-Enum values can be [deprecated](/Reference/deprecation):
+Enum values can be [deprecated](../deprecation.md):
 
 *Example*
 
