@@ -46,7 +46,8 @@ data class MutableSchemaDefinition(
     private val unions: ArrayList<TypeDef.Union> = arrayListOf(),
     private val directives: ArrayList<Directive.Partial> = arrayListOf(
         Directive.SKIP,
-        Directive.INCLUDE
+        Directive.INCLUDE,
+        Directive.DEPRECATED
     ),
     private val inputObjects: ArrayList<TypeDef.Input<*>> = arrayListOf()
 ) {
@@ -87,7 +88,7 @@ data class MutableSchemaDefinition(
         if (scalars.any { it.kClass == member } || enums.any { it.kClass == member }) {
             throw SchemaException(
                 "The member types of a Union type must all be Object base types; " +
-                        "Scalar, Interface and Union types may not be member types of a Union"
+                    "Scalar, Interface and Union types may not be member types of a Union"
             )
         }
 
@@ -120,7 +121,7 @@ data class MutableSchemaDefinition(
 
     fun addSubscription(subscription: SubscriptionDef<*>) {
         if (subscription.checkEqualName(subscriptions)) {
-            throw SchemaException("Cannot add mutation with duplicated name ${subscription.name}")
+            throw SchemaException("Cannot add subscription with duplicated name ${subscription.name}")
         }
         subscriptions.add(subscription)
     }
@@ -135,7 +136,7 @@ data class MutableSchemaDefinition(
 
     fun addInputObject(input: TypeDef.Input<*>) = addType(input, inputObjects, "Input")
 
-    fun <T : Definition> addType(type: T, target: ArrayList<T>, typeCategory: String) {
+    private fun <T : Definition> addType(type: T, target: ArrayList<T>, typeCategory: String) {
         if (type.name.startsWith("__")) {
             throw SchemaException("Type name starting with \"__\" are excluded for introspection system")
         }

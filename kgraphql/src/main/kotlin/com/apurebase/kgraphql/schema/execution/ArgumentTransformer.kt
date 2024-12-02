@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.typeReference
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.ObjectValueNode
@@ -46,7 +47,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
                 value == null && parameter.type.kind != TypeKind.NON_NULL -> parameter.default
                 value == null && parameter.type.kind == TypeKind.NON_NULL -> {
                     parameter.default ?: throw InvalidInputValueException(
-                        "argument '${parameter.name}' of type ${schema.typeReference(parameter.type)} on field '$funName' is not nullable, value cannot be null",
+                        "argument '${parameter.name}' of type ${parameter.type.typeReference()} on field '$funName' is not nullable, value cannot be null",
                         executionNode.selectionNode
                     )
                 }

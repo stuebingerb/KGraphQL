@@ -25,4 +25,9 @@ interface Schema : __Schema {
         options: ExecutionOptions = ExecutionOptions(),
         operationName: String? = null
     ) = runBlocking { execute(request, variables, context, options, operationName) }
+
+    /**
+     * Prints the current schema in schema definition language (SDL)
+     */
+    fun printSchema(): String
 }

@@ -68,6 +68,8 @@ class DefaultSchema(
         )
     }
 
+    override fun printSchema() = SchemaPrinter().print(model)
+
     override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
 
     override fun typeByKType(kType: KType): Type? = typeByKClass(kType.jvmErasure)

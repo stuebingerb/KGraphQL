@@ -7,7 +7,6 @@ import com.apurebase.kgraphql.schema.introspection.__EnumValue
 import com.apurebase.kgraphql.schema.introspection.__Field
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Type
-import com.apurebase.kgraphql.schema.introspection.asString
 import com.apurebase.kgraphql.schema.model.TypeDef
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -77,7 +76,7 @@ interface Type : __Type {
 
     class OperationObject(
         override val name: String,
-        override val description: String,
+        override val description: String?,
         fields: List<Field>
     ) : ComplexType(fields) {
 
@@ -110,7 +109,7 @@ interface Type : __Type {
 
         override val name: String = definition.name
 
-        override val description: String = definition.description ?: ""
+        override val description: String? = definition.description
 
         override val enumValues: List<__EnumValue>? = null
 
@@ -136,7 +135,7 @@ interface Type : __Type {
 
         override val name: String = definition.name
 
-        override val description: String = definition.description ?: ""
+        override val description: String? = definition.description
 
         override val enumValues: List<__EnumValue>? = null
 
@@ -159,7 +158,7 @@ interface Type : __Type {
 
         override val name: String = kqlType.name
 
-        override val description: String = kqlType.description ?: ""
+        override val description: String? = kqlType.description
 
         override val enumValues: List<__EnumValue>? = null
 
@@ -188,7 +187,7 @@ interface Type : __Type {
 
         override val name: String = kqlType.name
 
-        override val description: String = kqlType.description ?: ""
+        override val description: String? = kqlType.description
 
         override val enumValues: List<__EnumValue> = values
 
@@ -214,7 +213,7 @@ interface Type : __Type {
 
         override val name: String = kqlType.name
 
-        override val description: String = kqlType.description ?: ""
+        override val description: String? = kqlType.description
 
         override val enumValues: List<__EnumValue>? = null
 
@@ -238,7 +237,7 @@ interface Type : __Type {
 
         override val name: String = kqlType.name
 
-        override val description: String = kqlType.description ?: ""
+        override val description: String? = kqlType.description
 
         override val enumValues: List<__EnumValue>? = null
 
@@ -260,7 +259,7 @@ interface Type : __Type {
 
         override val name: String? = null
 
-        override val description: String = ""
+        override val description: String? = null
 
         override val enumValues: List<__EnumValue>? = null
 
@@ -282,7 +281,7 @@ interface Type : __Type {
 
         override val name: String? = null
 
-        override val description: String = ""
+        override val description: String? = null
 
         override val enumValues: List<__EnumValue>? = null
 
@@ -317,8 +316,6 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override fun toString(): String = asString()
-
         override fun isInstance(value: Any?): Boolean = false
     }
 
@@ -343,8 +340,6 @@ interface Type : __Type {
         override val enumValues: List<__EnumValue>? = null
 
         override val inputFields: List<__InputValue>? = null
-
-        override fun toString() = asString()
 
         override fun isInstance(value: Any?): Boolean = false
     }

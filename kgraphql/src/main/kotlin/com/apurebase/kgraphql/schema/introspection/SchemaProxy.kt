@@ -57,4 +57,6 @@ class SchemaProxy(
     ): String {
         return getProxied().execute(request, variables, context, options, operationName)
     }
+
+    override fun printSchema(): String = getProxied().printSchema()
 }

@@ -33,7 +33,7 @@ data class SchemaModel(
             // workaround on the fact that Double and Float are treated as GraphQL Float
             .filterNot { it is Type.Scalar<*> && it.kClass == Float::class }
             .filterNot { it.kClass?.findAnnotation<NotIntrospected>() != null }
-            // query and mutation must be present in introspection 'types' field for introspection tools
+            // query must be present in introspection 'types' field for introspection tools
             .plus(query)
             .toMutableList()
         if (mutation != null) {

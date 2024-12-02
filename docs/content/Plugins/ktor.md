@@ -90,3 +90,44 @@ schema {
   }  
 }
 ```
+
+## Schema Definition Language (SDL)
+
+The [Schema Definition Language](https://graphql.org/learn/schema/#type-language) (or Type System Definition Language) is a human-readable, language-agnostic
+representation of a GraphQL schema.
+
+See the following comparison:
+
+=== "KGraphQL"
+    ```kotlin
+    schema {
+        data class SampleData(
+            val id: Int,
+            val stringData: String,
+            val optionalList: List<String>?
+        )
+        
+        query("getSampleData") {
+            resolver { quantity: Int ->
+                (1..quantity).map { SampleData(it, "sample-$it", emptyList()) }
+            }.withArgs {
+                arg<Int> { name = "quantity"; defaultValue = 10 }
+            }
+        }
+    }
+    ```
+=== "SDL"
+    ```
+    type Query {
+        getSampleData(quantity: Int! = 10): [SampleData!]!
+    }
+    
+    type SampleData {
+        id: Int!
+        optionalList: [String!]
+        stringData: String!
+    }
+    ```
+
+If schema introspection is enabled, the ktor feature will expose the current schema in Schema Definition
+Language under [http://localhost:8080/graphql?schema](http://localhost:8080/graphql?schema).
