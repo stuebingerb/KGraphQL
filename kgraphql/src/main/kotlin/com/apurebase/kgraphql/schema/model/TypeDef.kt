@@ -47,7 +47,7 @@ interface TypeDef {
         fun toScalarType(): Type.Scalar<T> = Type.Scalar(this)
     }
 
-    //To avoid circular dependencies etc. union type members are resolved in runtime
+    // To avoid circular dependencies etc. union type members are resolved in runtime
     class Union(
         name: String,
         val members: Set<KClass<*>>,

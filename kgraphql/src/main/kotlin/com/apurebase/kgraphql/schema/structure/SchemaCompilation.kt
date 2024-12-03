@@ -150,6 +150,8 @@ class SchemaCompilation(
             definition.mutations.map { handleOperation(it) } + __typenameField)
     }
 
+    // https://spec.graphql.org/October2021/#sec-Type-Name-Introspection
+    //      "__typename may not be included as a root field in a subscription operation."
     private suspend fun handleSubscriptions(): Type {
         // https://spec.graphql.org/October2021/#sec-Type-Name-Introspection
         //      "__typename may not be included as a root field in a subscription operation."
@@ -165,7 +167,7 @@ class SchemaCompilation(
 
     private suspend fun introspectionTypeQuery() = handleOperation(
         QueryDef("__type", FunctionWrapper.on { name: String ->
-            schemaProxy.findTypeByName(name)
+            schemaProxy.types.firstOrNull { it.name == name }
         })
     )
 
