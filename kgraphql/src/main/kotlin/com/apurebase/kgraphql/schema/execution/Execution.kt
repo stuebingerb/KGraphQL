@@ -2,8 +2,8 @@ package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.introspection.NotIntrospected
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.structure.Field
-import com.apurebase.kgraphql.schema.structure.Type
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode
 import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
@@ -37,7 +37,7 @@ sealed class Execution {
     class Union(
         node: SelectionNode,
         val unionField: Field.Union<*>,
-        val memberChildren: Map<Type, Collection<Execution>>,
+        val memberChildren: Map<__Type, Collection<Execution>>,
         key: String,
         alias: String? = null,
         condition: TypeCondition? = null,
@@ -51,7 +51,7 @@ sealed class Execution {
         typeCondition = condition,
         directives = directives
     ) {
-        fun memberExecution(type: Type): Node {
+        fun memberExecution(type: __Type): Node {
             return Node(
                 selectionNode = selectionNode,
                 field = field,

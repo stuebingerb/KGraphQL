@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.request.TypeReference
 import com.apurebase.kgraphql.schema.Schema
+import com.apurebase.kgraphql.schema.introspection.__Type
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
@@ -11,15 +12,7 @@ interface LookupSchema : Schema {
 
     fun typeByKClass(kClass: KClass<*>): Type?
 
-    fun typeByKType(kType: KType): Type?
-
-    fun typeByName(name: String): Type?
-
     fun inputTypeByKClass(kClass: KClass<*>): Type?
-
-    fun inputTypeByKType(kType: KType): Type?
-
-    fun inputTypeByName(name: String): Type?
 
     fun typeReference(kType: KType): TypeReference {
         if (kType.jvmErasure.isIterable()) {
@@ -42,4 +35,6 @@ interface LookupSchema : Schema {
             return TypeReference(name, kType.isMarkedNullable)
         }
     }
+
+    fun findTypeByName(name: String): __Type?
 }
