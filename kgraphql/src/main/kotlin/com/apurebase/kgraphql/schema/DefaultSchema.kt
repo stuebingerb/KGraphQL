@@ -14,6 +14,7 @@ import com.apurebase.kgraphql.schema.execution.Executor.Parallel
 import com.apurebase.kgraphql.schema.execution.ParallelRequestExecutor
 import com.apurebase.kgraphql.schema.execution.RequestExecutor
 import com.apurebase.kgraphql.schema.introspection.__Schema
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.apurebase.kgraphql.schema.structure.LookupSchema
 import com.apurebase.kgraphql.schema.structure.RequestInterpreter
@@ -71,4 +72,6 @@ class DefaultSchema(
     override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
 
     override fun inputTypeByKClass(kClass: KClass<*>): Type? = model.inputTypes[kClass]
+
+    override fun findTypeByName(name: String): Type? = model.allTypesByName[name]
 }

@@ -11,8 +11,6 @@ data class SchemaModel(
     val query: Type,
     val mutation: Type?,
     val subscription: Type?,
-    val enums: Map<KClass<out Enum<*>>, Type.Enum<out Enum<*>>>,
-    val scalars: Map<KClass<*>, Type.Scalar<*>>,
     val allTypes: List<Type>,
     val queryTypes: Map<KClass<*>, Type>,
     val inputTypes: Map<KClass<*>, Type>,
@@ -47,7 +45,5 @@ data class SchemaModel(
     override val mutationType: __Type? = mutation
 
     override val subscriptionType: __Type? = subscription
-
-    override fun findTypeByName(name: String): __Type? = allTypesByName[name]
 }
 

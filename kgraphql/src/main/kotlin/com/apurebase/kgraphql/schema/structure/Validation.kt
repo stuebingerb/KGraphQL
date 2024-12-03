@@ -3,12 +3,14 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Field
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FieldNode
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
-fun validatePropertyArguments(parentType: Type, field: Field, requestNode: FieldNode) {
+fun validatePropertyArguments(parentType: __Type, field: __Field, requestNode: FieldNode) {
     val argumentValidationExceptions = field.validateArguments(requestNode.arguments, parentType.name)
 
     if (argumentValidationExceptions.isNotEmpty()) {
@@ -18,8 +20,8 @@ fun validatePropertyArguments(parentType: Type, field: Field, requestNode: Field
     }
 }
 
-fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: String?): List<ValidationException> {
-    if (!(arguments.isNotEmpty() || selectionArgs?.isNotEmpty() != true)) {
+fun __Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: String?): List<ValidationException> {
+    if (!(args.isNotEmpty() || selectionArgs?.isNotEmpty() != true)) {
         return listOf(
             ValidationException(
                 message = "Property $name on type $parentTypeName has no arguments, found: ${selectionArgs.map { it.name.value }}",
@@ -30,7 +32,7 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
 
     val exceptions = mutableListOf<ValidationException>()
 
-    val parameterNames = arguments.map { it.name }
+    val parameterNames = args.map { it.name }
     val invalidArguments = selectionArgs?.filter { it.name.value !in parameterNames }
 
     if (!invalidArguments.isNullOrEmpty()) {
@@ -41,7 +43,7 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
         )
     }
 
-    arguments.forEach { arg ->
+    args.forEach { arg ->
         val value = selectionArgs?.firstOrNull { arg.name == it.name.value }
         if (value == null && arg.type.kind == TypeKind.NON_NULL && arg.defaultValue == null) {
             exceptions.add(
