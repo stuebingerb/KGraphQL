@@ -347,6 +347,86 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `query with two inline fragments`() {
+        val map = execute(
+            """
+            {
+                film {
+                    ...on Film { title }
+                    ...on Film { director { age name } }
+                }
+            }
+            """.trimIndent()
+        )
+        assertNoErrors(map)
+        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
+        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
+        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+    }
+
+    @Test
+    fun `query with mixed selections`() {
+        val map = execute(
+            """
+            {
+                film {
+                    __typename
+                    ...film_title
+                    ...on Film { director { age name } }
+                }
+            }
+            
+            fragment film_title on Film {
+                title
+            }
+            """.trimIndent()
+        )
+        assertNoErrors(map)
+        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
+        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
+        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+        assertThat(map.extract<String>("data/film/__typename"), equalTo("Film"))
+
+    }
+
+    @Test
+    fun `query with missing fragment type`() {
+        invoking {
+            execute("""
+                {
+                    film {
+                        ...on MissingType {
+                            title
+                        }
+                    }
+                }
+            """.trimIndent())
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "Unknown type MissingType in type condition on fragment"
+            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
+            extensionsErrorDetail shouldBeEqualTo null
+        }
+    }
+
+    @Test
+    fun `query with missing named fragment type`() {
+        invoking {
+            execute("""
+                {
+                    film {
+                        ...film_title
+                    }
+                }
+                
+            """.trimIndent())
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "Fragment film_title not found"
+            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
+            extensionsErrorDetail shouldBeEqualTo null
+        }
+    }
+
+    @Test
     fun `query with missing selection set`() {
         invoking {
             execute("{film}")

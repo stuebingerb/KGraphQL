@@ -30,7 +30,6 @@ abstract class BaseSchemaTest {
     val davidFincher = Director("David Fincher", 43, listOf(bradPitt, morganFreeman, kevinSpacey))
     val se7en = Film(Id("Se7en", 1995), 1995, "Se7en", davidFincher)
 
-
     val rickyGervais = Actor("Ricky Gervais", 58)
 
     // new actors created via mutations in schema
@@ -147,7 +146,11 @@ abstract class BaseSchemaTest {
                 ignore = true
             }
             transformation(Scenario::content) { content: String, uppercase: Boolean? ->
-                if (uppercase == true) content.uppercase() else content
+                if (uppercase == true) {
+                    content.uppercase()
+                } else {
+                    content
+                }
             }
         }
         val favouriteID = unionType("Favourite") {
