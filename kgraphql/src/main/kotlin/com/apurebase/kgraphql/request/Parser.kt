@@ -178,7 +178,11 @@ open class Parser {
         return VariableDefinitionNode(
             variable = parseVariable(),
             type = expectToken(COLON).let { parseTypeReference() },
-            defaultValue = if (expectOptionalToken(EQUALS) != null) parseValueLiteral(true) else null,
+            defaultValue = if (expectOptionalToken(EQUALS) != null) {
+                parseValueLiteral(true)
+            } else {
+                null
+            },
             directives = parseDirectives(true),
             loc = loc(start)
         )
@@ -545,7 +549,11 @@ open class Parser {
      */
     private fun parseTypeSystemDefinition(): DefinitionNode.TypeSystemDefinitionNode {
         // Many definitions begin with a description and require a lookahead.
-        val keywordToken = if (peekDescription()) lexer.lookahead() else lexer.token
+        val keywordToken = if (peekDescription()) {
+            lexer.lookahead()
+        } else {
+            lexer.token
+        }
 
         if (keywordToken.kind == NAME) {
             return when (keywordToken.value) {
@@ -937,6 +945,7 @@ open class Parser {
      *   `FRAGMENT_DEFINITION`
      *   `FRAGMENT_SPREAD`
      *   `INLINE_FRAGMENT`
+     *   `VARIABLE_DEFINITION`
      *
      * TypeSystemDirectiveLocation : one of
      *   `SCHEMA`

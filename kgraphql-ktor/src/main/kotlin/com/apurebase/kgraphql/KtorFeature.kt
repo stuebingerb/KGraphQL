@@ -61,6 +61,12 @@ class GraphQL(val schema: Schema) {
     }
 
     class FeatureInstance(featureKey: String = "KGraphQL") : Plugin<Application, Configuration, GraphQL> {
+        companion object {
+            private val playgroundHtml: ByteArray? by lazy {
+                KtorGraphQLConfiguration::class.java.classLoader.getResource("playground.html")?.readBytes()
+            }
+        }
+
         override val key = AttributeKey<GraphQL>(featureKey)
 
         override fun install(pipeline: Application, configure: Configuration.() -> Unit): GraphQL {
@@ -87,12 +93,15 @@ class GraphQL(val schema: Schema) {
                             )
                             call.respondText(result, contentType = ContentType.Application.Json)
                         }
-                        if (config.playground) get {
-                            @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-                            val playgroundHtml =
-                                KtorGraphQLConfiguration::class.java.classLoader.getResource("playground.html")
-                                    .readBytes()
-                            call.respondBytes(playgroundHtml, contentType = ContentType.Text.Html)
+                        get {
+                            val schemaRequested = call.request.queryParameters["schema"] != null
+                            if (schemaRequested && config.introspection) {
+                                call.respondText(schema.printSchema())
+                            } else if (config.playground) {
+                                playgroundHtml?.let {
+                                    call.respondBytes(it, contentType = ContentType.Text.Html)
+                                }
+                            }
                         }
                     }
                 }

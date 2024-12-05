@@ -12,12 +12,12 @@ import org.amshove.kluent.shouldNotBeEqualTo
 import org.amshove.kluent.shouldNotContain
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.hasSize
 import org.hamcrest.collection.IsEmptyCollection.empty
 import org.junit.jupiter.api.Test
 
@@ -95,7 +95,13 @@ class IntrospectionSpecificationTest {
                         type<Union2>()
                     }
 
-                    resolver { (string) -> if (string.isEmpty()) Union1("!!") else Union2("??") }
+                    resolver { (string) ->
+                        if (string.isEmpty()) {
+                            Union1("!!")
+                        } else {
+                            Union2("??")
+                        }
+                    }
                 }
             }
 
@@ -106,13 +112,17 @@ class IntrospectionSpecificationTest {
 
         val response = deserialize(
             schema.executeBlocking(
-                "{data(input: \"\"){" +
-                        "string, " +
-                        "union{" +
-                        "... on Union1{one, __typename} " +
-                        "... on Union2{two}" +
-                        "}" +
-                        "}}"
+                """
+                {
+                  data(input: "") {
+                    string, 
+                    union {
+                      ...on Union1 { one, __typename }
+                      ...on Union2 { two }
+                    }
+                  }
+                }     
+                """.trimIndent()
             )
         )
 
@@ -328,6 +338,46 @@ class IntrospectionSpecificationTest {
         }
     }
 
+    @Test
+    fun `__Directive introspection should return all built-in directives as expected`() {
+        val schema = defaultSchema {
+            query("interface") {
+                resolver { -> Face("~~MOCK~~") }
+            }
+        }
+
+        val response = deserialize(
+            schema.executeBlocking(
+                "{__schema{directives{name isRepeatable args{name type{name kind ofType{name kind}}}}}}"
+            )
+        )
+
+        assertThat(response.extract<List<*>>("data/__schema/directives"), hasSize(3))
+
+        assertThat(response.extract("data/__schema/directives[0]/name"), equalTo("skip"))
+        assertThat(response.extract("data/__schema/directives[0]/isRepeatable"), equalTo(false))
+        assertThat(response.extract<List<*>>("data/__schema/directives[0]/args"), hasSize(1))
+        assertThat(response.extract("data/__schema/directives[0]/args[0]/name"), equalTo("if"))
+        assertThat(response.extract("data/__schema/directives[0]/args[0]/type/kind"), equalTo("NON_NULL"))
+        assertThat(response.extract("data/__schema/directives[0]/args[0]/type/ofType/name"), equalTo("Boolean"))
+        assertThat(response.extract("data/__schema/directives[0]/args[0]/type/ofType/kind"), equalTo("SCALAR"))
+
+        assertThat(response.extract("data/__schema/directives[1]/name"), equalTo("include"))
+        assertThat(response.extract("data/__schema/directives[1]/isRepeatable"), equalTo(false))
+        assertThat(response.extract<List<*>>("data/__schema/directives[1]/args"), hasSize(1))
+        assertThat(response.extract("data/__schema/directives[1]/args[0]/name"), equalTo("if"))
+        assertThat(response.extract("data/__schema/directives[1]/args[0]/type/kind"), equalTo("NON_NULL"))
+        assertThat(response.extract("data/__schema/directives[1]/args[0]/type/ofType/name"), equalTo("Boolean"))
+        assertThat(response.extract("data/__schema/directives[1]/args[0]/type/ofType/kind"), equalTo("SCALAR"))
+
+        assertThat(response.extract("data/__schema/directives[2]/name"), equalTo("deprecated"))
+        assertThat(response.extract("data/__schema/directives[2]/isRepeatable"), equalTo(false))
+        assertThat(response.extract<List<*>>("data/__schema/directives[2]/args"), hasSize(1))
+        assertThat(response.extract("data/__schema/directives[2]/args[0]/name"), equalTo("reason"))
+        assertThat(response.extract("data/__schema/directives[2]/args[0]/type/kind"), equalTo("SCALAR"))
+        assertThat(response.extract("data/__schema/directives[2]/args[0]/type/name"), equalTo("String"))
+    }
+
     /**
      * Not part of spec, but assumption of many graphql tools
      */
@@ -358,10 +408,9 @@ class IntrospectionSpecificationTest {
             deserialize(schema.executeBlocking("{__schema{directives{name, onField, onFragment, onOperation}}}"))
         val directives = response.extract<List<Map<String, *>>>("data/__schema/directives")
         directives.forEach { directive ->
-            assertThat(directive["name"] as String, anyOf(equalTo("skip"), equalTo("include")))
-            assertThat(directive["onField"] as Boolean, equalTo(true))
-            assertThat(directive["onFragment"] as Boolean, equalTo(true))
-            assertThat(directive["onOperation"] as Boolean, equalTo(false))
+            assertThat(directive["onField"], notNullValue())
+            assertThat(directive["onFragment"], notNullValue())
+            assertThat(directive["onOperation"], notNullValue())
         }
     }
 

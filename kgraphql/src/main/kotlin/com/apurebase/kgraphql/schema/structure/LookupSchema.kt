@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.request.TypeReference
 import com.apurebase.kgraphql.schema.Schema
-import com.apurebase.kgraphql.schema.introspection.TypeKind
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
@@ -43,11 +42,4 @@ interface LookupSchema : Schema {
             return TypeReference(name, kType.isMarkedNullable)
         }
     }
-
-    fun typeReference(type: Type) = TypeReference(
-        name = type.unwrapped().name!!,
-        isNullable = type.isNullable(),
-        isList = type.isList(),
-        isElementNullable = type.isList() && type.unwrapList().ofType?.kind == TypeKind.NON_NULL
-    )
 }

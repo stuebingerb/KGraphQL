@@ -18,9 +18,10 @@ data class SchemaConfiguration(
     val wrapErrors: Boolean,
     val executor: Executor,
     val timeout: Long?,
+    // allow schema introspection
     val introspection: Boolean = true,
     val plugins: MutableMap<KClass<*>, Any>,
-    val genericTypeResolver: GenericTypeResolver,
+    val genericTypeResolver: GenericTypeResolver
 ) {
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any> get(type: KClass<T>) = plugins[type] as T?

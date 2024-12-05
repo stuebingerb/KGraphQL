@@ -7,42 +7,29 @@ package com.apurebase.kgraphql.schema.introspection
 interface __Type {
     val kind: TypeKind
     val name: String?
-    val description: String
+    val description: String?
 
-    //OBJECT and INTERFACE only
+    // OBJECT and INTERFACE only
     val fields: List<__Field>?
 
-    //OBJECT and INTERFACE only
+    // OBJECT and INTERFACE only
     val interfaces: List<__Type>?
 
-    //INTERFACE and UNION only
+    // INTERFACE and UNION only
     val possibleTypes: List<__Type>?
 
-    //ENUM only
+    // ENUM only
     val enumValues: List<__EnumValue>?
 
-    //INPUT_OBJECT only
+    // INPUT_OBJECT only
     val inputFields: List<__InputValue>?
 
-    //NON_NULL and LIST only
+    // NON_NULL and LIST only
     val ofType: __Type?
 }
 
-fun __Type.asString() = buildString {
-    append(kind)
-    append(" : ")
-    append(name)
-    append(" ")
-
-    if (fields != null) {
-        append("[")
-        fields?.forEach { field ->
-            append(field.name).append(" : ").append(field.type.name ?: field.type.kind).append(" ")
-        }
-        append("]")
-    }
-
-    if (ofType != null) {
-        append(" => ").append(ofType?.name)
-    }
+fun __Type.typeReference(): String = when (kind) {
+    TypeKind.NON_NULL -> "${ofType?.typeReference()}!"
+    TypeKind.LIST -> "[${ofType?.typeReference()}]"
+    else -> name ?: ""
 }

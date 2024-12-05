@@ -20,7 +20,7 @@ open class TypeProxy(var proxied: Type) : Type {
     override val name: String?
         get() = proxied.name
 
-    override val description: String
+    override val description: String?
         get() = proxied.description
 
     override val fields: List<__Field>?

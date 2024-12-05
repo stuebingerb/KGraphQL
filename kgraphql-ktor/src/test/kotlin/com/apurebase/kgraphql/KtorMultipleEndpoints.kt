@@ -57,7 +57,7 @@ class KtorMultipleEndpoints : KtorTest() {
             }
         }
 
-        client.get("/graphql").status shouldBeEqualTo HttpStatusCode.MethodNotAllowed
+        client.get("/graphql").status shouldBeEqualTo HttpStatusCode.NotFound
     }
 
     @Test
@@ -78,5 +78,39 @@ class KtorMultipleEndpoints : KtorTest() {
         val response = client.get("/graphql")
         response.status shouldBeEqualTo HttpStatusCode.OK
         response.bodyAsText() shouldBeEqualTo playgroundHtml
+    }
+
+    @Test
+    fun `SDL should be provided by default`() = testApplication {
+        install(GraphQL) {
+            schema {
+                query("check") {
+                    resolver { -> "OK" }
+                }
+            }
+        }
+
+        val response = client.get("/graphql?schema")
+        response.status shouldBeEqualTo HttpStatusCode.OK
+        response.bodyAsText() shouldBeEqualTo """
+            type Query {
+              check: String!
+            }
+            
+        """.trimIndent()
+    }
+
+    @Test
+    fun `SDL should not be provided when introspection is disabled`() = testApplication {
+        install(GraphQL) {
+            introspection = false
+            schema {
+                query("check") {
+                    resolver { -> "OK" }
+                }
+            }
+        }
+
+        client.get("/graphql?schema").status shouldBeEqualTo HttpStatusCode.NotFound
     }
 }
