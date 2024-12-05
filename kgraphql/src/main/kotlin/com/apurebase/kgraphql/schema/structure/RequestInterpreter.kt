@@ -210,30 +210,34 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     ): Execution.Union {
         validateUnionRequest(field, selectionNode)
 
+        // https://spec.graphql.org/October2021/#sec-Unions
+        //  "With interfaces and objects, only those fields defined on the type can be queried directly; to query
+        //  other fields on an interface, typed fragments must be used. This is the same as for unions, but unions
+        //  do not define any fields, so *no* fields may be queried on this type without the use of type refining
+        //  fragments or inline fragments (with the exception of the meta-field `__typename`)."
         val unionMembersChildren: Map<Type, List<Execution>> =
             field.returnType.possibleTypes.associateWith { possibleType ->
-                val selections = selectionNode.selectionSet?.selections
+                val mergedSelectionsForType = selectionNode.selectionSet?.selections?.flatMap {
+                    when {
+                        // Only __typename is allowed as field selection
+                        it is FieldNode && it.name.value == "__typename"
+                            -> listOf(it)
 
-                val a = selections?.filterIsInstance<FragmentSpreadNode>()?.firstOrNull {
-                    ctx.fragments[it.name.value]?.first?.name == possibleType.name
+                        it is FragmentSpreadNode && ctx.fragments[it.name.value]?.first?.name == possibleType.name
+                            -> ctx.fragments.getValue(it.name.value).second.selections
+
+                        it is InlineFragmentNode && possibleType.name == it.typeCondition?.name?.value
+                            -> it.selectionSet.selections
+
+                        else -> emptyList()
+                    }
                 }
 
-                if (a != null) return@associateWith handleReturnType(
-                    ctx,
-                    possibleType,
-                    ctx.fragments.getValue(a.name.value).second
-                )
-
-                val b = selections?.filterIsInstance<InlineFragmentNode>()?.find {
-                    possibleType.name == it.typeCondition?.name?.value
+                if (!mergedSelectionsForType.isNullOrEmpty()) {
+                    handleReturnType(ctx, possibleType, SelectionSetNode(null, mergedSelectionsForType))
+                } else {
+                    throw ValidationException("Missing selection set for type ${possibleType.name}", selectionNode)
                 }
-
-                if (b != null) return@associateWith handleReturnType(ctx, possibleType, b.selectionSet)
-
-                throw ValidationException(
-                    "Missing type argument for type ${possibleType.name}",
-                    selectionNode
-                )
             }
 
         return Execution.Union(
@@ -249,9 +253,13 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     }
 
     private fun unknownFragmentTypeException(fragment: FragmentNode) = when (fragment) {
-        is FragmentSpreadNode -> error("This should never happen")
+        is FragmentSpreadNode -> ValidationException(
+            message = "Fragment ${fragment.name.value} not found",
+            node = fragment
+        )
+
         is InlineFragmentNode -> ValidationException(
-            message = "Unknown type ${fragment.typeCondition?.name?.value} in type condition on fragment ${fragment.typeCondition?.name?.value}",
+            message = "Unknown type ${fragment.typeCondition?.name?.value} in type condition on fragment",
             node = fragment
         )
     }

@@ -59,15 +59,14 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
  * validate that only typed fragments or __typename are present
  */
 fun validateUnionRequest(field: Field.Union<*>, selectionNode: FieldNode) {
-    val illegalChildren = selectionNode.selectionSet?.selections?.filterNot {
-        !(it is FieldNode && it.name.value != "__typename")
-    }
+    val illegalChildren =
+        selectionNode.selectionSet?.selections?.filterIsInstance<FieldNode>()?.filter { it.name.value != "__typename" }
 
-    if (illegalChildren?.any() == true) {
+    if (!illegalChildren.isNullOrEmpty()) {
         throw ValidationException(
             message = "Invalid selection set with properties: ${
                 illegalChildren.joinToString(prefix = "[", postfix = "]") {
-                    (it as FieldNode).aliasOrName.value
+                    it.aliasOrName.value
                 }
             } on union type property ${field.name} : ${field.returnType.possibleTypes.map { it.name }}",
             nodes = illegalChildren
@@ -78,8 +77,7 @@ fun validateUnionRequest(field: Field.Union<*>, selectionNode: FieldNode) {
 fun validateName(name: String) {
     if (name.startsWith("__")) {
         throw SchemaException(
-            "Illegal name '$name'. " +
-                    "Names starting with '__' are reserved for introspection system"
+            "Illegal name '$name'. Names starting with '__' are reserved for introspection system"
         )
     }
 }

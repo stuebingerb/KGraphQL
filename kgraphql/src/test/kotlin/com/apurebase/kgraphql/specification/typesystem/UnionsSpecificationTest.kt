@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
@@ -85,36 +86,128 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `A Union type should allow requesting __typename`() {
+    fun `a union type should allow requesting __typename`() {
         val result = execute(
             """{
-            actors {
-                name
-                favourite {
-                    ... on Actor { name }
-                    ... on Director { name, age }
-                    ... on Scenario { content(uppercase: false) }
-                    __typename
+                actors {
+                    name
+                    favourite {
+                        ... on Actor { name }
+                        ... on Director { name, age }
+                        ... on Scenario { content(uppercase: false) }
+                        __typename
+                    }
                 }
-            }
-        }""".trimIndent()
+            }""".trimIndent()
         )
-        println(result)
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[0]/name/"),
+            CoreMatchers.equalTo("Brad Pitt")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[0]/favourite/__typename"),
+            CoreMatchers.equalTo("Actor")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[1]/name/"),
+            CoreMatchers.equalTo("Morgan Freeman")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[1]/favourite/__typename"),
+            CoreMatchers.equalTo("Scenario")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[2]/name/"),
+            CoreMatchers.equalTo("Kevin Spacey")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[2]/favourite/__typename"),
+            CoreMatchers.equalTo("Actor")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[3]/name/"),
+            CoreMatchers.equalTo("Tom Hardy")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[3]/favourite/__typename"),
+            CoreMatchers.equalTo("Director")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[4]/name/"),
+            CoreMatchers.equalTo("Christian Bale")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[4]/favourite/__typename"),
+            CoreMatchers.equalTo("Actor")
+        )
+    }
+
+    @Test
+    fun `a union type should allow requesting __typename only`() {
+        val result = execute(
+            """{
+                actors {
+                    name
+                    favourite {
+                        __typename
+                    }
+                }
+            }""".trimIndent()
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[0]/favourite/__typename"),
+            CoreMatchers.equalTo("Actor")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[1]/favourite/__typename"),
+            CoreMatchers.equalTo("Scenario")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[2]/favourite/__typename"),
+            CoreMatchers.equalTo("Actor")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[3]/favourite/__typename"),
+            CoreMatchers.equalTo("Director")
+        )
+        MatcherAssert.assertThat(
+            result.extract<String>("data/actors[4]/favourite/__typename"),
+            CoreMatchers.equalTo("Actor")
+        )
+    }
+
+    @Test
+    fun `a union type should require a selection for all potential types`() {
+        invoking {
+            execute(
+                """{
+                actors {
+                    name
+                    favourite {
+                        ... on Actor { __typename }
+                        ... on Director { name, age }
+                    }
+                }
+            }""".trimIndent()
+            )
+        } shouldThrow ValidationException::class with {
+            message shouldBeEqualTo "Missing selection set for type Scenario"
+        }
     }
 
     @Test
     fun `Nullable union types should be valid`() {
         val result = execute(
             """{
-          actors(all: true) {
-            name
-            nullableFavourite {
-              ... on Actor { name }
-              ... on Director { name, age }
-              ... on Scenario { content(uppercase: false) }
-            }
-          }
-        }""".trimIndent()
+              actors(all: true) {
+                name
+                nullableFavourite {
+                  ... on Actor { name }
+                  ... on Director { name, age }
+                  ... on Scenario { content(uppercase: false) }
+                }
+              }
+            }""".trimIndent()
         )
 
         MatcherAssert.assertThat(
@@ -140,18 +233,17 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         invoking {
             execute(
                 """{
-                actors(all: true) {
-                    name
-                    favourite {
-                        ... on Actor { name }
-                        ... on Director { name, age }
-                        ... on Scenario { content(uppercase: false) }
+                    actors(all: true) {
+                        name
+                        favourite {
+                            ... on Actor { name }
+                            ... on Director { name, age }
+                            ... on Scenario { content(uppercase: false) }
+                        }
                     }
-                }
-            }""".trimIndent()
+                }""".trimIndent()
             )
         } shouldThrow ExecutionException::class with {
-            println(prettyPrint())
             message shouldBeEqualTo "Unexpected type of union property value, expected one of: [Actor, Scenario, Director]. value was null"
         }
     }
@@ -244,7 +336,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 }
             }
         """.trimIndent()
-            ).also(::println).deserialize().run {
+            ).deserialize().run {
                 extract<String>("data/f/s") shouldBeEqualTo "String"
                 extract<Int>("data/t/i") shouldBeEqualTo 1
             }
@@ -275,7 +367,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 }
             }
         """.trimIndent()
-        ).also(::println).deserialize().run {
+        ).deserialize().run {
             extract<Int>("data/returnUnion/i") shouldBeEqualTo 1
             assertThrows<IllegalArgumentException> { extract("data/returnUnion/s") }
             extract<List<String>>("data/returnUnion/fields") shouldBeEqualTo listOf("i", "fields", "s")
@@ -307,7 +399,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 }
             }
         """.trimIndent()
-        ).also(::println).deserialize().run {
+        ).deserialize().run {
             extract<String>("data/returnUnion[0]/__typename") shouldBeEqualTo "PrefixValue1"
             extract<String>("data/returnUnion[1]/__typename") shouldBeEqualTo "PrefixValue2"
         }
