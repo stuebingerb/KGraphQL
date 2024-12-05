@@ -46,21 +46,21 @@ test it out directly within the browser.
 
 ## Configuration options
 
-The GraphQL feature is extending the standard [KGraphQL configuration](/Reference/configuration) and providing its own
+The GraphQL feature is extending the standard [KGraphQL configuration](../Reference/configuration.md) and providing its own
 set of configuration as described in the table below.
 
 | Property   | Description                                                                                                                                                                    | Default value  |
 |------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
-| playground | Gives you out of the box access to a [GraphQL playground](https://github.com/graphql/graphiql)                                                                  | `false`        |
+| playground | Gives you out of the box access to a [GraphQL playground](https://github.com/graphql/graphiql)                                                                                 | `false`        |
 | endpoint   | This specifies what route will be delivering the GraphQL endpoint. When `playground` is enabled, it will use this endpoint also.                                               | `/graphql`     |
 | context    | Refer to example below                                                                                                                                                         |                |
 | wrap       | If you want to wrap the route into something before KGraphQL will install the GraphQL route. You can use this wrapper. See example below for a more in depth on how to use it. |                |
-| schema     | This is where you are defining your schema. Please refer to [KGraphQL References](/Reference/operations) for further documentation on this.                                    | ***required*** |
+| schema     | This is where you are defining your schema. Please refer to [KGraphQL References](../Reference/operations.md) for further documentation on this.                               | ***required*** |
 
 ### Wrap
 
 Sometimes you would need to wrap your route within something. A good example of this would be the `authenticate`
-function provided by [ktor Authentication feature](https://ktor.io/servers/features/authentication.html).
+function provided by [ktor Authentication feature](https://ktor.io/docs/server-auth.html).
 
 ```kotlin
 wrap {

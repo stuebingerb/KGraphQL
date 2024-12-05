@@ -3,9 +3,8 @@
 ## Basics
 
 In GraphQL every property needs a resolver. The resolver is the piece of system logic, required to resolve the response
-graph. [Operations](/Reference/operations), [](/Reference/)
-Resolver is KGraphQL definition of piece of system logic, required to resolve response graph. Operations, Extension
-Properties and Union Properties accept resolver, which allows schema creator to configure schema behaviour.
+graph. [Operations](operations.md), [Extension
+Properties](Type%20System/objects-and-interfaces.md/#extension-properties) and [Union Properties](Type%20System/unions.md) accept resolver, which allows schema creator to configure schema behaviour.
 
 Resolver clause accepts kotlin function and returns its DSL item, which is entry point for additional customization of
 resolver

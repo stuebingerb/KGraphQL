@@ -6,7 +6,7 @@ customize types. Besides, only member properties are inspected.
 
 **type { }**
 `type` method is entry point to Type DSL.
-See [Extension Properties](/Reference/Type%20System/objects-and-interfaces/#extension-properties), [Kotlin Properties](/Reference/Type%20System/objects-and-interfaces/#kotlin-properties), [Union Properties](/Reference/Type%20System/objects-and-interfaces/#union-properties).
+See [Extension Properties](#extension-properties), [Kotlin Properties](#kotlin-properties), [Union Properties](#union-properties).
 
 *Example*
 
@@ -59,7 +59,7 @@ KGraphQL.schema {
 ## Kotlin Properties
 
 Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring
-and [deprecation](/Reference/deprecation) of kotlin properties
+and [deprecation](../deprecation.md) of kotlin properties
 
 *Example*
 
@@ -85,7 +85,7 @@ after main entity is resolved.
 
 ## property { }
 
-`property` method accepts [resolver](/Reference/resolver) and can be subject of [deprecation](/Reference/deprecation).
+`property` method accepts [resolver](../resolver.md) and can be subject of [deprecation](../deprecation.md).
 
 *Example*
 
@@ -104,8 +104,8 @@ KGraphQL.schema {
 ## Union Properties
 
 As Kotlin does not support unions, union properties have to be explicitly declared in Schema DSL. Creating union
-property requires defining [resolver](/Reference/resolver) and return type. Return Type is reference returned by
-creation of [union type](/Reference/Type%20System/unions/).
+property requires defining [resolver](../resolver.md) and return type. Return Type is reference returned by
+creation of [union type](unions.md).
 
 Union type resolver is not type checked. Invalid resolver implementation which would return value of type other than
 members of union type will fail in runtime.
