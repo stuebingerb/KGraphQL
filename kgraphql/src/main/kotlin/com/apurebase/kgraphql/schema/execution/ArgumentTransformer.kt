@@ -1,10 +1,13 @@
 package com.apurebase.kgraphql.schema.execution
 
-import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.DefaultSchema
+import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode.ObjectValueNode
 import com.apurebase.kgraphql.schema.scalar.deserializeScalar
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
@@ -14,20 +17,80 @@ import kotlin.reflect.jvm.jvmErasure
 
 open class ArgumentTransformer(val schema: DefaultSchema) {
 
-    private fun transformValue(type: Type, value: ValueNode, variables: Variables): Any? {
+    fun transformArguments(
+        funName: String,
+        inputValues: List<InputValue<*>>,
+        args: ArgumentNodes?,
+        variables: Variables,
+        executionNode: Execution,
+        requestContext: Context
+    ): List<Any?> {
+        val unsupportedArguments = args?.filter { arg ->
+            inputValues.none { value -> value.name == arg.key }
+        }
+
+        if (unsupportedArguments?.isNotEmpty() == true) {
+            throw InvalidInputValueException(
+                "$funName does support arguments ${inputValues.map { it.name }}. Found arguments ${args.keys}",
+                executionNode.selectionNode
+            )
+        }
+
+        return inputValues.map { parameter ->
+            val value = args?.get(parameter.name)
+
+            when {
+                // inject request context
+                parameter.type.isInstance(requestContext) -> requestContext
+                parameter.type.isInstance(executionNode) -> executionNode
+                value == null && parameter.type.kind != TypeKind.NON_NULL -> parameter.default
+                value == null && parameter.type.kind == TypeKind.NON_NULL -> {
+                    parameter.default ?: throw InvalidInputValueException(
+                        "argument '${parameter.name}' of type ${schema.typeReference(parameter.type)} on field '$funName' is not nullable, value cannot be null",
+                        executionNode.selectionNode
+                    )
+                }
+
+                else -> {
+                    val transformedValue = transformValue(parameter.type, value!!, variables, true)
+                    if (transformedValue == null && parameter.type.isNotNullable()) {
+                        throw InvalidInputValueException(
+                            "argument ${parameter.name} is not optional, value cannot be null",
+                            executionNode.selectionNode
+                        )
+                    }
+                    transformedValue
+                }
+            }
+        }
+    }
+
+    private fun transformValue(
+        type: Type,
+        value: ValueNode,
+        variables: Variables,
+        // Normally, single values should be coerced to a list with one element. But not if that single value is a
+        // list of a nested list. Seems strange but cf. https://spec.graphql.org/October2021/#sec-List.Input-Coercion
+        // This parameter is used to track if we have seen a ListValueNode in the recursive call chain.
+        coerceSingleValueAsList: Boolean
+    ): Any? {
         val kType = type.toKType()
         val typeName = type.unwrapped().name
 
         return when {
             value is ValueNode.VariableNode -> {
                 variables.get(kType.jvmErasure, kType, typeName, value) { subValue ->
-                    transformValue(type, subValue, variables)
+                    transformValue(type, subValue, variables, coerceSingleValueAsList)
                 }
             }
 
-            type.isList() && value !is ValueNode.ListValueNode -> {
-                if (type.isNullable() && value is ValueNode.NullValueNode) {
-                    null
+            // https://spec.graphql.org/October2021/#sec-List.Input-Coercion
+            // If the value passed as an input to a list type is not a list and not the null value, then the result
+            // of input coercion is a list of size one, where the single item value is the result of input coercion
+            // for the list's item type on the provided value (note this may apply recursively for nested lists).
+            type.isList() && value !is ValueNode.ListValueNode && value !is ValueNode.NullValueNode -> {
+                if (coerceSingleValueAsList) {
+                    listOf(transformValue(type.unwrapList(), value, variables, true))
                 } else {
                     throw InvalidInputValueException(
                         "argument '${value.valueNodeName}' is not valid value of type List",
@@ -36,7 +99,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
                 }
             }
 
-            value is ValueNode.ObjectValueNode -> {
+            value is ObjectValueNode -> {
                 // SchemaCompilation ensures that input types have a primaryConstructor
                 val constructor = checkNotNull(type.unwrapped().kClass?.primaryConstructor)
                 val params = constructor.parameters.associateBy { it.name }
@@ -56,7 +119,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
                             value
                         )
 
-                    params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables)
+                    params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables, coerceSingleValueAsList)
                 }
 
                 val missingNonOptionalInputs = params.values.filter { !it.isOptional && !valueMap.containsKey(it) }
@@ -88,7 +151,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
                     )
                 } else {
                     value.values.map { valueNode ->
-                        transformValue(type.unwrapList(), valueNode, variables)
+                        transformValue(type.unwrapList(), valueNode, variables, false)
                     }
                 }
             }
@@ -123,25 +186,5 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
             "Invalid argument value '${value.valueNodeName}' for type ${schema.model.inputTypes[kClass]?.name}",
             value
         )
-    }
-
-    fun transformCollectionElementValue(inputValue: InputValue<*>, value: ValueNode, variables: Variables): Any? {
-        assert(inputValue.type.isList())
-        val elementType = inputValue.type.unwrapList().ofType as Type?
-            ?: throw ExecutionException("Unable to handle value of element of collection without type", value)
-
-        return transformValue(elementType, value, variables)
-    }
-
-    fun transformPropertyValue(parameter: InputValue<*>, value: ValueNode, variables: Variables): Any? {
-        return transformValue(parameter.type, value, variables)
-    }
-
-    fun transformPropertyObjectValue(
-        parameter: InputValue<*>,
-        value: ValueNode.ObjectValueNode,
-        variables: Variables
-    ): Any? {
-        return transformValue(parameter.type, value, variables)
     }
 }

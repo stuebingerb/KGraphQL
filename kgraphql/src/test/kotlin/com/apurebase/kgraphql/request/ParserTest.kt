@@ -2,7 +2,6 @@ package com.apurebase.kgraphql.request
 
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.ResourceFiles.kitchenSinkQuery
-import com.apurebase.kgraphql.d
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DocumentNode
 import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode.QUERY
@@ -217,7 +216,7 @@ class ParserTest {
                 |  ... on $keyword { field }
                 |}
                 |fragment $fragmentName on Type {
-                |  $keyword($keyword: ${d}$keyword)
+                |  $keyword($keyword: ${'$'}$keyword)
                 |    @$keyword($keyword: $keyword)
                 |}
             """.trimMargin()

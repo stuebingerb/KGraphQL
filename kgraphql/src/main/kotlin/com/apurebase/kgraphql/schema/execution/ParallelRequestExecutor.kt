@@ -30,7 +30,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         val requestContext: Context
     )
 
-    private val argumentsHandler = ArgumentsHandler(schema)
+    private val argumentsHandler = ArgumentTransformer(schema)
 
     private val jsonNodeFactory = JsonNodeFactory.instance
 

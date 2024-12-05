@@ -2,7 +2,6 @@ package com.apurebase.kgraphql.specification.language
 
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.Specification
-import com.apurebase.kgraphql.d
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
@@ -174,13 +173,13 @@ class InputValuesSpecificationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["null", "true", "42", "\"foo\""])
+    @ValueSource(strings = ["true", "\"foo\""])
     @Specification("2.9.7 List Value")
     fun `Invalid List input value`(value: String) {
         invoking {
             deserialize(schema.executeBlocking("{ List(value: $value) }"))
         } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "argument '$value' is not valid value of type List"
+            message shouldBeEqualTo "Cannot coerce $value to numeric constant"
             extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
         }
     }
@@ -195,13 +194,13 @@ class InputValuesSpecificationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["null", "true", "42", "\"foo\""])
+    @ValueSource(strings = ["null", "true", "42"])
     @Specification("2.9.8 Object Value")
     fun `Invalid Literal object input value`(value: String) {
         invoking {
             schema.executeBlocking("{ Object(value: { number: 232, description: \"little number\", list: $value }) }")
         } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "argument '$value' is not valid value of type List"
+            message shouldBeEqualTo "argument '$value' is not valid value of type String"
             extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
         }
     }
@@ -273,11 +272,11 @@ class InputValuesSpecificationTest {
     fun `Input object value mixed with variables`() {
         val response = schema.executeBlocking(
             """
-            query ObjectVariablesMixed(${d}description: String!, ${d}number: Int! = 25) {
+            query ObjectVariablesMixed(${'$'}description: String!, ${'$'}number: Int! = 25) {
                 ObjectList(value: {
-                    number: ${d}number,
-                    description: ${d}description,
-                    list: ["number", ${d}description, "little number"]
+                    number: ${'$'}number,
+                    description: ${'$'}description,
+                    list: ["number", ${'$'}description, "little number"]
                 })
             }
         """.trimIndent(), """{ "description": "Custom description" }"""
