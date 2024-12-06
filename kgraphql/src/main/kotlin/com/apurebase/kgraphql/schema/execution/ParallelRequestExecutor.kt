@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
@@ -190,8 +191,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
         }
 
-    private fun createNullNode(node: Execution.Node, returnType: Type): NullNode {
-        if (returnType !is Type.NonNull) {
+    private fun createNullNode(node: Execution.Node, returnType: __Type): NullNode {
+        if (returnType.kind != TypeKind.NON_NULL) {
             return jsonNodeFactory.nullNode()
         } else {
             throw ExecutionException("null result for non-nullable operation ${node.field}", node)
@@ -254,7 +255,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         value: T,
         container: Execution.Fragment
     ): Map<String, JsonNode?> {
-        val expectedType = container.condition.type
+        val expectedType = checkNotNull(schema.findTypeByName(container.condition.onType)) {
+            "Unable to find type ${container.condition.onType}"
+        }
         val include = shouldInclude(ctx, container)
 
         if (include) {
