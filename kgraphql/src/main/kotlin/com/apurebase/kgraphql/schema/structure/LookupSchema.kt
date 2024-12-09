@@ -11,15 +11,7 @@ interface LookupSchema : Schema {
 
     fun typeByKClass(kClass: KClass<*>): Type?
 
-    fun typeByKType(kType: KType): Type?
-
-    fun typeByName(name: String): Type?
-
     fun inputTypeByKClass(kClass: KClass<*>): Type?
-
-    fun inputTypeByKType(kType: KType): Type?
-
-    fun inputTypeByName(name: String): Type?
 
     fun typeReference(kType: KType): TypeReference {
         if (kType.jvmErasure.isIterable()) {

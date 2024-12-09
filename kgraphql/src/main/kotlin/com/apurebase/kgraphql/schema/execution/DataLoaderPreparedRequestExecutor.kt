@@ -79,7 +79,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     private fun Any?.toPrimitive(node: Execution.Node, returnType: Type): JsonElement = when {
         this == null -> createNullNode(node, returnType.unwrapList())
         this is Collection<*> || this is Array<*> -> when (this) {
-            is Array<*> -> this.toList()
+            is Array<*> -> toList()
             else -> this as Collection<*>
         }.map { it.toPrimitive(node, returnType.unwrapList()) }.let(::JsonArray)
 
@@ -193,7 +193,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         value: T,
         container: Execution.Fragment
     ) {
-        if (!shouldInclude(ctx, container)) return
+        if (!shouldInclude(ctx, container)) {
+            return
+        }
 
         val expectedType = container.condition.type
 
@@ -379,7 +381,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
 
                 "data" toDeferredObj {
                     plan.forEach { node ->
-                        if (shouldInclude(ctx, node)) writeOperation(ctx, node, node.field as Field.Function<*, *>)
+                        if (shouldInclude(ctx, node)) {
+                            writeOperation(ctx, node, node.field as Field.Function<*, *>)
+                        }
                     }
                 }
                 ctx.loaders.values.map { it.dispatch() }
