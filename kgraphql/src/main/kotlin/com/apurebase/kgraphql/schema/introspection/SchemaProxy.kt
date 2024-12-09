@@ -6,7 +6,6 @@ import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import com.apurebase.kgraphql.schema.structure.LookupSchema
 import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
 
 class SchemaProxy(
     override val configuration: SchemaConfiguration,
@@ -38,15 +37,7 @@ class SchemaProxy(
 
     override fun typeByKClass(kClass: KClass<*>): Type? = getProxied().typeByKClass(kClass)
 
-    override fun typeByKType(kType: KType): Type? = typeByKType(kType)
-
-    override fun typeByName(name: String): Type? = typeByName(name)
-
     override fun inputTypeByKClass(kClass: KClass<*>): Type? = inputTypeByKClass(kClass)
-
-    override fun inputTypeByKType(kType: KType): Type? = inputTypeByKType(kType)
-
-    override fun inputTypeByName(name: String): Type? = inputTypeByName(name)
 
     override suspend fun execute(
         request: String,

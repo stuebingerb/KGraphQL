@@ -117,7 +117,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             val expectedOneOf = unionProperty.type.possibleTypes!!.joinToString { it.name.toString() }
             throw ExecutionException(
                 "Unexpected type of union property value, expected one of: [$expectedOneOf]." +
-                        " value was $operationResult", node
+                    " value was $operationResult", node
             )
         }
 
@@ -224,7 +224,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         type: Type
     ): Pair<String, JsonNode?>? {
         when (child) {
-            //Union is subclass of Node so check it first
+            // Union is subclass of Node so check it first
             is Execution.Union -> {
                 val field = checkNotNull(type.unwrapped()[child.key]) {
                     "Execution unit ${child.key} is not contained by operation return type"
@@ -267,15 +267,17 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                         }
                     }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
                 }
-            } else if (expectedType.kind == TypeKind.UNION) return handleFragment(
-                ctx,
-                value,
-                container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
-            ) else {
+            } else if (expectedType.kind == TypeKind.UNION) {
+                return handleFragment(
+                    ctx,
+                    value,
+                    container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
+                )
+            } else {
                 error("fragments can be specified on object types, interfaces, and unions")
             }
         }
-        //not included, or type condition is not matched
+        // Not included, or type condition is not matched
         return emptyMap()
     }
 
