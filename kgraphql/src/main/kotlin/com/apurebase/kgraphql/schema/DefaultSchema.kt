@@ -21,8 +21,6 @@ import com.apurebase.kgraphql.schema.structure.SchemaModel
 import com.apurebase.kgraphql.schema.structure.Type
 import kotlinx.coroutines.coroutineScope
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.jvm.jvmErasure
 
 class DefaultSchema(
     override val configuration: SchemaConfiguration,
@@ -49,13 +47,13 @@ class DefaultSchema(
         options: ExecutionOptions,
         operationName: String?,
     ): String = coroutineScope {
-        val parsedVariables = variables
-            ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
-            ?: VariablesJson.Empty()
-
         if (!configuration.introspection && Introspection.isIntrospection(request)) {
             throw ValidationException("GraphQL introspection is not allowed")
         }
+
+        val parsedVariables = variables
+            ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
+            ?: VariablesJson.Empty()
 
         val document = Parser(request).parseDocument()
 
@@ -72,13 +70,5 @@ class DefaultSchema(
 
     override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
 
-    override fun typeByKType(kType: KType): Type? = typeByKClass(kType.jvmErasure)
-
     override fun inputTypeByKClass(kClass: KClass<*>): Type? = model.inputTypes[kClass]
-
-    override fun inputTypeByKType(kType: KType): Type? = typeByKClass(kType.jvmErasure)
-
-    override fun typeByName(name: String): Type? = model.queryTypesByName[name]
-
-    override fun inputTypeByName(name: String): Type? = model.inputTypesByName[name]
 }
