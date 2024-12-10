@@ -167,24 +167,27 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
 
         fun throwInvalidEnumValue(enumType: Type.Enum<*>) {
             throw InvalidInputValueException(
-                "Invalid enum ${schema.model.enums[kClass]?.name} value. Expected one of ${enumType.values.map { it.value }}",
+                "Invalid enum ${enumType.name} value. Expected one of ${enumType.values.map { it.value }}",
                 value
             )
         }
 
-        schema.model.enums[kClass]?.let { enumType ->
+        val type = schema.model.inputTypes[kClass]
+        type?.takeIf { it is Type.Enum<*> }?.let { enumType ->
             return if (value is ValueNode.EnumValueNode) {
-                enumType.values.find { it.name == value.value }?.value ?: throwInvalidEnumValue(enumType)
+                (enumType as Type.Enum<*>).values.find { it.name == value.value }?.value ?: throwInvalidEnumValue(
+                    enumType
+                )
             } else {
                 throw InvalidInputValueException(
                     "String literal '${value.valueNodeName}' is invalid value for enum type ${enumType.name}",
                     value
                 )
             }
-        } ?: schema.model.scalars[kClass]?.let { scalarType ->
-            return deserializeScalar(scalarType, value)
+        } ?: type?.takeIf { it is Type.Scalar<*> }?.let { scalarType ->
+            return deserializeScalar(scalarType as Type.Scalar<*>, value)
         } ?: throw InvalidInputValueException(
-            "Invalid argument value '${value.valueNodeName}' for type ${schema.model.inputTypes[kClass]?.name}",
+            "Invalid argument value '${value.valueNodeName}' for type ${type?.name}",
             value
         )
     }

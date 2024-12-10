@@ -26,10 +26,17 @@ interface __Type {
 
     // NON_NULL and LIST only
     val ofType: __Type?
+
+    operator fun get(name: String): __Field? = null
 }
 
 fun __Type.typeReference(): String = when (kind) {
     TypeKind.NON_NULL -> "${ofType?.typeReference()}!"
     TypeKind.LIST -> "[${ofType?.typeReference()}]"
     else -> name ?: ""
+}
+
+fun __Type.unwrapped(): __Type = when (kind) {
+    TypeKind.NON_NULL, TypeKind.LIST -> ofType!!.unwrapped()
+    else -> this
 }

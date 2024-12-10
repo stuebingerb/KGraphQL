@@ -9,6 +9,7 @@ import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
@@ -197,7 +198,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             return
         }
 
-        val expectedType = container.condition.type
+        val expectedType = checkNotNull(schema.findTypeByName(container.condition.onType)) {
+            "Unable to find type ${container.condition.onType}"
+        }
 
         if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
             if (expectedType.isInstance(value)) {
@@ -208,11 +211,13 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                     }
                 }
             }
-        } else if (expectedType.kind == TypeKind.UNION) return handleFragment(
-            ctx,
-            value,
-            container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
-        ) else {
+        } else if (expectedType.kind == TypeKind.UNION) {
+            // Union types do not define any fields, so children can only be fragments, cf.
+            // https://spec.graphql.org/October2021/#sec-Unions
+            container.elements.filterIsInstance<Execution.Fragment>().map {
+                handleFragment(ctx, value, it)
+            }
+        } else {
             error("fragments can be specified on object types, interfaces, and unions")
         }
     }
@@ -271,7 +276,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             val expectedOneOf = unionProperty.type.possibleTypes!!.joinToString { it.name.toString() }
             throw ExecutionException(
                 "Unexpected type of union property value, expected one of: [$expectedOneOf]." +
-                        " value was $operationResult", node
+                    " value was $operationResult", node
             )
         }
 
@@ -392,11 +397,12 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             result.await().toString()
         }
 
-    private fun createNullNode(node: Execution.Node, returnType: Type): JsonNull = if (returnType !is Type.NonNull) {
-        JsonNull
-    } else {
-        throw ExecutionException("null result for non-nullable operation ${node.field}", node)
-    }
+    private fun createNullNode(node: Execution.Node, returnType: __Type): JsonNull =
+        if (returnType.kind != TypeKind.NON_NULL) {
+            JsonNull
+        } else {
+            throw ExecutionException("null result for non-nullable operation ${node.field}", node)
+        }
 
     private suspend fun shouldInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {
         if (executionNode.directives?.isEmpty() == true) {

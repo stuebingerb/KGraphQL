@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
@@ -190,8 +191,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
         }
 
-    private fun createNullNode(node: Execution.Node, returnType: Type): NullNode {
-        if (returnType !is Type.NonNull) {
+    private fun createNullNode(node: Execution.Node, returnType: __Type): NullNode {
+        if (returnType.kind != TypeKind.NON_NULL) {
             return jsonNodeFactory.nullNode()
         } else {
             throw ExecutionException("null result for non-nullable operation ${node.field}", node)
@@ -254,7 +255,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         value: T,
         container: Execution.Fragment
     ): Map<String, JsonNode?> {
-        val expectedType = container.condition.type
+        val expectedType = checkNotNull(schema.findTypeByName(container.condition.onType)) {
+            "Unable to find type ${container.condition.onType}"
+        }
         val include = shouldInclude(ctx, container)
 
         if (include) {
@@ -268,11 +271,11 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
                 }
             } else if (expectedType.kind == TypeKind.UNION) {
-                return handleFragment(
-                    ctx,
-                    value,
-                    container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
-                )
+                // Union types do not define any fields, so children can only be fragments, cf.
+                // https://spec.graphql.org/October2021/#sec-Unions
+                return container.elements.filterIsInstance<Execution.Fragment>().flatMap {
+                    handleFragment(ctx, value, it).toList()
+                }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
             } else {
                 error("fragments can be specified on object types, interfaces, and unions")
             }
