@@ -104,7 +104,11 @@ interface FunctionWrapper<T> : Publisher {
      */
     fun valueParameters(): List<kotlin.reflect.KParameter> {
         return kFunction.valueParameters.let {
-            if (hasReceiver) it.drop(1) else it
+            if (hasReceiver) {
+                it.drop(1)
+            } else {
+                it
+            }
         }
     }
 

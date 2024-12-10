@@ -13,7 +13,6 @@ data class SchemaModel(
     val subscription: Type?,
     val enums: Map<KClass<out Enum<*>>, Type.Enum<out Enum<*>>>,
     val scalars: Map<KClass<*>, Type.Scalar<*>>,
-    val unions: List<Type.Union>,
     val allTypes: List<Type>,
     val queryTypes: Map<KClass<*>, Type>,
     val inputTypes: Map<KClass<*>, Type>,
@@ -23,8 +22,6 @@ data class SchemaModel(
     val allTypesByName = allTypes.associateBy { it.name }
 
     val queryTypesByName = queryTypes.values.associateBy { it.name }
-
-    val inputTypesByName = inputTypes.values.associateBy { it.name }
 
     override val types: List<__Type> = toTypeList()
 

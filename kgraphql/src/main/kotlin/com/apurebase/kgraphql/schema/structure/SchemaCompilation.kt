@@ -88,7 +88,6 @@ class SchemaCompilation(
             },
             enums = enums,
             scalars = scalars,
-            unions = unions,
             queryTypes = queryTypeProxies + enums + scalars,
             inputTypes = inputTypeProxies + enums + scalars,
             allTypes = queryTypeProxies.values
@@ -158,6 +157,8 @@ class SchemaCompilation(
     }
 
     private suspend fun handleSubscriptions(): Type {
+        // https://spec.graphql.org/October2021/#sec-Type-Name-Introspection
+        //      "__typename may not be included as a root field in a subscription operation."
         return Type.OperationObject(
             "Subscription",
             "Subscription object",
