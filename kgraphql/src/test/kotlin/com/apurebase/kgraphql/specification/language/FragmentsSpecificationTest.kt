@@ -194,13 +194,14 @@ class FragmentsSpecificationTest {
 
     sealed class TopUnion(val field: String) {
         class Union1(val names: List<String>) : TopUnion("union1")
-        class Union2(val numbers: List<Int>) : TopUnion("union2")
+        class Union2(val numbers: List<Int>, val booleans: List<Boolean>) : TopUnion("union2")
     }
 
     // https://github.com/aPureBase/KGraphQL/issues/141
+    // https://github.com/stuebingerb/KGraphQL/issues/130
     @Test
     fun `fragments on union types should work`() {
-        KGraphQL.schema {
+        val schema = KGraphQL.schema {
             unionType<TopUnion>()
 
             query("unions") {
@@ -208,11 +209,13 @@ class FragmentsSpecificationTest {
                     if (isOne) {
                         TopUnion.Union1(listOf("name1", "name2"))
                     } else {
-                        TopUnion.Union2(listOf(1, 2))
+                        TopUnion.Union2(listOf(1, 2), listOf(true, false))
                     }
                 }
             }
-        }.executeBlocking(
+        }
+
+        val nameResult = schema.executeBlocking(
             """
             {
                 unions(isOne: true) {
@@ -222,11 +225,28 @@ class FragmentsSpecificationTest {
             fragment abc on TopUnion {
                 ... on Union1 { names }
                 ... on Union2 { numbers }
+                ... on Union2 { booleans }
             }
             """.trimIndent()
-        )
-            .deserialize()
-            .extract<List<String>>("data/unions/names") shouldBeEqualTo listOf("name1", "name2")
+        ).deserialize()
+        nameResult.extract<List<String>>("data/unions/names") shouldBeEqualTo listOf("name1", "name2")
+
+        val numberResult = schema.executeBlocking(
+            """
+            {
+                unions(isOne: false) {
+                    ...abc
+                }
+            }
+            fragment abc on TopUnion {
+                ... on Union1 { names }
+                ... on Union2 { numbers }
+                ... on Union2 { booleans }
+            }
+            """.trimIndent()
+        ).deserialize()
+        numberResult.extract<List<Int>>("data/unions/numbers") shouldBeEqualTo listOf(1, 2)
+        numberResult.extract<List<Boolean>>("data/unions/booleans") shouldBeEqualTo listOf(true, false)
     }
 
     data class Outer(val inner1: Inner, val inner2: Inner)

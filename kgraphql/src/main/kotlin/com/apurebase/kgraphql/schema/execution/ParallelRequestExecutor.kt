@@ -268,11 +268,11 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
                 }
             } else if (expectedType.kind == TypeKind.UNION) {
-                return handleFragment(
-                    ctx,
-                    value,
-                    container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
-                )
+                // Union types do not define any fields, so children can only be fragments, cf.
+                // https://spec.graphql.org/October2021/#sec-Unions
+                return container.elements.filterIsInstance<Execution.Fragment>().flatMap {
+                    handleFragment(ctx, value, it).toList()
+                }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
             } else {
                 error("fragments can be specified on object types, interfaces, and unions")
             }

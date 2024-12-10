@@ -208,11 +208,13 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                     }
                 }
             }
-        } else if (expectedType.kind == TypeKind.UNION) return handleFragment(
-            ctx,
-            value,
-            container.elements.first { expectedType.name == expectedType.name } as Execution.Fragment
-        ) else {
+        } else if (expectedType.kind == TypeKind.UNION) {
+            // Union types do not define any fields, so children can only be fragments, cf.
+            // https://spec.graphql.org/October2021/#sec-Unions
+            container.elements.filterIsInstance<Execution.Fragment>().map {
+                handleFragment(ctx, value, it)
+            }
+        } else {
             error("fragments can be specified on object types, interfaces, and unions")
         }
     }
