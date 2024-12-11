@@ -86,8 +86,6 @@ class SchemaCompilation(
             } else {
                 subscriptionType
             },
-            enums = enums,
-            scalars = scalars,
             queryTypes = queryTypeProxies + enums + scalars,
             inputTypes = inputTypeProxies + enums + scalars,
             allTypes = queryTypeProxies.values
