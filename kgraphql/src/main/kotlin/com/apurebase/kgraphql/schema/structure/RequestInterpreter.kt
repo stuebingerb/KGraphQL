@@ -216,7 +216,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         //  do not define any fields, so *no* fields may be queried on this type without the use of type refining
         //  fragments or inline fragments (with the exception of the meta-field `__typename`)."
         val unionMembersChildren: Map<Type, List<Execution>> =
-            field.returnType.possibleTypes.associateWith { possibleType ->
+            (field.returnType.unwrapped() as Type.Union).possibleTypes.associateWith { possibleType ->
                 val mergedSelectionsForType = selectionNode.selectionSet?.selections?.flatMap {
                     when {
                         // Only __typename is allowed as field selection

@@ -90,8 +90,7 @@ sealed class Field : __Field {
 
     class Union<T>(
         kql: PropertyDef.Union<T>,
-        val nullable: Boolean,
-        override val returnType: Type.Union,
+        override val returnType: Type,
         override val arguments: List<InputValue<*>>
     ) : Field(), FunctionWrapper<Any?> by kql {
 

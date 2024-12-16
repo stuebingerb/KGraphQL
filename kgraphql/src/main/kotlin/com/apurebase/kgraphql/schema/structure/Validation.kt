@@ -68,7 +68,7 @@ fun validateUnionRequest(field: Field.Union<*>, selectionNode: FieldNode) {
                 illegalChildren.joinToString(prefix = "[", postfix = "]") {
                     it.aliasOrName.value
                 }
-            } on union type property ${field.name} : ${field.returnType.possibleTypes.map { it.name }}",
+            } on union type property ${field.name} : ${(field.returnType.unwrapped() as Type.Union).possibleTypes.map { it.name }}",
             nodes = illegalChildren
         )
     }
