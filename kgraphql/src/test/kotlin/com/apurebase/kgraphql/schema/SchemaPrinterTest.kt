@@ -112,6 +112,12 @@ class SchemaPrinterTest {
                         }
                     }
                 }
+                unionProperty("nullablePdf") {
+                    returnType = linked
+                    nullable = true
+                    description = "link to pdf representation of scenario"
+                    resolver { scenario: Scenario -> null }
+                }
             }
         }
 
@@ -133,10 +139,49 @@ class SchemaPrinterTest {
             type Scenario {
               author: String!
               content: String!
-              pdf: Linked
+              nullablePdf: Linked
+              pdf: Linked!
             }
             
             union Linked = Author | Scenario
+            
+        """.trimIndent()
+    }
+
+    sealed class Child
+    data class Child1(val one: String): Child()
+    data class Child2(val two: String?): Child()
+
+    @Test
+    fun `schema with union types out of sealed classes should be printed as expected`() {
+        val schema = KGraphQL.schema {
+            query("child") {
+                resolver<Child> { -> Child1("one") }
+            }
+            query("childs") {
+                resolver<List<Child>> { -> listOf(Child2("one")) }
+            }
+            query("nullchilds") {
+                resolver<List<Child?>?> { -> null }
+            }
+        }
+
+        SchemaPrinter().print(schema) shouldBeEqualTo """
+            type Child1 {
+              one: String!
+            }
+            
+            type Child2 {
+              two: String
+            }
+            
+            type Query {
+              child: Child!
+              childs: [Child!]!
+              nullchilds: [Child]
+            }
+            
+            union Child = Child1 | Child2
             
         """.trimIndent()
     }

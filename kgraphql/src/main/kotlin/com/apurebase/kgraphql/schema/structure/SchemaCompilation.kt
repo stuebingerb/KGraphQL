@@ -184,8 +184,8 @@ class SchemaCompilation(
 
     private suspend fun handleUnionProperty(unionProperty: PropertyDef.Union<*>): Field {
         val inputValues = handleInputValues(unionProperty.name, unionProperty, unionProperty.inputValues)
-        val type = handleUnionType(unionProperty.union)
-        return Field.Union(unionProperty, unionProperty.nullable, type, inputValues)
+        val type = applyNullability(unionProperty.nullable, handleUnionType(unionProperty.union))
+        return Field.Union(unionProperty, type, inputValues)
     }
 
     private suspend fun handlePossiblyWrappedType(kType: KType, typeCategory: TypeCategory): Type = try {
@@ -201,7 +201,7 @@ class SchemaCompilation(
                 name = kType.jvmErasure.simpleName!!,
                 members = kType.jvmErasure.sealedSubclasses.toSet(),
                 description = null
-            ).let { handleUnionType(it) }
+            ).let { applyNullability(kType.isMarkedNullable, handleUnionType(it)) }
 
             else -> handleSimpleType(kType, typeCategory)
         }
@@ -216,16 +216,16 @@ class SchemaCompilation(
     private suspend fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {
         val type = kType.getIterableElementType()
         val nullableListType = Type.AList(handlePossiblyWrappedType(type, typeCategory))
-        return applyNullability(kType, nullableListType)
+        return applyNullability(kType.isMarkedNullable, nullableListType)
     }
 
     private suspend fun handleSimpleType(kType: KType, typeCategory: TypeCategory): Type {
         val simpleType = handleRawType(kType.jvmErasure, typeCategory)
-        return applyNullability(kType, simpleType)
+        return applyNullability(kType.isMarkedNullable, simpleType)
     }
 
-    private fun applyNullability(kType: KType, simpleType: Type): Type {
-        return if (!kType.isMarkedNullable) {
+    private fun applyNullability(isNullable: Boolean, simpleType: Type): Type {
+        return if (!isNullable) {
             Type.NonNull(simpleType)
         } else {
             simpleType

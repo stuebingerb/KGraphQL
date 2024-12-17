@@ -244,7 +244,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 }""".trimIndent()
             )
         } shouldThrow ExecutionException::class with {
-            message shouldBeEqualTo "Unexpected type of union property value, expected one of: [Actor, Scenario, Director]. value was null"
+            message shouldBeEqualTo "Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was null"
         }
     }
 

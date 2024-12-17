@@ -267,13 +267,14 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             ctx = ctx
         )
 
-        val returnType = unionProperty.returnType.possibleTypes.find { it.isInstance(operationResult) }
+        val possibleTypes = (unionProperty.returnType.unwrapped() as Type.Union).possibleTypes
+        val returnType = possibleTypes.find { it.isInstance(operationResult) }
 
-        if (returnType == null && !unionProperty.nullable) {
-            val expectedOneOf = unionProperty.type.possibleTypes!!.joinToString { it.name.toString() }
+        if (returnType == null && unionProperty.returnType.isNotNullable()) {
+            val expectedOneOf = possibleTypes.joinToString { it.name.toString() }
             throw ExecutionException(
-                "Unexpected type of union property value, expected one of: [$expectedOneOf]." +
-                        " value was $operationResult", node
+                "Unexpected type of union property value, expected one of [$expectedOneOf] but was $operationResult",
+                node
             )
         }
 
