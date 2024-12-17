@@ -167,7 +167,7 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
 
         fun throwInvalidEnumValue(enumType: Type.Enum<*>) {
             throw InvalidInputValueException(
-                "Invalid enum ${schema.model.enums[kClass]?.name} value. Expected one of ${enumType.values.map { it.value }}",
+                "Invalid enum ${enumType.name} value. Expected one of ${enumType.values.map { it.value }}",
                 value
             )
         }

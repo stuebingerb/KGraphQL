@@ -15,10 +15,6 @@ import kotlin.reflect.full.createType
 
 interface Type : __Type {
 
-    fun hasField(name: String): Boolean {
-        return fields?.any { it.name == name } ?: false
-    }
-
     operator fun get(name: String): Field? = null
 
     fun unwrapped(): Type = when (kind) {
@@ -68,8 +64,6 @@ interface Type : __Type {
         private val fieldsByName = allFields.associateBy { it.name }
 
         override val fields: List<__Field>? = allFields.filterNot { it.name.startsWith("__") }
-
-        override fun hasField(name: String): Boolean = fieldsByName[name] != null
 
         override fun get(name: String): Field? = fieldsByName[name]
     }

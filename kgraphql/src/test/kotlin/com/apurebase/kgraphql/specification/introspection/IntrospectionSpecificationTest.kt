@@ -81,6 +81,26 @@ class IntrospectionSpecificationTest {
         } shouldThrow GraphQLError::class withMessage "Property __typename on String does not exist"
     }
 
+    enum class SampleEnum {
+        VALUE
+    }
+    data class EnumData(val enum: SampleEnum)
+
+    @Test
+    fun `__typename field cannot be used on enums`() {
+        val schema = defaultSchema {
+            enum<SampleEnum>()
+
+            query("sample") {
+                resolver { -> EnumData(SampleEnum.VALUE) }
+            }
+        }
+
+        invoking {
+            schema.executeBlocking("{sample{enum{__typename}}}")
+        } shouldThrow GraphQLError::class withMessage "Property __typename on SampleEnum does not exist"
+    }
+
     data class Union1(val one: String)
 
     data class Union2(val two: String)
@@ -416,7 +436,7 @@ class IntrospectionSpecificationTest {
 
     @Test
     fun `all available SpecLevels of the introspection query should return without errors`() {
-        Introspection.SpecLevel.entries.forEach {
+        Introspection.SpecLevel.entries.forEach { _ ->
             val schema = defaultSchema {
                 query("sample") {
                     resolver { -> "Ronaldinho" }

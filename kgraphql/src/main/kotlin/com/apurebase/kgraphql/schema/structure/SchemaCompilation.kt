@@ -10,6 +10,7 @@ import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.request.isIntrospectionType
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.introspection.NotIntrospected
@@ -40,7 +41,6 @@ class SchemaCompilation(
     val configuration: SchemaConfiguration,
     val definition: SchemaDefinition
 ) {
-
     private val queryTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
 
     private val inputTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
@@ -51,7 +51,7 @@ class SchemaCompilation(
 
     private val scalars = definition.scalars.associate { scalar -> scalar.kClass to scalar.toScalarType() }
 
-    private val schemaProxy = SchemaProxy(configuration)
+    private val schemaProxy = SchemaProxy()
 
     private val contextType = Type._Context()
 
@@ -136,9 +136,7 @@ class SchemaCompilation(
     }
 
     private suspend fun handleQueries(): Type {
-        val __typenameField = handleOperation(
-            PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on { -> "Query" })
-        )
+        val __typenameField = typenameField(FunctionWrapper.on { -> "Query" })
         return Type.OperationObject(
             name = "Query",
             description = "Query object",
@@ -147,9 +145,7 @@ class SchemaCompilation(
     }
 
     private suspend fun handleMutations(): Type {
-        val __typenameField = handleOperation(
-            PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on { -> "Mutation" })
-        )
+        val __typenameField = typenameField(FunctionWrapper.on { -> "Mutation" })
         return Type.OperationObject(
             "Mutation",
             "Mutation object",
@@ -165,9 +161,8 @@ class SchemaCompilation(
             definition.subscriptions.map { handleOperation(it) })
     }
 
-    @Suppress("USELESS_CAST") // We are casting as __Schema so we don't get proxied types. https://github.com/aPureBase/KGraphQL/issues/45
     private suspend fun introspectionSchemaQuery() = handleOperation(
-        QueryDef("__schema", FunctionWrapper.on<__Schema> { schemaProxy as __Schema })
+        QueryDef("__schema", FunctionWrapper.on<__Schema> { schemaProxy })
     )
 
     private suspend fun introspectionTypeQuery() = handleOperation(
@@ -206,6 +201,7 @@ class SchemaCompilation(
             else -> handleSimpleType(kType, typeCategory)
         }
     } catch (e: Throwable) {
+        // The `KotlinReflectionInternalError` happens during `kType.jvmErasure` and cannot be caught directly
         if ("KotlinReflectionInternalError" in e.toString()) {
             throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()")
         } else {
@@ -320,13 +316,11 @@ class SchemaCompilation(
             .flatMap(TypeDef.Object<*>::unionProperties)
             .map { property -> handleUnionProperty(property) }
 
-        val typenameResolver: suspend (Any) -> String? = { value: Any ->
-            schemaProxy.typeByKClass(value.javaClass.kotlin)?.name ?: typeProxy.name
+        val typenameResolver: suspend (Any) -> String = { value: Any ->
+            queryTypeProxies[value.javaClass.kotlin]?.name ?: error("No query type proxy found for $value")
         }
 
-        val __typenameField = handleOperation(
-            PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on(typenameResolver, true))
-        )
+        val __typenameField = typenameField(FunctionWrapper.on(typenameResolver, true))
 
         val declaredFields = kotlinFields + extensionFields + unionFields + dataloadExtensionFields
 
@@ -409,11 +403,9 @@ class SchemaCompilation(
             throw SchemaException("Invalid union type members")
         }
 
-        val __typenameField = handleOperation(
-            PropertyDef.Function<Nothing, String?>("__typename", FunctionWrapper.on({ value: Any ->
-                schemaProxy.typeByKClass(value.javaClass.kotlin)?.name
-            }, true))
-        )
+        val __typenameField = typenameField(FunctionWrapper.on({ value: Any ->
+            queryTypeProxies[value.javaClass.kotlin]?.name ?: error("No query type proxy found for $value")
+        }, true))
 
         val unionType = Type.Union(union, __typenameField, possibleTypes)
         unions.add(unionType)
@@ -461,4 +453,10 @@ class SchemaCompilation(
             transformation = transformation as Transformation<T, R>?
         )
     }
+
+    private fun typenameField(functionWrapper: FunctionWrapper<String>) = Field.Function(
+        PropertyDef.Function<Nothing, String>("__typename", functionWrapper),
+        BuiltInScalars.STRING.typeDef.toScalarType(),
+        emptyList()
+    )
 }

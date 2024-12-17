@@ -1,17 +1,11 @@
 package com.apurebase.kgraphql.schema.introspection
 
-import com.apurebase.kgraphql.Context
-import com.apurebase.kgraphql.configuration.SchemaConfiguration
-import com.apurebase.kgraphql.schema.execution.ExecutionOptions
-import com.apurebase.kgraphql.schema.structure.LookupSchema
-import com.apurebase.kgraphql.schema.structure.Type
-import kotlin.reflect.KClass
-
+/**
+ * Wrapper for [proxiedSchema] to resolve introspection types
+ */
 class SchemaProxy(
-    override val configuration: SchemaConfiguration,
-    var proxiedSchema: LookupSchema? = null
-) : LookupSchema {
-
+    var proxiedSchema: __Schema? = null
+) : __Schema {
     companion object {
         const val ILLEGAL_STATE_MESSAGE = "Missing proxied __Schema instance"
     }
@@ -34,20 +28,4 @@ class SchemaProxy(
         get() = getProxied().directives
 
     override fun findTypeByName(name: String): __Type? = getProxied().findTypeByName(name)
-
-    override fun typeByKClass(kClass: KClass<*>): Type? = getProxied().typeByKClass(kClass)
-
-    override fun inputTypeByKClass(kClass: KClass<*>): Type? = inputTypeByKClass(kClass)
-
-    override suspend fun execute(
-        request: String,
-        variables: String?,
-        context: Context,
-        options: ExecutionOptions,
-        operationName: String?
-    ): String {
-        return getProxied().execute(request, variables, context, options, operationName)
-    }
-
-    override fun printSchema(): String = getProxied().printSchema()
 }
