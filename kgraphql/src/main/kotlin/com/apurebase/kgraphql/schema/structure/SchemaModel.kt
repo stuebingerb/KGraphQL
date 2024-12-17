@@ -11,8 +11,6 @@ data class SchemaModel(
     val query: Type,
     val mutation: Type?,
     val subscription: Type?,
-    val enums: Map<KClass<out Enum<*>>, Type.Enum<out Enum<*>>>,
-    val scalars: Map<KClass<*>, Type.Scalar<*>>,
     val allTypes: List<Type>,
     val queryTypes: Map<KClass<*>, Type>,
     val inputTypes: Map<KClass<*>, Type>,

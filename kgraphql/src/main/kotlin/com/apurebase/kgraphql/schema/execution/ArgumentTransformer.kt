@@ -3,8 +3,8 @@ package com.apurebase.kgraphql.schema.execution
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.request.Variables
-import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.typeReference
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
@@ -12,11 +12,10 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode.ObjectValueNode
 import com.apurebase.kgraphql.schema.scalar.deserializeScalar
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
-import kotlin.reflect.KType
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
-open class ArgumentTransformer(val schema: DefaultSchema) {
+open class ArgumentTransformer(val schema: __Schema) {
 
     fun transformArguments(
         funName: String,
@@ -120,7 +119,12 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
                             value
                         )
 
-                    params.getValue(valueField.name.value) to transformValue(paramType, valueField.value, variables, coerceSingleValueAsList)
+                    params.getValue(valueField.name.value) to transformValue(
+                        paramType,
+                        valueField.value,
+                        variables,
+                        coerceSingleValueAsList
+                    )
                 }
 
                 val missingNonOptionalInputs = params.values.filter { !it.isOptional && !valueMap.containsKey(it) }
@@ -157,13 +161,11 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
                 }
             }
 
-            else -> transformString(value, kType)
+            else -> transformString(value, type.unwrapped())
         }
     }
 
-    private fun transformString(value: ValueNode, kType: KType): Any {
-
-        val kClass = kType.jvmErasure
+    private fun transformString(value: ValueNode, type: Type): Any {
 
         fun throwInvalidEnumValue(enumType: Type.Enum<*>) {
             throw InvalidInputValueException(
@@ -172,19 +174,19 @@ open class ArgumentTransformer(val schema: DefaultSchema) {
             )
         }
 
-        schema.model.enums[kClass]?.let { enumType ->
+        (type as? Type.Enum<*>)?.let { enumType ->
             return if (value is ValueNode.EnumValueNode) {
-                enumType.values.find { it.name == value.value }?.value ?: throwInvalidEnumValue(enumType)
+                enumType.values.firstOrNull { it.name == value.value }?.value ?: throwInvalidEnumValue(enumType)
             } else {
                 throw InvalidInputValueException(
                     "String literal '${value.valueNodeName}' is invalid value for enum type ${enumType.name}",
                     value
                 )
             }
-        } ?: schema.model.scalars[kClass]?.let { scalarType ->
+        } ?: (type as? Type.Scalar<*>)?.let { scalarType ->
             return deserializeScalar(scalarType, value)
         } ?: throw InvalidInputValueException(
-            "Invalid argument value '${value.valueNodeName}' for type ${schema.model.inputTypes[kClass]?.name}",
+            "Invalid argument value '${value.valueNodeName}' for type ${type.name}",
             value
         )
     }
