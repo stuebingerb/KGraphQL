@@ -26,10 +26,28 @@ interface __Type {
 
     // NON_NULL and LIST only
     val ofType: __Type?
-}
 
-fun __Type.typeReference(): String = when (kind) {
-    TypeKind.NON_NULL -> "${ofType?.typeReference()}!"
-    TypeKind.LIST -> "[${ofType?.typeReference()}]"
-    else -> name ?: ""
+    operator fun get(name: String): __Field? = null
+
+    fun isList(): Boolean = when {
+        kind == TypeKind.LIST -> true
+        ofType == null -> false
+        else -> (ofType as __Type).isList()
+    }
+
+    fun typeReference(): String = when (kind) {
+        TypeKind.NON_NULL -> "${ofType?.typeReference()}!"
+        TypeKind.LIST -> "[${ofType?.typeReference()}]"
+        else -> name ?: ""
+    }
+
+    fun unwrapped(): __Type = when (kind) {
+        TypeKind.NON_NULL, TypeKind.LIST -> ofType!!.unwrapped()
+        else -> this
+    }
+
+    fun unwrapList(): __Type = when (kind) {
+        TypeKind.LIST -> ofType as __Type
+        else -> ofType?.unwrapList() ?: throw NoSuchElementException("this type does not wrap list element")
+    }
 }

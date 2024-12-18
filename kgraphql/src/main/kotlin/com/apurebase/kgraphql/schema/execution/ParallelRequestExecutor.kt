@@ -7,6 +7,8 @@ import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Field
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
@@ -129,7 +131,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         ctx: ExecutionContext,
         value: T?,
         node: Execution.Node,
-        returnType: Type
+        returnType: __Type
     ): JsonNode {
         if (value == null) {
             return createNullNode(node, returnType)
@@ -140,7 +142,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         }
 
         return when {
-            //check value, not returnType, because this method can be invoked with element value
+            // Check value, not returnType, because this method can be invoked with element value
             value is Collection<*> || value is Array<*> -> {
                 val values: Collection<*> = when (value) {
                     is Array<*> -> value.toList()
@@ -178,7 +180,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         }
     }
 
-    private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonNode =
+    private fun <T> createSimpleValueNode(returnType: __Type, value: T, node: Execution.Node): JsonNode =
         when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
                 serializeScalar(jsonNodeFactory, unwrapped, value, node)
@@ -188,11 +190,11 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 jsonNodeFactory.textNode(value.toString())
             }
 
-            else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
+            else -> throw ExecutionException("Invalid Type: ${unwrapped.name}", node)
         }
 
-    private fun createNullNode(node: Execution.Node, returnType: Type): NullNode {
-        if (returnType !is Type.NonNull) {
+    private fun createNullNode(node: Execution.Node, returnType: __Type): NullNode {
+        if (returnType.kind != TypeKind.NON_NULL) {
             return jsonNodeFactory.nullNode()
         } else {
             throw ExecutionException("null result for non-nullable operation ${node.field}", node)
@@ -203,7 +205,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         ctx: ExecutionContext,
         value: T,
         node: Execution.Node,
-        type: Type
+        type: __Type
     ): ObjectNode {
         val objectNode = jsonNodeFactory.objectNode()
         for (child in node.children) {
@@ -222,7 +224,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         ctx: ExecutionContext,
         value: T,
         child: Execution,
-        type: Type
+        type: __Type
     ): Pair<String, JsonNode?>? {
         when (child) {
             // Union is subclass of Node so check it first
@@ -255,7 +257,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         value: T,
         container: Execution.Fragment
     ): Map<String, JsonNode?> {
-        val expectedType = container.condition.type
+        val expectedType = checkNotNull(schema.findTypeByName(container.condition.onType)) {
+            "Unable to find type ${container.condition.onType}"
+        }
         val include = shouldInclude(ctx, container)
 
         if (include) {
@@ -286,7 +290,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         ctx: ExecutionContext,
         parentValue: T,
         node: Execution.Node,
-        field: Field
+        field: __Field
     ): JsonNode? {
         val include = shouldInclude(ctx, node)
         node.field.checkAccess(parentValue, ctx.requestContext)
@@ -322,9 +326,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     return handleDataProperty(ctx, parentValue, node, field)
                 }
 
-                else -> {
-                    throw Exception("Unexpected field type: $field, should be Field.Kotlin or Field.Function")
-                }
+                else -> error("Unexpected field type: $field, should be Field.Kotlin, Field.Function or Field.DataLoader")
             }
         } else {
             return null
@@ -406,6 +408,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             executionNode,
             ctx.requestContext
         )
+
         // exceptions are not caught on purpose to pass up business logic errors
         return try {
             when {

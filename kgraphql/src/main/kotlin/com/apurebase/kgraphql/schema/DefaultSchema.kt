@@ -71,4 +71,6 @@ class DefaultSchema(
     override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
 
     override fun inputTypeByKClass(kClass: KClass<*>): Type? = model.inputTypes[kClass]
+
+    override fun findTypeByName(name: String): Type? = model.allTypesByName[name]
 }

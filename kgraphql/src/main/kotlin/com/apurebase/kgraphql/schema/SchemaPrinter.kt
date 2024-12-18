@@ -9,7 +9,6 @@ import com.apurebase.kgraphql.schema.introspection.__Directive
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.__Type
-import com.apurebase.kgraphql.schema.introspection.typeReference
 import com.apurebase.kgraphql.schema.model.Depreciable
 
 data class SchemaPrinterConfig(

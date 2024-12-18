@@ -15,9 +15,9 @@ import kotlin.reflect.full.createType
 
 interface Type : __Type {
 
-    operator fun get(name: String): Field? = null
+    override operator fun get(name: String): Field? = null
 
-    fun unwrapped(): Type = when (kind) {
+    override fun unwrapped(): Type = when (kind) {
         TypeKind.NON_NULL, TypeKind.LIST -> (ofType as Type).unwrapped()
         else -> this
     }
@@ -26,15 +26,9 @@ interface Type : __Type {
 
     fun isNotNullable() = kind == TypeKind.NON_NULL
 
-    fun unwrapList(): Type = when (kind) {
+    override fun unwrapList(): Type = when (kind) {
         TypeKind.LIST -> ofType as Type
         else -> (ofType as Type?)?.unwrapList() ?: throw NoSuchElementException("this type does not wrap list element")
-    }
-
-    fun isList(): Boolean = when {
-        kind == TypeKind.LIST -> true
-        ofType == null -> false
-        else -> (ofType as Type).isList()
     }
 
     fun isNotList(): Boolean = !isList()

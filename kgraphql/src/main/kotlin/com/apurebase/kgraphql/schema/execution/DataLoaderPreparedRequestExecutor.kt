@@ -9,6 +9,8 @@ import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Field
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
@@ -76,7 +78,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         applyKeyToElement(ctx, result, node, node.field.returnType, 1)
     }
 
-    private fun Any?.toPrimitive(node: Execution.Node, returnType: Type): JsonElement = when {
+    private fun Any?.toPrimitive(node: Execution.Node, returnType: __Type): JsonElement = when {
         this == null -> createNullNode(node, returnType.unwrapList())
         this is Collection<*> || this is Array<*> -> when (this) {
             is Array<*> -> toList()
@@ -97,7 +99,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         ctx: ExecutionContext,
         value: T?,
         node: Execution.Node,
-        returnType: Type,
+        returnType: __Type,
         parentCount: Long
     ) {
         return when {
@@ -162,14 +164,14 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         }
     }
 
-    private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonElement {
+    private fun <T> createSimpleValueNode(returnType: __Type, value: T, node: Execution.Node): JsonElement {
         return when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
                 serializeScalar(unwrapped, value, node)
             }
 
             is Type.Enum<*> -> JsonPrimitive(value.toString())
-            else -> throw ExecutionException("Invalid Type:  ${returnType.name}", node)
+            else -> throw ExecutionException("Invalid Type: ${unwrapped.name}", node)
         }
     }
 
@@ -177,7 +179,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         ctx: ExecutionContext,
         value: T,
         node: Execution.Node,
-        type: Type,
+        type: __Type,
         parentCount: Long
     ) {
         node.children.map { child ->
@@ -197,7 +199,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             return
         }
 
-        val expectedType = container.condition.type
+        val expectedType = checkNotNull(schema.findTypeByName(container.condition.onType)) {
+            "Unable to find type ${container.condition.onType}"
+        }
 
         if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
             if (expectedType.isInstance(value)) {
@@ -223,7 +227,8 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     private suspend fun <T> DeferredJsonMap.applyProperty(
         ctx: ExecutionContext,
         value: T,
-        child: Execution, type: Type,
+        child: Execution,
+        type: __Type,
         parentCount: Long
     ) {
         when (child) {
@@ -286,7 +291,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         ctx: ExecutionContext,
         parentValue: T,
         node: Execution.Node,
-        field: Field,
+        field: __Field,
         parentCount: Long
     ) {
         node.field.checkAccess(parentValue, ctx.requestContext)
@@ -296,11 +301,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
 
         when (field) {
             is Field.Kotlin<*, *> -> {
-                val rawValue = try {
-                    (field.kProperty as KProperty1<T, *>).get(parentValue)
-                } catch (e: NullPointerException) {
-                    throw e
-                }
+                val rawValue = (field.kProperty as KProperty1<T, *>).get(parentValue)
                 val value: Any? = field.transformation?.invoke(
                     funName = field.name,
                     receiver = rawValue,
@@ -322,7 +323,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                 handleDataPropertyAsync(ctx, parentValue, node, field, parentCount)
             }
 
-            else -> error("Only Kotlin Fields are supported!")
+            else -> error("Unexpected field type: $field, should be Field.Kotlin, Field.Function or Field.DataLoader")
         }
     }
 
@@ -395,11 +396,12 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             result.await().toString()
         }
 
-    private fun createNullNode(node: Execution.Node, returnType: Type): JsonNull = if (returnType !is Type.NonNull) {
-        JsonNull
-    } else {
-        throw ExecutionException("null result for non-nullable operation ${node.field}", node)
-    }
+    private fun createNullNode(node: Execution.Node, returnType: __Type): JsonNull =
+        if (returnType.kind != TypeKind.NON_NULL) {
+            JsonNull
+        } else {
+            throw ExecutionException("null result for non-nullable operation ${node.field}", node)
+        }
 
     private suspend fun shouldInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {
         if (executionNode.directives?.isEmpty() == true) {

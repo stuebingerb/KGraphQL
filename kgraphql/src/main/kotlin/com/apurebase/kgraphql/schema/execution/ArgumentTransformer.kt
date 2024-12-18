@@ -5,7 +5,6 @@ import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Schema
-import com.apurebase.kgraphql.schema.introspection.typeReference
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.ObjectValueNode
