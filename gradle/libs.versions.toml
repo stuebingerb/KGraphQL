@@ -3,7 +3,7 @@ kotlin = "2.1.0"
 kotlinx-coroutines = "1.10.0"
 kotlinx-serialization = "1.7.3"
 jackson = "2.18.2"
-ktor = "3.0.2"
+ktor = "3.0.3"
 junit-jupiter = "5.11.4"
 
 [plugins]
