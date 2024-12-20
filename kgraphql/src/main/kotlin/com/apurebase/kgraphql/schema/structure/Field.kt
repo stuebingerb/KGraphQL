@@ -20,7 +20,7 @@ sealed class Field : __Field {
     override val args: List<__InputValue>
         get() = arguments.filterNot { it.type.kClass?.findAnnotation<NotIntrospected>() != null }
 
-    abstract val returnType: Type
+    abstract val returnType: __Type
 
     override val type: __Type
         get() = returnType
@@ -28,7 +28,7 @@ sealed class Field : __Field {
     abstract fun checkAccess(parent: Any?, ctx: Context)
 
     open class Function<T, R>(
-        kql: BaseOperationDef<T, R>,
+        private val kql: BaseOperationDef<T, R>,
         override val returnType: Type,
         override val arguments: List<InputValue<*>>
     ) : Field(), FunctionWrapper<R> by kql {
@@ -41,10 +41,8 @@ sealed class Field : __Field {
 
         override val deprecationReason: String? = kql.deprecationReason
 
-        val accessRule: ((T?, Context) -> Exception?)? = kql.accessRule
-
         override fun checkAccess(parent: Any?, ctx: Context) {
-            accessRule?.invoke(parent as T?, ctx)?.let { throw it }
+            kql.accessRule?.invoke(parent as T?, ctx)?.let { throw it }
         }
     }
 
@@ -65,7 +63,7 @@ sealed class Field : __Field {
     }
 
     class Kotlin<T : Any, R>(
-        kql: PropertyDef.Kotlin<T, R>,
+        private val kql: PropertyDef.Kotlin<T, R>,
         override val returnType: Type,
         override val arguments: List<InputValue<*>>,
         val transformation: Transformation<T, R>?
@@ -81,15 +79,13 @@ sealed class Field : __Field {
 
         override val deprecationReason: String? = kql.deprecationReason
 
-        val accessRule: ((T?, Context) -> Exception?)? = kql.accessRule
-
         override fun checkAccess(parent: Any?, ctx: Context) {
-            accessRule?.invoke(parent as T?, ctx)?.let { throw it }
+            kql.accessRule?.invoke(parent as T?, ctx)?.let { throw it }
         }
     }
 
     class Union<T>(
-        kql: PropertyDef.Union<T>,
+        private val kql: PropertyDef.Union<T>,
         override val returnType: Type,
         override val arguments: List<InputValue<*>>
     ) : Field(), FunctionWrapper<Any?> by kql {
@@ -102,10 +98,8 @@ sealed class Field : __Field {
 
         override val deprecationReason: String? = kql.deprecationReason
 
-        val accessRule: ((T?, Context) -> Exception?)? = kql.accessRule
-
         override fun checkAccess(parent: Any?, ctx: Context) {
-            accessRule?.invoke(parent as T?, ctx)?.let { throw it }
+            kql.accessRule?.invoke(parent as T?, ctx)?.let { throw it }
         }
     }
 }

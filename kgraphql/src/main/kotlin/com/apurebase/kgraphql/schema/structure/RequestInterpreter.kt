@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import com.apurebase.kgraphql.schema.execution.ExecutionPlan
 import com.apurebase.kgraphql.schema.execution.TypeCondition
+import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
@@ -31,7 +32,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     private val directivesByName = schemaModel.directives.associateBy { it.name }
 
     inner class InterpreterContext(
-        val fragments: Map<String, Pair<Type, SelectionSetNode>>
+        val fragments: Map<String, Pair<__Type, SelectionSetNode>>
     ) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
@@ -41,7 +42,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             }
 
             val (conditionType, selectionSet) = fragments[node.name.value] ?: return null
-            val condition = TypeCondition(conditionType)
+            val condition = TypeCondition(conditionType.name!!)
 
             fragmentsStack.push(node.name.value)
             val elements = selectionSet.selections.map { conditionType.handleSelectionFieldOrFragment(it, this) }
@@ -59,34 +60,14 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     ): ExecutionPlan {
         val executables = document.definitions.filterIsInstance<ExecutableDefinitionNode>()
 
-        val operation = executables.filterIsInstance<OperationDefinitionNode>().let { operations ->
-            when (operations.size) {
-                0 -> throw ValidationException("Must provide any operation")
-                1 -> operations.first()
-                else -> {
-                    val operationNamesFound = operations.mapNotNull { it.name?.value }.also {
-                        if (it.size != operations.size) {
-                            throw ValidationException("anonymous operation must be the only defined operation")
-                        }
-                    }.joinToString(prefix = "[", postfix = "]")
-
-                    val operationName = requestedOperationName ?: (
-                        variables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
-                            ?: throw ValidationException("Must provide an operation name from: $operationNamesFound")
-                        )
-
-                    operations.firstOrNull { it.name?.value == operationName }
-                        ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found $operationName")
-                }
-            }
-        }
+        val operation = document.getOperation(variables, requestedOperationName)
 
         val root = when (operation.operation) {
-            OperationTypeNode.QUERY -> schemaModel.query
-            OperationTypeNode.MUTATION -> schemaModel.mutation
+            OperationTypeNode.QUERY -> schemaModel.queryType
+            OperationTypeNode.MUTATION -> schemaModel.mutationType
                 ?: throw ValidationException("Mutations are not supported on this schema")
 
-            OperationTypeNode.SUBSCRIPTION -> schemaModel.subscription
+            OperationTypeNode.SUBSCRIPTION -> schemaModel.subscriptionType
                 ?: throw ValidationException("Subscriptions are not supported on this schema")
         }
 
@@ -114,38 +95,34 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         }
     }
 
-    private fun handleReturnType(ctx: InterpreterContext, type: Type, requestNode: FieldNode) =
+    private fun handleReturnType(ctx: InterpreterContext, type: __Type, requestNode: FieldNode) =
         handleReturnType(ctx, type, requestNode.selectionSet, requestNode.name)
 
     private fun handleReturnType(
         ctx: InterpreterContext,
-        type: Type,
+        type: __Type,
         selectionSet: SelectionSetNode?,
         propertyName: NameNode? = null
-    ): List<Execution> {
-        val children = mutableListOf<Execution>()
-
-        if (!selectionSet?.selections.isNullOrEmpty()) {
-            selectionSet!!.selections.mapTo(children) {
-                handleReturnTypeChildOrFragment(it, type, ctx)
-            }
-        } else if (type.unwrapped().fields?.isNotEmpty() == true) {
-            throw ValidationException(
-                "Missing selection set on property ${propertyName?.value} of type ${type.unwrapped().name}",
-                selectionSet
-            )
+    ): List<Execution> = if (!selectionSet?.selections.isNullOrEmpty()) {
+        selectionSet!!.selections.map {
+            handleReturnTypeChildOrFragment(it, type, ctx)
         }
-
-        return children
+    } else if (type.unwrapped().fields?.isNotEmpty() == true) {
+        throw ValidationException(
+            "Missing selection set on property ${propertyName?.value} of type ${type.unwrapped().name}",
+            selectionSet
+        )
+    } else {
+        emptyList()
     }
 
-    private fun handleReturnTypeChildOrFragment(node: SelectionNode, returnType: Type, ctx: InterpreterContext) =
+    private fun handleReturnTypeChildOrFragment(node: SelectionNode, returnType: __Type, ctx: InterpreterContext) =
         returnType.unwrapped().handleSelectionFieldOrFragment(node, ctx)
 
     private fun findFragmentType(
         fragment: FragmentNode,
         ctx: InterpreterContext,
-        enclosingType: Type
+        enclosingType: __Type
     ): Execution.Fragment = when (fragment) {
         is FragmentSpreadNode -> {
             ctx.get(fragment) ?: throw unknownFragmentTypeException(fragment)
@@ -161,20 +138,20 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             }
             Execution.Fragment(
                 selectionNode = fragment,
-                condition = TypeCondition(type),
+                condition = TypeCondition(type.name!!),
                 directives = fragment.directives?.lookup(),
                 elements = fragment.selectionSet.selections.map { type.handleSelectionFieldOrFragment(it, ctx) }
             )
         }
     }
 
-    private fun Type.handleSelectionFieldOrFragment(node: SelectionNode, ctx: InterpreterContext): Execution =
+    private fun __Type.handleSelectionFieldOrFragment(node: SelectionNode, ctx: InterpreterContext): Execution =
         when (node) {
             is FragmentNode -> findFragmentType(node, ctx, this)
             is FieldNode -> handleSelection(node, ctx)
         }
 
-    private fun Type.handleSelection(
+    private fun __Type.handleSelection(
         node: FieldNode,
         ctx: InterpreterContext,
         variables: List<VariableDefinitionNode>? = null
@@ -186,7 +163,8 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             )
 
             is Field.Union<*> -> handleUnion(field, node, ctx)
-            else -> {
+
+            is Field -> {
                 validatePropertyArguments(this, field, node)
 
                 return Execution.Node(
@@ -199,6 +177,10 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                     directives = node.directives?.lookup(),
                     variables = variables
                 )
+            }
+
+            else -> {
+                error("unhandled field $field")
             }
         }
     }
@@ -215,7 +197,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         //  other fields on an interface, typed fragments must be used. This is the same as for unions, but unions
         //  do not define any fields, so *no* fields may be queried on this type without the use of type refining
         //  fragments or inline fragments (with the exception of the meta-field `__typename`)."
-        val unionMembersChildren: Map<Type, List<Execution>> =
+        val unionMembersChildren: Map<__Type, List<Execution>> =
             (field.returnType.unwrapped() as Type.Union).possibleTypes.associateWith { possibleType ->
                 val mergedSelectionsForType = selectionNode.selectionSet?.selections?.flatMap {
                     when {
@@ -249,7 +231,6 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             condition = null,
             directives = selectionNode.directives?.lookup()
         )
-
     }
 
     private fun unknownFragmentTypeException(fragment: FragmentNode) = when (fragment) {
@@ -264,10 +245,35 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         )
     }
 
-    fun List<DirectiveNode>.lookup() = associate { findDirective(it) to it.arguments?.toArguments() }
+    private fun List<DirectiveNode>.lookup() = associate { findDirective(it) to it.arguments?.toArguments() }
 
     private fun findDirective(invocation: DirectiveNode): Directive {
         return directivesByName[invocation.name.value.removePrefix("@")]
             ?: throw ValidationException("Directive ${invocation.name.value} does not exist", invocation)
+    }
+
+    private fun DocumentNode.getOperation(
+        variables: VariablesJson,
+        requestedOperationName: String?
+    ): OperationDefinitionNode = definitions.filterIsInstance<OperationDefinitionNode>().let { operations ->
+        when (operations.size) {
+            0 -> throw ValidationException("Must provide any operation")
+            1 -> operations.first()
+            else -> {
+                val operationNamesFound = operations.mapNotNull { it.name?.value }.also {
+                    if (it.size != operations.size) {
+                        throw ValidationException("anonymous operation must be the only defined operation")
+                    }
+                }.joinToString(prefix = "[", postfix = "]")
+
+                val operationName = requestedOperationName ?: (
+                    variables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
+                        ?: throw ValidationException("Must provide an operation name from: $operationNamesFound")
+                    )
+
+                operations.firstOrNull { it.name?.value == operationName }
+                    ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found $operationName")
+            }
+        }
     }
 }

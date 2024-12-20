@@ -45,7 +45,5 @@ data class SchemaModel(
     override val mutationType: __Type? = mutation
 
     override val subscriptionType: __Type? = subscription
-
-    override fun findTypeByName(name: String): __Type? = allTypesByName[name]
 }
 

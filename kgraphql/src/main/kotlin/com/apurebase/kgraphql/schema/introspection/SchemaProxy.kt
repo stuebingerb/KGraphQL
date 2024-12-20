@@ -26,6 +26,4 @@ class SchemaProxy(
 
     override val directives: List<__Directive>
         get() = getProxied().directives
-
-    override fun findTypeByName(name: String): __Type? = getProxied().findTypeByName(name)
 }
