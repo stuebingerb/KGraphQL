@@ -3,14 +3,12 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.introspection.__Field
-import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FieldNode
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
-fun validatePropertyArguments(parentType: __Type, field: __Field, requestNode: FieldNode) {
+fun validatePropertyArguments(parentType: Type, field: Field, requestNode: FieldNode) {
     val argumentValidationExceptions = field.validateArguments(requestNode.arguments, parentType.name)
 
     if (argumentValidationExceptions.isNotEmpty()) {
@@ -20,7 +18,7 @@ fun validatePropertyArguments(parentType: __Type, field: __Field, requestNode: F
     }
 }
 
-fun __Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: String?): List<ValidationException> {
+fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: String?): List<ValidationException> {
     if (!(args.isNotEmpty() || selectionArgs?.isNotEmpty() != true)) {
         return listOf(
             ValidationException(

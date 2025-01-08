@@ -20,7 +20,7 @@ sealed class Field : __Field {
     override val args: List<__InputValue>
         get() = arguments.filterNot { it.type.kClass?.findAnnotation<NotIntrospected>() != null }
 
-    abstract val returnType: __Type
+    abstract val returnType: Type
 
     override val type: __Type
         get() = returnType

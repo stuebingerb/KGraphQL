@@ -7,8 +7,6 @@ import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.introspection.__Field
-import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
@@ -131,7 +129,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         ctx: ExecutionContext,
         value: T?,
         node: Execution.Node,
-        returnType: __Type
+        returnType: Type
     ): JsonNode {
         if (value == null) {
             return createNullNode(node, returnType)
@@ -180,7 +178,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         }
     }
 
-    private fun <T> createSimpleValueNode(returnType: __Type, value: T, node: Execution.Node): JsonNode =
+    private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonNode =
         when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
                 serializeScalar(jsonNodeFactory, unwrapped, value, node)
@@ -193,7 +191,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             else -> throw ExecutionException("Invalid Type: ${unwrapped.name}", node)
         }
 
-    private fun createNullNode(node: Execution.Node, returnType: __Type): NullNode {
+    private fun createNullNode(node: Execution.Node, returnType: Type): NullNode {
         if (returnType.kind != TypeKind.NON_NULL) {
             return jsonNodeFactory.nullNode()
         } else {
@@ -205,7 +203,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         ctx: ExecutionContext,
         value: T,
         node: Execution.Node,
-        type: __Type
+        type: Type
     ): ObjectNode {
         val objectNode = jsonNodeFactory.objectNode()
         for (child in node.children) {
@@ -224,7 +222,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         ctx: ExecutionContext,
         value: T,
         child: Execution,
-        type: __Type
+        type: Type
     ): Pair<String, JsonNode?>? {
         when (child) {
             // Union is subclass of Node so check it first
@@ -290,7 +288,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         ctx: ExecutionContext,
         parentValue: T,
         node: Execution.Node,
-        field: __Field
+        field: Field
     ): JsonNode? {
         val include = shouldInclude(ctx, node)
         node.field.checkAccess(parentValue, ctx.requestContext)

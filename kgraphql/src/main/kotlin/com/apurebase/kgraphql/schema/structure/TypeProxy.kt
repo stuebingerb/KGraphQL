@@ -23,13 +23,13 @@ open class TypeProxy(var proxied: Type) : Type {
     override val description: String?
         get() = proxied.description
 
-    override val fields: List<__Field>?
+    override val fields: List<Field>?
         get() = proxied.fields
 
-    override val interfaces: List<__Type>?
+    override val interfaces: List<Type>?
         get() = proxied.interfaces
 
-    override val possibleTypes: List<__Type>?
+    override val possibleTypes: List<Type>?
         get() = proxied.possibleTypes
 
     override val enumValues: List<__EnumValue>?
@@ -38,7 +38,7 @@ open class TypeProxy(var proxied: Type) : Type {
     override val inputFields: List<__InputValue>?
         get() = proxied.inputFields
 
-    override val ofType: __Type?
+    override val ofType: Type?
         get() = proxied.ofType
 
     override fun get(name: String) = proxied[name]
