@@ -2,8 +2,6 @@ plugins {
     id("library-conventions")
 }
 
-val isReleaseVersion = !version.toString().endsWith("SNAPSHOT")
-
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))

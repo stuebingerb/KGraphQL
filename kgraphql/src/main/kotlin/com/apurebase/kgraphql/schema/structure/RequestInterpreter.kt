@@ -228,7 +228,6 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             memberChildren = unionMembersChildren,
             key = selectionNode.name.value,
             alias = selectionNode.alias?.value,
-            condition = null,
             directives = selectionNode.directives?.lookup()
         )
     }

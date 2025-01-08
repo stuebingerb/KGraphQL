@@ -75,6 +75,15 @@ class MutationTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `invalid arguments number with NotIntrospected class`() {
+        invoking {
+            execute("mutation {createActorWithContext(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
+        } shouldThrow ValidationException::class with {
+            message shouldBeEqualTo "createActorWithContext does support arguments [name, age]. Found arguments [name, age, bananan]"
+        }
+    }
+
+    @Test
     fun `mutation with alias`() {
         val map = execute("mutation {caine : createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         assertNoErrors(map)

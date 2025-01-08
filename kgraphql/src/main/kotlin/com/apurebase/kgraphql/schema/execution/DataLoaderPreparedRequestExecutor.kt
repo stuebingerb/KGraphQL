@@ -92,7 +92,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         this is Boolean -> JsonPrimitive(this)
         this is Long -> JsonPrimitive(this)
         returnType.unwrapped() is Type.Enum<*> -> JsonPrimitive(toString())
-        else -> error("Whaa? -> $this")
+        else -> error("Unexpected primitive class: $this")
     }
 
     private suspend fun <T> DeferredJsonMap.applyKeyToElement(
@@ -136,7 +136,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
                         }
                     }
                 } else {
-                    throw ExecutionException("Invalid collection value for non collection property", node)
+                    throw ExecutionException("Invalid collection value for non-collection property", node)
                 }
             }
 
@@ -400,7 +400,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         if (returnType.kind != TypeKind.NON_NULL) {
             JsonNull
         } else {
-            throw ExecutionException("null result for non-nullable operation ${node.field}", node)
+            throw ExecutionException("null result for non-nullable operation ${node.field.name}", node)
         }
 
     private suspend fun shouldInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {

@@ -32,7 +32,7 @@ sealed class ValueNode(override val loc: Location?) : ASTNode() {
 
     val valueNodeName: String
         get() = when (this) {
-            is VariableNode -> name.value
+            is VariableNode -> "\$${name.value}"
             is NumberValueNode -> "$value"
             is DoubleValueNode -> "$value"
             is StringValueNode -> "\"$value\""
@@ -40,7 +40,7 @@ sealed class ValueNode(override val loc: Location?) : ASTNode() {
             is NullValueNode -> "null"
             is EnumValueNode -> value
             is ListValueNode -> values.joinToString(prefix = "[", postfix = "]") { it.valueNodeName }
-            is ObjectValueNode -> fields.joinToString { "${it.name.value}: ${it.value.valueNodeName}" }
+            is ObjectValueNode -> fields.joinToString(prefix = "{", postfix = "}") { "${it.name.value}: ${it.value.valueNodeName}" }
             is ObjectValueNode.ObjectFieldNode -> value.valueNodeName
         }
 }

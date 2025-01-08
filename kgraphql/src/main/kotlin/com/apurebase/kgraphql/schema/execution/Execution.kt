@@ -20,7 +20,6 @@ sealed class Execution {
         val key: String,
         val alias: String? = null,
         val arguments: ArgumentNodes? = null,
-        val typeCondition: TypeCondition? = null,
         override val directives: Map<Directive, ArgumentNodes?>? = null,
         val variables: List<VariableDefinitionNode>? = null
     ) : Execution() {
@@ -39,16 +38,14 @@ sealed class Execution {
         val unionField: Field.Union<*>,
         val memberChildren: Map<__Type, Collection<Execution>>,
         key: String,
-        alias: String? = null,
-        condition: TypeCondition? = null,
-        directives: Map<Directive, ArgumentNodes?>? = null
+        alias: String?,
+        directives: Map<Directive, ArgumentNodes?>?
     ) : Node(
         selectionNode = node,
         field = unionField,
         children = emptyList(),
         key = key,
         alias = alias,
-        typeCondition = condition,
         directives = directives
     ) {
         fun memberExecution(type: __Type): Node {
@@ -61,7 +58,6 @@ sealed class Execution {
                 key = key,
                 alias = alias,
                 arguments = arguments,
-                typeCondition = typeCondition,
                 directives = directives,
                 variables = null
             )

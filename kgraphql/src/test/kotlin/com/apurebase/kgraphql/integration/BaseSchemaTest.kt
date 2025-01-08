@@ -108,6 +108,14 @@ abstract class BaseSchemaTest {
                 actor
             }
         }
+        mutation("createActorWithContext") {
+            description = "create new actor with context"
+            resolver { name: String, age: Int, ctx: Context ->
+                val actor = Actor(name, age)
+                createdActors.add(actor)
+                actor
+            }
+        }
         mutation("createActorWithInput") {
             description = "create new actor"
             resolver { input: ActorInput ->
