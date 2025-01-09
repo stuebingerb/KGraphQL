@@ -230,21 +230,25 @@ class SchemaPrinterTest {
     @Test
     fun `schema with input types should be printed as expected`() {
         val schema = KGraphQL.schema {
+            inputType<TestObject> {
+                name = "TestObjectInput"
+            }
             mutation("add") {
-                resolver { inputObject: InputObject -> inputObject.id }
+                resolver { input: TestObject -> input }
             }
         }
 
         SchemaPrinter().print(schema) shouldBeEqualTo """
             type Mutation {
-              add(inputObject: InputObject!): Int!
+              add(input: TestObjectInput!): TestObject!
             }
             
-            input InputObject {
-              id: Int!
-              intInput: Int!
-              optional: String
-              stringInput: String!
+            type TestObject {
+              name: String!
+            }
+            
+            input TestObjectInput {
+              name: String!
             }
             
         """.trimIndent()

@@ -3,8 +3,6 @@ plugins {
     alias(libs.plugins.serialization)
 }
 
-val isReleaseVersion = !version.toString().endsWith("SNAPSHOT")
-
 dependencies {
     api(project(":kgraphql"))
     implementation(kotlin("stdlib-jdk8"))

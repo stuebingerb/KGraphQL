@@ -156,7 +156,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                         array.add(valuesMap[v])
                     }
                 } else {
-                    throw ExecutionException("Invalid collection value for non collection property", node)
+                    throw ExecutionException("Invalid collection value for non-collection property", node)
                 }
             }
 
@@ -197,7 +197,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         if (returnType.kind != TypeKind.NON_NULL) {
             return jsonNodeFactory.nullNode()
         } else {
-            throw ExecutionException("null result for non-nullable operation ${node.field}", node)
+            throw ExecutionException("null result for non-nullable operation ${node.field.name}", node)
         }
     }
 
