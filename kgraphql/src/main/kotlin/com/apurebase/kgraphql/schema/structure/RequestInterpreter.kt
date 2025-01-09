@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import com.apurebase.kgraphql.schema.execution.ExecutionPlan
 import com.apurebase.kgraphql.schema.execution.TypeCondition
-import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
@@ -32,7 +31,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     private val directivesByName = schemaModel.directives.associateBy { it.name }
 
     inner class InterpreterContext(
-        val fragments: Map<String, Pair<__Type, SelectionSetNode>>
+        val fragments: Map<String, Pair<Type, SelectionSetNode>>
     ) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
@@ -95,12 +94,12 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         }
     }
 
-    private fun handleReturnType(ctx: InterpreterContext, type: __Type, requestNode: FieldNode) =
+    private fun handleReturnType(ctx: InterpreterContext, type: Type, requestNode: FieldNode) =
         handleReturnType(ctx, type, requestNode.selectionSet, requestNode.name)
 
     private fun handleReturnType(
         ctx: InterpreterContext,
-        type: __Type,
+        type: Type,
         selectionSet: SelectionSetNode?,
         propertyName: NameNode? = null
     ): List<Execution> = if (!selectionSet?.selections.isNullOrEmpty()) {
@@ -116,13 +115,13 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         emptyList()
     }
 
-    private fun handleReturnTypeChildOrFragment(node: SelectionNode, returnType: __Type, ctx: InterpreterContext) =
+    private fun handleReturnTypeChildOrFragment(node: SelectionNode, returnType: Type, ctx: InterpreterContext) =
         returnType.unwrapped().handleSelectionFieldOrFragment(node, ctx)
 
     private fun findFragmentType(
         fragment: FragmentNode,
         ctx: InterpreterContext,
-        enclosingType: __Type
+        enclosingType: Type
     ): Execution.Fragment = when (fragment) {
         is FragmentSpreadNode -> {
             ctx.get(fragment) ?: throw unknownFragmentTypeException(fragment)
@@ -145,13 +144,13 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         }
     }
 
-    private fun __Type.handleSelectionFieldOrFragment(node: SelectionNode, ctx: InterpreterContext): Execution =
+    private fun Type.handleSelectionFieldOrFragment(node: SelectionNode, ctx: InterpreterContext): Execution =
         when (node) {
             is FragmentNode -> findFragmentType(node, ctx, this)
             is FieldNode -> handleSelection(node, ctx)
         }
 
-    private fun __Type.handleSelection(
+    private fun Type.handleSelection(
         node: FieldNode,
         ctx: InterpreterContext,
         variables: List<VariableDefinitionNode>? = null
@@ -164,7 +163,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
             is Field.Union<*> -> handleUnion(field, node, ctx)
 
-            is Field -> {
+            else -> {
                 validatePropertyArguments(this, field, node)
 
                 return Execution.Node(
@@ -179,9 +178,6 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                 )
             }
 
-            else -> {
-                error("unhandled field $field")
-            }
         }
     }
 
@@ -197,7 +193,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         //  other fields on an interface, typed fragments must be used. This is the same as for unions, but unions
         //  do not define any fields, so *no* fields may be queried on this type without the use of type refining
         //  fragments or inline fragments (with the exception of the meta-field `__typename`)."
-        val unionMembersChildren: Map<__Type, List<Execution>> =
+        val unionMembersChildren: Map<Type, List<Execution>> =
             (field.returnType.unwrapped() as Type.Union).possibleTypes.associateWith { possibleType ->
                 val mergedSelectionsForType = selectionNode.selectionSet?.selections?.flatMap {
                     when {

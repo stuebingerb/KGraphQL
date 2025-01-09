@@ -9,8 +9,6 @@ import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.introspection.__Field
-import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.scalar.serializeScalar
@@ -78,7 +76,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         applyKeyToElement(ctx, result, node, node.field.returnType, 1)
     }
 
-    private fun Any?.toPrimitive(node: Execution.Node, returnType: __Type): JsonElement = when {
+    private fun Any?.toPrimitive(node: Execution.Node, returnType: Type): JsonElement = when {
         this == null -> createNullNode(node, returnType.unwrapList())
         this is Collection<*> || this is Array<*> -> when (this) {
             is Array<*> -> toList()
@@ -99,7 +97,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         ctx: ExecutionContext,
         value: T?,
         node: Execution.Node,
-        returnType: __Type,
+        returnType: Type,
         parentCount: Long
     ) {
         return when {
@@ -164,7 +162,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         }
     }
 
-    private fun <T> createSimpleValueNode(returnType: __Type, value: T, node: Execution.Node): JsonElement {
+    private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonElement {
         return when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
                 serializeScalar(unwrapped, value, node)
@@ -179,7 +177,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         ctx: ExecutionContext,
         value: T,
         node: Execution.Node,
-        type: __Type,
+        type: Type,
         parentCount: Long
     ) {
         node.children.map { child ->
@@ -228,7 +226,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         ctx: ExecutionContext,
         value: T,
         child: Execution,
-        type: __Type,
+        type: Type,
         parentCount: Long
     ) {
         when (child) {
@@ -291,7 +289,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         ctx: ExecutionContext,
         parentValue: T,
         node: Execution.Node,
-        field: __Field,
+        field: Field,
         parentCount: Long
     ) {
         node.field.checkAccess(parentValue, ctx.requestContext)
@@ -396,7 +394,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             result.await().toString()
         }
 
-    private fun createNullNode(node: Execution.Node, returnType: __Type): JsonNull =
+    private fun createNullNode(node: Execution.Node, returnType: Type): JsonNull =
         if (returnType.kind != TypeKind.NON_NULL) {
             JsonNull
         } else {

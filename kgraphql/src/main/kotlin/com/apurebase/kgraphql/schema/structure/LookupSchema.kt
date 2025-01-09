@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.request.TypeReference
 import com.apurebase.kgraphql.schema.Schema
-import com.apurebase.kgraphql.schema.introspection.__Type
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
@@ -36,5 +35,5 @@ interface LookupSchema : Schema {
         }
     }
 
-    fun findTypeByName(name: String): __Type?
+    fun findTypeByName(name: String): Type?
 }

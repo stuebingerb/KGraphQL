@@ -4,7 +4,6 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__EnumValue
-import com.apurebase.kgraphql.schema.introspection.__Field
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.TypeDef
@@ -15,9 +14,17 @@ import kotlin.reflect.full.createType
 
 interface Type : __Type {
 
-    override operator fun get(name: String): Field? = null
+    override val ofType: Type?
 
-    override fun unwrapped(): Type = when (kind) {
+    override val fields: List<Field>?
+
+    override val interfaces: List<Type>?
+
+    override val possibleTypes: List<Type>?
+
+    operator fun get(name: String): Field? = null
+
+    fun unwrapped(): Type = when (kind) {
         TypeKind.NON_NULL, TypeKind.LIST -> (ofType as Type).unwrapped()
         else -> this
     }
@@ -26,9 +33,15 @@ interface Type : __Type {
 
     fun isNotNullable() = kind == TypeKind.NON_NULL
 
-    override fun unwrapList(): Type = when (kind) {
+    fun unwrapList(): Type = when (kind) {
         TypeKind.LIST -> ofType as Type
-        else -> (ofType as Type?)?.unwrapList() ?: throw NoSuchElementException("this type does not wrap list element")
+        else -> ofType?.unwrapList() ?: throw NoSuchElementException("this type does not wrap list element")
+    }
+
+    fun isList(): Boolean = when {
+        kind == TypeKind.LIST -> true
+        ofType == null -> false
+        else -> (ofType as Type).isList()
     }
 
     fun isNotList(): Boolean = !isList()
@@ -57,7 +70,7 @@ interface Type : __Type {
     abstract class ComplexType(val allFields: List<Field>) : Type {
         private val fieldsByName = allFields.associateBy { it.name }
 
-        override val fields: List<__Field>? = allFields.filterNot { it.name.startsWith("__") }
+        override val fields: List<Field>? = allFields.filterNot { it.name.startsWith("__") }
 
         override fun get(name: String): Field? = fieldsByName[name]
     }
@@ -76,9 +89,9 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
 
         override val interfaces: List<Interface<*>> = emptyList()
 
@@ -103,9 +116,9 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
 
         fun withInterfaces(interfaces: List<Type>) = Object(definition, allFields, interfaces)
     }
@@ -129,7 +142,7 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
         fun withPossibleTypes(possibleTypes: List<Type>) = Interface(definition, allFields, possibleTypes)
 
@@ -152,13 +165,13 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
-        override val interfaces: List<__Type>? = null
+        override val interfaces: List<Type>? = null
 
-        override val fields: List<__Field>? = null
+        override val fields: List<Field>? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
 
         val coercion = kqlType.coercion
     }
@@ -181,13 +194,13 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
-        override val interfaces: List<__Type>? = null
+        override val interfaces: List<Type>? = null
 
-        override val fields: List<__Field>? = null
+        override val fields: List<Field>? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
     }
 
     class Input<T : Any>(
@@ -205,13 +218,13 @@ interface Type : __Type {
 
         override val enumValues: List<__EnumValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
-        override val interfaces: List<__Type>? = null
+        override val interfaces: List<Type>? = null
 
-        override val fields: List<__Field>? = null
+        override val fields: List<Field>? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
     }
 
     class Union(
@@ -231,11 +244,11 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
-        override val interfaces: List<__Type>? = null
+        override val interfaces: List<Type>? = null
 
-        override val fields: List<__Field>? = null
+        override val fields: List<Field>? = null
 
         override fun isInstance(value: Any?): Boolean = false
     }
@@ -253,13 +266,13 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
-        override val interfaces: List<__Type>? = null
+        override val interfaces: List<Type>? = null
 
-        override val fields: List<__Field>? = null
+        override val fields: List<Field>? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
     }
 
     class _ExecutionNode : Type {
@@ -275,13 +288,13 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
-        override val ofType: __Type? = null
+        override val ofType: Type? = null
 
-        override val interfaces: List<__Type>? = null
+        override val interfaces: List<Type>? = null
 
-        override val fields: List<__Field>? = null
+        override val fields: List<Field>? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
     }
 
     class NonNull(override val ofType: Type) : Type {
@@ -294,11 +307,11 @@ interface Type : __Type {
 
         override val description: String = "NonNull wrapper type"
 
-        override val fields: List<__Field>? = null
+        override val fields: List<Field>? = null
 
-        override val interfaces: List<__Type>? = null
+        override val interfaces: List<Type>? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
 
         override val enumValues: List<__EnumValue>? = null
 
@@ -311,7 +324,7 @@ interface Type : __Type {
 
         override val kClass: KClass<*>? = null
 
-        override val ofType: __Type = elementType
+        override val ofType: Type = elementType
 
         override val kind: TypeKind = TypeKind.LIST
 
@@ -319,11 +332,11 @@ interface Type : __Type {
 
         override val description: String = "List wrapper type"
 
-        override val fields: List<__Field>? = null
+        override val fields: List<Field>? = null
 
-        override val interfaces: List<__Type>? = null
+        override val interfaces: List<Type>? = null
 
-        override val possibleTypes: List<__Type>? = null
+        override val possibleTypes: List<Type>? = null
 
         override val enumValues: List<__EnumValue>? = null
 
