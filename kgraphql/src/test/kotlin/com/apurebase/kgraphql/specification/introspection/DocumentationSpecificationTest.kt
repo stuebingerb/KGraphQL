@@ -27,6 +27,9 @@ class DocumentationSpecificationTest {
     fun `mutations may be documented`() {
         val expected = "sample mutation"
         val schema = defaultSchema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("sample") {
                 description = expected
                 resolver<String> { "SAMPLE" }

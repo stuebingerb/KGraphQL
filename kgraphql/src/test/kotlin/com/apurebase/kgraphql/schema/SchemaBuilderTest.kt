@@ -276,6 +276,9 @@ class SchemaBuilderTest {
     @Test
     fun `Schema should map input types`() {
         val schema = defaultSchema {
+            query("createInput") {
+                resolver { input: InputTwo -> input.one }
+            }
             inputType<InputTwo>()
         }
 
@@ -723,6 +726,9 @@ class SchemaBuilderTest {
     @Test
     fun `Schema can have same type and input type with different names`() {
         val schema = defaultSchema {
+            query("createType") {
+                resolver { input: InputOne -> input }
+            }
             inputType<InputOne> {
                 name = "TypeAsInput"
             }
@@ -822,6 +828,9 @@ class SchemaBuilderTest {
     @Test
     fun `specifying return type explicitly allows generic property creation`() {
         val schema = defaultSchema {
+            query("scenario") {
+                resolver { -> "dummy" }
+            }
             type<Scenario> {
                 createGenericProperty(InputOne("generic"))
             }
@@ -841,12 +850,14 @@ class SchemaBuilderTest {
 
     @Test
     fun `creation of properties from a list`() {
-
         val props = listOf(
             Prop(typeOf<Int>()) { 0 },
             Prop(typeOf<String>()) { "test" })
 
         val schema = defaultSchema {
+            query("scenario") {
+                resolver { -> "dummy" }
+            }
             type<Scenario> {
                 props.forEach { prop ->
                     createGenericPropertyExplicitly(prop.resultType, prop.resolver())
@@ -872,5 +883,28 @@ class SchemaBuilderTest {
         } shouldThrow SchemaException::class with {
             message shouldBeEqualTo "Java class 'LatLng' as inputType is not supported"
         }
+    }
+
+    // https://github.com/stuebingerb/KGraphQL/issues/156
+    @Test
+    fun `empty schema should be invalid`() {
+        invoking {
+            KGraphQL.schema {}
+        } shouldThrow SchemaException::class withMessage "Schema must define at least one query"
+    }
+
+    // https://github.com/stuebingerb/KGraphQL/issues/156
+    @Test
+    fun `schema without query should be invalid`() {
+        invoking {
+            KGraphQL.schema {
+                mutation("dummy") {
+                    resolver { -> "dummy" }
+                }
+                subscription("dummy") {
+                    resolver { -> "dummy" }
+                }
+            }
+        } shouldThrow SchemaException::class withMessage "Schema must define at least one query"
     }
 }

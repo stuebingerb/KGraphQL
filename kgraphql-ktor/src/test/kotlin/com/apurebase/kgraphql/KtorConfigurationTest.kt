@@ -9,11 +9,17 @@ import org.junit.jupiter.api.Test
 class KtorConfigurationTest : KtorTest() {
 
     @Test
-    fun `default configuration should`() {
+    fun `default configuration should use Parallel executor`() {
         var checked = false
         testApplication {
             application {
-                val config = install(GraphQL) {}
+                val config = install(GraphQL) {
+                    schema {
+                        query("dummy") {
+                            resolver { -> "dummy" }
+                        }
+                    }
+                }
                 checked = true
                 config.schema.configuration.executor shouldBeEqualTo Executor.Parallel
             }
@@ -28,6 +34,11 @@ class KtorConfigurationTest : KtorTest() {
             application {
                 val config = install(GraphQL) {
                     executor = Executor.DataLoaderPrepared
+                    schema {
+                        query("dummy") {
+                            resolver { -> "dummy" }
+                        }
+                    }
                 }
                 checked = true
                 config.schema.configuration.executor shouldBeEqualTo Executor.DataLoaderPrepared

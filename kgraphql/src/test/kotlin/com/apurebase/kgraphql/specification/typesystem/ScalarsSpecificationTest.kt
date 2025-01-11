@@ -59,6 +59,9 @@ class ScalarsSpecificationTest {
     @Test
     fun `integer value represents a value grater than 2^-31 and less or equal to 2^31`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("Int") {
                 resolver { int: Int -> int }
             }
@@ -74,6 +77,9 @@ class ScalarsSpecificationTest {
     @Test
     fun `when float is expected as an input type, both integer and float input values are accepted`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("float") {
                 resolver { float: Float -> float }
             }
@@ -106,6 +112,9 @@ class ScalarsSpecificationTest {
     @Test
     fun `For numeric scalars, input string with numeric content must raise a query error indicating an incorrect type`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("Int") {
                 resolver { int: Int -> int }
             }
@@ -276,6 +285,9 @@ class ScalarsSpecificationTest {
     @Test
     fun `Schema may declare LocalDate custom scalar`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             stringScalar<LocalDate> {
                 serialize = { date -> date.toString() }
                 deserialize = { dateString -> LocalDate.parse(dateString) }

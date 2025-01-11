@@ -99,7 +99,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
         // Objects (includes Query, Mutation, and Subscription) with non-empty fields
         //  https://spec.graphql.org/draft/#sec-Objects
         val objects = buildString {
-            schemaTypes[TypeKind.OBJECT]?.filter { !it.fields.isNullOrEmpty() }?.forEachIndexed { index, type ->
+            schemaTypes[TypeKind.OBJECT]?.forEachIndexed { index, type ->
                 if (index > 0) {
                     appendLine()
                 }
@@ -215,9 +215,9 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
         (subscriptionType != null && subscriptionType?.name != "Subscription")
 
     private fun __Schema.hasRegularTypeWithDefaultRootTypeName() = types.any {
-        (it != queryType && it.name == "Query") ||
-            (it != mutationType && it.name == "Mutation") ||
-            (it != subscriptionType && it.name == "Subscription")
+        (it.name != queryType.name && it.name == "Query") ||
+            (it.name != mutationType?.name && it.name == "Mutation") ||
+            (it.name != subscriptionType?.name && it.name == "Subscription")
     }
 
     private fun Depreciable.deprecationInfo(): String = if (isDeprecated) {

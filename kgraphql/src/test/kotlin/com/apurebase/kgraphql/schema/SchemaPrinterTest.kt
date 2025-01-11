@@ -54,6 +54,9 @@ class SchemaPrinterTest {
     @Test
     fun `schema with types should be printed as expected`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             type<Book>()
             type<Author>()
         }
@@ -68,6 +71,10 @@ class SchemaPrinterTest {
               author: Author!
               title: String
             }
+            
+            type Query {
+              dummy: String!
+            }
 
         """.trimIndent()
     }
@@ -75,6 +82,9 @@ class SchemaPrinterTest {
     @Test
     fun `schema with nested lists should be printed as expected`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             type<NestedLists>()
         }
 
@@ -83,6 +93,10 @@ class SchemaPrinterTest {
               nested1: [[String]!]!
               nested2: [[[[[String!]]!]]!]!
               nested3: [[[[[[[String]!]]!]!]!]!]
+            }
+            
+            type Query {
+              dummy: String!
             }
 
         """.trimIndent()
@@ -189,6 +203,9 @@ class SchemaPrinterTest {
     @Test
     fun `schema with interfaces should be printed as expected`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             type<Simple>()
             type<Complex>()
             type<BaseInterface>()
@@ -202,6 +219,10 @@ class SchemaPrinterTest {
               extra: Int!
               other1: String
               other2: [String]
+            }
+            
+            type Query {
+              dummy: String!
             }
             
             type Simple implements BaseInterface & SimpleInterface {
@@ -230,6 +251,9 @@ class SchemaPrinterTest {
     @Test
     fun `schema with input types should be printed as expected`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             inputType<TestObject> {
                 name = "TestObjectInput"
             }
@@ -241,6 +265,10 @@ class SchemaPrinterTest {
         SchemaPrinter().print(schema) shouldBeEqualTo """
             type Mutation {
               add(input: TestObjectInput!): TestObject!
+            }
+            
+            type Query {
+              dummy: String!
             }
             
             type TestObject {
@@ -257,6 +285,9 @@ class SchemaPrinterTest {
     @Test
     fun `schema with custom scalars should be printed as expected`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             stringScalar<UUID> {
                 deserialize = UUID::fromString
                 serialize = UUID::toString
@@ -272,12 +303,19 @@ class SchemaPrinterTest {
             
             scalar UUID
             
+            type Query {
+              dummy: String!
+            }
+            
         """.trimIndent()
     }
 
     @Test
     fun `schema with custom type extensions should be printed as expected`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             type<TestObject> {
                 property("addedProperty") {
                     resolver { _ -> "added" }
@@ -286,6 +324,10 @@ class SchemaPrinterTest {
         }
 
         SchemaPrinter().print(schema) shouldBeEqualTo """
+            type Query {
+              dummy: String!
+            }
+            
             type TestObject {
               addedProperty: String!
               name: String!
@@ -339,6 +381,9 @@ class SchemaPrinterTest {
     @Test
     fun `schema with mutations should be printed as expected`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("addString") {
                 resolver { string: String -> string }
             }
@@ -354,16 +399,27 @@ class SchemaPrinterTest {
               addString(string: String!): String!
             }
             
+            type Query {
+              dummy: String!
+            }
+            
         """.trimIndent()
     }
 
     @Test
     fun `schema with enums should be printed as expected`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             enum<TestEnum>()
         }
 
         SchemaPrinter().print(schema) shouldBeEqualTo """
+            type Query {
+              dummy: String!
+            }
+            
             enum TestEnum {
               TYPE1
               TYPE2
@@ -630,10 +686,17 @@ class SchemaPrinterTest {
     @Test
     fun `schema built-in directives should be printed as expected if built-in directives are included`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             type<TestObject>()
         }
 
         SchemaPrinter(SchemaPrinterConfig(includeBuiltInDirectives = true)).print(schema) shouldBeEqualTo """
+            type Query {
+              dummy: String!
+            }
+            
             type TestObject {
               name: String!
             }
@@ -650,12 +713,19 @@ class SchemaPrinterTest {
     @Test
     fun `schema itself should be included if enforced`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             type<TestObject>()
         }
 
         SchemaPrinter(SchemaPrinterConfig(includeSchemaDefinition = true)).print(schema) shouldBeEqualTo """
             schema {
               query: Query
+            }
+            
+            type Query {
+              dummy: String!
             }
             
             type TestObject {
@@ -668,6 +738,9 @@ class SchemaPrinterTest {
     @Test
     fun `schema itself should by default be included if required - other type named Mutation`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             type<TestObject> {
                 name = "Mutation"
             }
@@ -682,12 +755,19 @@ class SchemaPrinterTest {
               name: String!
             }
             
+            type Query {
+              dummy: String!
+            }
+            
         """.trimIndent()
     }
 
     @Test
     fun `schema itself should by default be included if required - other type named Subscription`() {
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             type<TestObject> {
                 name = "Subscription"
             }
@@ -696,6 +776,10 @@ class SchemaPrinterTest {
         SchemaPrinter().print(schema) shouldBeEqualTo """
             schema {
               query: Query
+            }
+            
+            type Query {
+              dummy: String!
             }
             
             type Subscription {

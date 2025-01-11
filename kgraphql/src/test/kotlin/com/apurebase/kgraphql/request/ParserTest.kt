@@ -28,12 +28,7 @@ import org.junit.jupiter.api.Test
 
 class ParserTest {
 
-    private fun parse(source: String, options: Parser.Options? = null) = try {
-        Parser(source, options).parseDocument()
-    } catch (e: GraphQLError) {
-        println(e.prettyPrint())
-        throw e
-    }
+    private fun parse(source: String, options: Parser.Options? = null) = Parser(source, options).parseDocument()
 
     private fun parse(source: Source) = Parser(source).parseDocument()
 

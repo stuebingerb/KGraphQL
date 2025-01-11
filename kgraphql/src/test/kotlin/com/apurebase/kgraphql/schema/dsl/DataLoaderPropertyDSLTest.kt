@@ -70,6 +70,9 @@ class DataLoaderPropertyDSLTest {
             configure {
                 executor = Executor.DataLoaderPrepared
             }
+            query("scenario") {
+                resolver { -> "dummy" }
+            }
             type<Scenario> {
                 createGenericDataProperty(typeOf<SchemaBuilderTest.InputOne>()) { SchemaBuilderTest.InputOne("generic") }
             }
@@ -88,6 +91,9 @@ class DataLoaderPropertyDSLTest {
         val schema = defaultSchema {
             configure {
                 executor = Executor.DataLoaderPrepared
+            }
+            query("scenario") {
+                resolver { -> "dummy" }
             }
             type<Scenario> {
                 props.forEach { prop ->
