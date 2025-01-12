@@ -144,6 +144,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             value is Double -> node.aliasOrKey toValue JsonPrimitive(value)
             value is Boolean -> node.aliasOrKey toValue JsonPrimitive(value)
             value is Long -> node.aliasOrKey toValue JsonPrimitive(value)
+            value is Short -> node.aliasOrKey toValue JsonPrimitive(value)
             value is Deferred<*> -> {
                 deferredLaunch {
                     applyKeyToElement(ctx, value.await(), node, returnType, parentCount)

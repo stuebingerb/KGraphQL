@@ -47,6 +47,8 @@ class GitHubIssue75 {
                 useDefaultPrettyPrinter = true
             }
 
+            extendedScalars()
+
             query("findTrace") {
                 resolver { traceID: String ->
                     Trace(
@@ -132,6 +134,6 @@ class GitHubIssue75 {
               }
             }
         """, "{\"traceID\": \"646851f15cb2dad1\"}"
-        ).let(::println)
+        )
     }
 }

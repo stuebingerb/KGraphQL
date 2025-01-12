@@ -31,3 +31,6 @@ stringScalar<UUID> {
   }
 }
 ```
+
+In addition to the built-in types, KGraphQL provides support for `Long` and `Short` which can be added to a schema
+using `extendedScalars()`.

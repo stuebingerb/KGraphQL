@@ -537,6 +537,7 @@ class SchemaPrinterTest {
     @Test
     fun `schema with descriptions should be printed as expected if descriptions are included`() {
         val schema = KGraphQL.schema {
+            extendedScalars()
             type<TestObject> {
                 property(TestObject::name) {
                     description = "This is the name"
@@ -581,6 +582,12 @@ class SchemaPrinterTest {
               "Subscription object"
               subscription: Subscription
             }
+            
+            "The Long scalar type represents a signed 64-bit numeric non-fractional value"
+            scalar Long
+
+            "The Short scalar type represents a signed 16-bit numeric non-fractional value"
+            scalar Short
             
             "Mutation object"
             type Mutation {

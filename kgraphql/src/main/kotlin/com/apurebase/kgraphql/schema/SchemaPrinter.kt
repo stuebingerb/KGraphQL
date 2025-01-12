@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.request.isIntrospectionType
-import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Described
@@ -30,6 +29,8 @@ data class SchemaPrinterConfig(
 )
 
 class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfig()) {
+    private val builtInScalarNames = setOf("Int", "Float", "String", "Boolean", "ID")
+
     /**
      * Returns the given [schema] in schema definition language (SDL). Types and fields are sorted
      * ascending by their name and appear in order of their corresponding spec section, i.e.
@@ -229,7 +230,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
     private fun __Directive.isBuiltIn(): Boolean =
         name in setOf(Directive.DEPRECATED.name, Directive.INCLUDE.name, Directive.SKIP.name)
 
-    private fun __Type.isBuiltInScalar(): Boolean = name in BuiltInScalars.entries.map { it.typeDef.name }
+    private fun __Type.isBuiltInScalar(): Boolean = name in builtInScalarNames
 
     private fun __Type.implements(): String =
         interfaces
