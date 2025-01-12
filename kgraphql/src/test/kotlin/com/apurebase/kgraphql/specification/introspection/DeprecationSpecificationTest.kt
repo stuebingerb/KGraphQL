@@ -32,6 +32,9 @@ class DeprecationSpecificationTest {
     fun `mutations may be deprecated`() {
         val expected = "sample mutation"
         val schema = defaultSchema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("sample") {
                 deprecate(expected)
                 resolver<String> { "SAMPLE" }
@@ -120,6 +123,9 @@ class DeprecationSpecificationTest {
 
         val expected = "deprecated input value"
         val schema = defaultSchema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             inputType<InputType> {
                 InputType::oldOptional.configure {
                     deprecate(expected)
@@ -158,6 +164,9 @@ class DeprecationSpecificationTest {
 
         val expected = "deprecated input value"
         val schema = defaultSchema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             inputType<InputType> {
                 InputType::oldOptional.configure {
                     deprecate(expected)

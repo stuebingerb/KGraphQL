@@ -37,6 +37,9 @@ class KtorFeatureTest : KtorTest() {
     @Test
     fun `Simple mutation test`() {
         val server = withServer {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("hello") {
                 resolver { -> "World! mutation" }
             }

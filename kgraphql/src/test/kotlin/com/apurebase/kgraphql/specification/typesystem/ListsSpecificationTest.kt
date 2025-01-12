@@ -163,6 +163,9 @@ class ListsSpecificationTest {
         )
 
         val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("createNestedLists") {
                 resolver { nested1: List<List<String?>>,
                            nested2: List<List<List<List<List<String>?>>?>>,

@@ -50,7 +50,11 @@ class IntrospectionSpecificationTest {
 
     @Test
     fun `__typename field can be used to obtain type of query`() {
-        val schema = defaultSchema {}
+        val schema = defaultSchema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
+        }
 
         val response = deserialize(schema.executeBlocking("{__typename}"))
         assertThat(response.extract("data/__typename"), equalTo("Query"))
@@ -59,6 +63,9 @@ class IntrospectionSpecificationTest {
     @Test
     fun `__typename field can be used to obtain type of mutation`() {
         val schema = defaultSchema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
             mutation("sample") {
                 resolver { -> Data("Ronaldingo") }
             }

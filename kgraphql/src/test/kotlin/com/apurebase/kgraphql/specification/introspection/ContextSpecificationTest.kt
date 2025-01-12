@@ -20,7 +20,6 @@ class ContextSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__schema{queryType{fields{args{name}}}}}"))
-        println("response: $response")
         MatcherAssert.assertThat(
             response.extract("data/__schema/queryType/fields[0]/args[0]/name"),
             CoreMatchers.equalTo("limit")
@@ -31,13 +30,15 @@ class ContextSpecificationTest {
     @Suppress("UNUSED_ANONYMOUS_PARAMETER")
     fun `mutation resolver should not return context param`() {
         val schema = defaultSchema {
+            query("sample") {
+                resolver { -> "dummy" }
+            }
             mutation("sample") {
                 resolver { ctx: Context, input: String -> "SAMPLE" }
             }
         }
 
         val response = deserialize(schema.executeBlocking("{__schema{mutationType{fields{args{name}}}}}"))
-        println("response: $response")
         MatcherAssert.assertThat(
             response.extract("data/__schema/mutationType/fields[0]/args[0]/name"),
             CoreMatchers.equalTo("input")

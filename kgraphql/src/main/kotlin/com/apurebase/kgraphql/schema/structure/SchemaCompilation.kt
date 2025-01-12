@@ -76,16 +76,8 @@ class SchemaCompilation(
 
         val model = SchemaModel(
             query = queryType,
-            mutation = if (mutationType.fields.isNullOrEmpty()) {
-                null
-            } else {
-                mutationType
-            },
-            subscription = if (subscriptionType.fields.isNullOrEmpty()) {
-                null
-            } else {
-                subscriptionType
-            },
+            mutation = mutationType,
+            subscription = subscriptionType,
             queryTypes = queryTypeProxies + enums + scalars,
             inputTypes = inputTypeProxies + enums + scalars,
             allTypes = queryTypeProxies.values
@@ -135,30 +127,44 @@ class SchemaCompilation(
 
     private suspend fun handleQueries(): Type {
         val __typenameField = typenameField(FunctionWrapper.on { -> "Query" })
+        val declaredFields = definition.queries.map { handleOperation(it) }
+        if (declaredFields.isEmpty()) {
+            throw SchemaException("Schema must define at least one query")
+        }
         return Type.OperationObject(
             name = "Query",
             description = "Query object",
-            fields = definition.queries.map { handleOperation(it) } + introspectionSchemaQuery() + introspectionTypeQuery() + __typenameField
+            fields = declaredFields + __typenameField + introspectionSchemaQuery() + introspectionTypeQuery()
         )
     }
 
-    private suspend fun handleMutations(): Type {
+    private suspend fun handleMutations(): Type? {
         val __typenameField = typenameField(FunctionWrapper.on { -> "Mutation" })
-        return Type.OperationObject(
-            "Mutation",
-            "Mutation object",
-            definition.mutations.map { handleOperation(it) } + __typenameField)
+        val declaredFields = definition.mutations.map { handleOperation(it) }
+        return if (declaredFields.isNotEmpty()) {
+            Type.OperationObject(
+                name = "Mutation",
+                description = "Mutation object",
+                fields = declaredFields + __typenameField
+            )
+        } else {
+            null
+        }
     }
 
-    // https://spec.graphql.org/October2021/#sec-Type-Name-Introspection
-    //      "__typename may not be included as a root field in a subscription operation."
-    private suspend fun handleSubscriptions(): Type {
-        // https://spec.graphql.org/October2021/#sec-Type-Name-Introspection
-        //      "__typename may not be included as a root field in a subscription operation."
-        return Type.OperationObject(
-            "Subscription",
-            "Subscription object",
-            definition.subscriptions.map { handleOperation(it) })
+    private suspend fun handleSubscriptions(): Type? {
+        val declaredFields = definition.subscriptions.map { handleOperation(it) }
+        return if (declaredFields.isNotEmpty()) {
+            Type.OperationObject(
+                name = "Subscription",
+                description = "Subscription object",
+                // https://spec.graphql.org/October2021/#sec-Type-Name-Introspection
+                //      "__typename may not be included as a root field in a subscription operation."
+                fields = definition.subscriptions.map { handleOperation(it) }
+            )
+        } else {
+            null
+        }
     }
 
     private suspend fun introspectionSchemaQuery() = handleOperation(
