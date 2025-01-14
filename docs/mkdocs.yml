@@ -3,7 +3,7 @@ site_description: KGraphQL Documentation
 site_url: https://stuebingerb.github.io/KGraphQL/
 dev_addr: 0.0.0.0:8000
 
-repo_name: 'GitHub'
+repo_name: 'stuebingerb/KGraphQL'
 repo_url: 'https://github.com/stuebingerb/KGraphQL'
 
 docs_dir: 'content'
@@ -20,9 +20,17 @@ theme:
   feature:
     tabs: false
   palette:
-    scheme: preference
-    primary: 'pink'
-    accent: 'pink'
+    - media: "(prefers-color-scheme)"
+      primary: 'black'
+      accent: 'blue'
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: 'black'
+      accent: 'blue'
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: 'black'
+      accent: 'blue'
   i18n:
     prev: 'Previous'
     next: 'Next'
@@ -31,7 +39,7 @@ extra_css:
   - assets/hljs/styles/atom-one-light.css # HightlightJS's CSS theme
 
 extra_javascript:
-  - assets/hljs/highlight.pack.js # Download from https://highlightjs.org/download/
+  - assets/hljs/highlight.min.js # Download from https://highlightjs.org/download/
   - assets/hljs/init.js
 
 plugins:
@@ -40,23 +48,13 @@ plugins:
       glob:
         - "**/include-*.md"
 
-# https://squidfunk.github.io/mkdocs-material/extensions/admonition/
-# https://facelessuser.github.io/pymdown-extensions/
 markdown_extensions:
-  - attr_list
-  - admonition
-  - footnotes
-  - pymdownx.details
-  - pymdownx.inlinehilite
   - pymdownx.smartsymbols
   - pymdownx.superfences
-  - pymdownx.tasklist
+  - pymdownx.highlight:
+      use_pygments: false
   - pymdownx.tabbed:
       alternate_style: true
-  - pymdownx.snippets:
-      check_paths: true
-  - toc:
-      permalink: true
 
 extra:
   social:

@@ -170,7 +170,7 @@ configure {
 }
 ```
 
-*example*
+*Example*
 
 ```kotlin
 data class Person(val id: Int, val name: String)
