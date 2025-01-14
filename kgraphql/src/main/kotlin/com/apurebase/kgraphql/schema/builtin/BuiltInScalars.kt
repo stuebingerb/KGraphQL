@@ -31,19 +31,20 @@ private const val BOOLEAN_DESCRIPTION =
     "The Boolean scalar type represents true or false"
 
 /**
- * These scalars are created only for sake of documentation in introspection, not during execution
- *
  * https://spec.graphql.org/October2021/#sec-Scalars.Built-in-Scalars
  */
 enum class BuiltInScalars(val typeDef: TypeDef.Scalar<*>) {
     STRING(TypeDef.Scalar(String::class.defaultKQLTypeName(), String::class, STRING_COERCION, STRING_DESCRIPTION)),
-    SHORT(TypeDef.Scalar(Short::class.defaultKQLTypeName(), Short::class, SHORT_COERCION, SHORT_DESCRIPTION)),
     INT(TypeDef.Scalar(Int::class.defaultKQLTypeName(), Int::class, INT_COERCION, INT_DESCRIPTION)),
 
     // GraphQL does not differentiate between float and double, treat double like float
     DOUBLE(TypeDef.Scalar(Float::class.defaultKQLTypeName(), Double::class, DOUBLE_COERCION, FLOAT_DESCRIPTION)),
     FLOAT(TypeDef.Scalar(Float::class.defaultKQLTypeName(), Float::class, FLOAT_COERCION, FLOAT_DESCRIPTION)),
     BOOLEAN(TypeDef.Scalar(Boolean::class.defaultKQLTypeName(), Boolean::class, BOOLEAN_COERCION, BOOLEAN_DESCRIPTION)),
+}
+
+enum class ExtendedBuiltInScalars(val typeDef: TypeDef.Scalar<*>) {
+    SHORT(TypeDef.Scalar(Short::class.defaultKQLTypeName(), Short::class, SHORT_COERCION, SHORT_DESCRIPTION)),
     LONG(TypeDef.Scalar(Long::class.defaultKQLTypeName(), Long::class, LONG_COERCION, LONG_DESCRIPTION))
 }
 

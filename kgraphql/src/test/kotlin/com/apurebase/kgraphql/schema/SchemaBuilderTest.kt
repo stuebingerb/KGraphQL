@@ -750,11 +750,11 @@ class SchemaBuilderTest {
     @Test
     fun `Short int types are mapped to Short Scalar`() {
         val schema = defaultSchema {
+            extendedScalars()
             query("shortQuery") {
                 resolver { -> 1.toShort() }
             }
         }
-
 
         val typesIntrospection = deserialize(schema.executeBlocking("{__schema{types{name}}}"))
         val types = typesIntrospection.extract<List<Map<String, String>>>("data/__schema/types")

@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import org.amshove.kluent.invoking
@@ -20,6 +21,71 @@ import java.util.UUID
 
 @Specification("3.1.1 Scalars")
 class ScalarsSpecificationTest {
+
+    @Test
+    fun `built-in scalars should be available by default`() {
+        val schema = KGraphQL.schema {
+            query("int") {
+                resolver<Int> { 1 }
+            }
+            query("float") {
+                resolver<Float> { 2.0f }
+            }
+            query("double") {
+                resolver<Double> { 3.0 }
+            }
+            query("string") {
+                resolver<String> { "foo" }
+            }
+            query("boolean") {
+                resolver<Boolean> { true }
+            }
+            // TODO: ID, cf. https://github.com/stuebingerb/KGraphQL/issues/83
+        }
+
+        val response = deserialize(schema.executeBlocking("{ int float double string boolean }"))
+        assertThat(response.extract<Int>("data/int"), equalTo(1))
+        assertThat(response.extract<Float>("data/float"), equalTo(2.0))
+        assertThat(response.extract<Double>("data/double"), equalTo(3.0))
+        assertThat(response.extract<String>("data/string"), equalTo("foo"))
+        assertThat(response.extract<Boolean>("data/boolean"), equalTo(true))
+    }
+
+    @Test
+    fun `extended scalars should not be available by default`() {
+        invoking {
+            KGraphQL.schema {
+                query("long") {
+                    resolver<Long> { 1L }
+                }
+            }
+        } shouldThrow SchemaException::class withMessage "An Object type must define one or more fields. Found none on type Long"
+
+        invoking {
+            KGraphQL.schema {
+                query("short") {
+                    resolver<Short> { 2.toShort() }
+                }
+            }
+        } shouldThrow SchemaException::class withMessage "An Object type must define one or more fields. Found none on type Short"
+    }
+
+    @Test
+    fun `extended scalars should be available if included`() {
+        val schema = KGraphQL.schema {
+            extendedScalars()
+            query("long") {
+                resolver<Long> { Long.MAX_VALUE }
+            }
+            query("short") {
+                resolver<Short> { 2.toShort() }
+            }
+        }
+
+        val response = deserialize(schema.executeBlocking("{ long short }"))
+        assertThat(response.extract<Long>("data/long"), equalTo(9223372036854775807L))
+        assertThat(response.extract<Int>("data/short"), equalTo(2))
+    }
 
     data class Person(val uuid: UUID, val name: String)
 
@@ -44,12 +110,12 @@ class ScalarsSpecificationTest {
             }
         }
 
-        val queryResponse = deserialize(testedSchema.executeBlocking("{person{uuid}}"))
+        val queryResponse = deserialize(testedSchema.executeBlocking("{ person{ uuid } }"))
         assertThat(queryResponse.extract<String>("data/person/uuid"), equalTo(uuid.toString()))
 
         val mutationResponse = deserialize(
             testedSchema.executeBlocking(
-                "mutation{createPerson(uuid: \"$uuid\", name: \"John\"){uuid name}}"
+                "mutation { createPerson(uuid: \"$uuid\", name: \"John\"){ uuid name } }"
             )
         )
         assertThat(mutationResponse.extract<String>("data/createPerson/uuid"), equalTo(uuid.toString()))
@@ -68,7 +134,7 @@ class ScalarsSpecificationTest {
         }
 
         invoking {
-            schema.executeBlocking("mutation{Int(int: ${Integer.MAX_VALUE.toLong() + 2L})}")
+            schema.executeBlocking("mutation { Int(int: ${Integer.MAX_VALUE.toLong() + 2L}) }")
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Cannot coerce to type of Int as '${Integer.MAX_VALUE.toLong() + 2L}' is greater than (2^-31)-1"
         }
@@ -84,7 +150,7 @@ class ScalarsSpecificationTest {
                 resolver { float: Float -> float }
             }
         }
-        val map = deserialize(schema.executeBlocking("mutation{float(float: 1)}"))
+        val map = deserialize(schema.executeBlocking("mutation { float(float: 1) }"))
         assertThat(map.extract<Double>("data/float"), equalTo(1.0))
     }
 
@@ -104,7 +170,7 @@ class ScalarsSpecificationTest {
 
         val randomUUID = UUID.randomUUID()
         val map =
-            deserialize(testedSchema.executeBlocking("query(\$id: ID = \"$randomUUID\"){personById(id: \$id){uuid, name}}"))
+            deserialize(testedSchema.executeBlocking("query(\$id: ID = \"$randomUUID\"){ personById(id: \$id) { uuid, name } }"))
         assertThat(map.extract<String>("data/personById/uuid"), equalTo(randomUUID.toString()))
     }
 
@@ -121,7 +187,7 @@ class ScalarsSpecificationTest {
         }
 
         invoking {
-            schema.executeBlocking("mutation{Int(int: \"223\")}")
+            schema.executeBlocking("mutation { Int(int: \"223\") }")
         } shouldThrow GraphQLError::class withMessage "Cannot coerce \"223\" to numeric constant"
     }
 
@@ -129,7 +195,6 @@ class ScalarsSpecificationTest {
 
     @Test
     fun `Schema may declare custom int scalar type`() {
-
         val schema = KGraphQL.schema {
             intScalar<Number> {
                 deserialize = ::Number
@@ -142,7 +207,7 @@ class ScalarsSpecificationTest {
         }
 
         val value = 3434
-        val response = deserialize(schema.executeBlocking("{number(number: $value)}"))
+        val response = deserialize(schema.executeBlocking("{ number(number: $value) }"))
         assertThat(response.extract<Int>("data/number"), equalTo(value))
     }
 
@@ -150,7 +215,6 @@ class ScalarsSpecificationTest {
 
     @Test
     fun `Schema may declare custom boolean scalar type`() {
-
         val schema = KGraphQL.schema {
             booleanScalar<Bool> {
                 deserialize = ::Bool
@@ -163,7 +227,7 @@ class ScalarsSpecificationTest {
         }
 
         val value = true
-        val response = deserialize(schema.executeBlocking("{boolean(boolean: $value)}"))
+        val response = deserialize(schema.executeBlocking("{ boolean(boolean: $value) }"))
         assertThat(response.extract<Boolean>("data/boolean"), equalTo(value))
     }
 
@@ -177,7 +241,6 @@ class ScalarsSpecificationTest {
 
     @Test
     fun `Schema may declare custom double scalar type`() {
-
         val schema = KGraphQL.schema {
             floatScalar<Dob> {
                 deserialize = ::Dob
@@ -190,7 +253,7 @@ class ScalarsSpecificationTest {
         }
 
         val value = 232.33
-        val response = deserialize(schema.executeBlocking("{double(double: $value)}"))
+        val response = deserialize(schema.executeBlocking("{ double(double: $value) }"))
         assertThat(response.extract<Double>("data/double"), equalTo(value))
     }
 
@@ -240,7 +303,7 @@ class ScalarsSpecificationTest {
         val d = '$'
 
         val req = """
-            query Query(${d}boo: Boo!,  ${d}sho: Sho!, ${d}lon: Lon!, ${d}dob: Dob!, ${d}num: Num!, ${d}str: Str!){
+            query Query(${d}boo: Boo!,  ${d}sho: Sho!, ${d}lon: Lon!, ${d}dob: Dob!, ${d}num: Num!, ${d}str: Str!) {
                 boo(boo: ${d}boo)
                 sho(sho: ${d}sho)
                 lon(lon: ${d}lon)

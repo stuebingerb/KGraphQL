@@ -13,12 +13,13 @@ class LongScalarTest {
     @Test
     fun testLongField() {
         val schema = defaultSchema {
+            extendedScalars()
             query("long") {
                 resolver { -> Long.MAX_VALUE }
             }
         }
 
-        val response = schema.executeBlocking("{long}")
+        val response = schema.executeBlocking("{ long }")
         val long = deserialize(response).extract<Long>("data/long")
         assertThat(long, equalTo(Long.MAX_VALUE))
     }
@@ -26,13 +27,21 @@ class LongScalarTest {
     @Test
     fun testLongArgument() {
         val schema = defaultSchema {
+            extendedScalars()
             query("isLong") {
-                resolver { long: Long -> if (long > Int.MAX_VALUE) "YES" else "NO" }
+                resolver { long: Long ->
+                    if (long > Int.MAX_VALUE) {
+                        "YES"
+                    } else {
+                        "NO"
+                    }
+                }
             }
         }
 
-        val isLong =
-            deserialize(schema.executeBlocking("{isLong(long: ${Int.MAX_VALUE.toLong() + 1})}")).extract<String>("data/isLong")
+        val isLong = deserialize(
+            schema.executeBlocking("{ isLong(long: ${Int.MAX_VALUE.toLong() + 1}) }")
+        ).extract<String>("data/isLong")
         assertThat(isLong, equalTo("YES"))
     }
 
@@ -52,7 +61,7 @@ class LongScalarTest {
         }
 
         val value = Int.MAX_VALUE.toLong() + 2
-        val response = deserialize(schema.executeBlocking("{number(number: $value)}"))
+        val response = deserialize(schema.executeBlocking("{ number(number: $value) }"))
         assertThat(response.extract<Long>("data/number"), equalTo(value))
     }
 

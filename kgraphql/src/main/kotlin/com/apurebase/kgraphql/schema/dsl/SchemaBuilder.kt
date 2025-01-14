@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema.dsl
 import com.apurebase.kgraphql.schema.Publisher
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.schema.builtin.ExtendedBuiltInScalars
 import com.apurebase.kgraphql.schema.dsl.operations.MutationDSL
 import com.apurebase.kgraphql.schema.dsl.operations.QueryDSL
 import com.apurebase.kgraphql.schema.dsl.operations.SubscriptionDSL
@@ -138,6 +139,12 @@ class SchemaBuilder internal constructor() {
 
     inline fun <reified T : Any> booleanScalar(noinline block: ScalarDSL<T, Boolean>.() -> Unit) {
         booleanScalar(T::class, block)
+    }
+
+    fun extendedScalars() {
+        ExtendedBuiltInScalars.values().forEach {
+            model.addScalar(it.typeDef)
+        }
     }
 
     //================================================================================
