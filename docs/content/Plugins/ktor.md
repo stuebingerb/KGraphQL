@@ -117,7 +117,7 @@ See the following comparison:
     }
     ```
 === "SDL"
-    ```
+    ```graphql
     type Query {
         getSampleData(quantity: Int! = 10): [SampleData!]!
     }
