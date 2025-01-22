@@ -11,6 +11,7 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode.ObjectValueNode
 import com.apurebase.kgraphql.schema.scalar.deserializeScalar
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
@@ -89,7 +90,7 @@ open class ArgumentTransformer(val schema: __Schema) {
             // for the list's item type on the provided value (note this may apply recursively for nested lists).
             type.isList() && value !is ValueNode.ListValueNode && value !is ValueNode.NullValueNode -> {
                 if (coerceSingleValueAsList) {
-                    listOf(transformValue(type.unwrapList(), value, variables, true))
+                    transformToCollection(type.listType(), listOf(value), variables, true)
                 } else {
                     throw InvalidInputValueException(
                         "argument '${value.valueNodeName}' is not valid value of type List",
@@ -154,13 +155,26 @@ open class ArgumentTransformer(val schema: __Schema) {
                         value
                     )
                 } else {
-                    value.values.map { valueNode ->
-                        transformValue(type.unwrapList(), valueNode, variables, false)
-                    }
+                    transformToCollection(type.listType(), value.values, variables, false)
                 }
             }
 
             else -> transformString(value, type.unwrapped())
+        }
+    }
+
+    private fun transformToCollection(
+        type: Type.AList,
+        values: List<ValueNode>,
+        variables: Variables,
+        coerceSingleValueAsList: Boolean
+    ): Collection<*> = if (type.kClass.isSubclassOf(Set::class)) {
+        values.mapTo(mutableSetOf()) { valueNode ->
+            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList)
+        }
+    } else {
+        values.map { valueNode ->
+            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList)
         }
     }
 

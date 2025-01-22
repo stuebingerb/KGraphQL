@@ -30,7 +30,8 @@ class ListsSpecificationTest {
             { "list": ["GAGA", "DADA", "PADA"] }
         """.trimIndent()
 
-        val response = deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
+        val response =
+            deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
         assertThat(response.extract<String>("data/list[0]"), equalTo("GAGA"))
         assertThat(response.extract<String>("data/list[1]"), equalTo("DADA"))
         assertThat(response.extract<String>("data/list[2]"), equalTo("PADA"))
@@ -136,6 +137,77 @@ class ListsSpecificationTest {
 
         val response = deserialize(schema.executeBlocking("{ list }"))
         assertThat(response.extract<Iterable<String>>("data/list"), equalTo(getResult()))
+    }
+
+    @Test
+    fun `input objects with sets should work properly with direct input`() {
+        data class TestObject(val list: List<String>, val set: Set<String>)
+
+        val schema = KGraphQL.schema {
+            query("getObject") {
+                resolver { -> TestObject(listOf("foo", "bar", "foo", "bar"), setOf("foo", "bar", "foo", "bar")) }
+            }
+            mutation("addObject") {
+                resolver { input: TestObject -> input }
+            }
+            inputType<TestObject> {
+                name = "TestObjectInput"
+            }
+        }
+        val queryResponse = deserialize(schema.executeBlocking("{ getObject { list set } }"))
+        assertThat(queryResponse.toString(), equalTo("{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"))
+        val mutationResponse = deserialize(
+            schema.executeBlocking(
+                """
+                mutation {
+                  addObject(input: { list: ["foo", "bar", "foo", "bar"], set: ["foo", "bar", "foo", "bar"] }) {
+                    list set
+                  }
+                }
+                """.trimIndent()
+            )
+        )
+        assertThat(
+            mutationResponse.toString(),
+            equalTo("{data={addObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}")
+        )
+    }
+
+    @Test
+    fun `input objects with sets should work properly with variables`() {
+        data class TestObject(val list: List<String>, val set: Set<String>)
+
+        val schema = KGraphQL.schema {
+            query("getObject") {
+                resolver { -> TestObject(listOf("foo", "bar", "foo", "bar"), setOf("foo", "bar", "foo", "bar")) }
+            }
+            mutation("addObject") {
+                resolver { input: TestObject -> input }
+            }
+            inputType<TestObject> {
+                name = "TestObjectInput"
+            }
+        }
+        val variables = """
+            { "inputData": { "list": ["foo", "bar", "foo", "bar"], "set": ["foo", "bar", "foo", "bar"] } }
+        """.trimIndent()
+        val queryResponse = deserialize(schema.executeBlocking("{ getObject { list set } }"))
+        assertThat(queryResponse.toString(), equalTo("{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"))
+        val mutationResponse = deserialize(
+            schema.executeBlocking(
+                """
+                mutation(${'$'}inputData: TestObjectInput!) {
+                  addObject(input: ${'$'}inputData) {
+                    list set
+                  }
+                }
+                """.trimIndent(), variables
+            )
+        )
+        assertThat(
+            mutationResponse.toString(),
+            equalTo("{data={addObject={list=[foo, bar, foo, bar], set=[bar, foo]}}}")
+        )
     }
 
     // https://github.com/stuebingerb/KGraphQL/issues/110

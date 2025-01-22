@@ -38,6 +38,11 @@ interface Type : __Type {
         else -> ofType?.unwrapList() ?: throw NoSuchElementException("this type does not wrap list element")
     }
 
+    fun listType(): AList = when (kind) {
+        TypeKind.LIST -> this as AList
+        else -> ofType?.listType() ?: throw NoSuchElementException("this type is not a list type")
+    }
+
     fun isList(): Boolean = when {
         kind == TypeKind.LIST -> true
         ofType == null -> false
@@ -56,8 +61,8 @@ interface Type : __Type {
         }
 
         return if (isList()) {
-            List::class.createType(
-                listOf(KTypeProjection.covariant(unwrappedKClass.createType(nullable = isElementNullable()))),
+            listType().kClass.createType(
+                arguments = listOf(KTypeProjection.covariant(unwrappedKClass.createType(nullable = isElementNullable()))),
                 nullable = isNullable()
             )
         } else {
@@ -320,9 +325,7 @@ interface Type : __Type {
         override fun isInstance(value: Any?): Boolean = false
     }
 
-    class AList(elementType: Type) : Type {
-
-        override val kClass: KClass<*>? = null
+    class AList(elementType: Type, override val kClass: KClass<*>) : Type {
 
         override val ofType: Type = elementType
 
