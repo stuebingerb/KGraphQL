@@ -82,7 +82,7 @@ data class Variables(
         val invalidName = (expectedTypeName ?: expectedType.name) != variable.type.nameNode.value
         val invalidIsList = expectedType.isList != variableType.isList
         val invalidNullability =
-            !expectedType.isNullable && variableType !is TypeNode.NonNullTypeNode && variable.defaultValue == null
+            !expectedType.isNullable && variableType.isNullable && variable.defaultValue == null
 
         val invalidElementNullability = !expectedType.isElementNullable && when (variableType) {
             is TypeNode.ListTypeNode -> variableType.isElementNullable
