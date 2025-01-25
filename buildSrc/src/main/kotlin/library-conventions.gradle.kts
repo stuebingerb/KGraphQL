@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id("kotlin-conventions")
-    id("dev.adamko.dokkatoo-html")
+    id("org.jetbrains.dokka")
     id("com.vanniktech.maven.publish")
 }
 
@@ -20,16 +20,13 @@ kotlin {
     }
 }
 
-dokkatoo {
-    dokkaGeneratorIsolation.set(
-        ProcessIsolation {
-            maxHeapSize.set("4g")
-        }
-    )
+dokka {
+    dokkaGeneratorIsolation = ProcessIsolation {
+        maxHeapSize = "4g"
+    }
 }
 
 mavenPublishing {
-    configure(KotlinJvm(JavadocJar.Dokka("dokkatooGeneratePublicationHtml")))
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
     pom {
