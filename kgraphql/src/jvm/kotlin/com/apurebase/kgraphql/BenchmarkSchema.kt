@@ -9,7 +9,10 @@ data class ModelTwo(val one: ModelOne, val range: FakeIntRange)
 
 data class ModelThree(val id: String, val twos: List<ModelTwo>)
 
-class FakeIntRange(private val range: IntRange) {
+// wrapping needed, because https://github.com/stuebingerb/KGraphQL/commit/d8ce0085130b9f0f30c0c2f31ed52f44d6456981
+// destroyed compatibility with ranges in the schema.
+// please see: https://github.com/stuebingerb/KGraphQL/issues/176
+class FakeIntRange(range: IntRange) {
     val start = range.first
     val endInclusive = range.last
 }
