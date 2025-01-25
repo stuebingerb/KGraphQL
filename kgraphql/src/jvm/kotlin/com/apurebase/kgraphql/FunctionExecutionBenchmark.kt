@@ -1,9 +1,15 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
+import kotlinx.benchmark.Benchmark
+import kotlinx.benchmark.Measurement
+import kotlinx.benchmark.OutputTimeUnit
+import kotlinx.benchmark.Param
+import kotlinx.benchmark.Scope
+import kotlinx.benchmark.Setup
+import kotlinx.benchmark.State
+import kotlinx.benchmark.Warmup
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
-import org.openjdk.jmh.annotations.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 import java.util.function.BiFunction
@@ -19,21 +25,17 @@ import java.util.function.BiFunction
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Fork(value = 5)
 open class FunctionExecutionBenchmark {
 
     @Param("true", "false")
-    var useFunctionWrapper = true
+    private var useFunctionWrapper = true
 
-    lateinit var functionWrapper: FunctionWrapper.ArityTwo<String, Int, String>
+    private lateinit var functionWrapper: FunctionWrapper.ArityTwo<String, Int, String>
+    private lateinit var biFunction: BiFunction<Int, String, String>
 
-    lateinit var biFunction: BiFunction<Int, String, String>
-
-    val arg1 = 3
-
-    val arg2 = "CODE"
-
-    val implementation = { int: Int, string: String -> "${int * ThreadLocalRandom.current().nextDouble()} $string" }
+    private val arg1 = 3
+    private val arg2 = "CODE"
+    private val implementation = { int: Int, string: String -> "${int * ThreadLocalRandom.current().nextDouble()} $string" }
 
     @Setup
     fun setup() {
@@ -54,11 +56,5 @@ open class FunctionExecutionBenchmark {
         } else {
             biFunction.apply(arg1, arg2)
         }
-    }
-
-    @Test
-    fun check() {
-        setup()
-        println(benchmarkFunctionExecution())
     }
 }
