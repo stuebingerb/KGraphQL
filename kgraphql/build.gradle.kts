@@ -2,7 +2,7 @@ import kotlinx.benchmark.gradle.JvmBenchmarkTarget
 
 plugins {
     id("library-conventions")
-    id("org.jetbrains.kotlinx.benchmark") version "0.4.13"
+    alias(libs.plugins.kotlinx.benchmark)
 }
 
 lateinit var benchmarkImplementation: String
@@ -43,5 +43,5 @@ dependencies {
     testImplementation(libs.junit.jupiter.params)
     testImplementation(libs.kotlinx.coroutines.debug)
     testImplementation(libs.kotlinx.coroutines.test)
-    benchmarkImplementation("org.jetbrains.kotlinx:kotlinx-benchmark-runtime:0.4.13")
+    benchmarkImplementation(libs.kotlinx.benchmark.runtime)
 }
