@@ -24,11 +24,12 @@ open class ParallelExecutionBenchmark {
     var withSuspendResolvers = false
 
     private lateinit var schema: Schema
+
     private val query = buildString {
         append("{")
         (0..999).forEach { appendLine("automated$it".prependIndent("  ")) }
         append("}")
-    }.also(::println)
+    }
 
     @Setup
     fun setup() {
