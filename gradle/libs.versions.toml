@@ -2,12 +2,14 @@
 kotlin = "2.1.0"
 kotlinx-coroutines = "1.10.1"
 kotlinx-serialization = "1.8.0"
+kotlinx-benchmark = "0.4.13"
 jackson = "2.18.2"
 ktor = "3.0.3"
 junit-jupiter = "5.11.4"
 
 [plugins]
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
 [libraries]
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -29,3 +31,4 @@ hamcrest = { module = "org.hamcrest:hamcrest", version = "3.0" }
 kluent = { module = "org.amshove.kluent:kluent", version = "1.73" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit-jupiter" }
+kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }

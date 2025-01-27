@@ -1,5 +1,29 @@
+import kotlinx.benchmark.gradle.JvmBenchmarkTarget
+
 plugins {
     id("library-conventions")
+    alias(libs.plugins.kotlinx.benchmark)
+}
+
+lateinit var benchmarkImplementation: String
+
+sourceSets {
+    benchmarkImplementation = create("jvm").implementationConfigurationName
+}
+
+kotlin
+    .target
+    .compilations
+    .getByName("jvm")
+    .associateWith(kotlin.target.compilations.getByName("main"))
+
+benchmark {
+    targets {
+        register("jvm") {
+            this as JvmBenchmarkTarget
+            jmhVersion = "1.37"
+        }
+    }
 }
 
 dependencies {
@@ -19,4 +43,5 @@ dependencies {
     testImplementation(libs.junit.jupiter.params)
     testImplementation(libs.kotlinx.coroutines.debug)
     testImplementation(libs.kotlinx.coroutines.test)
+    benchmarkImplementation(libs.kotlinx.benchmark.runtime)
 }

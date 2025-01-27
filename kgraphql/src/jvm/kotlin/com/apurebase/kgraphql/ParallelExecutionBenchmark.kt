@@ -1,31 +1,42 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.Schema
-import org.openjdk.jmh.annotations.*
-import java.util.concurrent.ThreadLocalRandom
+import kotlinx.benchmark.Benchmark
+import kotlinx.benchmark.BenchmarkMode
+import kotlinx.benchmark.Measurement
+import kotlinx.benchmark.Mode
+import kotlinx.benchmark.OutputTimeUnit
+import kotlinx.benchmark.Param
+import kotlinx.benchmark.Scope
+import kotlinx.benchmark.Setup
+import kotlinx.benchmark.State
+import kotlinx.benchmark.Warmup
+import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.*
-import org.junit.jupiter.api.Test
 
 @State(Scope.Benchmark)
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Fork(value = 1)
 open class ParallelExecutionBenchmark {
 
     @Param("true", "false")
     var withSuspendResolvers = false
 
-    var schema: Schema = KGraphQL.schema { }
+    private lateinit var schema: Schema
+
+    private val query = buildString {
+        append("{")
+        (0..999).forEach { appendLine("automated$it".prependIndent("  ")) }
+        append("}")
+    }
 
     @Setup
     fun setup() {
         schema = KGraphQL.schema {
-
-            if (withSuspendResolvers == false)
+            if (!withSuspendResolvers)
                 repeat(1000) {
-                    query("automated-$it") {
+                    query("automated$it") {
                         resolver { ->
                             Thread.sleep(3)
                             "$it"
@@ -33,7 +44,7 @@ open class ParallelExecutionBenchmark {
                     }
                 } else {
                 repeat(1000) {
-                    query("automated-$it") {
+                    query("automated$it") {
                         resolver { ->
                             delay(3)
                             "$it"
@@ -47,18 +58,5 @@ open class ParallelExecutionBenchmark {
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     fun queryBenchmark(): String =
-        schema.executeBlocking("{ " + (0..999).map { "automated-${it}" }.joinToString(", ") + " }")
-
-    @Test
-    fun benchmarkWithThreads() {
-        setup()
-        println(queryBenchmark())
-    }
-
-    @Test
-    fun benchmarkWithSuspendResolvers() {
-        withSuspendResolvers = true
-        setup()
-        println(queryBenchmark())
-    }
+        schema.executeBlocking(query)
 }
