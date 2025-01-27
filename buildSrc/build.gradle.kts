@@ -10,6 +10,6 @@ plugins {
 
 dependencies {
     implementation(libs.kotlin.gradle)
-    implementation(libs.dokkatoo.gradle)
+    implementation(libs.dokka.gradle)
     implementation(libs.mavenPublish.gradle)
 }
