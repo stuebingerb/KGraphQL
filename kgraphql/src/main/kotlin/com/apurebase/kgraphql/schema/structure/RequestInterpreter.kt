@@ -41,7 +41,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             }
 
             val (conditionType, selectionSet) = fragments[node.name.value] ?: return null
-            val condition = TypeCondition(conditionType.name!!)
+            val condition = TypeCondition(conditionType)
 
             fragmentsStack.push(node.name.value)
             val elements = selectionSet.selections.map { conditionType.handleSelectionFieldOrFragment(it, this) }
@@ -137,7 +137,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             }
             Execution.Fragment(
                 selectionNode = fragment,
-                condition = TypeCondition(type.name!!),
+                condition = TypeCondition(type),
                 directives = fragment.directives?.lookup(),
                 elements = fragment.selectionSet.selections.map { type.handleSelectionFieldOrFragment(it, ctx) }
             )
