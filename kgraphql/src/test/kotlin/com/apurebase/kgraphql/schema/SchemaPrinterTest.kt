@@ -130,7 +130,7 @@ class SchemaPrinterTest {
                     returnType = linked
                     nullable = true
                     description = "link to pdf representation of scenario"
-                    resolver { scenario: Scenario -> null }
+                    resolver { null }
                 }
             }
         }
@@ -163,20 +163,20 @@ class SchemaPrinterTest {
     }
 
     sealed class Child
-    data class Child1(val one: String): Child()
-    data class Child2(val two: String?): Child()
+    data class Child1(val one: String) : Child()
+    data class Child2(val two: String?) : Child()
 
     @Test
     fun `schema with union types out of sealed classes should be printed as expected`() {
         val schema = KGraphQL.schema {
             query("child") {
-                resolver<Child> { -> Child1("one") }
+                resolver<Child> { Child1("one") }
             }
             query("childs") {
-                resolver<List<Child>> { -> listOf(Child2("one")) }
+                resolver<List<Child>> { listOf(Child2("one")) }
             }
             query("nullchilds") {
-                resolver<List<Child?>?> { -> null }
+                resolver<List<Child?>?> { null }
             }
         }
 
@@ -367,7 +367,7 @@ class SchemaPrinterTest {
               getNullString: String
               getObject(nullObject: Boolean!): TestObject
               getString: String!
-              randomInt(min: Int!, max: Int): Int!
+              randomInt(max: Int, min: Int!): Int!
               randomString(possibleReturns: [String!]!): String!
             }
             
@@ -460,7 +460,7 @@ class SchemaPrinterTest {
             
             type Query {
               getStringsForTypes(types: [TestEnum!] = [TYPE1, TYPE2]): [String!]!
-              getStringWithDefault(type: TestEnum! = TYPE1, string: String!): String!
+              getStringWithDefault(string: String!, type: TestEnum! = TYPE1): String!
             }
             
             enum TestEnum {
@@ -493,6 +493,7 @@ class SchemaPrinterTest {
                 }
             }
             query("data") {
+                @Suppress("UNUSED_ANONYMOUS_PARAMETER")
                 resolver { oldOptional: String?, new: String -> "" }.withArgs {
                     arg(String::class, typeOf<String?>()) {
                         name = "oldOptional"; defaultValue = "\"\""; deprecate("deprecated arg")
@@ -514,8 +515,8 @@ class SchemaPrinterTest {
             
             type Query {
               data(
-                oldOptional: String = "" @deprecated(reason: "deprecated arg")
                 new: String!
+                oldOptional: String = "" @deprecated(reason: "deprecated arg")
               ): String!
             }
             
@@ -542,6 +543,9 @@ class SchemaPrinterTest {
                 property(TestObject::name) {
                     description = "This is the name"
                 }
+            }
+            inputType<TestObject> {
+                name = "TestObjectInput"
             }
             enum<TestEnum> {
                 value(TestEnum.TYPE1) {
@@ -594,7 +598,7 @@ class SchemaPrinterTest {
               "Add a test object"
               "With some multi-line description"
               "(& special characters like " and \n)"
-              addObject(toAdd: TestObject!): TestObject!
+              addObject(toAdd: TestObjectInput!): TestObject!
             }
             
             "Query object"
@@ -623,7 +627,7 @@ class SchemaPrinterTest {
               TYPE2
             }
             
-            input TestObject {
+            input TestObjectInput {
               name: String!
             }
             
@@ -637,6 +641,9 @@ class SchemaPrinterTest {
                 property(TestObject::name) {
                     description = "This is the name"
                 }
+            }
+            inputType<TestObject> {
+                name = "TestObjectInput"
             }
             enum<TestEnum> {
                 value(TestEnum.TYPE1) {
@@ -663,7 +670,7 @@ class SchemaPrinterTest {
 
         SchemaPrinter(SchemaPrinterConfig(includeDescriptions = false)).print(schema) shouldBeEqualTo """
             type Mutation {
-              addObject(toAdd: TestObject!): TestObject!
+              addObject(toAdd: TestObjectInput!): TestObject!
             }
             
             type Query {
@@ -683,7 +690,7 @@ class SchemaPrinterTest {
               TYPE2
             }
             
-            input TestObject {
+            input TestObjectInput {
               name: String!
             }
             
