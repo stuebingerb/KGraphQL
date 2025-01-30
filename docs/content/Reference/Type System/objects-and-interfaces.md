@@ -251,6 +251,7 @@ Returns:
 
 This feature can be used in production but does currently have some issues:
 
-1. The `useDefaultPrettyPrint` doesn't work.
+1. The `useDefaultPrettyPrint` doesn't work
 1. Order of fields are not guaranteed, to match the order that was requested
-1. Other than that it should work as expected.
+1. Custom generic type resolvers are not supported
+1. Other than that it should work as expected
