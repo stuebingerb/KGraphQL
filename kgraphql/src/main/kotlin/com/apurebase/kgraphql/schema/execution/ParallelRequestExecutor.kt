@@ -255,9 +255,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         value: T,
         container: Execution.Fragment
     ): Map<String, JsonNode?> {
-        val expectedType = checkNotNull(schema.findTypeByName(container.condition.onType)) {
-            "Unable to find type ${container.condition.onType}"
-        }
+        val expectedType = container.condition.onType
         val include = shouldInclude(ctx, container)
 
         if (include) {

@@ -198,10 +198,7 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
             return
         }
 
-        val expectedType = checkNotNull(schema.findTypeByName(container.condition.onType)) {
-            "Unable to find type ${container.condition.onType}"
-        }
-
+        val expectedType = container.condition.onType
         if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
             if (expectedType.isInstance(value)) {
                 container.elements.map { child ->
