@@ -159,8 +159,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
         // Input Types
         //  https://spec.graphql.org/draft/#sec-Input-Objects
         val inputTypes = buildString {
-            schemaTypes[TypeKind.INPUT_OBJECT]?.filter { !it.inputFields.isNullOrEmpty() }
-                ?.forEachIndexed { index, type ->
+            schemaTypes[TypeKind.INPUT_OBJECT]?.forEachIndexed { index, type ->
                     if (index > 0) {
                         appendLine()
                     }
@@ -184,7 +183,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
                     if (index > 0) {
                         appendLine()
                     }
-                    val args = directive.args.takeIf { it.isNotEmpty() }
+                    val args = directive.args.sortedByName().takeIf { it.isNotEmpty() }
                         ?.joinToString(", ", prefix = "(", postfix = ")") { arg ->
                             arg.name + ": " + arg.type.typeReference() + arg.defaultInfo()
                         } ?: ""
@@ -263,15 +262,15 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
             // otherwise print them on a single line
             if (field.args.any { it.isDeprecated || (config.includeDescriptions && !it.description.isNullOrBlank()) }) {
                 appendLine("${indentation}${field.name}(")
-                field.args.forEach { arg ->
+                field.args.sortedByName().forEach { arg ->
                     val argsIndentation = "$indentation$indentation"
                     appendDescription(arg, argsIndentation)
                     appendLine("$argsIndentation${arg.name}: ${arg.type.typeReference()}${arg.defaultInfo()}${arg.deprecationInfo()}")
                 }
                 appendLine("${indentation}): ${field.type.typeReference()}${field.deprecationInfo()}")
             } else {
-                val args =
-                    field.args.takeIf { it.isNotEmpty() }?.joinToString(", ", prefix = "(", postfix = ")") { arg ->
+                val args = field.args.sortedByName().takeIf { it.isNotEmpty() }
+                    ?.joinToString(", ", prefix = "(", postfix = ")") { arg ->
                         arg.name + ": " + arg.type.typeReference() + arg.defaultInfo()
                     } ?: ""
                 appendLine("${indentation}${field.name}$args: ${field.type.typeReference()}${field.deprecationInfo()}")

@@ -9,7 +9,6 @@ sealed class TypeNode(override val loc: Location?) : ASTNode() {
 
     class NonNullTypeNode(loc: Location?, val type: TypeNode) : TypeNode(loc)
 
-
     val isNullable get() = this !is NonNullTypeNode
 
     val isList get() = this is ListTypeNode || (this is NonNullTypeNode && type is ListTypeNode)
