@@ -25,6 +25,7 @@ import com.apurebase.kgraphql.schema.model.QueryDef
 import com.apurebase.kgraphql.schema.model.SchemaDefinition
 import com.apurebase.kgraphql.schema.model.Transformation
 import com.apurebase.kgraphql.schema.model.TypeDef
+import com.apurebase.kgraphql.schema.structure.stitched.RemoteSchemaCompilation
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
@@ -61,10 +62,17 @@ class SchemaCompilation(
         INPUT, QUERY
     }
 
+    private val remoteSchemaCompilation = RemoteSchemaCompilation(configuration)
+
     suspend fun perform(): DefaultSchema {
         definition.unions.forEach { handleUnionType(it) }
         definition.objects.forEach { handleObjectType(it.kClass) }
         definition.inputObjects.forEach { handleInputType(it.kClass) }
+
+        definition.remoteSchemas.forEach { (url, schema) ->
+            remoteSchemaCompilation.perform(url, schema)
+        }
+
         val queryType = handleQueries()
         val mutationType = handleMutations()
         val subscriptionType = handleSubscriptions()
@@ -74,18 +82,64 @@ class SchemaCompilation(
             introspectInterfaces(kClass, typeProxy)
         }
 
+        val typesByName =
+            (queryTypeProxies.values + enums.values + scalars.values + inputTypeProxies.values + unions).associateByTo(
+                mutableMapOf()
+            ) { it.name }
+        (remoteSchemaCompilation.remoteQueryTypeProxies + remoteSchemaCompilation.remoteInputTypeProxies).forEach {
+            if (typesByName[it.key] == null) {
+                typesByName[it.key] = it.value
+            } else {
+                // Ignore duplicate type from remote
+                // TODO: log as soon as we have logging
+            }
+        }
+
+        definition.links.groupBy { it.typeName }.forEach { (typeName, links) ->
+            val originalType: TypeProxy = (typesByName[typeName] as? TypeProxy)
+                ?: throw SchemaException("linked type $typeName does not exist")
+            val linkedFields = links.map { link ->
+                if (originalType.fields?.any { it.name == link.fieldName } == true) {
+                    throw SchemaException("Cannot add stitched field ${link.fieldName} with duplicate name")
+                }
+                val linkedRemoteQuery = queryType.fields?.firstOrNull { it.name == link.remoteQueryName }
+                    ?: error("linked remote query ${link.remoteQueryName} does not exist")
+                var linkedType = linkedRemoteQuery.returnType
+
+                // TODO: we might (should?) be able to get rid of link.nullable as well
+                if (!link.nullable && linkedType.isNullable()) {
+                    linkedType = Type.NonNull(linkedType)
+                } else if (link.nullable && linkedType.isNotNullable()) {
+                    linkedType = linkedType.unwrapNonNull()
+                }
+
+                val argsFromParent =
+                    link.linkArguments.filter { it.parentFieldName != null }.associate { linkedArgument ->
+                        linkedRemoteQuery.args.first { it.name == linkedArgument.name } to linkedArgument.parentFieldName!!
+                    }
+                val args = linkedRemoteQuery.args.filterNot { arg -> arg.name in argsFromParent.keys.map { it.name } }
+                val linkedField = Field.Delegated(link.fieldName, null, false, null, args, linkedType, argsFromParent)
+                val linkedRemoteUrl = (linkedRemoteQuery as? Field.RemoteOperation<*, *>)?.remoteUrl
+                    ?: link.localUrl
+                    ?: throw SchemaException("linked type without url")
+                remoteSchemaCompilation.remoteRootOperation(linkedField, linkedRemoteUrl, link.remoteQueryName)
+            }
+            // TODO: support *local* original types
+            originalType.proxied = (originalType.proxied as Type.RemoteObject).withStitchedFields(linkedFields)
+        }
+
         val model = SchemaModel(
             query = queryType,
             mutation = mutationType,
             subscription = subscriptionType,
             queryTypes = queryTypeProxies + enums + scalars,
             inputTypes = inputTypeProxies + enums + scalars,
-            allTypes = queryTypeProxies.values
-                + inputTypeProxies.values
-                + enums.values
-                + scalars.values
-                + unions.distinctBy(Type.Union::name),
-            directives = definition.directives.map { handlePartialDirective(it) }
+            allTypes = typesByName.values.toList(),
+            directives = definition.directives.map { handlePartialDirective(it) },
+            // TODO: we shouldn't need to do a full recompilation again
+            remoteTypesBySchema = definition.remoteSchemas.mapValues {
+                RemoteSchemaCompilation(configuration).perform(it.key, it.value)
+            }
         )
         val schema = DefaultSchema(configuration, model)
         schemaProxy.proxiedSchema = schema
@@ -127,7 +181,7 @@ class SchemaCompilation(
 
     private suspend fun handleQueries(): Type {
         val __typenameField = typenameField(FunctionWrapper.on { -> "Query" })
-        val declaredFields = definition.queries.map { handleOperation(it) }
+        val declaredFields = definition.queries.map { handleOperation(it) } + remoteSchemaCompilation.remoteQueries
         if (declaredFields.isEmpty()) {
             throw SchemaException("Schema must define at least one query")
         }
@@ -140,7 +194,7 @@ class SchemaCompilation(
 
     private suspend fun handleMutations(): Type? {
         val __typenameField = typenameField(FunctionWrapper.on { -> "Mutation" })
-        val declaredFields = definition.mutations.map { handleOperation(it) }
+        val declaredFields = definition.mutations.map { handleOperation(it) } + remoteSchemaCompilation.remoteMutations
         return if (declaredFields.isNotEmpty()) {
             Type.OperationObject(
                 name = "Mutation",

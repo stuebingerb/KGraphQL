@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema.execution
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.introspection.NotIntrospected
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
+import com.apurebase.kgraphql.schema.model.ast.OperationTypeNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode
 import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 import com.apurebase.kgraphql.schema.structure.Field
@@ -58,9 +59,23 @@ sealed class Execution {
                 key = key,
                 alias = alias,
                 arguments = arguments,
-                directives = directives,
-                variables = null
+                directives = directives
             )
         }
     }
+
+    class Remote(
+        selectionNode: SelectionNode,
+        field: Field,
+        children: Collection<Execution>,
+        key: String,
+        alias: String?,
+        arguments: ArgumentNodes?,
+        directives: Map<Directive, ArgumentNodes?>?,
+        variables: List<VariableDefinitionNode>?,
+        val namedFragments: List<Fragment>?,
+        val remoteUrl: String,
+        val remoteOperation: String,
+        val operationType: OperationTypeNode
+    ) : Node(selectionNode, field, children, key, alias, arguments, directives, variables)
 }

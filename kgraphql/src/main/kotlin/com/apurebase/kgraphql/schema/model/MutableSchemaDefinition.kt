@@ -13,6 +13,7 @@ import com.apurebase.kgraphql.schema.introspection.__Field
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.__Type
+import com.apurebase.kgraphql.schema.stitched.Link
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -49,7 +50,9 @@ data class MutableSchemaDefinition(
         Directive.INCLUDE,
         Directive.DEPRECATED
     ),
-    private val inputObjects: ArrayList<TypeDef.Input<*>> = arrayListOf()
+    private val inputObjects: ArrayList<TypeDef.Input<*>> = arrayListOf(),
+    private val remoteSchemas: MutableMap<String, __Schema> = mutableMapOf(),
+    private val links: MutableList<Link> = mutableListOf()
 ) {
 
     val unionsMonitor: List<TypeDef.Union>
@@ -76,7 +79,9 @@ data class MutableSchemaDefinition(
             enums,
             unions,
             directives,
-            inputObjects
+            inputObjects,
+            remoteSchemas,
+            links
         )
     }
 
@@ -135,6 +140,20 @@ data class MutableSchemaDefinition(
     fun addUnion(union: TypeDef.Union) = addType(union, unions, "Union")
 
     fun addInputObject(input: TypeDef.Input<*>) = addType(input, inputObjects, "Input")
+
+    fun addRemoteSchema(url: String, schema: __Schema) {
+        if (url in remoteSchemas.keys) {
+            throw SchemaException("Cannot add remote schema with duplicated url $url")
+        }
+        remoteSchemas[url] = schema
+    }
+
+    fun addLink(link: Link) {
+        if (links.any { it.typeName == link.typeName && it.fieldName == link.fieldName }) {
+            throw SchemaException("Cannot add link with duplicated field ${link.fieldName} for type ${link.typeName}")
+        }
+        links.add(link)
+    }
 
     private fun <T : Definition> addType(type: T, target: ArrayList<T>, typeCategory: String) {
         if (type.name.startsWith("__")) {

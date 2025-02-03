@@ -1,6 +1,8 @@
 package com.apurebase.kgraphql.schema.model
 
 import com.apurebase.kgraphql.schema.directive.Directive
+import com.apurebase.kgraphql.schema.introspection.__Schema
+import com.apurebase.kgraphql.schema.stitched.Link
 
 /**
  * [SchemaDefinition] represents unstructured schema components
@@ -19,5 +21,7 @@ data class SchemaDefinition(
     val enums: List<TypeDef.Enumeration<*>>,
     val unions: List<TypeDef.Union>,
     val directives: List<Directive.Partial>,
-    val inputObjects: List<TypeDef.Input<*>>
+    val inputObjects: List<TypeDef.Input<*>>,
+    val remoteSchemas: Map<String, __Schema>,
+    val links: List<Link>
 )

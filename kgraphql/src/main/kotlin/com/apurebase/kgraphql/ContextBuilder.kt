@@ -4,7 +4,7 @@ import kotlin.reflect.KClass
 
 class ContextBuilder(block: ContextBuilder.() -> Unit) {
 
-    val components: MutableMap<Any, Any> = mutableMapOf()
+    val components: MutableMap<KClass<*>, Any> = mutableMapOf()
 
     init {
         block()

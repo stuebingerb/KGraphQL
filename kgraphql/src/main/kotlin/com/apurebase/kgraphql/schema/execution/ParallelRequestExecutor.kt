@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
+import com.apurebase.kgraphql.schema.execution.stitched.RemoteArgumentTransformer
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
@@ -15,6 +16,7 @@ import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
 import com.apurebase.kgraphql.toMapAsync
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -43,6 +45,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             it
         }
     }
+
+    private val remoteArgumentsHandler = RemoteArgumentTransformer(schema.model)
 
     override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context): String =
         coroutineScope {
@@ -131,9 +135,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         node: Execution.Node,
         returnType: Type
     ): JsonNode {
-        if (value == null) {
+        if (value == null || value is NullNode) {
             return createNullNode(node, returnType)
         }
+
         val unboxed = schema.configuration.genericTypeResolver.unbox(value)
         if (unboxed !== value) {
             return createNode(ctx, unboxed, node, returnType)
@@ -141,9 +146,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
         return when {
             // Check value, not returnType, because this method can be invoked with element value
-            value is Collection<*> || value is Array<*> -> {
+            value is Collection<*> || value is Array<*> || value is ArrayNode -> {
                 val values: Collection<*> = when (value) {
                     is Array<*> -> value.toList()
+                    is ArrayNode -> value.toList()
                     else -> value as Collection<*>
                 }
                 if (returnType.isList()) {
@@ -173,6 +179,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             node is Execution.Union -> {
                 createObjectNode(ctx, value, node.memberExecution(returnType), returnType)
             }
+
+            // TODO: do we have to consider more? more validation e.g.?
+            value is JsonNode -> value
 
             else -> createSimpleValueNode(returnType, value, node)
         }
@@ -237,6 +246,15 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 }
             }
 
+            is Execution.Remote -> {
+                return child.aliasOrKey to handleFunctionProperty(
+                    ctx,
+                    value,
+                    child,
+                    child.field as Field.Function<*, *>
+                )
+            }
+
             is Execution.Node -> {
                 val field = checkNotNull(type.unwrapped()[child.key]) {
                     "Execution unit ${child.key} is not contained by operation return type"
@@ -260,7 +278,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
         if (include) {
             if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
-                if (expectedType.isInstance(value)) {
+                // TODO: for remote objects we now rely on the presence of the __typename. So maybe we should/need to automatically add it if not present already? Can this break something?
+                if (expectedType.isInstance(value) || (value is JsonNode && value["__typename"].textValue() == expectedType.name)) {
                     return container.elements.flatMap { child ->
                         when (child) {
                             is Execution.Fragment -> handleFragment(ctx, value, child).toList()
@@ -292,6 +311,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         node.field.checkAccess(parentValue, ctx.requestContext)
 
         if (include) {
+            // TODO: this feels a bit hacky
+            if (parentValue is JsonNode) {
+                return createNode(ctx, (parentValue as JsonNode).get(node.aliasOrKey), node, field.returnType)
+            }
             when (field) {
                 is Field.Kotlin<*, *> -> {
                     val rawValue = try {
@@ -396,14 +419,24 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         executionNode: Execution,
         ctx: ExecutionContext
     ): T? {
-        val transformedArgs = argumentsHandler.transformArguments(
-            funName,
-            inputValues,
-            args,
-            ctx.variables,
-            executionNode,
-            ctx.requestContext
-        )
+        val transformedArgs = if (executionNode is Execution.Remote) {
+            remoteArgumentsHandler.transformArguments(
+                receiver,
+                inputValues,
+                executionNode,
+                ctx,
+                (this as? Field.RemoteOperation<*, *>)?.field?.argsFromParent.orEmpty()
+            ) ?: return null
+        } else {
+            argumentsHandler.transformArguments(
+                funName,
+                inputValues,
+                args,
+                ctx.variables,
+                executionNode,
+                ctx.requestContext
+            )
+        }
 
         // exceptions are not caught on purpose to pass up business logic errors
         return try {

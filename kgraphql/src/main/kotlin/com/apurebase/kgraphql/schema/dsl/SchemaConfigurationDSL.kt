@@ -4,6 +4,7 @@ import com.apurebase.kgraphql.configuration.PluginConfiguration
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.Executor
 import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
+import com.apurebase.kgraphql.schema.execution.RemoteRequestExecutor
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -23,6 +24,7 @@ open class SchemaConfigurationDSL {
     var timeout: Long? = null
     var introspection: Boolean = true
     var genericTypeResolver: GenericTypeResolver = GenericTypeResolver.DEFAULT
+    var remoteExecutor: RemoteRequestExecutor? = null
 
     private val plugins: MutableMap<KClass<*>, Any> = mutableMapOf()
 
@@ -47,6 +49,7 @@ open class SchemaConfigurationDSL {
             introspection = introspection,
             plugins = plugins,
             genericTypeResolver = genericTypeResolver,
+            remoteExecutor = remoteExecutor
         )
     }
 }

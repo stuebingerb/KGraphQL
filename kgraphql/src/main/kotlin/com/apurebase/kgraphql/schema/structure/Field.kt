@@ -9,6 +9,7 @@ import com.apurebase.kgraphql.schema.model.BaseOperationDef
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.PropertyDef
 import com.apurebase.kgraphql.schema.model.Transformation
+import com.apurebase.kgraphql.schema.stitched.LinkArgument
 import nidomiro.kdataloader.factories.DataLoaderFactory
 import kotlin.reflect.full.findAnnotation
 
@@ -100,6 +101,41 @@ sealed class Field : __Field {
 
         override fun checkAccess(parent: Any?, ctx: Context) {
             kql.accessRule?.invoke(parent as T?, ctx)?.let { throw it }
+        }
+    }
+
+    // TODO: can we combine remoteoperation and delegated?
+    class RemoteOperation<T, R>(
+        private val kql: BaseOperationDef<T, R>,
+        val field: Delegated,
+        val remoteUrl: String,
+        val remoteQuery: String,
+        override val arguments: List<InputValue<*>> = emptyList(),
+        override val args: List<__InputValue>
+    ) : Function<T, R>(kql, field.returnType, emptyList()) {
+        override fun checkAccess(parent: Any?, ctx: Context) {
+            kql.accessRule?.invoke(parent as T?, ctx)?.let { throw it }
+        }
+
+        override val isDeprecated: Boolean = field.isDeprecated
+        override val deprecationReason: String? = field.deprecationReason
+        override val name: String = field.name
+        override val description: String? = field.description
+    }
+
+    class Delegated(
+        override val name: String,
+        override val description: String?,
+        override val isDeprecated: Boolean,
+        override val deprecationReason: String?,
+        override val args: List<__InputValue>,
+        override val returnType: Type,
+        val argsFromParent: Map<__InputValue, String>
+    ) : Field() {
+        override val arguments: List<InputValue<*>> = emptyList()
+
+        override fun checkAccess(parent: Any?, ctx: Context) {
+            // Noop
         }
     }
 }

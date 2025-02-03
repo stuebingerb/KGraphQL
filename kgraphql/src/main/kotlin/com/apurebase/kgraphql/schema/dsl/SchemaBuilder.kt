@@ -18,9 +18,12 @@ import com.apurebase.kgraphql.schema.dsl.types.ShortScalarDSL
 import com.apurebase.kgraphql.schema.dsl.types.StringScalarDSL
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.dsl.types.UnionTypeDSL
+import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.model.EnumValueDef
 import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
 import com.apurebase.kgraphql.schema.model.TypeDef
+import com.apurebase.kgraphql.schema.stitched.Link
+import com.apurebase.kgraphql.schema.stitched.LinkArgument
 import com.apurebase.kgraphql.schema.structure.SchemaCompilation
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
@@ -231,6 +234,18 @@ class SchemaBuilder internal constructor() {
 
     inline fun <reified T : Any> inputType(noinline block: InputTypeDSL<T>.() -> Unit = {}) {
         inputType(T::class, block)
+    }
+
+    //================================================================================
+    // STITCHING
+    //================================================================================
+
+    fun remoteSchema(url: String, block: () -> __Schema) {
+        model.addRemoteSchema(url, block.invoke())
+    }
+
+    fun link(typeName: String, fieldName: String, remoteQueryName: String, localUrl: String? = null, nullable: Boolean = true, linkArguments: List<LinkArgument> = emptyList()) {
+        model.addLink(Link(typeName, fieldName, remoteQueryName, localUrl, nullable, linkArguments))
     }
 }
 
