@@ -24,6 +24,12 @@ benchmark {
             jmhVersion = "1.37"
         }
     }
+
+    configurations {
+        register("requestCachingBenchmark") {
+            include("com.apurebase.kgraphql.RequestCachingBenchmark")
+        }
+    }
 }
 
 dependencies {

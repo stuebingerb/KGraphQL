@@ -45,7 +45,7 @@ import com.apurebase.kgraphql.schema.model.ast.TypeNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 
-open class Parser {
+internal class Parser {
     private val options: Options
     private val lexer: Lexer
 
@@ -55,11 +55,6 @@ open class Parser {
     }
 
     constructor(source: String, options: Options? = null) : this(Source(source), options)
-
-    constructor(lexer: Lexer, options: Options? = null) {
-        this.options = options ?: Options()
-        this.lexer = lexer
-    }
 
     /**
      * Converts a name lex token into a name parse node.

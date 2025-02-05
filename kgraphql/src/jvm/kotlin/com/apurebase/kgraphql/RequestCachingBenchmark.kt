@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 @State(Scope.Benchmark)
 @Warmup(iterations = 10)
 @Measurement(iterations = 5)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.SECONDS)
 open class RequestCachingBenchmark {
 
     @Param("true", "false")
