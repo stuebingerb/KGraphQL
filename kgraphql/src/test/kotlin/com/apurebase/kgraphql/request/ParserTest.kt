@@ -28,23 +28,25 @@ import org.junit.jupiter.api.Test
 
 class ParserTest {
 
-    private fun parse(source: String, options: Parser.Options? = null) = Parser(source, options).parseDocument()
+    private fun parse(source: String, options: Parser.Options? = null) = Parser(options).parseDocument(Source(source))
 
-    private fun parse(source: Source) = Parser(source).parseDocument()
+    private fun parse(source: Source) = Parser().parseDocument(source)
 
     private fun parseValue(source: String): ValueNode {
-        val parser = Parser(source)
-        parser.expectToken(SOF)
-        val value = parser.parseValueLiteral(false)
-        parser.expectToken(EOF)
+        val parser = Parser()
+        val lexer = Lexer(Source(source))
+        with(parser) { lexer.expectToken(SOF) }
+        val value = with(parser) { lexer.parseValueLiteral(false) }
+        with(parser) { lexer.expectToken(EOF) }
         return value
     }
 
     private fun parseType(source: String): TypeNode {
-        val parser = Parser(source)
-        parser.expectToken(SOF)
-        val type = parser.parseTypeReference()
-        parser.expectToken(EOF)
+        val parser = Parser()
+        val lexer = Lexer(Source(source))
+        with(parser) { lexer.expectToken(SOF) }
+        val type = with(parser) { lexer.parseTypeReference() }
+        with(parser) { lexer.expectToken(EOF) }
         return type
     }
 

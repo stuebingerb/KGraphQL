@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.schema
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
-import com.apurebase.kgraphql.function.memoized
+import com.apurebase.kgraphql.function.memoize
 import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.request.Parser
 import com.apurebase.kgraphql.request.VariablesJson
@@ -17,6 +17,7 @@ import com.apurebase.kgraphql.schema.execution.RequestExecutor
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.model.ast.DocumentNode
 import com.apurebase.kgraphql.schema.model.ast.NameNode
+import com.apurebase.kgraphql.schema.model.ast.Source
 import com.apurebase.kgraphql.schema.structure.LookupSchema
 import com.apurebase.kgraphql.schema.structure.RequestInterpreter
 import com.apurebase.kgraphql.schema.structure.SchemaModel
@@ -43,16 +44,13 @@ class DefaultSchema(
     }
 
     private val requestInterpreter: RequestInterpreter = RequestInterpreter(model)
+    private val parser = Parser()
 
-    private val parseRequest: (suspend (String) -> DocumentNode) =
-        if (configuration.useCachingDocumentParser) {
-            ::parseDocument.memoized(
-                this,
-                configuration.documentParserCacheMaximumSize
-            )
-        } else {
-            ::parseDocument
-        }
+    private val parse: suspend (String) -> DocumentNode = if (configuration.useCachingDocumentParser) {
+        memoize(this, configuration.documentParserCacheMaximumSize) { parser.parseDocument(Source(it)) }
+    } else {
+        { parser.parseDocument(Source(it)) }
+    }
 
     override suspend fun execute(
         request: String,
@@ -69,7 +67,7 @@ class DefaultSchema(
             ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
             ?: VariablesJson.Empty()
 
-        val document = parseRequest(request)
+        val document = parse(request)
 
         val executor = options.executor?.let(this@DefaultSchema::getExecutor) ?: defaultRequestExecutor
 
@@ -87,9 +85,6 @@ class DefaultSchema(
     override fun inputTypeByKClass(kClass: KClass<*>): Type? = model.inputTypes[kClass]
 
     override fun findTypeByName(name: String): Type? = model.allTypesByName[name]
-
-    @Suppress("RedundantSuspendModifier")
-    private suspend fun parseDocument(input: String): DocumentNode = Parser(input).parseDocument()
 
     override val coroutineContext: CoroutineContext = configuration.coroutineDispatcher
 }

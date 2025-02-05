@@ -47,19 +47,15 @@ import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 
 internal class Parser {
     private val options: Options
-    private val lexer: Lexer
 
-    constructor(source: Source, options: Options? = null) {
+    constructor(options: Options? = null) {
         this.options = options ?: Options()
-        lexer = Lexer(source)
     }
-
-    constructor(source: String, options: Options? = null) : this(Source(source), options)
 
     /**
      * Converts a name lex token into a name parse node.
      */
-    private fun parseName(): NameNode {
+    private fun Lexer.parseName(): NameNode {
         val token = expectToken(NAME)
         return NameNode(
             value = token.value!!,
@@ -72,16 +68,17 @@ internal class Parser {
     /**
      * Document : Definition+
      */
-    fun parseDocument(): DocumentNode {
+    fun parseDocument(input: Source): DocumentNode {
+        val lexer = Lexer(input)
         val start = lexer.token
 
         return DocumentNode(
-            definitions = many(
+            definitions = lexer.many(
                 SOF,
-                ::parseDefinition,
+                { lexer.parseDefinition() },
                 EOF
             ),
-            loc = loc(start)
+            loc = lexer.loc(start)
         )
     }
 
@@ -95,9 +92,9 @@ internal class Parser {
      *   - OperationDefinition
      *   - FragmentDefinition
      */
-    private fun parseDefinition(): DefinitionNode {
+    private fun Lexer.parseDefinition(): DefinitionNode {
         return when {
-            peek(NAME) -> when (lexer.token.value) {
+            peek(NAME) -> when (token.value) {
                 "query", "mutation", "subscription" -> parseOperationDefinition()
                 "fragment" -> parseFragmentDefinition()
                 "schema", "scalar", "type", "interface", "union", "enum", "input", "directive" -> parseTypeSystemDefinition()
@@ -116,8 +113,8 @@ internal class Parser {
      *  - SelectionSet
      *  - OperationType Name? VariableDefinitions? Directives? SelectionSet
      */
-    private fun parseOperationDefinition(): DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseOperationDefinition(): DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode {
+        val start = token
         if (peek(BRACE_L)) {
             return DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode(
                 operation = QUERY,
@@ -146,7 +143,7 @@ internal class Parser {
     /**
      * OperationType : one of query mutation subscription
      */
-    private fun parseOperationType(): OperationTypeNode {
+    private fun Lexer.parseOperationType(): OperationTypeNode {
         val operationToken = expectToken(NAME)
         return when (operationToken.value) {
             "query" -> QUERY
@@ -159,17 +156,17 @@ internal class Parser {
     /**
      * VariableDefinitions : ( VariableDefinition+ )
      */
-    private fun parseVariableDefinitions() = optionalMany(
+    private fun Lexer.parseVariableDefinitions() = optionalMany(
         PAREN_L,
-        ::parseVariableDefinition,
+        { parseVariableDefinition() },
         PAREN_R
     )
 
     /**
      * VariableDefinition : Variable : Type DefaultValue? Directives{Const}?
      */
-    private fun parseVariableDefinition(): VariableDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseVariableDefinition(): VariableDefinitionNode {
+        val start = token
         return VariableDefinitionNode(
             variable = parseVariable(),
             type = expectToken(COLON).let { parseTypeReference() },
@@ -186,8 +183,8 @@ internal class Parser {
     /**
      * Variable : $ Name
      */
-    private fun parseVariable(): ValueNode.VariableNode {
-        val start = lexer.token
+    private fun Lexer.parseVariable(): ValueNode.VariableNode {
+        val start = token
         expectToken(DOLLAR)
         return ValueNode.VariableNode(
             name = parseName(),
@@ -198,8 +195,8 @@ internal class Parser {
     /**
      * SelectionSet : { Selection+ }
      */
-    private fun parseSelectionSet(parent: SelectionNode?): SelectionSetNode {
-        val start = lexer.token
+    private fun Lexer.parseSelectionSet(parent: SelectionNode?): SelectionSetNode {
+        val start = token
         return SelectionSetNode(
             selections = many(
                 BRACE_L,
@@ -216,7 +213,7 @@ internal class Parser {
      *   - FragmentSpread
      *   - InlineFragment
      */
-    private fun parseSelection(parent: SelectionNode?): SelectionNode {
+    private fun Lexer.parseSelection(parent: SelectionNode?): SelectionNode {
         return if (peek(SPREAD)) parseFragment(parent) else parseField(parent)
     }
 
@@ -225,8 +222,8 @@ internal class Parser {
      *
      * Alias : Name :
      */
-    private fun parseField(parent: SelectionNode?): SelectionNode.FieldNode {
-        val start = lexer.token
+    private fun Lexer.parseField(parent: SelectionNode?): SelectionNode.FieldNode {
+        val start = token
 
         val nameOrAlias = parseName()
         val alias: NameNode?
@@ -256,16 +253,16 @@ internal class Parser {
     /**
      * Arguments{Const} : ( Argument[?Const]+ )
      */
-    private fun parseArguments(isConst: Boolean): MutableList<ArgumentNode> {
-        val item = if (isConst) ::parseConstArgument else ::parseArgument
+    private fun Lexer.parseArguments(isConst: Boolean): MutableList<ArgumentNode> {
+        val item = if (isConst) ({ parseConstArgument() }) else ({ parseArgument() })
         return optionalMany(PAREN_L, item, PAREN_R)
     }
 
     /**
      * Argument{Const} : Name : Value[?Const]
      */
-    private fun parseArgument(): ArgumentNode {
-        val start = lexer.token
+    private fun Lexer.parseArgument(): ArgumentNode {
+        val start = token
         val name = parseName()
 
         expectToken(COLON)
@@ -276,8 +273,8 @@ internal class Parser {
         )
     }
 
-    private fun parseConstArgument(): ArgumentNode {
-        val start = lexer.token
+    private fun Lexer.parseConstArgument(): ArgumentNode {
+        val start = token
         return ArgumentNode(
             name = parseName(),
             value = expectToken(COLON).let { parseValueLiteral(true) },
@@ -292,8 +289,8 @@ internal class Parser {
      *
      * InlineFragment : ... TypeCondition? Directives? SelectionSet
      */
-    private fun parseFragment(parent: SelectionNode?): SelectionNode.FragmentNode {
-        val start = lexer.token
+    private fun Lexer.parseFragment(parent: SelectionNode?): SelectionNode.FragmentNode {
+        val start = token
         expectToken(SPREAD)
 
         val hasTypeCondition = expectOptionalKeyword("on")
@@ -323,8 +320,8 @@ internal class Parser {
      *
      * TypeCondition : NamedType
      */
-    private fun parseFragmentDefinition(): DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseFragmentDefinition(): DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode {
+        val start = token
         expectKeyword("fragment")
         return DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode(
             name = parseFragmentName(),
@@ -338,8 +335,8 @@ internal class Parser {
     /**
      * FragmentName : Name but not `on`
      */
-    private fun parseFragmentName(): NameNode {
-        if (lexer.token.value == "on") {
+    private fun Lexer.parseFragmentName(): NameNode {
+        if (token.value == "on") {
             throw unexpected()
         }
         return parseName()
@@ -363,14 +360,14 @@ internal class Parser {
      *
      * EnumValue : Name but not `true`, `false` or `null`
      */
-    fun parseValueLiteral(isConst: Boolean): ValueNode {
-        val token = lexer.token
+    internal fun Lexer.parseValueLiteral(isConst: Boolean): ValueNode {
+        val token = token
 
         return when (token.kind) {
             BRACKET_L -> parseList(isConst)
             BRACE_L -> parseObject(isConst)
             INT -> {
-                lexer.advance()
+                advance()
                 ValueNode.NumberValueNode(
                     value = token.value!!,
                     loc = loc(token)
@@ -378,7 +375,7 @@ internal class Parser {
             }
 
             FLOAT -> {
-                lexer.advance()
+                advance()
                 ValueNode.DoubleValueNode(
                     value = token.value!!,
                     loc = loc(token)
@@ -388,16 +385,16 @@ internal class Parser {
             STRING, BLOCK_STRING -> parseStringLiteral()
             NAME -> {
                 if (token.value == "true" || token.value == "false") {
-                    lexer.advance()
+                    advance()
                     ValueNode.BooleanValueNode(
                         value = token.value == "true",
                         loc = loc(token)
                     )
                 } else if (token.value == "null") {
-                    lexer.advance()
+                    advance()
                     ValueNode.NullValueNode(loc(token))
                 } else {
-                    lexer.advance()
+                    advance()
                     ValueNode.EnumValueNode(
                         value = token.value!!,
                         loc = loc(token)
@@ -410,9 +407,9 @@ internal class Parser {
         }
     }
 
-    private fun parseStringLiteral(): ValueNode.StringValueNode {
-        val token = lexer.token
-        lexer.advance()
+    private fun Lexer.parseStringLiteral(): ValueNode.StringValueNode {
+        val token = token
+        advance()
         return ValueNode.StringValueNode(
             value = token.value!!,
             block = token.kind == BLOCK_STRING,
@@ -425,8 +422,8 @@ internal class Parser {
      *   - [ ]
      *   - [ Value[?Const]+ ]
      */
-    private fun parseList(isConst: Boolean): ValueNode.ListValueNode {
-        val start = lexer.token
+    private fun Lexer.parseList(isConst: Boolean): ValueNode.ListValueNode {
+        val start = token
         val item = { parseValueLiteral(isConst) }
 
         return ValueNode.ListValueNode(
@@ -440,8 +437,8 @@ internal class Parser {
      *   - { }
      *   - { ObjectField[?Const]+ }
      */
-    private fun parseObject(isConst: Boolean): ValueNode.ObjectValueNode {
-        val start = lexer.token
+    private fun Lexer.parseObject(isConst: Boolean): ValueNode.ObjectValueNode {
+        val start = token
         val item = { parseObjectField(isConst) }
         return ValueNode.ObjectValueNode(
             fields = any(BRACE_L, item, BRACE_R),
@@ -452,8 +449,8 @@ internal class Parser {
     /**
      * ObjectField{Const} : Name : Value[?Const]
      */
-    private fun parseObjectField(isConst: Boolean): ValueNode.ObjectValueNode.ObjectFieldNode {
-        val start = lexer.token
+    private fun Lexer.parseObjectField(isConst: Boolean): ValueNode.ObjectValueNode.ObjectFieldNode {
+        val start = token
         val name = parseName()
         expectToken(COLON)
 
@@ -467,7 +464,7 @@ internal class Parser {
     /**
      * Directives{Const} : Directive[?Const]+
      */
-    private fun parseDirectives(isConst: Boolean): MutableList<DirectiveNode> {
+    private fun Lexer.parseDirectives(isConst: Boolean): MutableList<DirectiveNode> {
         val directives = mutableListOf<DirectiveNode>()
         while (peek(AT)) {
             directives.add(parseDirective(isConst))
@@ -478,8 +475,8 @@ internal class Parser {
     /**
      * Directive{Const} : @ Name Arguments[?Const]?
      */
-    private fun parseDirective(isConst: Boolean): DirectiveNode {
-        val start = lexer.token
+    private fun Lexer.parseDirective(isConst: Boolean): DirectiveNode {
+        val start = token
         expectToken(AT)
         return DirectiveNode(
             name = parseName(),
@@ -494,8 +491,8 @@ internal class Parser {
      *   - ListType
      *   - NonNullType
      */
-    internal fun parseTypeReference(): TypeNode {
-        val start = lexer.token
+    internal fun Lexer.parseTypeReference(): TypeNode {
+        val start = token
         var type: TypeNode?
         if (expectOptionalToken(BRACKET_L) != null) {
             type = parseTypeReference()
@@ -520,8 +517,8 @@ internal class Parser {
     /**
      * NamedType : Name
      */
-    private fun parseNamedType(): TypeNode.NamedTypeNode {
-        val start = lexer.token
+    private fun Lexer.parseNamedType(): TypeNode.NamedTypeNode {
+        val start = token
         return TypeNode.NamedTypeNode(
             name = parseName(),
             loc = loc(start)
@@ -542,12 +539,12 @@ internal class Parser {
      *   - EnumTypeDefinition
      *   - InputObjectTypeDefinition
      */
-    private fun parseTypeSystemDefinition(): DefinitionNode.TypeSystemDefinitionNode {
+    private fun Lexer.parseTypeSystemDefinition(): DefinitionNode.TypeSystemDefinitionNode {
         // Many definitions begin with a description and require a lookahead.
         val keywordToken = if (peekDescription()) {
-            lexer.lookahead()
+            lookahead()
         } else {
-            lexer.token
+            token
         }
 
         if (keywordToken.kind == NAME) {
@@ -566,12 +563,12 @@ internal class Parser {
         throw unexpected(keywordToken)
     }
 
-    private fun peekDescription() = peek(STRING) || peek(BLOCK_STRING)
+    private fun Lexer.peekDescription() = peek(STRING) || peek(BLOCK_STRING)
 
     /**
      * Description : StringValue
      */
-    private fun parseDescription() = if (peekDescription()) {
+    private fun Lexer.parseDescription() = if (peekDescription()) {
         parseStringLiteral()
     } else {
         null
@@ -580,13 +577,13 @@ internal class Parser {
     /**
      * SchemaDefinition : schema Directives{Const}? { OperationTypeDefinition+ }
      */
-    private fun parseSchemaDefinition(): DefinitionNode.TypeSystemDefinitionNode.SchemaDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseSchemaDefinition(): DefinitionNode.TypeSystemDefinitionNode.SchemaDefinitionNode {
+        val start = token
         expectKeyword("schema")
         val directives = parseDirectives(true)
         val operationTypes = many(
             BRACE_L,
-            ::parseOperationTypeDefinition,
+            { parseOperationTypeDefinition() },
             BRACE_R
         )
         return DefinitionNode.TypeSystemDefinitionNode.SchemaDefinitionNode(
@@ -599,8 +596,8 @@ internal class Parser {
     /**
      * OperationTypeDefinition : OperationType : NamedType
      */
-    private fun parseOperationTypeDefinition(): OperationTypeDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseOperationTypeDefinition(): OperationTypeDefinitionNode {
+        val start = token
         val operation = parseOperationType()
         expectToken(COLON)
         val type = parseNamedType()
@@ -614,8 +611,8 @@ internal class Parser {
     /**
      * ScalarTypeDefinition : Description? scalar Name Directives{Const}?
      */
-    private fun parseScalarTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.ScalarTypeDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseScalarTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.ScalarTypeDefinitionNode {
+        val start = token
         val description = parseDescription()
         expectKeyword("scalar")
         val name = parseName()
@@ -633,8 +630,8 @@ internal class Parser {
      *   Description?
      *   type Name ImplementsInterfaces? Directives{Const}? FieldsDefinition?
      */
-    private fun parseObjectTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.ObjectTypeDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseObjectTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.ObjectTypeDefinitionNode {
+        val start = token
         val description = parseDescription()
         expectKeyword("type")
         val name = parseName()
@@ -656,7 +653,7 @@ internal class Parser {
      *   - implements `&`? NamedType
      *   - ImplementsInterfaces & NamedType
      */
-    private fun parseImplementsInterfaces(): MutableList<TypeNode.NamedTypeNode> {
+    private fun Lexer.parseImplementsInterfaces(): MutableList<TypeNode.NamedTypeNode> {
         val types = mutableListOf<TypeNode.NamedTypeNode>()
         if (expectOptionalKeyword("implements")) {
             // Optional leading ampersand
@@ -666,7 +663,7 @@ internal class Parser {
             } while (
                 expectOptionalToken(AMP) != null ||
                 // Legacy support for the SDL?
-                (options.allowLegacySDLImplementsInterfaces && peek(NAME))
+                (this@Parser.options.allowLegacySDLImplementsInterfaces && peek(NAME))
             )
         }
         return types
@@ -675,20 +672,20 @@ internal class Parser {
     /**
      * FieldsDefinition : { FieldDefinition+ }
      */
-    private fun parseFieldsDefinition(): MutableList<FieldDefinitionNode> {
+    private fun Lexer.parseFieldsDefinition(): MutableList<FieldDefinitionNode> {
         // Legacy support for the SDL?
         if (
-            options.allowLegacySDLEmptyFields &&
+            this@Parser.options.allowLegacySDLEmptyFields &&
             peek(BRACE_L) &&
-            lexer.lookahead().kind == BRACE_R
+            lookahead().kind == BRACE_R
         ) {
-            lexer.advance()
-            lexer.advance()
+            advance()
+            advance()
             return mutableListOf()
         }
         return optionalMany(
             BRACE_L,
-            ::parseFieldDefinition,
+            { parseFieldDefinition() },
             BRACE_R
         )
     }
@@ -697,8 +694,8 @@ internal class Parser {
      * FieldDefinition :
      *   - Description? Name ArgumentsDefinition? : Type Directives{Const}?
      */
-    private fun parseFieldDefinition(): FieldDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseFieldDefinition(): FieldDefinitionNode {
+        val start = token
         val description = parseDescription()
         val name = parseName()
         val args = parseArgumentDefs()
@@ -719,9 +716,9 @@ internal class Parser {
     /**
      * ArgumentsDefinition : ( InputValueDefinition+ )
      */
-    private fun parseArgumentDefs() = optionalMany(
+    private fun Lexer.parseArgumentDefs() = optionalMany(
         PAREN_L,
-        ::parseInputValueDef,
+        { parseInputValueDef() },
         PAREN_R
     )
 
@@ -729,8 +726,8 @@ internal class Parser {
      * InputValueDefinition :
      *   - Description? Name ArgumentsDefinition? : Type DefaultValue? Directives{Const}?
      */
-    private fun parseInputValueDef(): InputValueDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseInputValueDef(): InputValueDefinitionNode {
+        val start = token
         val description = parseDescription()
         val name = parseName()
         val args = parseArgumentDefs()
@@ -754,8 +751,8 @@ internal class Parser {
      * InterfaceTypeDefinition :
      *   - Description? interface Name Directives{Const}? FieldsDefinition?
      */
-    private fun parseInterfaceTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.InterfaceTypeDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseInterfaceTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.InterfaceTypeDefinitionNode {
+        val start = token
         val description = parseDescription()
         expectKeyword("interface")
         val name = parseName()
@@ -775,8 +772,8 @@ internal class Parser {
      * UnionTypeDefinition :
      *   - Description? union Name Directives{Const}? UnionMemberTypes?
      */
-    private fun parseUnionTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.UnionTypeDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseUnionTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.UnionTypeDefinitionNode {
+        val start = token
         val description = parseDescription()
         expectKeyword("union")
         val name = parseName()
@@ -797,7 +794,7 @@ internal class Parser {
      *   - = `|`? NamedType
      *   - UnionMemberTypes | NamedType
      */
-    private fun parseUnionMemberTypes(): MutableList<TypeNode.NamedTypeNode> {
+    private fun Lexer.parseUnionMemberTypes(): MutableList<TypeNode.NamedTypeNode> {
         val types = mutableListOf<TypeNode.NamedTypeNode>()
         if (expectOptionalToken(EQUALS) != null) {
             // Optional leading pipe
@@ -813,8 +810,8 @@ internal class Parser {
      * EnumTypeDefinition :
      *   - Description? enum Name Directives{Const}? EnumValuesDefinition?
      */
-    private fun parseEnumTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.EnumTypeDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseEnumTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.EnumTypeDefinitionNode {
+        val start = token
         val description = parseDescription()
         expectKeyword("enum")
         val name = parseName()
@@ -832,9 +829,9 @@ internal class Parser {
     /**
      * EnumValuesDefinition : { EnumValueDefinition+ }
      */
-    private fun parseEnumValuesDefinition() = optionalMany(
+    private fun Lexer.parseEnumValuesDefinition() = optionalMany(
         BRACE_L,
-        ::parseEnumValueDefinition,
+        { parseEnumValueDefinition() },
         BRACE_R
     )
 
@@ -843,8 +840,8 @@ internal class Parser {
      *
      * EnumValue : Name
      */
-    private fun parseEnumValueDefinition(): EnumValueDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseEnumValueDefinition(): EnumValueDefinitionNode {
+        val start = token
         val description = parseDescription()
         val name = parseName()
         val directives = parseDirectives(true)
@@ -861,8 +858,8 @@ internal class Parser {
      * InputObjectTypeDefinition :
      *   - Description? input Name Directives{Const}? InputFieldsDefinition?
      */
-    private fun parseInputObjectTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.InputObjectTypeDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseInputObjectTypeDefinition(): DefinitionNode.TypeSystemDefinitionNode.TypeDefinitionNode.InputObjectTypeDefinitionNode {
+        val start = token
         val description = parseDescription()
         expectKeyword("input")
         val name = parseName()
@@ -881,9 +878,9 @@ internal class Parser {
     /**
      * InputFieldsDefinition : { InputValueDefinition+ }
      */
-    private fun parseInputFieldsDefinition() = optionalMany(
+    private fun Lexer.parseInputFieldsDefinition() = optionalMany(
         BRACE_L,
-        ::parseInputValueDef,
+        { parseInputValueDef() },
         BRACE_R
     )
 
@@ -891,8 +888,8 @@ internal class Parser {
      * DirectiveDefinition :
      *   - Description? directive @ Name ArgumentsDefinition? `repeatable`? on DirectiveLocations
      */
-    private fun parseDirectiveDefinition(): DefinitionNode.TypeSystemDefinitionNode.DirectiveDefinitionNode {
-        val start = lexer.token
+    private fun Lexer.parseDirectiveDefinition(): DefinitionNode.TypeSystemDefinitionNode.DirectiveDefinitionNode {
+        val start = token
         val description = parseDescription()
         expectKeyword("directive")
         expectToken(AT)
@@ -917,7 +914,7 @@ internal class Parser {
      *   - `|`? DirectiveLocation
      *   - DirectiveLocations | DirectiveLocation
      */
-    private fun parseDirectiveLocations(): MutableList<NameNode> {
+    private fun Lexer.parseDirectiveLocations(): MutableList<NameNode> {
         // Optional leading pipe
         expectOptionalToken(PIPE)
         val locations = mutableListOf<NameNode>()
@@ -955,8 +952,8 @@ internal class Parser {
      *   `INPUT_OBJECT`
      *   `INPUT_FIELD_DEFINITION`
      */
-    private fun parseDirectiveLocation(): NameNode {
-        val start = lexer.token
+    private fun Lexer.parseDirectiveLocation(): NameNode {
+        val start = token
         val name = parseName()
         if (DirectiveLocation.from(name.value) != null) {
             return name
@@ -968,9 +965,9 @@ internal class Parser {
      * Returns a location object, used to identify the place in
      * the source that created a given parsed object.
      */
-    private fun loc(startToken: Token): Location? {
-        if (options.noLocation != true) {
-            return Location(startToken, lexer.lastToken, lexer.source)
+    private fun Lexer.loc(startToken: Token): Location? {
+        if (this@Parser.options.noLocation != true) {
+            return Location(startToken, lastToken, source)
         }
         return null
     }
@@ -978,21 +975,21 @@ internal class Parser {
     /**
      * Determines if the next token is of a given kind
      */
-    private fun peek(kind: TokenKindEnum) = lexer.token.kind == kind
+    private fun Lexer.peek(kind: TokenKindEnum) = token.kind == kind
 
     /**
      * If the next token is of the given kind, return that token after advancing
      * the lexer. Otherwise, do not change the parser state and throw an error.
      */
-    internal fun expectToken(kind: TokenKindEnum): Token {
-        val token = lexer.token
+    internal fun Lexer.expectToken(kind: TokenKindEnum): Token {
+        val token = token
         if (token.kind == kind) {
-            lexer.advance()
+            advance()
             return token
         }
 
         throw syntaxError(
-            lexer.source,
+            source,
             token.start,
             "Expected ${getTokenKindDesc(kind)}, found ${
                 getTokenDesc(
@@ -1006,10 +1003,10 @@ internal class Parser {
      * If the next token is of the given kind, return that token after advancing
      * the lexer. Otherwise, do not change the parser state and return undefined.
      */
-    private fun expectOptionalToken(kind: TokenKindEnum): Token? {
-        val token = lexer.token
+    private fun Lexer.expectOptionalToken(kind: TokenKindEnum): Token? {
+        val token = token
         if (token.kind == kind) {
-            lexer.advance()
+            advance()
             return token
         }
         return null
@@ -1019,13 +1016,13 @@ internal class Parser {
      * If the next token is a given keyword, advance the lexer.
      * Otherwise, do not change the parser state and throw an error.
      */
-    private fun expectKeyword(value: String) {
-        val token = lexer.token
+    private fun Lexer.expectKeyword(value: String) {
+        val token = token
         if (token.kind == NAME && token.value == value) {
-            lexer.advance()
+            advance()
         } else {
             throw syntaxError(
-                lexer.source,
+                source,
                 token.start,
                 "Expected \"${value}\", found ${getTokenDesc(token)}."
             )
@@ -1036,10 +1033,10 @@ internal class Parser {
      * If the next token is a given keyword, return "true" after advancing
      * the lexer. Otherwise, do not change the parser state and return "false".
      */
-    private fun expectOptionalKeyword(value: String): Boolean {
-        val token = lexer.token
+    private fun Lexer.expectOptionalKeyword(value: String): Boolean {
+        val token = token
         if (token.kind == NAME && token.value == value) {
-            lexer.advance()
+            advance()
             return true
         }
         return false
@@ -1049,8 +1046,8 @@ internal class Parser {
      * Helper function for creating an error when an unexpected lexed token
      * is encountered.
      */
-    private fun unexpected(token: Token = lexer.token) = syntaxError(
-        lexer.source,
+    private fun Lexer.unexpected(token: Token = this.token) = syntaxError(
+        source,
         token.start,
         "Unexpected ${getTokenDesc(token)}."
     )
@@ -1061,7 +1058,7 @@ internal class Parser {
      * and ends with a lex token of closeKind. Advances the parser
      * to the next lex token after the closing token.
      */
-    private fun <T> any(
+    private fun <T> Lexer.any(
         openKind: TokenKindEnum,
         parseFn: () -> T,
         closeKind: TokenKindEnum
@@ -1081,7 +1078,7 @@ internal class Parser {
      * with a lex token of closeKind. Advances the parser to the next lex token
      * after the closing token.
      */
-    private fun <T> optionalMany(
+    private fun <T> Lexer.optionalMany(
         openKind: TokenKindEnum,
         parseFn: () -> T,
         closeKind: TokenKindEnum
@@ -1102,7 +1099,7 @@ internal class Parser {
      * and ends with a lex token of closeKind. Advances the parser
      * to the next lex token after the closing token.
      */
-    private fun <T> many(
+    private fun <T> Lexer.many(
         openKind: TokenKindEnum,
         parseFn: () -> T,
         closeKind: TokenKindEnum

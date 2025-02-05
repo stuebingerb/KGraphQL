@@ -13,22 +13,21 @@ class MemoizeTest {
 
     @Test
     fun `calls function on invocation`() = runTest {
-        assertEquals(2, ::slowPlusOne.memoized(this,1).invoke(1))
+        assertEquals(2, memoize(this, 1, ::slowPlusOne)(1))
         assertEquals(slowFunctionDuration.inWholeMilliseconds, testScheduler.currentTime)
     }
 
     @Test
     fun `calls function once on multiple invocations with same input`() = runTest {
-        val memoized = ::slowPlusOne.memoized(this, 2)
-
+        val memoized = memoize(this, 1, ::slowPlusOne)
         repeat(2) { assertEquals(2, memoized(1)) }
         assertEquals(slowFunctionDuration.inWholeMilliseconds, testScheduler.currentTime)
     }
 
     @Test
     fun `different memoized instances do not share their memory`() = runTest {
-        val one = ::slowPlusOne.memoized(this, 2)
-        val two = ::slowPlusOne.memoized(this, 2)
+        val one = memoize(this, 2, ::slowPlusOne)
+        val two = memoize(this, 2, ::slowPlusOne)
 
         one(1)
         two(2)
