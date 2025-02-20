@@ -11,7 +11,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmErasure
 
-internal fun <T : Any> KClass<T>.defaultKQLTypeName() = this.simpleName!!
+fun <T : Any> KClass<T>.defaultKQLTypeName() = this.simpleName!!
 
 internal fun String.dropQuotes(): String = if (isLiteral()) {
     drop(1).dropLast(1)
@@ -21,16 +21,14 @@ internal fun String.dropQuotes(): String = if (isLiteral()) {
 
 internal fun String.isLiteral(): Boolean = startsWith('\"') && endsWith('\"')
 
-internal fun KClass<*>.isIterable() = isSubclassOf(Iterable::class)
+fun KClass<*>.isIterable() = isSubclassOf(Iterable::class)
 
-internal fun KType.isIterable() = jvmErasure.isIterable() || toString().startsWith("kotlin.Array")
+fun KType.isIterable() = jvmErasure.isIterable() || toString().startsWith("kotlin.Array")
 
-internal fun KType.getIterableElementType(): KType {
+fun KType.getIterableElementType(): KType {
     require(isIterable()) { "KType $this is not collection type" }
     return arguments.firstOrNull()?.type ?: throw NoSuchElementException("KType $this has no type arguments")
 }
-
-internal fun not(boolean: Boolean) = !boolean
 
 internal suspend fun <T, R> Collection<T>.toMapAsync(
     dispatcher: CoroutineDispatcher = Dispatchers.Default,

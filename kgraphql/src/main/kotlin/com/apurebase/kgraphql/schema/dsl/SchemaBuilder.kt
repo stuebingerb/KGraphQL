@@ -20,6 +20,7 @@ import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.dsl.types.UnionTypeDSL
 import com.apurebase.kgraphql.schema.model.EnumValueDef
 import com.apurebase.kgraphql.schema.model.MutableSchemaDefinition
+import com.apurebase.kgraphql.schema.model.SchemaDefinition
 import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.structure.SchemaCompilation
 import com.fasterxml.jackson.core.JsonParser
@@ -32,15 +33,18 @@ import kotlin.reflect.KClass
 /**
  * SchemaBuilder exposes rich DSL to setup GraphQL schema
  */
-class SchemaBuilder internal constructor() {
+class SchemaBuilder {
 
     private val model = MutableSchemaDefinition()
+
+    val schemaDefinition: SchemaDefinition
+        get() = model.toSchemaDefinition()
 
     var configuration = SchemaConfigurationDSL()
 
     fun build(): Schema {
         return runBlocking {
-            SchemaCompilation(configuration.build(), model.toSchemaDefinition()).perform()
+            SchemaCompilation(configuration.build(), schemaDefinition).perform()
         }
     }
 

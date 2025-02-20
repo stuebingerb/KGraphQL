@@ -28,7 +28,7 @@ import kotlin.reflect.KProperty1
 
 class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
-    private val argumentsHandler = ArgumentTransformer(schema)
+    private val argumentsHandler = ArgumentTransformer()
 
     inner class ExecutionContext(
         val variables: Variables,
@@ -426,12 +426,14 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     ): T? {
         val transformedArgs = argumentsHandler.transformArguments(
             funName,
+            receiver,
             inputValues,
             args,
             ctx.variables,
             executionNode,
-            ctx.requestContext
-        )
+            ctx.requestContext,
+            this
+        ) ?: return null
 
         return try {
             if (hasReceiver) {
