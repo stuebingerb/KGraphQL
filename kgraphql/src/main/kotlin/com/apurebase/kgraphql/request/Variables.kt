@@ -9,6 +9,7 @@ import com.apurebase.kgraphql.schema.model.ast.TypeNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 import com.apurebase.kgraphql.schema.structure.LookupSchema
+import com.fasterxml.jackson.databind.JsonNode
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -58,6 +59,8 @@ data class Variables(
 
         return value
     }
+
+    fun getRaw(): JsonNode? = variablesJson.getRaw()
 
     private fun <T : Any> transformDefaultValue(
         transform: (value: ValueNode) -> Any?,

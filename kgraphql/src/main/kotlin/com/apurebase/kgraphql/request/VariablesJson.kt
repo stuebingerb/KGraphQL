@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.type.TypeFactory
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -20,10 +21,12 @@ interface VariablesJson {
 
     fun <T : Any> get(kClass: KClass<T>, kType: KType, key: NameNode): T?
 
+    fun getRaw(): JsonNode?
+
     class Empty : VariablesJson {
-        override fun <T : Any> get(kClass: KClass<T>, kType: KType, key: NameNode): T? {
-            return null
-        }
+        override fun <T : Any> get(kClass: KClass<T>, kType: KType, key: NameNode): T? = null
+
+        override fun getRaw(): JsonNode? = null
     }
 
     class Defined(val objectMapper: ObjectMapper, val json: JsonNode) : VariablesJson {
@@ -31,7 +34,7 @@ interface VariablesJson {
         constructor(objectMapper: ObjectMapper, json: String) : this(objectMapper, objectMapper.readTree(json))
 
         /**
-         * map and return object of requested class
+         * Maps and returns object of requested [key] as [kClass]
          */
         override fun <T : Any> get(kClass: KClass<T>, kType: KType, key: NameNode): T? {
             require(kClass == kType.jvmErasure) { "kClass and KType must represent same class" }
@@ -46,6 +49,11 @@ interface VariablesJson {
                 }
             }
         }
+
+        /**
+         * Returns the raw [json] unless it is a [NullNode]
+         */
+        override fun getRaw(): JsonNode? = json.takeUnless { it is NullNode }
     }
 
     fun KType.toTypeReference(): JavaType {

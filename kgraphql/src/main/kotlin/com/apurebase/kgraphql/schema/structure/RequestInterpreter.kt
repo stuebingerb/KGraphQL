@@ -31,7 +31,10 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     private val directivesByName = schemaModel.directives.associateBy { it.name }
 
     inner class InterpreterContext(
-        val fragments: Map<String, Pair<Type, SelectionSetNode>>
+        // Fragments defined for the current operation
+        val fragments: Map<String, Pair<Type, SelectionSetNode>>,
+        // Variables declared for the current operation
+        val declaredVariables: List<VariableDefinitionNode>?
     ) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
@@ -70,19 +73,19 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                 ?: throw ValidationException("Subscriptions are not supported on this schema")
         }
 
-        val fragmentDefinitionNode = executables.filterIsInstance<FragmentDefinitionNode>()
-        val fragmentDefinitions = fragmentDefinitionNode.associate { fragmentDef ->
+        val fragmentDefinitionNodes = executables.filterIsInstance<FragmentDefinitionNode>()
+        val fragmentDefinitions = fragmentDefinitionNodes.associate { fragmentDef ->
             val type = schemaModel.allTypesByName.getValue(fragmentDef.typeCondition.name.value)
             val name = fragmentDef.name!!.value
 
-            if (fragmentDefinitionNode.count { it.name!!.value == name } > 1) {
+            if (fragmentDefinitionNodes.count { it.name!!.value == name } > 1) {
                 throw ValidationException("There can be only one fragment named $name.", fragmentDef)
             }
 
             name to (type to fragmentDef.selectionSet)
         }
 
-        val ctx = InterpreterContext(fragmentDefinitions)
+        val ctx = InterpreterContext(fragmentDefinitions, operation.variableDefinitions)
 
         return ExecutionPlan(
             options,
@@ -163,6 +166,8 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
             is Field.Union<*> -> handleUnion(field, node, ctx)
 
+            is Field.RemoteOperation<*, *> -> handleRemoteOperation(field, node, ctx)
+
             else -> {
                 validatePropertyArguments(this, field, node)
 
@@ -174,11 +179,62 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                     alias = node.alias?.value,
                     arguments = node.arguments?.toArguments(),
                     directives = node.directives?.lookup(),
+                    // TODO: can we use ctx.declaredVariables here? currently, variables are only assigned to root
+                    //  and remote operation nodes, not field nodes and others
                     variables = variables
                 )
             }
-
         }
+    }
+
+    private fun Type.handleRemoteOperation(
+        field: Field.RemoteOperation<*, *>,
+        node: FieldNode,
+        ctx: InterpreterContext
+    ): Execution.Remote {
+        fun List<SelectionNode>.namedFragments(): List<Execution.Fragment> = flatMap { selectionNode ->
+            when (selectionNode) {
+                is FragmentSpreadNode -> {
+                    val fragment = findFragmentType(selectionNode, ctx, this@handleRemoteOperation)
+                    fragment.elements.map { it.selectionNode }.namedFragments() + fragment
+                }
+
+                is InlineFragmentNode -> {
+                    selectionNode.selectionSet.selections.namedFragments()
+                }
+
+                is FieldNode -> {
+                    selectionNode.selectionSet?.selections.orEmpty().namedFragments()
+                }
+            }
+        }
+
+        // If we don't have an entry in remoteTypesBySchema we are querying a local type (can happen with stitched fields)
+        // TODO: should be more obvious and maybe we need a "typesBySchema", not only for remotes
+        val typesFromSameSchema =
+            (schemaModel.remoteTypesBySchema[field.remoteUrl]
+                ?: schemaModel.queryTypes.values).mapNotNullTo(HashSet()) { it.name }
+
+        return Execution.Remote(
+            selectionNode = node,
+            field = field,
+            children = handleReturnType(ctx, field.returnType, node),
+            key = node.name.value,
+            alias = node.alias?.value,
+            arguments = node.arguments?.toArguments(),
+            directives = node.directives?.lookup(),
+            variables = ctx.declaredVariables,
+            namedFragments = node.selectionSet?.selections?.namedFragments()
+                ?.filter { it.condition.onType.name in typesFromSameSchema }
+                ?.distinctBy { (it.selectionNode as FragmentSpreadNode).name.value },
+            remoteUrl = field.remoteUrl,
+            remoteOperation = field.remoteQuery,
+            operationType = when {
+                this == schemaModel.mutationType -> OperationTypeNode.MUTATION
+                this == schemaModel.subscriptionType -> OperationTypeNode.SUBSCRIPTION
+                else -> OperationTypeNode.QUERY
+            }
+        )
     }
 
     private fun <T> handleUnion(
