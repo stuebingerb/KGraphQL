@@ -20,18 +20,18 @@ import kotlin.reflect.full.isSubclassOf
  * Intermediate, mutable data structure used to prepare [SchemaDefinition]
  * Performs basic validation (names duplication etc.) when methods for adding schema components are invoked
  */
-data class MutableSchemaDefinition(
-    private val objects: ArrayList<TypeDef.Object<*>> = arrayListOf(
+open class MutableSchemaDefinition {
+    protected val objects: ArrayList<TypeDef.Object<*>> = arrayListOf(
         TypeDef.Object(__Schema::class.defaultKQLTypeName(), __Schema::class),
         create__TypeDefinition(),
         create__DirectiveDefinition(),
         create__FieldDefinition()
-    ),
-    private val queries: ArrayList<QueryDef<*>> = arrayListOf(),
-    private val scalars: ArrayList<TypeDef.Scalar<*>> = BuiltInScalars.entries.mapTo(ArrayList()) { it.typeDef },
-    private val mutations: ArrayList<MutationDef<*>> = arrayListOf(),
-    private val subscriptions: ArrayList<SubscriptionDef<*>> = arrayListOf(),
-    private val enums: ArrayList<TypeDef.Enumeration<*>> = arrayListOf(
+    )
+    protected val queries: ArrayList<QueryDef<*>> = arrayListOf()
+    protected val scalars: ArrayList<TypeDef.Scalar<*>> = BuiltInScalars.entries.mapTo(ArrayList()) { it.typeDef }
+    protected val mutations: ArrayList<MutationDef<*>> = arrayListOf()
+    protected val subscriptions: ArrayList<SubscriptionDef<*>> = arrayListOf()
+    protected val enums: ArrayList<TypeDef.Enumeration<*>> = arrayListOf(
         TypeDef.Enumeration(
             "__" + TypeKind::class.defaultKQLTypeName(),
             TypeKind::class,
@@ -42,33 +42,23 @@ data class MutableSchemaDefinition(
             DirectiveLocation::class,
             enumValues<DirectiveLocation>().map { EnumValueDef(it) }
         )
-    ),
-    private val unions: ArrayList<TypeDef.Union> = arrayListOf(),
-    private val directives: ArrayList<Directive.Partial> = arrayListOf(
+    )
+    protected val unions: ArrayList<TypeDef.Union> = arrayListOf()
+    protected val directives: ArrayList<Directive.Partial> = arrayListOf(
         Directive.SKIP,
         Directive.INCLUDE,
         Directive.DEPRECATED
-    ),
-    private val inputObjects: ArrayList<TypeDef.Input<*>> = arrayListOf()
-) {
+    )
+    protected val inputObjects: ArrayList<TypeDef.Input<*>> = arrayListOf()
 
     val unionsMonitor: List<TypeDef.Union>
         get() = unions
 
-    fun toSchemaDefinition(): SchemaDefinition {
-        val compiledObjects = ArrayList(this.objects)
-
-        unions.forEach { union ->
-            if (union.members.isEmpty()) {
-                throw SchemaException("The union type '${union.name}' has no possible types defined, requires at least one. Please refer to https://stuebingerb.github.io/KGraphQL/Reference/Type%20System/unions/")
-            }
-            union.members.forEach { member ->
-                validateUnionMember(union, member, compiledObjects)
-            }
-        }
+    open fun toSchemaDefinition(): SchemaDefinition {
+        validateUnions()
 
         return SchemaDefinition(
-            compiledObjects,
+            objects,
             queries,
             scalars,
             mutations,
@@ -78,6 +68,17 @@ data class MutableSchemaDefinition(
             directives,
             inputObjects
         )
+    }
+
+    protected fun validateUnions() {
+        unions.forEach { union ->
+            if (union.members.isEmpty()) {
+                throw SchemaException("The union type '${union.name}' has no possible types defined, requires at least one. Please refer to https://stuebingerb.github.io/KGraphQL/Reference/Type%20System/unions/")
+            }
+            union.members.forEach { member ->
+                validateUnionMember(union, member, objects)
+            }
+        }
     }
 
     private fun validateUnionMember(
