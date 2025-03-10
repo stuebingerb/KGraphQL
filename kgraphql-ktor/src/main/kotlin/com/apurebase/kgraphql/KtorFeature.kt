@@ -81,7 +81,7 @@ class GraphQL(val schema: Schema) {
                     route(config.endpoint) {
                         post {
                             val bodyAsText = call.receiveText()
-                            val request = decodeFromString(GraphqlRequest.serializer(), bodyAsText)
+                            val request = decodeFromString<GraphqlRequest>(bodyAsText)
                             val ctx = context {
                                 config.contextSetup?.invoke(this, call)
                             }
