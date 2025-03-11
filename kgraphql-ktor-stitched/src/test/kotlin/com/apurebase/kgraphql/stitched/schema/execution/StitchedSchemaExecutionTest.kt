@@ -1472,38 +1472,6 @@ class StitchedSchemaExecutionTest {
     }
 
     @Test
-    fun `stitched schema local execution should work without configured remote executor`() = testApplication {
-        install(GraphQL.FeatureInstance("KGraphql - Remote")) {
-            endpoint = "remote"
-            schema {
-                remoteSchema1()
-            }
-        }
-        install(StitchedGraphQL.FeatureInstance("KGraphql - Local")) {
-            endpoint = "local"
-            stitchedSchema {
-                localSchema {
-                    query("local") {
-                        resolver { -> "local" }
-                    }
-                }
-                remoteSchema("remote") {
-                    getRemoteSchema {
-                        remoteSchema1()
-                    }
-                }
-            }
-        }
-
-        client.post("local") {
-            header(HttpHeaders.ContentType, ContentType.Application.Json)
-            setBody(graphqlRequest("{ local }"))
-        }.bodyAsText() shouldBeEqualTo """
-            {"data":{"local":"local"}}
-        """.trimIndent()
-    }
-
-    @Test
     fun `schema with remote extension properties and aliases should work as expected`() = testApplication {
         install(GraphQL.FeatureInstance("KGraphql - Remote")) {
             endpoint = "remote"

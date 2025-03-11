@@ -71,9 +71,6 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
             name = field.name,
             resolver = FunctionWrapper.ArityTwo(
                 implementation = { node: Execution.Remote, ctx: Context ->
-                    val remoteExecutor = requireNotNull(configuration.remoteExecutor) {
-                        "Remote executor not defined for ${field.name}"
-                    }
                     // Skip remote execution if we have a selection of only stitched fields
                     // TODO: ideally we would filter this out in RequestInterpreter already
                     // TODO: test for interfaces, unions, etc.
@@ -90,7 +87,7 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
                         return@ArityTwo configuration.objectMapper.createObjectNode()
                     }
 
-                    remoteExecutor.execute(node, ctx)
+                    configuration.remoteExecutor.execute(node, ctx)
                 },
                 hasReceiver = false
             )

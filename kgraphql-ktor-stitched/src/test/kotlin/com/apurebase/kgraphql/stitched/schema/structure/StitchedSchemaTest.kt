@@ -24,6 +24,10 @@ import java.util.UUID
 
 class StitchedSchemaTest {
 
+    object DummyRemoteRequestExecutor : RemoteRequestExecutor {
+        override suspend fun execute(node: Execution.Remote, ctx: Context) = null
+    }
+
     data class LocalType(val value: String)
     data class RemoteType(val bar: Int)
     data class RemoteType2(val bars: List<Int?>)
@@ -76,6 +80,9 @@ class StitchedSchemaTest {
     @Test
     fun `stitched schema should skip duplicate types by name and prefer local types`() {
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             localSchema {
                 type<LocalType>()
             }
@@ -109,6 +116,9 @@ class StitchedSchemaTest {
     @Test
     fun `stitched schema should include local and remote types with proper fields`() {
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             localSchema { type<LocalType>() }
             remoteSchema("remote") {
                 getRemoteSchema {
@@ -168,6 +178,9 @@ class StitchedSchemaTest {
     @Test
     fun `stitched schema should include union types with proper possible types`() {
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             remoteSchema("remote") {
                 getRemoteSchema {
                     query("dummy") {
@@ -205,6 +218,9 @@ class StitchedSchemaTest {
     @Test
     fun `stitched schema should include all local and remote queries`() {
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             localSchema {
                 query("localQuery") {
                     resolver { -> LocalType("foo") }
@@ -271,6 +287,9 @@ class StitchedSchemaTest {
     @Test
     fun `stitched schema should include all local and remote mutations`() {
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             localSchema {
                 mutation("localMutation") {
                     resolver { -> "local" }
@@ -338,6 +357,9 @@ class StitchedSchemaTest {
         data class TestObject(val name: String)
 
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             remoteSchema("remote") {
                 getRemoteSchema {
                     query("dummy") {
@@ -381,6 +403,9 @@ class StitchedSchemaTest {
         data class TestObject(val name: String)
 
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             remoteSchema("remote") {
                 getRemoteSchema {
                     query("dummy") {
@@ -424,6 +449,9 @@ class StitchedSchemaTest {
         data class TestObject(val name: String)
 
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             remoteSchema("remote") {
                 getRemoteSchema {
                     query("dummy") {
@@ -468,6 +496,9 @@ class StitchedSchemaTest {
     @Test
     fun `schema with remote interfaces should be printed as expected`() {
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             remoteSchema("remote") {
                 getRemoteSchema {
                     query("interface") {
@@ -514,6 +545,9 @@ class StitchedSchemaTest {
         data class SimpleClass(val existing: String)
         invoking {
             StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
                 localSchema {
                     query("dummy") {
                         resolver { -> "dummy" }
@@ -539,6 +573,9 @@ class StitchedSchemaTest {
 
         invoking {
             StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
                 localSchema {
                     query("dummy") {
                         resolver { -> "dummy" }
@@ -572,6 +609,9 @@ class StitchedSchemaTest {
     fun `schema should prevent multiple local schema definitions`() {
         invoking {
             StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
                 localSchema {
                     query("dummy") {
                         resolver { -> "dummy" }
@@ -592,6 +632,9 @@ class StitchedSchemaTest {
         data class SimpleClass(val existing: String)
 
         val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
             localSchema {
                 query("dummy") {
                     resolver { -> "dummy" }

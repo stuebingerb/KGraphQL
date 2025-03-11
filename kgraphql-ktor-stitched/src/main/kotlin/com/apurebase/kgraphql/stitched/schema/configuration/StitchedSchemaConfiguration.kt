@@ -26,7 +26,7 @@ class StitchedSchemaConfiguration(
     plugins: MutableMap<KClass<*>, Any>,
     genericTypeResolver: GenericTypeResolver,
     argumentTransformer: ArgumentTransformer,
-    val remoteExecutor: RemoteRequestExecutor?,
+    val remoteExecutor: RemoteRequestExecutor,
     val localUrl: String?
 ) : SchemaConfiguration(
     useCachingDocumentParser,
