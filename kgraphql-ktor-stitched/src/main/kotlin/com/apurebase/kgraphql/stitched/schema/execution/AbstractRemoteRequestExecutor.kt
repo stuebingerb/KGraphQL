@@ -15,28 +15,16 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import io.ktor.client.HttpClient
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import kotlinx.serialization.json.Json.Default.decodeFromString
-import kotlinx.serialization.json.Json.Default.encodeToString
 import kotlinx.serialization.json.JsonObject
 
-open class DefaultRemoteRequestExecutor(private val client: HttpClient, private val objectMapper: ObjectMapper) :
-    RemoteRequestExecutor {
+abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMapper) : RemoteRequestExecutor {
 
     /**
      * Executes the actual [request] against the given [url] in the current [ctx]. This function is intended to
-     * be overridden by client implementations to provide custom handling (like adding auth headers).
+     * be implemented by consumers to execute the actual request.
      */
-    open suspend fun executeRequest(url: String, request: GraphqlRequest, ctx: Context): String =
-        client.post(url) {
-            contentType(ContentType.Application.Json)
-            setBody(encodeToString(request))
-        }.bodyAsText()
+    abstract suspend fun executeRequest(url: String, request: GraphqlRequest, ctx: Context): String
 
     /**
      * Main entry point called from the local request executor for the given [node] and [ctx].

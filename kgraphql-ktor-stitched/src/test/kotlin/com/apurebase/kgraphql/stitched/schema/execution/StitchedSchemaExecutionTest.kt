@@ -150,7 +150,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -205,7 +205,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -246,7 +246,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -301,7 +301,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -373,7 +373,7 @@ class StitchedSchemaExecutionTest {
                 endpoint = "local"
                 stitchedSchema {
                     configure {
-                        remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                        remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                     }
                     localSchema {
                         query("local") {
@@ -455,7 +455,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -584,7 +584,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -767,7 +767,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                     localUrl = endpoint
                 }
                 localSchema {
@@ -873,7 +873,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -936,7 +936,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -1042,7 +1042,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -1221,7 +1221,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote") {
                     getRemoteSchema {
@@ -1355,7 +1355,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote") {
                     getRemoteSchema {
@@ -1483,7 +1483,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote") {
                     getRemoteSchema {
@@ -1548,7 +1548,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote1") {
                     getRemoteSchema {
@@ -1638,7 +1638,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote1") {
                     getRemoteSchema {
@@ -1739,7 +1739,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -1799,7 +1799,9 @@ class StitchedSchemaExecutionTest {
                 resolver { enum: RemoteEnum -> enum }
             }
         }
+
         data class Remote2TypeWithEnum(val localEnum: RemoteEnum)
+
         fun SchemaBuilder.remote2Schema() = run {
             enum<RemoteEnum>()
             query("remote2") {
@@ -1822,7 +1824,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote1") {
                     getRemoteSchema {
@@ -1899,7 +1901,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                     localUrl = endpoint
                 }
                 localSchema {
@@ -2018,7 +2020,7 @@ class StitchedSchemaExecutionTest {
                 endpoint = "local"
                 stitchedSchema {
                     configure {
-                        remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                        remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                         localUrl = endpoint
                     }
                     localSchema {
@@ -2114,7 +2116,7 @@ class StitchedSchemaExecutionTest {
                 endpoint = "local"
                 stitchedSchema {
                     configure {
-                        remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                        remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                         localUrl = endpoint
                     }
                     localSchema {
@@ -2206,7 +2208,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                     localUrl = endpoint
                 }
                 localSchema {
@@ -2311,7 +2313,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote1") {
                     getRemoteSchema {
@@ -2440,7 +2442,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote1") {
                     getRemoteSchema {
@@ -2538,7 +2540,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote1") {
                     getRemoteSchema {
@@ -2611,7 +2613,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 remoteSchema("remote") {
                     getRemoteSchema {
@@ -2682,7 +2684,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
@@ -2775,7 +2777,7 @@ class StitchedSchemaExecutionTest {
             endpoint = "local"
             stitchedSchema {
                 configure {
-                    remoteExecutor = DefaultRemoteRequestExecutor(client, objectMapper)
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
                     query("local") {
