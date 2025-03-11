@@ -11,12 +11,11 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.Type
 import com.apurebase.kgraphql.stitched.RemoteExecutionException
+import com.apurebase.kgraphql.stitched.StitchedGraphqlRequest
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import kotlinx.serialization.json.Json.Default.decodeFromString
-import kotlinx.serialization.json.JsonObject
 
 abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMapper) : RemoteRequestExecutor {
 
@@ -24,7 +23,7 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
      * Executes the actual [request] against the given [url] in the current [ctx]. This function is intended to
      * be implemented by consumers to execute the actual request.
      */
-    abstract suspend fun executeRequest(url: String, request: GraphqlRequest, ctx: Context): String
+    abstract suspend fun executeRequest(url: String, request: StitchedGraphqlRequest, ctx: Context): String
 
     /**
      * Main entry point called from the local request executor for the given [node] and [ctx].
@@ -64,7 +63,7 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
     /**
      * Converts the given [node] to a [GraphqlRequest] in the given [ctx].
      */
-    private fun toGraphQLRequest(node: Execution.Remote, ctx: Context): GraphqlRequest {
+    private fun toGraphQLRequest(node: Execution.Remote, ctx: Context): StitchedGraphqlRequest {
         val operation = when (node.operationType) {
             OperationTypeNode.QUERY -> "query"
             OperationTypeNode.MUTATION -> "mutation"
@@ -88,9 +87,8 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
                 addSelectionsForFragment(fragment)
             }
         }
-        // TODO: kotlinx vs jackson...
-        val variables = ctx.get<Variables>()?.getRaw()?.let { decodeFromString<JsonObject>(it.toString()) }
-        return GraphqlRequest(query = query, variables = variables)
+        val variables = ctx.get<Variables>()?.getRaw()
+        return StitchedGraphqlRequest(query = query, variables = variables)
     }
 
     private fun StringBuilder.addSelectionsForField(node: Execution.Remote) {
