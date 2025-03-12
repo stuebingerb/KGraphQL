@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.stitched.schema.execution
 
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.GraphQL
 import com.apurebase.kgraphql.GraphqlRequest
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.JsonObject
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
+@OptIn(ExperimentalAPI::class)
 class StitchedSchemaExecutionTest {
 
     data class Remote1(val foo1: String)

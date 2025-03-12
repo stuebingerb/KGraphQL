@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.stitched.schema.structure
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.introspection.TypeKind
@@ -20,6 +21,7 @@ import com.apurebase.kgraphql.schema.structure.TypeProxy
 import com.apurebase.kgraphql.stitched.schema.configuration.StitchedSchemaConfiguration
 import com.fasterxml.jackson.databind.JsonNode
 
+@ExperimentalAPI
 class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfiguration) {
     val remoteQueryTypeProxies = mutableMapOf<String, TypeProxy>()
     val remoteInputTypeProxies = mutableMapOf<String, TypeProxy>()

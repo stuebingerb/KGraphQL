@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.stitched.schema.dsl
 
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
@@ -15,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 /**
  * StitchedSchemaBuilder exposes rich DSL to setup stitched GraphQL schema
  */
+@ExperimentalAPI
 class StitchedSchemaBuilder {
     private val model = StitchedMutableSchemaDefinition()
     private val localSchemaBuilder = SchemaBuilder()

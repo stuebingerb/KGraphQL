@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.stitched.schema.execution
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.GraphqlRequest
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.execution.Execution
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 
+@ExperimentalAPI
 abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMapper) : RemoteRequestExecutor {
 
     /**
