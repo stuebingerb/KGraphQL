@@ -1,11 +1,13 @@
 package com.apurebase.kgraphql.stitched.schema.dsl
 
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.schema.dsl.SchemaConfigurationDSL
 import com.apurebase.kgraphql.stitched.schema.configuration.StitchedSchemaConfiguration
 import com.apurebase.kgraphql.stitched.schema.execution.RemoteArgumentTransformer
 import com.apurebase.kgraphql.stitched.schema.execution.RemoteRequestExecutor
 import com.fasterxml.jackson.databind.DeserializationFeature
 
+@ExperimentalAPI
 open class StitchedSchemaConfigurationDSL : SchemaConfigurationDSL() {
     // Remote executor has to be set for remote schemas
     var remoteExecutor: RemoteRequestExecutor? = null

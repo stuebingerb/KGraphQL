@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.stitched.schema.structure
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.getIterableElementType
 import com.apurebase.kgraphql.isIterable
@@ -40,6 +41,7 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
+@ExperimentalAPI
 // TODO: reduce duplication with SchemaCompilation
 class StitchedSchemaCompilation(
     val configuration: StitchedSchemaConfiguration,

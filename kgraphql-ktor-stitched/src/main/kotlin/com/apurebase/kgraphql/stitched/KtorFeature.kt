@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.stitched
 
 import com.apurebase.kgraphql.ContextBuilder
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.GraphQL
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.GraphqlRequest
@@ -29,6 +30,7 @@ import io.ktor.util.AttributeKey
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json.Default.decodeFromString
 
+@ExperimentalAPI
 class StitchedGraphQL(val schema: Schema) {
     class Configuration : StitchedSchemaConfigurationDSL() {
         fun stitchedSchema(block: StitchedSchemaBuilder.() -> Unit) {

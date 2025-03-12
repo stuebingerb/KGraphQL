@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.stitched.schema.structure
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.SchemaException
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test
 import java.util.Locale
 import java.util.UUID
 
+@OptIn(ExperimentalAPI::class)
 class StitchedSchemaTest {
 
     object DummyRemoteRequestExecutor : RemoteRequestExecutor {

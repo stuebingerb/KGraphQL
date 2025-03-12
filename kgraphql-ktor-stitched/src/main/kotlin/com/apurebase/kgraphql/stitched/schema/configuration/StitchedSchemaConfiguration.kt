@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.stitched.schema.configuration
 
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
 import com.apurebase.kgraphql.schema.execution.Executor
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlin.reflect.KClass
 
+@ExperimentalAPI
 class StitchedSchemaConfiguration(
     // document parser caching mechanisms
     useCachingDocumentParser: Boolean,
