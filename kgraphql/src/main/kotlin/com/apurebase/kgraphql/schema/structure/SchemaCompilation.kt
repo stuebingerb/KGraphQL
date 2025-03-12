@@ -85,7 +85,8 @@ class SchemaCompilation(
                 + enums.values
                 + scalars.values
                 + unions.distinctBy(Type.Union::name),
-            directives = definition.directives.map { handlePartialDirective(it) }
+            directives = definition.directives.map { handlePartialDirective(it) },
+            remoteTypesBySchema = emptyMap()
         )
         val schema = DefaultSchema(configuration, model)
         schemaProxy.proxiedSchema = schema
