@@ -12,4 +12,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "core"
 
-include("kgraphql", "kgraphql-ktor")
+include("kgraphql", "kgraphql-ktor", "kgraphql-ktor-stitched")

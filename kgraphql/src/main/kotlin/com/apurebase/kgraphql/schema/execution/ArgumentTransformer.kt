@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Schema
+import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.ObjectValueNode
@@ -15,16 +16,18 @@ import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
-open class ArgumentTransformer(val schema: __Schema) {
+open class ArgumentTransformer {
 
-    fun transformArguments(
+    open fun transformArguments(
         funName: String,
+        receiver: Any?,
         inputValues: List<InputValue<*>>,
         args: ArgumentNodes?,
         variables: Variables,
         executionNode: Execution,
-        requestContext: Context
-    ): List<Any?> {
+        requestContext: Context,
+        field: FunctionWrapper<*>
+    ): List<Any?>? {
         val unsupportedArguments = args?.filter { arg ->
             inputValues.none { value -> value.name == arg.key }
         }

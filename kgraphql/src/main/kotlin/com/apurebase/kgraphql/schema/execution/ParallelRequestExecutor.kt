@@ -15,6 +15,7 @@ import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
 import com.apurebase.kgraphql.toMapAsync
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -30,7 +31,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         val requestContext: Context
     )
 
-    private val argumentsHandler = ArgumentTransformer(schema)
+    private val argumentsHandler = schema.configuration.argumentTransformer
 
     private val jsonNodeFactory = JsonNodeFactory.instance
 
@@ -131,9 +132,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         node: Execution.Node,
         returnType: Type
     ): JsonNode {
-        if (value == null) {
+        if (value == null || value is NullNode) {
             return createNullNode(node, returnType)
         }
+
         val unboxed = schema.configuration.genericTypeResolver.unbox(value)
         if (unboxed !== value) {
             return createNode(ctx, unboxed, node, returnType)
@@ -141,9 +143,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
         return when {
             // Check value, not returnType, because this method can be invoked with element value
-            value is Collection<*> || value is Array<*> -> {
+            value is Collection<*> || value is Array<*> || value is ArrayNode -> {
                 val values: Collection<*> = when (value) {
                     is Array<*> -> value.toList()
+                    is ArrayNode -> value.toList()
                     else -> value as Collection<*>
                 }
                 if (returnType.isList()) {
@@ -173,6 +176,9 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             node is Execution.Union -> {
                 createObjectNode(ctx, value, node.memberExecution(returnType), returnType)
             }
+
+            // TODO: do we have to consider more? more validation e.g.?
+            value is JsonNode -> value
 
             else -> createSimpleValueNode(returnType, value, node)
         }
@@ -237,6 +243,15 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 }
             }
 
+            is Execution.Remote -> {
+                return child.aliasOrKey to handleFunctionProperty(
+                    ctx,
+                    value,
+                    child,
+                    child.field as Field.Function<*, *>
+                )
+            }
+
             is Execution.Node -> {
                 val field = checkNotNull(type.unwrapped()[child.key]) {
                     "Execution unit ${child.key} is not contained by operation return type"
@@ -260,7 +275,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
         if (include) {
             if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
-                if (expectedType.isInstance(value)) {
+                // TODO: for remote objects we now rely on the presence of the __typename. So maybe we should/need to automatically add it if not present already? Can this break something?
+                if (expectedType.isInstance(value) || (value is JsonNode && value["__typename"].textValue() == expectedType.name)) {
                     return container.elements.flatMap { child ->
                         when (child) {
                             is Execution.Fragment -> handleFragment(ctx, value, child).toList()
@@ -292,8 +308,17 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         node.field.checkAccess(parentValue, ctx.requestContext)
 
         if (include) {
-            when (field) {
-                is Field.Kotlin<*, *> -> {
+            when {
+                parentValue is JsonNode -> {
+                    // This covers a) Field.Delegated but also b) *local* types that are returned from
+                    //   remote queries, which can happen if we stitch to a local query (and where field
+                    //   is Field.Kotlin<*, *> but parentValue is an ObjectNode)
+                    // TODO: We might want to have separated types and then *only* deal with delegated fields here
+                    // TODO: Can this break with functions or local types that are *actually* JsonNodes?
+                    return createNode(ctx, (parentValue as JsonNode).get(node.aliasOrKey), node, field.returnType)
+                }
+
+                field is Field.Kotlin<*, *> -> {
                     val rawValue = try {
                         (field.kProperty as KProperty1<T, *>).get(parentValue)
                     } catch (e: IllegalArgumentException) {
@@ -314,11 +339,11 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     return createNode(ctx, value, node, field.returnType)
                 }
 
-                is Field.Function<*, *> -> {
+                field is Field.Function<*, *> -> {
                     return handleFunctionProperty(ctx, parentValue, node, field)
                 }
 
-                is Field.DataLoader<*, *, *> -> {
+                field is Field.DataLoader<*, *, *> -> {
                     return handleDataProperty(ctx, parentValue, node, field)
                 }
 
@@ -398,12 +423,14 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
     ): T? {
         val transformedArgs = argumentsHandler.transformArguments(
             funName,
+            receiver,
             inputValues,
             args,
             ctx.variables,
             executionNode,
-            ctx.requestContext
-        )
+            ctx.requestContext,
+            this
+        ) ?: return null
 
         // exceptions are not caught on purpose to pass up business logic errors
         return try {
