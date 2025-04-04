@@ -71,6 +71,7 @@ nav:
       - 'Star Wars Tutorial': 'Tutorials/starwars.md'
       - 'Ktor Tutorial': 'Tutorials/ktor.md'
   - 'Reference':
+      - 'Stitching': 'Reference/stitching.md'
       - 'Operations': 'Reference/operations.md'
       - 'Configuration': 'Reference/configuration.md'
       - 'Resolver': 'Reference/resolver.md'
@@ -83,4 +84,3 @@ nav:
           - 'Unions': 'Reference/Type System/unions.md'
           - 'Input Objects': 'Reference/Type System/input-objects.md'
           - 'Objects and Interfaces': 'Reference/Type System/objects-and-interfaces.md'
-
