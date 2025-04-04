@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.schema.dsl
 
 import com.apurebase.kgraphql.configuration.PluginConfiguration
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
+import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
 import com.apurebase.kgraphql.schema.execution.Executor
 import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -24,7 +25,7 @@ open class SchemaConfigurationDSL {
     var introspection: Boolean = true
     var genericTypeResolver: GenericTypeResolver = GenericTypeResolver.DEFAULT
 
-    private val plugins: MutableMap<KClass<*>, Any> = mutableMapOf()
+    protected val plugins: MutableMap<KClass<*>, Any> = mutableMapOf()
 
     fun install(plugin: PluginConfiguration) {
         val kClass = plugin::class
@@ -32,8 +33,8 @@ open class SchemaConfigurationDSL {
         plugins[kClass] = plugin
     }
 
-    internal fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
-    internal fun build(): SchemaConfiguration {
+    fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
+    open fun build(): SchemaConfiguration {
         objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, acceptSingleValueAsArray)
         return SchemaConfiguration(
             useCachingDocumentParser = useCachingDocumentParser,
@@ -47,6 +48,7 @@ open class SchemaConfigurationDSL {
             introspection = introspection,
             plugins = plugins,
             genericTypeResolver = genericTypeResolver,
+            argumentTransformer = ArgumentTransformer()
         )
     }
 }

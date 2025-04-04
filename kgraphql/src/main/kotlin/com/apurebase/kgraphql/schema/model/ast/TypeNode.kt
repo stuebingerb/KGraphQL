@@ -19,4 +19,11 @@ sealed class TypeNode(override val loc: Location?) : ASTNode() {
             is ListTypeNode -> type.nameNode
             is NamedTypeNode -> name
         }
+
+    fun typeReference(): String =
+        when (this) {
+            is NamedTypeNode -> nameNode.value
+            is ListTypeNode -> "[${type.typeReference()}]"
+            is NonNullTypeNode -> "${type.typeReference()}!"
+        }
 }

@@ -4,6 +4,7 @@ import com.apurebase.deferredJson.DeferredJsonMap
 import com.apurebase.deferredJson.deferredJsonBuilder
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
@@ -26,9 +27,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import nidomiro.kdataloader.DataLoader
 import kotlin.reflect.KProperty1
 
+@ExperimentalAPI
 class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
-    private val argumentsHandler = ArgumentTransformer(schema)
+    private val argumentsHandler = ArgumentTransformer()
 
     inner class ExecutionContext(
         val variables: Variables,
@@ -426,12 +428,14 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
     ): T? {
         val transformedArgs = argumentsHandler.transformArguments(
             funName,
+            receiver,
             inputValues,
             args,
             ctx.variables,
             executionNode,
-            ctx.requestContext
-        )
+            ctx.requestContext,
+            this
+        ) ?: return null
 
         return try {
             if (hasReceiver) {

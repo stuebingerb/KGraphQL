@@ -10,7 +10,7 @@ import com.apurebase.kgraphql.schema.directive.Directive
  *
  * [SchemaDefinition] contains full schema tree, with all types
  */
-data class SchemaDefinition(
+open class SchemaDefinition(
     val objects: List<TypeDef.Object<*>>,
     val queries: List<QueryDef<*>>,
     val scalars: List<TypeDef.Scalar<*>>,

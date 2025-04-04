@@ -33,6 +33,11 @@ interface Type : __Type {
 
     fun isNotNullable() = kind == TypeKind.NON_NULL
 
+    fun unwrapNonNull(): Type = when (kind) {
+        TypeKind.NON_NULL -> ofType as Type
+        else -> ofType?.unwrapNonNull() ?: this
+    }
+
     fun unwrapList(): Type = when (kind) {
         TypeKind.LIST -> ofType as Type
         else -> ofType?.unwrapList() ?: throw NoSuchElementException("this type does not wrap list element")
@@ -126,6 +131,10 @@ interface Type : __Type {
         override val possibleTypes: List<Type>? = null
 
         fun withInterfaces(interfaces: List<Type>) = Object(definition, allFields, interfaces)
+
+        fun withStitchedFields(stitchedFields: List<Field>): RemoteObject = RemoteObject(
+            name, description, allFields + stitchedFields, interfaces
+        )
     }
 
     class Interface<T : Any>(
@@ -346,5 +355,110 @@ interface Type : __Type {
         override val inputFields: List<__InputValue>? = null
 
         override fun isInstance(value: Any?): Boolean = false
+    }
+
+    class RemoteEnum(
+        override val name: String,
+        override val description: String?,
+        override val enumValues: List<__EnumValue>
+    ) : Type {
+
+        override val kClass: KClass<*>? = null
+
+        override val kind: TypeKind = TypeKind.ENUM
+
+        override val fields: List<Field>? = null
+
+        override val interfaces: List<Type>? = null
+
+        override val possibleTypes: List<Type>? = null
+
+        override val inputFields: List<__InputValue>? = null
+
+        override val ofType: Type? = null
+    }
+
+    class RemoteObject(
+        override val name: String,
+        override val description: String?,
+        fields: List<Field>,
+        override val interfaces: List<Type>? = emptyList()
+    ) : ComplexType(fields) {
+
+        override val kClass = null
+
+        override val kind: TypeKind = TypeKind.OBJECT
+
+        override val enumValues: List<__EnumValue>? = null
+
+        override val inputFields: List<__InputValue>? = null
+
+        override val ofType: Type? = null
+
+        override val possibleTypes: List<Type>? = null
+
+        fun withStitchedFields(stitchedFields: List<Field>): RemoteObject = RemoteObject(
+            name, description, allFields + stitchedFields, interfaces
+        )
+    }
+
+    class RemoteInterface(
+        override val name: String,
+        override val description: String?,
+        fields: List<Field>,
+        override val interfaces: List<Type>? = emptyList()
+    ) : ComplexType(fields) {
+
+        override val kClass = null
+
+        override val kind: TypeKind = TypeKind.INTERFACE
+
+        override val enumValues: List<__EnumValue>? = null
+
+        override val inputFields: List<__InputValue>? = null
+
+        override val ofType: Type? = null
+
+        override val possibleTypes: List<Type>? = null
+    }
+
+    class RemoteInputObject(
+        override val name: String,
+        override val description: String?,
+        override val inputFields: List<__InputValue> = emptyList()
+    ) : Type {
+
+        override val kClass = null
+
+        override val kind: TypeKind = TypeKind.INPUT_OBJECT
+
+        override val enumValues: List<__EnumValue>? = null
+
+        override val ofType: Type? = null
+
+        override val interfaces: List<Type>? = null
+
+        override val fields: List<Field>? = null
+
+        override val possibleTypes: List<Type>? = null
+    }
+
+    class RemoteScalar(override val name: String, override val description: String?) : Type {
+
+        override val kClass = null
+
+        override val kind: TypeKind = TypeKind.SCALAR
+
+        override val enumValues: List<__EnumValue>? = null
+
+        override val inputFields: List<__InputValue>? = null
+
+        override val ofType: Type? = null
+
+        override val interfaces: List<Type>? = null
+
+        override val fields: List<Field>? = null
+
+        override val possibleTypes: List<Type>? = null
     }
 }
