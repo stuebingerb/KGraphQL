@@ -4,7 +4,6 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
@@ -105,24 +104,23 @@ open class ArgumentTransformer {
             value is ObjectValueNode -> {
                 // SchemaCompilation ensures that input types have a primaryConstructor
                 val constructor = checkNotNull(type.unwrapped().kClass?.primaryConstructor)
-                val params = constructor.parameters.associateBy { it.name }
-                val valueMap = value.fields.associate { valueField ->
-                    val inputField = type
-                        .unwrapped()
-                        .inputFields
-                        ?.firstOrNull { it.name == valueField.name.value }
+                val constructorParametersByName = constructor.parameters.associateBy { it.name }
+                val inputFieldsByName = type.unwrapped().inputFields.orEmpty().associateBy { it.name }
+
+                val providedValuesByKParameter = value.fields.associate { valueField ->
+                    val fieldName = valueField.name.value
+                    val inputField = inputFieldsByName[fieldName]
                         ?: throw InvalidInputValueException(
-                            "Constructor parameter '${valueField.name.value}' cannot be found in '${type.unwrapped().kClass!!.simpleName}'",
-                            value
+                            "Property '$fieldName' on '${type.unwrapped().name}' does not exist", value
                         )
 
                     val paramType = inputField.type as? Type
                         ?: throw InvalidInputValueException(
-                            "Something went wrong while searching for the constructor parameter type '${valueField.name.value}'",
+                            "Something went wrong while searching for the constructor parameter type '$fieldName'",
                             value
                         )
 
-                    params.getValue(valueField.name.value) to transformValue(
+                    constructorParametersByName[fieldName] to transformValue(
                         paramType,
                         valueField.value,
                         variables,
@@ -130,11 +128,29 @@ open class ArgumentTransformer {
                     )
                 }
 
-                val missingNonOptionalInputs = params.values.filter { !it.isOptional && !valueMap.containsKey(it) }
+                // Constructor parameters that are neither provided explicitly nor have a Kotlin default value
+                val missingNonOptionalInputs = mutableListOf<String>()
+                val valueMap = constructorParametersByName.mapNotNull { (name, parameter) ->
+                    if (providedValuesByKParameter.containsKey(parameter)) {
+                        // Value was provided: use provided value
+                        parameter to providedValuesByKParameter[parameter]
+                    } else if (parameter.isOptional) {
+                        // Value was not provided but parameter is optional: skip it (and use default from Kotlin)
+                        null
+                    } else if (parameter.type.isMarkedNullable) {
+                        // Value was not provided and parameter is nullable: use null
+                        parameter to null
+                    } else {
+                        // Value was not provided and parameter is required: error
+                        missingNonOptionalInputs.add(name ?: "Parameter #${parameter.index}")
+                        null
+                    }
+                }.toMap()
 
                 if (missingNonOptionalInputs.isNotEmpty()) {
-                    val inputs = missingNonOptionalInputs.map { it.name }.joinToString(",")
-                    throw InvalidInputValueException("missing non-optional input fields: $inputs", value)
+                    throw InvalidInputValueException(
+                        "Missing non-optional input fields: ${missingNonOptionalInputs.joinToString()}", value
+                    )
                 }
 
                 constructor.callBy(valueMap)
