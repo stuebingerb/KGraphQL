@@ -25,7 +25,7 @@ class InputObjectsSpecificationTest {
 
     data class Circular(val ref: Circular? = null, val value: String? = null)
 
-    val objectMapper = jacksonObjectMapper()
+    private val objectMapper = jacksonObjectMapper()
 
     val schema = KGraphQL.schema {
         enum<MockEnum>()
@@ -59,8 +59,8 @@ class InputObjectsSpecificationTest {
         val response = deserialize(
             schema.executeBlocking(
                 "query(\$cirNull: Circular!, \$cirSuccess: Circular!){" +
-                        "null: circular(cir: \$cirNull)" +
-                        "success: circular(cir: \$cirSuccess)}",
+                    "null: circular(cir: \$cirNull)" +
+                    "success: circular(cir: \$cirSuccess)}",
                 objectMapper.writeValueAsString(variables)
             )
         )
@@ -82,14 +82,71 @@ class InputObjectsSpecificationTest {
         invoking {
             schema.executeBlocking(
                 """
-                        {
-                            main(input: { valu1: "Hello" })
-                        }
-                        """
+                {
+                    main(input: { valu1: "Hello" })
+                }
+                """
             )
         } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Constructor parameter 'valu1' cannot be found in 'MyInput'"
+            message shouldBeEqualTo "Property 'valu1' on 'MyInput' does not exist"
             extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
         }
+    }
+
+    // Non-data class with a constructor parameter that is not a property
+    class NonDataClass(param1: String = "Hello", val param3: Boolean?) {
+        var param2: Int = param1.length
+    }
+
+    @Test
+    fun `input objects should take fields from primary constructor`() {
+        val schema = KGraphQL.schema {
+            inputType<NonDataClass> {
+                name = "NonDataClassInput"
+            }
+            query("test") {
+                resolver { input: NonDataClass -> input }
+            }
+        }
+
+        val sdl = schema.printSchema()
+        sdl shouldBeEqualTo """
+            type NonDataClass {
+              param2: Int!
+              param3: Boolean
+            }
+
+            type Query {
+              test(input: NonDataClassInput!): NonDataClass!
+            }
+
+            input NonDataClassInput {
+              param1: String!
+              param3: Boolean
+            }
+
+        """.trimIndent()
+
+        val response1 = schema.executeBlocking(
+            """
+            query {
+                test(input: {param1: "myParam1"}) { param2 param3 }
+            }
+            """.trimIndent()
+        )
+        response1 shouldBeEqualTo """
+            {"data":{"test":{"param2":8,"param3":null}}}
+        """.trimIndent()
+
+        val response2 = schema.executeBlocking(
+            """
+            query {
+                test(input: {param3: true}) { param2 param3 }
+            }
+            """.trimIndent()
+        )
+        response2 shouldBeEqualTo """
+            {"data":{"test":{"param2":5,"param3":true}}}
+        """.trimIndent()
     }
 }

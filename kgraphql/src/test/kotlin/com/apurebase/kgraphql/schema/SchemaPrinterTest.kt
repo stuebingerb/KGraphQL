@@ -540,12 +540,14 @@ class SchemaPrinterTest {
         val schema = KGraphQL.schema {
             extendedScalars()
             type<TestObject> {
+                description = "Description for query object"
                 property(TestObject::name) {
                     description = "This is the name"
                 }
             }
             inputType<TestObject> {
                 name = "TestObjectInput"
+                description = "Description for input object"
             }
             enum<TestEnum> {
                 value(TestEnum.TYPE1) {
@@ -616,6 +618,7 @@ class SchemaPrinterTest {
               subscribeObject: TestObject!
             }
             
+            "Description for query object"
             type TestObject {
               "This is the name"
               name: String!
@@ -627,6 +630,7 @@ class SchemaPrinterTest {
               TYPE2
             }
             
+            "Description for input object"
             input TestObjectInput {
               name: String!
             }
