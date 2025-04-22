@@ -1,7 +1,9 @@
 package com.apurebase.kgraphql.stitched.schema.execution
 
+import com.apurebase.kgraphql.BuiltInErrorCodes
 import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.GraphQL
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.GraphqlRequest
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.stitched.StitchedGraphQL
@@ -1691,7 +1693,7 @@ class StitchedSchemaExecutionTest {
             {"data":{"remote2":{"bar2":42,"stitchedEnum":"REMOTE1"}}}
         """.trimIndent()
 
-        // Call with *only* stiched fields should work (without complaining about missing selection sets)
+        // Call with *only* stitched fields should work (without complaining about missing selection sets)
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(
@@ -2721,8 +2723,26 @@ class StitchedSchemaExecutionTest {
 
     @Test
     fun `errors from remote execution should be propagated correctly`() = testApplication {
-        fun SchemaBuilder.remoteSchema() = query("fail") {
-            resolver<String> { throw IllegalArgumentException("don't call me!") }
+        fun SchemaBuilder.remoteSchema() = run {
+            query("failRemote") {
+                resolver<String> {
+                    throw GraphQLError(
+                        message = "don't call me remote!",
+                        extensions = mapOf(
+                            "type" to BuiltInErrorCodes.BAD_USER_INPUT.name,
+                            "remoteErrorKey" to listOf(
+                                "remoteErrorValue1",
+                                "remoteErrorValue2"
+                            )
+                        )
+                    )
+                }
+            }
+            query("failRemote2") {
+                resolver<String> {
+                    throw IllegalStateException()
+                }
+            }
         }
         install(GraphQL.FeatureInstance("KGraphql - Remote")) {
             endpoint = "remote"
@@ -2737,8 +2757,14 @@ class StitchedSchemaExecutionTest {
                     remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
                 }
                 localSchema {
-                    query("local") {
-                        resolver { -> "local" }
+                    query("failLocal") {
+                        resolver<String> {
+                            throw GraphQLError(
+                                message = "don't call me local!",
+                                extensionsErrorType = BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name,
+                                extensionsErrorDetail = mapOf("localErrorKey" to "localErrorValue")
+                            )
+                        }
                     }
                 }
                 remoteSchema("remote") {
@@ -2761,9 +2787,23 @@ class StitchedSchemaExecutionTest {
         // TODO: should IMHO contain a data key according to https://spec.graphql.org/draft/#sec-Response-Format
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
-            setBody(graphqlRequest("{ fail }"))
+            setBody(graphqlRequest("{ failLocal }"))
         }.bodyAsText() shouldBeEqualTo """
-            {"errors":[{"message":"don't call me!","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"INTERNAL_SERVER_ERROR","detail":{"remoteUrl":"remote","remoteOperation":"fail"}}}]}
+            {"errors":[{"message":"don't call me local!","locations":[],"path":[],"extensions":{"type":"INTERNAL_SERVER_ERROR","detail":{"localErrorKey":"localErrorValue"}}}]}
+        """.trimIndent()
+
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(graphqlRequest("{ failRemote }"))
+        }.bodyAsText() shouldBeEqualTo """
+            {"errors":[{"message":"don't call me remote!","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"BAD_USER_INPUT","remoteUrl":"remote","remoteOperation":"failRemote","remoteErrorKey":["remoteErrorValue1","remoteErrorValue2"]}}]}
+        """.trimIndent()
+
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(graphqlRequest("{ failRemote2 }"))
+        }.bodyAsText() shouldBeEqualTo """
+            {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"INTERNAL_SERVER_ERROR","remoteUrl":"remote","remoteOperation":"failRemote2"}}]}
         """.trimIndent()
     }
 
