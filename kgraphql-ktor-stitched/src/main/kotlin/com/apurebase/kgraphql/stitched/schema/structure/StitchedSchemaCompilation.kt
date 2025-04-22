@@ -30,6 +30,7 @@ import com.apurebase.kgraphql.schema.structure.TypeProxy
 import com.apurebase.kgraphql.schema.structure.assertValidObjectType
 import com.apurebase.kgraphql.stitched.schema.configuration.StitchedSchemaConfiguration
 import kotlin.reflect.KClass
+import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
 import kotlin.reflect.KVisibility
@@ -405,9 +406,8 @@ class StitchedSchemaCompilation(
     private suspend fun handleInputType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
 
-        if (kClass.primaryConstructor == null) {
-            throw SchemaException("Java class '${kClass.simpleName}' as inputType is not supported")
-        }
+        val primaryConstructor = kClass.primaryConstructor
+            ?: throw SchemaException("Java class '${kClass.simpleName}' as inputType is not supported")
 
         val inputObjectDef =
             definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName(), kClass)
@@ -415,11 +415,20 @@ class StitchedSchemaCompilation(
         val typeProxy = TypeProxy(objectType)
         inputTypeProxies[kClass] = typeProxy
 
+        val memberPropertiesByName = kClass.memberProperties.associateBy { it.name }
         val fields = if (kClass.findAnnotation<NotIntrospected>() == null) {
-            kClass.memberProperties.map { property ->
+            // Input types are created using their primary constructor. Therefore, it makes sense to (only) use the
+            // parameters of this constructor for the fields (cf. https://github.com/stuebingerb/KGraphQL/issues/235).
+            // Member properties are sorted by name (https://youtrack.jetbrains.com/issue/KT-41042), and SDL is
+            // sorting by name, so we'll also sort constructor parameters to be consistent.
+            primaryConstructor.parameters.sortedBy { it.name }.map { parameter ->
+                // kProperty is used to configure deprecation and description in the DSL, so we use it
+                // if available
+                val kProperty = memberPropertiesByName[parameter.name]
                 handleKotlinInputProperty(
-                    kProperty = property,
-                    kqlProperty = inputObjectDef.kotlinProperties[property]
+                    parameter = parameter,
+                    kProperty = kProperty,
+                    kqlProperty = kProperty?.let { inputObjectDef.kotlinProperties[it] }
                 )
             }
         } else {
@@ -474,21 +483,22 @@ class StitchedSchemaCompilation(
     }
 
     private suspend fun <T : Any, R> handleKotlinInputProperty(
-        kProperty: KProperty1<T, R>,
+        parameter: KParameter,
+        kProperty: KProperty1<T, R>?,
         kqlProperty: PropertyDef.Kotlin<*, *>?
     ): InputValue<*> {
-        val type = handlePossiblyWrappedType(kProperty.returnType, TypeCategory.INPUT)
-        val actualKqlProperty = kqlProperty ?: PropertyDef.Kotlin(kProperty)
-        if (actualKqlProperty.isDeprecated && !type.isNullable()) {
+        val type = handlePossiblyWrappedType(parameter.type, TypeCategory.INPUT)
+        val actualKqlProperty = kqlProperty ?: kProperty?.let { PropertyDef.Kotlin(it) }
+        if (actualKqlProperty?.isDeprecated == true && !type.isNullable()) {
             throw SchemaException("Required fields cannot be marked as deprecated")
         }
         return InputValue(
             InputValueDef(
-                kProperty.returnType.jvmErasure,
-                kProperty.name,
-                description = actualKqlProperty.description,
-                isDeprecated = actualKqlProperty.isDeprecated,
-                deprecationReason = actualKqlProperty.deprecationReason
+                parameter.type.jvmErasure,
+                parameter.name ?: throw SchemaException("No name available for parameter $parameter"),
+                description = actualKqlProperty?.description,
+                isDeprecated = actualKqlProperty?.isDeprecated ?: false,
+                deprecationReason = actualKqlProperty?.deprecationReason
             ), type
         )
     }

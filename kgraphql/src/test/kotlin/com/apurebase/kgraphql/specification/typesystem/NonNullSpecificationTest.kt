@@ -103,21 +103,39 @@ class NonNullSpecificationTest {
                     }
                 }
             }
-        """.trimIndent()
-        ).also(::println).deserialize().run {
+            """.trimIndent()
+        ).deserialize().run {
             extract<String>("data/data/items[0]/value") shouldBeEqualTo "Stuff"
             extract<String?>("data/data/items[1]").shouldBeNull()
         }
     }
 
-    data class MyInput(val value1: String, val value2: String?)
+    data class MyInput(val value1: String, val value2: String?, val value3: Int)
 
     @Test
-    fun `nullable values without default values should raise an error`() {
-
+    fun `missing nullable values without Kotlin default values should execute successfully and use null`() {
         val schema = KGraphQL.schema {
             query("main") {
-                resolver { input: MyInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
+                resolver { input: MyInput -> "${input.value1} - ${input.value2 ?: "Nada"} - ${input.value3}" }
+            }
+        }
+
+        schema.executeBlocking(
+            """
+            {
+                main(input: { value1: "Hello", value3: 42 })
+            }
+            """.trimIndent()
+        ).deserialize().run {
+            extract<String>("data/main") shouldBeEqualTo "Hello - Nada - 42"
+        }
+    }
+
+    @Test
+    fun `missing non-nullable values without Kotlin default values should raise an error`() {
+        val schema = KGraphQL.schema {
+            query("main") {
+                resolver { input: MyInput -> "${input.value1} - ${input.value2 ?: "Nada"} - ${input.value3}" }
             }
         }
 
@@ -125,19 +143,19 @@ class NonNullSpecificationTest {
             schema.executeBlocking(
                 """
                 {
-                    main(input: { value1: "Hello" })
+                    main(input: { value2: "World" })
                 }
-            """
+                """.trimIndent()
             )
         } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "missing non-optional input fields: value2"
+            message shouldBeEqualTo "Missing non-optional input fields: value1, value3"
         }
     }
 
-    data class MyOptionalInput(val value1: String, val value2: String? = null)
+    data class MyOptionalInput(val value1: String = "Hello", val value2: String? = "World")
 
     @Test
-    fun `nullable values with default values should execute successfully`() {
+    fun `missing nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
@@ -149,9 +167,30 @@ class NonNullSpecificationTest {
             {
                 main(input: { value1: "Hello" })
             }
-        """.trimIndent()
-        ).also(::println).deserialize().run {
-            extract<String>("data/main") shouldBeEqualTo "Hello - Nada"
+            """.trimIndent()
+        ).deserialize().run {
+            extract<String>("data/main") shouldBeEqualTo "Hello - World"
+        }
+    }
+
+    @Test
+    fun `missing non-nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
+        val schema = KGraphQL.schema {
+            query("main") {
+                resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
+            }
+        }
+
+        println(schema.printSchema())
+
+        schema.executeBlocking(
+            """
+            {
+                main(input: { value2: "World, again" })
+            }
+            """.trimIndent()
+        ).deserialize().run {
+            extract<String>("data/main") shouldBeEqualTo "Hello - World, again"
         }
     }
 }
