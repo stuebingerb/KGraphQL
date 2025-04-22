@@ -72,8 +72,9 @@ class QueryTest : BaseSchemaTest() {
             execute("{film{title, director{name, favDish}}}")
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Property favDish on Director does not exist"
-            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
-            extensionsErrorDetail shouldBeEqualTo null
+            extensions shouldBeEqualTo mapOf(
+                "type" to "GRAPHQL_VALIDATION_FAILED"
+            )
         }
     }
 
@@ -119,8 +120,9 @@ class QueryTest : BaseSchemaTest() {
             execute("{scenario{author, content}}")
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Property author on Scenario does not exist"
-            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
-            extensionsErrorDetail shouldBeEqualTo null
+            extensions shouldBeEqualTo mapOf(
+                "type" to "GRAPHQL_VALIDATION_FAILED"
+            )
         }
     }
 
@@ -229,8 +231,9 @@ class QueryTest : BaseSchemaTest() {
             execute("{scenario{id(uppercase: true), content}}")
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Property id on type Scenario has no arguments, found: [uppercase]"
-            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
-            extensionsErrorDetail shouldBeEqualTo null
+            extensions shouldBeEqualTo mapOf(
+                "type" to "GRAPHQL_VALIDATION_FAILED"
+            )
         }
     }
 
@@ -403,8 +406,9 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent())
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Unknown type MissingType in type condition on fragment"
-            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
-            extensionsErrorDetail shouldBeEqualTo null
+            extensions shouldBeEqualTo mapOf(
+                "type" to "GRAPHQL_VALIDATION_FAILED"
+            )
         }
     }
 
@@ -421,8 +425,9 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent())
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Fragment film_title not found"
-            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
-            extensionsErrorDetail shouldBeEqualTo null
+            extensions shouldBeEqualTo mapOf(
+                "type" to "GRAPHQL_VALIDATION_FAILED"
+            )
         }
     }
 
@@ -432,8 +437,9 @@ class QueryTest : BaseSchemaTest() {
             execute("{film}")
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Missing selection set on property film of type Film"
-            extensionsErrorType shouldBeEqualTo "GRAPHQL_VALIDATION_FAILED"
-            extensionsErrorDetail shouldBeEqualTo null
+            extensions shouldBeEqualTo mapOf(
+                "type" to "GRAPHQL_VALIDATION_FAILED"
+            )
         }
     }
 
@@ -474,7 +480,7 @@ class QueryTest : BaseSchemaTest() {
                 name
             }
         """.trimIndent()
-        ).also(::println).deserialize()
+        ).deserialize()
 
         result.extract<List<String>>("data/root/fields") shouldBeEqualTo listOf("fields")
         result.extract<Int>("data/root/kids[0]/id") shouldBeEqualTo 1

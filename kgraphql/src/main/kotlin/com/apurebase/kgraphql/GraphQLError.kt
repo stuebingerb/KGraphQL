@@ -15,7 +15,6 @@ enum class BuiltInErrorCodes {
 }
 
 open class GraphQLError(
-
     /**
      * A message describing the Error for debugging purposes.
      */
@@ -51,12 +50,19 @@ open class GraphQLError(
      *
      * For supported built-in codes see [BuiltInErrorCodes].
      */
-    val extensionsErrorType: String,
+    @Deprecated(message = "Use extensions with key 'type'")
+    val extensionsErrorType: String = BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name,
 
     /**
      * Details regarding this error.
      */
-    val extensionsErrorDetail: Map<String, Any?>? = null
+    @Deprecated(message = "Use extensions with key 'detail'")
+    val extensionsErrorDetail: Map<String, Any?>? = null,
+
+    /**
+     * Custom error extensions.
+     */
+    open val extensions: Map<String, Any?>? = null
 ) : Exception(message) {
 
     /**
@@ -95,14 +101,6 @@ open class GraphQLError(
         return output
     }
 
-    open val extensions: Map<String, Any?>? by lazy {
-        val extensions = mutableMapOf<String, Any?>(
-            "type" to extensionsErrorType
-        )
-        extensionsErrorDetail?.let { extensions.put("detail", extensionsErrorDetail) }
-        extensions
-    }
-
     open fun serialize(): String = buildJsonObject {
         put("errors", buildJsonArray {
             addJsonObject {
@@ -118,9 +116,13 @@ open class GraphQLError(
                 put("path", buildJsonArray {
                     // TODO: Build this path. https://spec.graphql.org/June2018/#example-90475
                 })
-                extensions?.let {
-                    put("extensions", it.toJsonElement())
+                val legacyExtensions = mutableMapOf<String, Any?>().apply {
+                    put("type", extensionsErrorType)
+                    extensionsErrorDetail?.let { detail ->
+                        put("detail", detail)
+                    }
                 }
+                put("extensions", (legacyExtensions + extensions.orEmpty()).toJsonElement())
             }
         })
     }.toString()
@@ -128,31 +130,35 @@ open class GraphQLError(
 
 class ExecutionException(message: String, node: ASTNode? = null, cause: Throwable? = null) :
     GraphQLError(
-        message,
+        message = message,
         nodes = node?.let(::listOf),
         originalError = cause,
-        extensionsErrorType = BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name
+        extensions = mapOf("type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name)
     ) {
-        constructor(message: String, node: Execution, cause: Throwable? = null) : this(message, node.selectionNode, cause)
-    }
+    constructor(message: String, node: Execution, cause: Throwable? = null) : this(message, node.selectionNode, cause)
+}
 
 class InvalidInputValueException(message: String, node: ASTNode?, originalError: Throwable? = null) :
     GraphQLError(
-        message,
+        message = message,
         nodes = node?.let(::listOf),
         originalError = originalError,
-        extensionsErrorType = BuiltInErrorCodes.BAD_USER_INPUT.name
+        extensions = mapOf("type" to BuiltInErrorCodes.BAD_USER_INPUT.name)
     )
 
 class InvalidSyntaxException(message: String, source: Source, positions: List<Int>) :
     GraphQLError(
-        message,
+        message = message,
         source = source,
         positions = positions,
-        extensionsErrorType = BuiltInErrorCodes.GRAPHQL_PARSE_FAILED.name
+        extensions = mapOf("type" to BuiltInErrorCodes.GRAPHQL_PARSE_FAILED.name)
     )
 
 class ValidationException(message: String, nodes: List<ASTNode>? = null) :
-    GraphQLError(message, nodes = nodes, extensionsErrorType = BuiltInErrorCodes.GRAPHQL_VALIDATION_FAILED.name) {
+    GraphQLError(
+        message = message,
+        nodes = nodes,
+        extensions = mapOf("type" to BuiltInErrorCodes.GRAPHQL_VALIDATION_FAILED.name)
+    ) {
     constructor(message: String, node: ASTNode?) : this(message, node?.let(::listOf))
 }

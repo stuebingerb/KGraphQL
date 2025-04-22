@@ -105,7 +105,9 @@ class InputValuesSpecificationTest {
             deserialize(schema.executeBlocking("{ Boolean(value: $value) }"))
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "argument '$value' is not valid value of type Boolean"
-            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
         }
     }
 
@@ -135,7 +137,9 @@ class InputValuesSpecificationTest {
             deserialize(schema.executeBlocking("{ String(value: $value) }"))
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "argument '$value' is not valid value of type String"
-            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
         }
     }
 
@@ -161,7 +165,9 @@ class InputValuesSpecificationTest {
             deserialize(schema.executeBlocking("{ Enum(value: $value) }"))
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Invalid enum ${FakeEnum::class.simpleName} value. Expected one of [ENUM1, ENUM2]"
-            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
         }
     }
 
@@ -180,7 +186,9 @@ class InputValuesSpecificationTest {
             deserialize(schema.executeBlocking("{ List(value: $value) }"))
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Cannot coerce $value to numeric constant"
-            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
         }
     }
 
@@ -201,7 +209,9 @@ class InputValuesSpecificationTest {
             schema.executeBlocking("{ Object(value: { number: 232, description: \"little number\", list: $value }) }")
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "argument '$value' is not valid value of type String"
-            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
         }
     }
 
@@ -212,7 +222,9 @@ class InputValuesSpecificationTest {
             schema.executeBlocking("{ Object(value: null) }")
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "argument 'null' is not valid value of type FakeData"
-            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
         }
     }
 
@@ -295,7 +307,9 @@ class InputValuesSpecificationTest {
             schema.executeBlocking("query(\$object: FakeDate) { Object(value: \$object) }")
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Invalid variable \$object argument type FakeDate, expected FakeData!"
-            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
         }
     }
 }

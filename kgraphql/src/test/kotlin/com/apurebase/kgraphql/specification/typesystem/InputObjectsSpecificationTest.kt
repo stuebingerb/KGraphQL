@@ -89,7 +89,9 @@ class InputObjectsSpecificationTest {
             )
         } shouldThrow GraphQLError::class with {
             message shouldBeEqualTo "Property 'valu1' on 'MyInput' does not exist"
-            extensionsErrorType shouldBeEqualTo "BAD_USER_INPUT"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
         }
     }
 
