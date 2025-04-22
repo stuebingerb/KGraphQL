@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.stitched.schema.execution
 
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExperimentalAPI
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.GraphqlRequest
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.execution.Execution
@@ -12,6 +13,7 @@ import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.Type
 import com.apurebase.kgraphql.stitched.RemoteExecutionException
 import com.apurebase.kgraphql.stitched.StitchedGraphqlRequest
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -40,11 +42,24 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
             """.trimIndent()
         }
         val responseJson = objectMapper.readTree(response)
+        // TODO: properly transfer errors from the remote execution
         responseJson["errors"]?.let { errors ->
-            // TODO: properly transfer errors from the remote execution
-            val messages = (errors as? ArrayNode)?.map { (it as? ObjectNode)?.get("message")?.textValue() }
-                ?: listOf("Error(s) during remote execution")
-            throw RemoteExecutionException(message = messages.joinToString(", "), node = node)
+            (errors as? ArrayNode)?.forEach { error ->
+                val objectNode = error as? ObjectNode
+                val message = objectNode?.get("message")?.textValue()?.takeIf { it.isNotBlank() }
+                    ?: "Error(s) during remote execution"
+                val extensionsNode = objectNode?.get("extensions") as? ObjectNode
+                val extensions = mapOf("remoteUrl" to node.remoteUrl, "remoteOperation" to node.remoteOperation) +
+                    extensionsNode?.let {
+                        objectMapper.convertValue(it, object : TypeReference<Map<String, Any?>>() {})
+                    }.orEmpty()
+                throw GraphQLError(
+                    message = message,
+                    nodes = listOf(node.selectionNode),
+                    extensions = extensions
+                )
+            }
+            throw RemoteExecutionException(message = "Error(s) during remote execution", node = node)
         }
         return responseJson["data"]?.get(node.remoteOperation)
     }
