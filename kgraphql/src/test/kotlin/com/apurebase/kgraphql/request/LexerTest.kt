@@ -202,8 +202,9 @@ internal class LexerTest {
             source shouldBeEqualTo testSource
             locations shouldNotBeEqualTo null
             locations!!.shouldHaveSize(1)
-            extensionsErrorType shouldBeEqualTo "GRAPHQL_PARSE_FAILED"
-            extensionsErrorDetail shouldBeEqualTo null
+            extensions shouldBeEqualTo mapOf(
+                "type" to "GRAPHQL_PARSE_FAILED"
+            )
             prettyPrint() shouldBeEqualTo """
                 Syntax Error: Cannot parse the unexpected character "?".
                 
