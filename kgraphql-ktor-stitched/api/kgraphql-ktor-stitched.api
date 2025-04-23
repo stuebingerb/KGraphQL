@@ -528,11 +528,13 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/StitchedProp
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/apurebase/kgraphql/stitched/schema/structure/StitchedSchemaCompilation {
+public final class com/apurebase/kgraphql/stitched/schema/structure/StitchedSchemaCompilation : com/apurebase/kgraphql/schema/structure/SchemaCompilation {
 	public fun <init> (Lcom/apurebase/kgraphql/stitched/schema/configuration/StitchedSchemaConfiguration;Lcom/apurebase/kgraphql/stitched/schema/structure/StitchedSchemaDefinition;)V
-	public final fun getConfiguration ()Lcom/apurebase/kgraphql/stitched/schema/configuration/StitchedSchemaConfiguration;
-	public final fun getDefinition ()Lcom/apurebase/kgraphql/stitched/schema/structure/StitchedSchemaDefinition;
-	public final fun perform (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getConfiguration ()Lcom/apurebase/kgraphql/configuration/SchemaConfiguration;
+	public fun getConfiguration ()Lcom/apurebase/kgraphql/stitched/schema/configuration/StitchedSchemaConfiguration;
+	public synthetic fun getDefinition ()Lcom/apurebase/kgraphql/schema/model/SchemaDefinition;
+	public fun getDefinition ()Lcom/apurebase/kgraphql/stitched/schema/structure/StitchedSchemaDefinition;
+	public fun perform (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/StitchedSchemaDefinition : com/apurebase/kgraphql/schema/model/SchemaDefinition {

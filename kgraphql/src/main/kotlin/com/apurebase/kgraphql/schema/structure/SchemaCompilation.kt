@@ -38,21 +38,21 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
-class SchemaCompilation(
-    val configuration: SchemaConfiguration,
-    val definition: SchemaDefinition
+open class SchemaCompilation(
+    open val configuration: SchemaConfiguration,
+    open val definition: SchemaDefinition
 ) {
-    private val queryTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
+    protected val queryTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
 
-    private val inputTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
+    protected val inputTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
 
-    private val unions = mutableListOf<Type.Union>()
+    protected val unions = mutableListOf<Type.Union>()
 
-    private val enums = definition.enums.associate { enum -> enum.kClass to enum.toEnumType() }
+    protected val enums by lazy { definition.enums.associate { enum -> enum.kClass to enum.toEnumType() } }
 
-    private val scalars = definition.scalars.associate { scalar -> scalar.kClass to scalar.toScalarType() }
+    protected val scalars by lazy { definition.scalars.associate { scalar -> scalar.kClass to scalar.toScalarType() } }
 
-    private val schemaProxy = SchemaProxy()
+    protected val schemaProxy = SchemaProxy()
 
     private val contextType = Type._Context()
 
@@ -62,13 +62,13 @@ class SchemaCompilation(
         INPUT, QUERY
     }
 
-    suspend fun perform(): DefaultSchema {
+    open suspend fun perform(): DefaultSchema {
         definition.unions.forEach { handleUnionType(it) }
         definition.objects.forEach { handleObjectType(it.kClass) }
         definition.inputObjects.forEach { handleInputType(it.kClass) }
-        val queryType = handleQueries()
-        val mutationType = handleMutations()
-        val subscriptionType = handleSubscriptions()
+        val queryType = handleQueries(definition.queries.map { handleOperation(it) })
+        val mutationType = handleMutations(definition.mutations.map { handleOperation(it) })
+        val subscriptionType = handleSubscriptions(definition.subscriptions.map { handleOperation(it) })
 
         queryTypeProxies.forEach { (kClass, typeProxy) ->
             introspectPossibleTypes(kClass, typeProxy)
@@ -94,7 +94,7 @@ class SchemaCompilation(
         return schema
     }
 
-    private fun introspectPossibleTypes(kClass: KClass<*>, typeProxy: TypeProxy) {
+    protected fun introspectPossibleTypes(kClass: KClass<*>, typeProxy: TypeProxy) {
         val proxied = typeProxy.proxied
         if (proxied is Type.Interface<*>) {
             val possibleTypes = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
@@ -105,7 +105,7 @@ class SchemaCompilation(
         }
     }
 
-    private fun introspectInterfaces(kClass: KClass<*>, typeProxy: TypeProxy) {
+    protected fun introspectInterfaces(kClass: KClass<*>, typeProxy: TypeProxy) {
         val proxied = typeProxy.proxied
         if (proxied is Type.Object<*>) {
             val interfaces = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
@@ -122,14 +122,13 @@ class SchemaCompilation(
         }
     }
 
-    private suspend fun handlePartialDirective(directive: Directive.Partial): Directive {
+    protected suspend fun handlePartialDirective(directive: Directive.Partial): Directive {
         val inputValues = handleInputValues(directive.name, directive.execution, emptyList())
         return directive.toDirective(inputValues)
     }
 
-    private suspend fun handleQueries(): Type {
+    protected suspend fun handleQueries(declaredFields: List<Field>): Type {
         val __typenameField = typenameField(FunctionWrapper.on { -> "Query" })
-        val declaredFields = definition.queries.map { handleOperation(it) }
         if (declaredFields.isEmpty()) {
             throw SchemaException("Schema must define at least one query")
         }
@@ -140,9 +139,8 @@ class SchemaCompilation(
         )
     }
 
-    private suspend fun handleMutations(): Type? {
+    protected fun handleMutations(declaredFields: List<Field>): Type? {
         val __typenameField = typenameField(FunctionWrapper.on { -> "Mutation" })
-        val declaredFields = definition.mutations.map { handleOperation(it) }
         return if (declaredFields.isNotEmpty()) {
             Type.OperationObject(
                 name = "Mutation",
@@ -154,15 +152,14 @@ class SchemaCompilation(
         }
     }
 
-    private suspend fun handleSubscriptions(): Type? {
-        val declaredFields = definition.subscriptions.map { handleOperation(it) }
+    protected fun handleSubscriptions(declaredFields: List<Field>): Type? {
         return if (declaredFields.isNotEmpty()) {
             Type.OperationObject(
                 name = "Subscription",
                 description = "Subscription object",
                 // https://spec.graphql.org/October2021/#sec-Type-Name-Introspection
                 //      "__typename may not be included as a root field in a subscription operation."
-                fields = definition.subscriptions.map { handleOperation(it) }
+                fields = declaredFields
             )
         } else {
             null
@@ -179,7 +176,7 @@ class SchemaCompilation(
         })
     )
 
-    private suspend fun handleOperation(operation: BaseOperationDef<*, *>): Field {
+    protected suspend fun handleOperation(operation: BaseOperationDef<*, *>): Field {
         val returnType = handlePossiblyWrappedType(operation.returnType, TypeCategory.QUERY)
         val inputValues = handleInputValues(operation.name, operation, operation.inputValues)
         return Field.Function(operation, returnType, inputValues)
@@ -274,7 +271,7 @@ class SchemaCompilation(
         )
     }
 
-    private suspend fun handleObjectType(kClass: KClass<*>): Type {
+    protected suspend fun handleObjectType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
         val objectDefs = definition.objects.filter { it.kClass.isSuperclassOf(kClass) }
         val objectDef = objectDefs.find { it.kClass == kClass } ?: TypeDef.Object(kClass.defaultKQLTypeName(), kClass)
@@ -349,7 +346,7 @@ class SchemaCompilation(
         return typeProxy
     }
 
-    private suspend fun handleInputType(kClass: KClass<*>): Type {
+    protected suspend fun handleInputType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
 
         val primaryConstructor = kClass.primaryConstructor
@@ -409,7 +406,7 @@ class SchemaCompilation(
         }
     }
 
-    private suspend fun handleUnionType(union: TypeDef.Union): Type.Union {
+    protected suspend fun handleUnionType(union: TypeDef.Union): Type.Union {
         val possibleTypes = union.members.map {
             handleRawType(it, TypeCategory.QUERY)
         }
