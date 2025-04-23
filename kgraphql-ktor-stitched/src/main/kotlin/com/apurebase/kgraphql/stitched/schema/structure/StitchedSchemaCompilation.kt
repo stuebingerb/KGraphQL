@@ -53,8 +53,11 @@ class StitchedSchemaCompilation(
             val originalType: TypeProxy = (typesByName[typeName] as? TypeProxy)
                 ?: throw SchemaException("Stitched type $typeName does not exist")
             val stitchedFields = stitchedProperties.map { property ->
+                if (property.fieldName.startsWith("__")) {
+                    throw SchemaException("Illegal name '${property.fieldName}'. Names starting with '__' are reserved for introspection system")
+                }
                 if (originalType.fields?.any { it.name == property.fieldName } == true) {
-                    throw SchemaException("Cannot add stitched field ${property.fieldName} with duplicate name")
+                    throw SchemaException("Cannot add stitched field with duplicated name '${property.fieldName}'")
                 }
                 val remoteQuery = queryType.fields?.firstOrNull { it.name == property.remoteQueryName }
                     ?: error("Stitched remote query ${property.remoteQueryName} does not exist")
