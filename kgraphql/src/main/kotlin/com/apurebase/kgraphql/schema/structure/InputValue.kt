@@ -19,4 +19,6 @@ class InputValue<T : Any>(
     override val deprecationReason: String? = valueDef.deprecationReason
 
     val default: T? = valueDef.defaultValue
+
+    val parameterName: String = valueDef.parameterName
 }

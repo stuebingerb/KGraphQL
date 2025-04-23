@@ -9,14 +9,17 @@ class KotlinPropertyDSL<T : Any, R>(
     block: KotlinPropertyDSL<T, R>.() -> Unit
 ) : LimitedAccessItemDSL<T>() {
 
+    // Whether this property should be ignored, i.e. hidden from GraphQL
     var ignore = false
+
+    // Custom name for this property, otherwise taken from the [kProperty]
+    var name: String? = null
 
     init {
         block()
     }
 
     fun accessRule(rule: (T, Context) -> Exception?) {
-
         val accessRuleAdapter: (T?, Context) -> Exception? = { parent, ctx ->
             if (parent != null) rule(
                 parent,
@@ -25,7 +28,6 @@ class KotlinPropertyDSL<T : Any, R>(
                 IllegalArgumentException("Unexpected null parent of kotlin property")
             }
         }
-
         accessRuleBlock = accessRuleAdapter
     }
 
@@ -35,6 +37,7 @@ class KotlinPropertyDSL<T : Any, R>(
         isDeprecated = isDeprecated,
         deprecationReason = deprecationReason,
         isIgnored = ignore,
-        accessRule = accessRuleBlock
+        accessRule = accessRuleBlock,
+        customName = name
     )
 }

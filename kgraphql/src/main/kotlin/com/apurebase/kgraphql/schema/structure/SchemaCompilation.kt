@@ -378,6 +378,10 @@ open class SchemaCompilation(
             listOf()
         }
 
+        fields.find { it.name.startsWith("__") }?.let { field ->
+            throw SchemaException("Illegal name '${field.name}'. Names starting with '__' are reserved for introspection system")
+        }
+
         typeProxy.proxied = Type.Input(inputObjectDef, fields)
         return typeProxy
     }
@@ -435,13 +439,16 @@ open class SchemaCompilation(
         if (actualKqlProperty?.isDeprecated == true && !type.isNullable()) {
             throw SchemaException("Required fields cannot be marked as deprecated")
         }
+        val parameterName = parameter.name ?: throw SchemaException("No name available for parameter $parameter")
         return InputValue(
             InputValueDef(
-                parameter.type.jvmErasure,
-                parameter.name ?: throw SchemaException("No name available for parameter $parameter"),
+                kClass = parameter.type.jvmErasure,
+                // actualKqlProperty can have a custom name configured via DSL
+                name = actualKqlProperty?.name ?: parameterName,
                 description = actualKqlProperty?.description,
                 isDeprecated = actualKqlProperty?.isDeprecated ?: false,
-                deprecationReason = actualKqlProperty?.deprecationReason
+                deprecationReason = actualKqlProperty?.deprecationReason,
+                parameterName = parameterName
             ), type
         )
     }

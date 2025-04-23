@@ -1473,6 +1473,149 @@ class StitchedSchemaExecutionTest {
     }
 
     @Test
+    fun `stitched schema with variables and renamed properties should work as expected`() = testApplication {
+        data class RemoteChild(val bar: String)
+        data class RemoteObject(
+            val foo: String
+        )
+
+        fun SchemaBuilder.remoteSchema() = run {
+            type<RemoteObject> {
+                property(RemoteObject::foo) {
+                    name = "notFoo"
+                }
+            }
+            query("getRemoteObject") {
+                resolver { foo: String -> RemoteObject(foo) }
+            }
+            query("getRemoteChild") {
+                resolver { bar: String -> RemoteChild(bar) }
+            }
+        }
+        install(GraphQL.FeatureInstance("KGraphql - Remote1")) {
+            endpoint = "remote"
+            schema {
+                remoteSchema()
+            }
+        }
+        install(StitchedGraphQL.FeatureInstance("KGraphql - Local")) {
+            endpoint = "local"
+            stitchedSchema {
+                configure {
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        remoteSchema()
+                    }
+                }
+                type("RemoteObject") {
+                    stitchedProperty("stitchedChild") {
+                        nullable = false
+                        remoteQuery("getRemoteChild").withArgs {
+                            arg { name = "bar" }
+                        }
+                    }
+                }
+            }
+        }
+
+        val sdl = client.get("local?schema").bodyAsText()
+        sdl shouldBeEqualTo """
+            type Query {
+              getRemoteChild(bar: String!): RemoteChild!
+              getRemoteObject(foo: String!): RemoteObject!
+            }
+
+            type RemoteChild {
+              bar: String!
+            }
+
+            type RemoteObject {
+              notFoo: String!
+              stitchedChild(bar: String!): RemoteChild!
+            }
+
+        """.trimIndent()
+
+        // Query remote1 schema but from the *local* endpoint
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(
+                graphqlRequest(
+                    """
+                    query {
+                      getRemoteObject(foo: "foo1") {
+                        notFoo
+                        stitchedChild(bar: "bar1") {
+                          bar
+                        }
+                      }
+                    }
+                    """.trimIndent()
+                )
+            )
+        }.bodyAsText() shouldBeEqualTo """
+            {"data":{"getRemoteObject":{"notFoo":"foo1","stitchedChild":{"bar":"bar1"}}}}
+        """.trimIndent()
+
+        val variables = decodeFromString<JsonObject>(
+            """
+            {
+              "varFoo": "fooVar",
+              "bar": "barVar"
+            }
+            """.trimIndent()
+        )
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(
+                graphqlRequest(
+                    """
+                    query(${'$'}varFoo: String!, ${'$'}bar: String!) {
+                      getRemoteObject(foo: ${'$'}varFoo) {
+                        notFoo
+                        stitchedChild(bar: ${'$'}bar) {
+                          bar
+                        }
+                      }
+                    }
+                    """.trimIndent(),
+                    variables
+                )
+            )
+        }.bodyAsText() shouldBeEqualTo """
+            {"data":{"getRemoteObject":{"notFoo":"fooVar","stitchedChild":{"bar":"barVar"}}}}
+        """.trimIndent()
+
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(
+                graphqlRequest(
+                    """
+                    query(${'$'}varFoo: String!, ${'$'}bar: String!) {
+                      getRemoteObject(foo: ${'$'}varFoo) {
+                        notFoo
+                        ...objectFragment
+                      }
+                    }
+
+                    fragment objectFragment on RemoteObject {
+                      __typename
+                      stitchedChild(bar: ${'$'}bar) {
+                        bar
+                      }
+                    }
+                    """.trimIndent(),
+                    variables
+                )
+            )
+        }.bodyAsText() shouldBeEqualTo """
+            {"data":{"getRemoteObject":{"notFoo":"fooVar","__typename":"RemoteObject","stitchedChild":{"bar":"barVar"}}}}
+        """.trimIndent()
+    }
+
+    @Test
     fun `schema with remote extension properties and aliases should work as expected`() = testApplication {
         install(GraphQL.FeatureInstance("KGraphql - Remote")) {
             endpoint = "remote"

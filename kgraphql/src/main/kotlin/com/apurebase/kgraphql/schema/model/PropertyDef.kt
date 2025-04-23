@@ -43,8 +43,9 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
         override val isDeprecated: Boolean = false,
         override val deprecationReason: String? = null,
         override val accessRule: ((T?, Context) -> Exception?)? = null,
-        val isIgnored: Boolean = false
-    ) : Definition(kProperty.name), PropertyDef<T>
+        val isIgnored: Boolean = false,
+        customName: String? = null
+    ) : Definition(customName ?: kProperty.name), PropertyDef<T>
 
     class Union<T>(
         name: String,
