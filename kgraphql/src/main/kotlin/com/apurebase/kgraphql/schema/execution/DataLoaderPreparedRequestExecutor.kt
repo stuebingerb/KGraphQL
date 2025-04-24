@@ -376,9 +376,9 @@ class DataLoaderPreparedRequestExecutor(val schema: DefaultSchema) : RequestExec
         coroutineScope {
             val result = deferredJsonBuilder(timeout = plan.options.timeout ?: schema.configuration.timeout) {
                 val ctx = ExecutionContext(
-                    Variables(schema, variables, plan.firstOrNull { it.variables != null }?.variables),
+                    Variables(variables, plan.firstOrNull { it.variables != null }?.variables),
                     context,
-                    plan.constructLoaders(),
+                    plan.constructLoaders()
                 )
 
                 "data" toDeferredObj {

@@ -50,6 +50,20 @@ class InputValuesSpecificationTest {
         assertThat(response.extract<Int>("data/Int"), equalTo(input))
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["42.0", "\"foo\"", "bar"])
+    @Specification("2.9.1 Int Value")
+    fun `Invalid Int input value`(value: String) {
+        invoking {
+            deserialize(schema.executeBlocking("{ Int(value: $value) }"))
+        } shouldThrow GraphQLError::class with {
+            message shouldBeEqualTo "Cannot coerce $value to numeric constant"
+            extensions shouldBeEqualTo mapOf(
+                "type" to "BAD_USER_INPUT"
+            )
+        }
+    }
+
     @Test
     @Specification("2.9.2 Float Value")
     fun `Float input value`() {

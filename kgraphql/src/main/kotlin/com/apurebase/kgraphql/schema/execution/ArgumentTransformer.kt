@@ -13,7 +13,6 @@ import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
-import kotlin.reflect.jvm.jvmErasure
 
 open class ArgumentTransformer {
 
@@ -76,14 +75,9 @@ open class ArgumentTransformer {
         // This parameter is used to track if we have seen a ListValueNode in the recursive call chain.
         coerceSingleValueAsList: Boolean
     ): Any? {
-        val kType = type.toKType()
-        val typeName = type.unwrapped().name
-
         return when {
             value is ValueNode.VariableNode -> {
-                variables.get(kType.jvmErasure, kType, typeName, value) { subValue ->
-                    transformValue(type, subValue, variables, coerceSingleValueAsList)
-                }
+                variables.get(type, value)?.let { transformValue(type, it, variables, coerceSingleValueAsList) }
             }
 
             // https://spec.graphql.org/October2021/#sec-List.Input-Coercion

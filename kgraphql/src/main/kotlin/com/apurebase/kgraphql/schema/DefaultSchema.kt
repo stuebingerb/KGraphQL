@@ -52,7 +52,7 @@ class DefaultSchema(
         }
 
         val parsedVariables = variables
-            ?.let { VariablesJson.Defined(configuration.objectMapper, variables) }
+            ?.let { VariablesJson.Defined(configuration.objectMapper.readTree(variables)) }
             ?: VariablesJson.Empty()
 
         val document = Parser(request).parseDocument()

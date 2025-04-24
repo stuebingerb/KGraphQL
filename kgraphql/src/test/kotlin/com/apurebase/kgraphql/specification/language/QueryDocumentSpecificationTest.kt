@@ -38,7 +38,7 @@ class QueryDocumentSpecificationTest {
     fun `must provide operation name when multiple named operations`() {
         invoking {
             deserialize(schema.executeBlocking("query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
-        } shouldThrow GraphQLError::class withMessage "Must provide an operation name from: [FIZZ, BUZZ]"
+        } shouldThrow GraphQLError::class withMessage "Must provide an operation name from: [FIZZ, BUZZ], found null"
     }
 
     @Test

@@ -321,6 +321,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun setFields (Ljava/util/List;)V
 	public fun toString ()Ljava/lang/String;
 	public fun typeReference ()Ljava/lang/String;
+	public fun unwrapped ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 }
 
 public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedRootOperation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
@@ -405,6 +406,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun setFields (Ljava/util/List;)V
 	public fun toString ()Ljava/lang/String;
 	public fun typeReference ()Ljava/lang/String;
+	public fun unwrapped ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 }
 
 public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedType$$serializer : kotlinx/serialization/internal/GeneratedSerializer {

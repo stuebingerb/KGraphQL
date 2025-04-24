@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.specification.language
 
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
@@ -27,6 +28,51 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `query with int variable`() {
+        val map = execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1}")
+        assertNoErrors(map)
+        assertThat(map.extract<Int>("data/filmByRank/title"), equalTo("Prestige"))
+    }
+
+    // Json only has one number type, so "1" and "1.0" are the same, and input coercion should be able to handle
+    // the value accordingly
+    @Test
+    fun `query with int variable should allow whole floating point numbers`() {
+        val map =
+            execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1.0}")
+        assertNoErrors(map)
+        assertThat(map.extract<Int>("data/filmByRank/title"), equalTo("Prestige"))
+    }
+
+    @Test
+    fun `query with int variable should not allow floating point numbers that are not whole`() {
+        expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
+            execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1.01}")
+        }
+    }
+
+    @Test
+    fun `query with float variable`() {
+        val map = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 42.3}")
+        assertNoErrors(map)
+        assertThat(map.extract<Float>("data/float"), equalTo(42.3))
+    }
+
+    @Test
+    fun `query with float variable in exponential notation`() {
+        val map = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 2.1e1}")
+        assertNoErrors(map)
+        assertThat(map.extract<Float>("data/float"), equalTo(2.1e1))
+    }
+
+    @Test
+    fun `query with float variable should allow integer input`() {
+        val map = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 42}")
+        assertNoErrors(map)
+        assertThat(map.extract<Float>("data/float"), equalTo(42.0))
+    }
+
+    @Test
     fun `query with boolean variable`() {
         val map = execute(query = "query(\$big: Boolean!) {number(big: \$big)}", variables = "{\"big\": true}")
         assertNoErrors(map)
@@ -38,6 +84,19 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         val map = execute(query = "query(\$big: Boolean = true) {number(big: \$big)}")
         assertNoErrors(map)
         assertThat(map.extract<Int>("data/number"), equalTo(10000))
+    }
+
+    @Test
+    fun `query with enum variable`() {
+        val map = execute(
+            query = "query(\$type: FilmType!) {filmsByType(type: \$type) {title}}",
+            variables = "{\"type\": \"FULL_LENGTH\"}"
+        )
+        assertNoErrors(map)
+        assertThat(
+            map.extract<Map<String, String>>("data/filmsByType"),
+            equalTo(listOf(mapOf("title" to "Prestige"), mapOf("title" to "Se7en")))
+        )
     }
 
     @Test
@@ -58,7 +117,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     fun `query with variables and default value pointing to another variable`() {
         val map = execute(
             query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int = \$defaultAge, \$defaultAge : Int!) " +
-                    "{createActor(name: \$name, age: \$age){name, age}}",
+                "{createActor(name: \$name, age: \$age){name, age}}",
             variables = "{\"defaultAge\": 22}"
         )
         assertNoErrors(map)
@@ -72,7 +131,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     fun `fragment with variable`() {
         val map = execute(
             query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!, \$big: Boolean!) {createActor(name: \$name, age: \$age){...Linda}}" +
-                    "fragment Linda on Actor {picture(big: \$big)}",
+                "fragment Linda on Actor {picture(big: \$big)}",
             variables = "{\"age\": 22, \"big\": true}"
         )
         assertNoErrors(map)
@@ -87,7 +146,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         expect<ValidationException>("Variable '\$big' was not declared for this operation") {
             execute(
                 query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!) {createActor(name: \$name, age: \$age){...Linda}}" +
-                        "fragment Linda on Actor {picture(big: \$big)}",
+                    "fragment Linda on Actor {picture(big: \$big)}",
                 variables = "{\"age\": 22}"
             )
         }

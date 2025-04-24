@@ -32,4 +32,9 @@ interface __Type {
         TypeKind.LIST -> "[${ofType?.typeReference()}]"
         else -> name ?: ""
     }
+
+    fun unwrapped(): __Type = when (kind) {
+        TypeKind.NON_NULL, TypeKind.LIST -> (ofType as __Type).unwrapped()
+        else -> this
+    }
 }

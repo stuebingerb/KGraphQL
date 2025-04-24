@@ -51,7 +51,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             val data = root.putObject("data")
 
             val resultMap = plan.toMapAsync(dispatcher) {
-                val ctx = ExecutionContext(Variables(schema, variables, it.variables), context)
+                val ctx = ExecutionContext(Variables(variables, it.variables), context)
                 if (shouldInclude(ctx, it)) {
                     writeOperation(
                         isSubscription = plan.isSubscription,
