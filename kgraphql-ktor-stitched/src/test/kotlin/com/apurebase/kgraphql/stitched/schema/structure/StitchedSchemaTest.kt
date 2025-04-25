@@ -571,7 +571,7 @@ class StitchedSchemaTest {
                     }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Cannot add stitched field existing with duplicate name"
+        } shouldThrow SchemaException::class withMessage "Cannot add stitched field with duplicated name 'existing'"
 
         invoking {
             StitchedKGraphQL.stitchedSchema {
@@ -604,7 +604,39 @@ class StitchedSchemaTest {
                     }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Cannot add stitched field with duplicated field extension for type SimpleClass"
+        } shouldThrow SchemaException::class withMessage "Cannot add stitched field with duplicated name 'extension' for type 'SimpleClass'"
+    }
+
+    @Test
+    fun `schema should prevent invalid field names from stitching`() {
+        data class SimpleClass(val existing: String)
+        invoking {
+            StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
+                localSchema {
+                    query("dummy") {
+                        resolver { -> "dummy" }
+                    }
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        query("simple") {
+                            resolver { -> SimpleClass("existing") }
+                        }
+                        query("extension") {
+                            resolver { -> "extension" }
+                        }
+                    }
+                }
+                type("SimpleClass") {
+                    stitchedProperty("__extension") {
+                        remoteQuery("extension")
+                    }
+                }
+            }
+        } shouldThrow SchemaException::class withMessage "Illegal name '__extension'. Names starting with '__' are reserved for introspection system"
     }
 
     @Test

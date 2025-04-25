@@ -42,7 +42,7 @@ class StitchedMutableSchemaDefinition : MutableSchemaDefinition() {
 
     fun addStitchedProperty(stitchedProperty: StitchedProperty) {
         if (stitchedProperties.any { it.typeName == stitchedProperty.typeName && it.fieldName == stitchedProperty.fieldName }) {
-            throw SchemaException("Cannot add stitched field with duplicated field ${stitchedProperty.fieldName} for type ${stitchedProperty.typeName}")
+            throw SchemaException("Cannot add stitched field with duplicated name '${stitchedProperty.fieldName}' for type '${stitchedProperty.typeName}'")
         }
         stitchedProperties.add(stitchedProperty)
     }
