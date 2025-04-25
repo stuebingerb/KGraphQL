@@ -2294,11 +2294,27 @@ public final class com/apurebase/kgraphql/schema/structure/RequestInterpreter$In
 	public final fun getFragments ()Ljava/util/Map;
 }
 
-public final class com/apurebase/kgraphql/schema/structure/SchemaCompilation {
+public class com/apurebase/kgraphql/schema/structure/SchemaCompilation {
 	public fun <init> (Lcom/apurebase/kgraphql/configuration/SchemaConfiguration;Lcom/apurebase/kgraphql/schema/model/SchemaDefinition;)V
-	public final fun getConfiguration ()Lcom/apurebase/kgraphql/configuration/SchemaConfiguration;
-	public final fun getDefinition ()Lcom/apurebase/kgraphql/schema/model/SchemaDefinition;
-	public final fun perform (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getConfiguration ()Lcom/apurebase/kgraphql/configuration/SchemaConfiguration;
+	public fun getDefinition ()Lcom/apurebase/kgraphql/schema/model/SchemaDefinition;
+	protected final fun getEnums ()Ljava/util/Map;
+	protected final fun getInputTypeProxies ()Ljava/util/Map;
+	protected final fun getQueryTypeProxies ()Ljava/util/Map;
+	protected final fun getScalars ()Ljava/util/Map;
+	protected final fun getSchemaProxy ()Lcom/apurebase/kgraphql/schema/introspection/SchemaProxy;
+	protected final fun getUnions ()Ljava/util/List;
+	protected final fun handleInputType (Lkotlin/reflect/KClass;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun handleMutations (Ljava/util/List;)Lcom/apurebase/kgraphql/schema/structure/Type;
+	protected final fun handleObjectType (Lkotlin/reflect/KClass;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun handleOperation (Lcom/apurebase/kgraphql/schema/model/BaseOperationDef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun handlePartialDirective (Lcom/apurebase/kgraphql/schema/directive/Directive$Partial;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun handleQueries (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun handleSubscriptions (Ljava/util/List;)Lcom/apurebase/kgraphql/schema/structure/Type;
+	protected final fun handleUnionType (Lcom/apurebase/kgraphql/schema/model/TypeDef$Union;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun introspectInterfaces (Lkotlin/reflect/KClass;Lcom/apurebase/kgraphql/schema/structure/TypeProxy;)V
+	protected final fun introspectPossibleTypes (Lkotlin/reflect/KClass;Lcom/apurebase/kgraphql/schema/structure/TypeProxy;)V
+	public fun perform (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/apurebase/kgraphql/schema/structure/SchemaModel : com/apurebase/kgraphql/schema/introspection/__Schema {
