@@ -127,9 +127,6 @@ class StitchedSchemaExecutionTest {
     }
 
     private fun SchemaBuilder.complexRemoteSchema2WithInputObject() = run {
-        inputType<Child> {
-            name = "ChildInput"
-        }
         query("remote2") {
             resolver { inputObject: Child? -> inputObject?.let { Remote2(inputObject.childFoo, 13) } }
         }
@@ -1001,9 +998,6 @@ class StitchedSchemaExecutionTest {
             query("remote1") {
                 resolver { -> "dummy" }
             }
-            inputType<Remote1> {
-                name = "Remote1Input"
-            }
             enum<RemoteEnum>()
             mutation("objectMutation") {
                 resolver { input: Remote1 -> input.copy(foo1 = "${input.foo1}-processed") }
@@ -1196,9 +1190,6 @@ class StitchedSchemaExecutionTest {
 
         fun SchemaBuilder.remoteSchema1WithVariables() = run {
             enum<RemoteEnum>()
-            inputType<VariableObject> {
-                name = "VariableObjectInput"
-            }
             query("getBoolean") {
                 resolver { toGet: Boolean -> toGet }
             }
