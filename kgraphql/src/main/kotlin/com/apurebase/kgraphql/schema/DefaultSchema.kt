@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.request.Introspection
@@ -33,6 +34,7 @@ class DefaultSchema(
 
     private val defaultRequestExecutor: RequestExecutor = getExecutor(configuration.executor)
 
+    @OptIn(ExperimentalAPI::class)
     private fun getExecutor(executor: Executor) = when (executor) {
         Parallel -> ParallelRequestExecutor(this)
         DataLoaderPrepared -> DataLoaderPreparedRequestExecutor(this)

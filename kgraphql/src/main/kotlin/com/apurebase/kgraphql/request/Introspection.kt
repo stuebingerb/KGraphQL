@@ -1,5 +1,12 @@
 package com.apurebase.kgraphql.request
 
+import com.apurebase.kgraphql.schema.directive.DirectiveLocation
+import com.apurebase.kgraphql.schema.introspection.TypeKind
+import com.apurebase.kgraphql.schema.introspection.__Directive
+import com.apurebase.kgraphql.schema.introspection.__EnumValue
+import com.apurebase.kgraphql.schema.introspection.__Field
+import com.apurebase.kgraphql.schema.introspection.__InputValue
+import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.TypeDef
 
@@ -239,14 +246,23 @@ object Introspection {
 }
 
 /**
- * Returns whether the given [__Type] is an introspection type (i.e. has a name
- * starting with "__")
+ * Returns whether the current [__Type] is an introspection type (i.e. has a name starting with "__")
  */
 fun __Type.isIntrospectionType() = name?.startsWith("__") == true
 
+private val introspectionTypes = setOf(
+    __Schema::class,
+    __Directive::class,
+    __InputValue::class,
+    __Type::class,
+    __EnumValue::class,
+    __Field::class,
+    TypeKind::class,
+    DirectiveLocation::class
+)
+
 /**
- * Returns whether the given [TypeDef] is an introspection type (i.e. has a name
- * starting with "__")
+ * Returns whether the current [TypeDef] is an introspection type from [introspectionTypes]
  */
-fun TypeDef.isIntrospectionType() = name.startsWith("__")
+fun TypeDef.isIntrospectionType() = (this as? TypeDef.Kotlin<*>)?.kClass in introspectionTypes
 

@@ -276,6 +276,16 @@ open class SchemaCompilation(
         val objectDefs = definition.objects.filter { it.kClass.isSuperclassOf(kClass) }
         val objectDef = objectDefs.find { it.kClass == kClass } ?: TypeDef.Object(kClass.defaultKQLTypeName(), kClass)
 
+        if (!objectDef.isIntrospectionType()) {
+            validateName(objectDef.name)
+            if ((enums.values + scalars.values + inputTypeProxies.values + unions).any { it.name == objectDef.name }) {
+                throw SchemaException("Cannot add Object type with duplicated name ${objectDef.name}")
+            }
+            if (queryTypeProxies.any { it.key != kClass && it.value.name == objectDef.name }) {
+                throw SchemaException("Cannot add Object type with duplicated name ${objectDef.name}")
+            }
+        }
+
         // treat introspection types as objects -> adhere to reference implementation behaviour
         val kind = if (kClass.isFinal || objectDef.isIntrospectionType()) {
             TypeKind.OBJECT
@@ -288,6 +298,7 @@ open class SchemaCompilation(
         } else {
             Type.Interface(objectDef)
         }
+
         val typeProxy = TypeProxy(objectType)
         queryTypeProxies[kClass] = typeProxy
 
@@ -333,9 +344,7 @@ open class SchemaCompilation(
             throw SchemaException("An Object type must define one or more fields. Found none on type ${objectDef.name}")
         }
 
-        declaredFields.find { it.name.startsWith("__") }?.let { field ->
-            throw SchemaException("Illegal name '${field.name}'. Names starting with '__' are reserved for introspection system")
-        }
+        declaredFields.forEach { validateName(it.name) }
 
         val allFields = declaredFields + __typenameField
         typeProxy.proxied = if (kind == TypeKind.OBJECT) {
@@ -360,8 +369,27 @@ open class SchemaCompilation(
                     "${it}Input"
                 }
             }, kClass)
+
+        validateName(inputObjectDef.name)
+        if ((enums.values + scalars.values + queryTypeProxies.values + unions).any { it.name == inputObjectDef.name }) {
+            throw SchemaException("Cannot add Input type with duplicated name ${inputObjectDef.name}")
+        }
+        if (inputTypeProxies.any { it.key != kClass && it.value.name == inputObjectDef.name }) {
+            throw SchemaException("Cannot add Input type with duplicated name ${inputObjectDef.name}")
+        }
+
         val objectType = Type.Input(inputObjectDef)
         val typeProxy = TypeProxy(objectType)
+        if (typeProxy.checkEqualName(
+                inputTypeProxies.values,
+                queryTypeProxies.values,
+                scalars.values,
+                unions,
+                enums.values
+            )
+        ) {
+            throw SchemaException("Cannot add Input type with duplicated name ${typeProxy.name}")
+        }
         inputTypeProxies[kClass] = typeProxy
 
         val memberPropertiesByName = kClass.memberProperties.associateBy { it.name }
@@ -384,9 +412,7 @@ open class SchemaCompilation(
             listOf()
         }
 
-        fields.find { it.name.startsWith("__") }?.let { field ->
-            throw SchemaException("Illegal name '${field.name}'. Names starting with '__' are reserved for introspection system")
-        }
+        fields.forEach { validateName(it.name) }
 
         typeProxy.proxied = Type.Input(inputObjectDef, fields)
         return typeProxy
@@ -486,4 +512,10 @@ open class SchemaCompilation(
         BuiltInScalars.STRING.typeDef.toScalarType(),
         emptyList()
     )
+
+    // https://spec.graphql.org/October2021/#sec-Names
+    // "Names in GraphQL are case-sensitive. That is to say name, Name, and NAME all refer to different names."
+    private fun Type.checkEqualName(vararg collections: Collection<Type>): Boolean {
+        return collections.fold(false) { acc, list -> acc || list.any { it.name == name } }
+    }
 }

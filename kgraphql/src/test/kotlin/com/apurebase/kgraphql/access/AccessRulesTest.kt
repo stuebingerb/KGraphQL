@@ -49,7 +49,7 @@ class AccessRulesTest {
 
     @Test
     fun `reject when not matching`() {
-        expect<IllegalAccessException>("") {
+        expect<IllegalAccessException>("ILLEGAL ACCESS") {
             deserialize(
                 schema.executeBlocking("{ black_mamba {id} }", context = context { +"LAKERS" })
             ).extract<String>("data/black_mamba/id")

@@ -2,9 +2,7 @@ package com.apurebase.kgraphql.schema.structure
 
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__EnumValue
-import com.apurebase.kgraphql.schema.introspection.__Field
 import com.apurebase.kgraphql.schema.introspection.__InputValue
-import com.apurebase.kgraphql.schema.introspection.__Type
 import kotlin.reflect.KClass
 
 open class TypeProxy(var proxied: Type) : Type {

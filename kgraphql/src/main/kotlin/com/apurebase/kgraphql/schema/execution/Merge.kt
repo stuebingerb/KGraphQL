@@ -9,7 +9,7 @@ fun MutableMap<String, JsonNode?>.merge(key: String, node: JsonNode?): MutableMa
 }
 
 fun ObjectNode.merge(other: ObjectNode) {
-    other.fields().forEach {
+    other.properties().forEach {
         merge(it.key, it.value)
     }
 }

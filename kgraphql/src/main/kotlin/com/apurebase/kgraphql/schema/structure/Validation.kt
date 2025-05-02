@@ -8,6 +8,8 @@ import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FieldNode
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
+private val namePattern = Regex("[_a-zA-Z][_a-zA-Z0-9]*")
+
 fun validatePropertyArguments(parentType: Type, field: Field, requestNode: FieldNode) {
     val argumentValidationExceptions = field.validateArguments(requestNode.arguments, parentType.name)
 
@@ -79,6 +81,11 @@ fun validateName(name: String) {
         throw SchemaException(
             "Illegal name '$name'. Names starting with '__' are reserved for introspection system"
         )
+    }
+    // https://spec.graphql.org/October2021/#sec-Names
+    // "Names in GraphQL are limited to the Latin ASCII subset of SourceCharacter in order to support interoperation with as many other systems as possible."
+    if (!name.matches(namePattern)) {
+        throw SchemaException("Illegal name '$name'. Names must start with a letter or underscore, and may only contain [_a-zA-Z0-9]")
     }
 }
 

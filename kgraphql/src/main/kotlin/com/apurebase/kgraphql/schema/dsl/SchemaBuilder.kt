@@ -146,7 +146,7 @@ class SchemaBuilder {
     }
 
     fun extendedScalars() {
-        ExtendedBuiltInScalars.values().forEach {
+        ExtendedBuiltInScalars.entries.forEach {
             model.addScalar(it.typeDef)
         }
     }

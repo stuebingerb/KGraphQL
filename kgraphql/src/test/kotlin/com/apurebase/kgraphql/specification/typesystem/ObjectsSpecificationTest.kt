@@ -7,14 +7,19 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.execution.Executor
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBe
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @Specification("3.1.2 Objects")
 class ObjectsSpecificationTest {
-    data class Underscore(val __field: Int)
+    data class Underscore(val __field: Int, val field__: String = "")
+    data class Type(val field: String)
 
     // TODO: We want to have [Executor.DataLoaderPrepared] working with these tests before reaching stable release of that executor!
     fun schema(executor: Executor = Executor.Parallel, block: SchemaBuilder.() -> Unit) = KGraphQL.schema {
@@ -25,11 +30,98 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    fun `All fields defined within an Object type must not have a name which begins with __`() {
+    fun `all fields defined within an Object type must not have a name which begins with __`() {
         expect<SchemaException>("Illegal name '__field'. Names starting with '__' are reserved for introspection system") {
             schema {
                 query("underscore") {
                     resolver { -> Underscore(0) }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `it should be possible to make classes with illegal field names work by renaming problematic properties`() {
+        val schema = schema {
+            type<Underscore> {
+                property(Underscore::__field) {
+                    name = "renamed"
+                }
+            }
+            query("underscore") {
+                resolver { -> Underscore(0) }
+            }
+        }
+
+        schema.printSchema() shouldBeEqualTo """
+            type Query {
+              underscore: Underscore!
+            }
+
+            type Underscore {
+              field__: String!
+              renamed: Int!
+            }
+            
+        """.trimIndent()
+    }
+
+    @Test
+    fun `it should be possible to make classes with illegal field names work by ignoring problematic properties`() {
+        val schema = schema {
+            type<Underscore> {
+                property(Underscore::__field) {
+                    ignore = true
+                }
+            }
+            query("underscore") {
+                resolver { -> Underscore(0) }
+            }
+        }
+
+        schema.printSchema() shouldBeEqualTo """
+            type Query {
+              underscore: Underscore!
+            }
+
+            type Underscore {
+              field__: String!
+            }
+            
+        """.trimIndent()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["name", "Name", "NAME", "legal_name", "name1", "nameWithNumber_42", "_underscore", "_more_under_scores_", "even__", "more__underscores"])
+    @Specification("2.1.9 Names")
+    fun `legal field names defined within an Object type should be possible`(legalName: String) {
+        val schema = schema {
+            type<Type> {
+                property(Type::field) {
+                    name = legalName
+                }
+            }
+            query("queryType") {
+                resolver { -> Type("type") }
+            }
+        }
+
+        schema.types.first { it.name == "Type" }.fields?.firstOrNull { it.name == legalName } shouldNotBe null
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["special!", "1special", "big$", "ßpecial", "<UNK>pecial", "42", "speciäl"])
+    @Specification("2.1.9 Names")
+    fun `illegal field names defined within an Object type should result in an appropriate exception`(illegalName: String) {
+        expect<SchemaException>("Illegal name '$illegalName'. Names must start with a letter or underscore, and may only contain [_a-zA-Z0-9]") {
+            schema {
+                type<Type> {
+                    property(Type::field) {
+                        name = illegalName
+                    }
+                }
+                query("queryType") {
+                    resolver { -> Type("type") }
                 }
             }
         }
@@ -100,8 +192,8 @@ class ObjectsSpecificationTest {
 
         val result = schema.executeBlocking(
             "{many{active, ...Fields, ...Few , smooth, id}} " +
-                    "fragment Fields on ManyFields { id2, value }" +
-                    "fragment Few on FewFields { name } "
+                "fragment Fields on ManyFields { id2, value }" +
+                "fragment Few on FewFields { name } "
         )
         with(result) {
             assertThat(indexOf("\"id\""), greaterThan(indexOf("\"smooth\"")))
@@ -112,7 +204,7 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    fun `If a field is queried multiple times in a selection, it is ordered by the first time it is encountered`() {
+    fun `if a field is queried multiple times in a selection, it is ordered by the first time it is encountered`() {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
         }
@@ -153,7 +245,7 @@ class ObjectsSpecificationTest {
     class Empty
 
     @Test
-    fun `An Object type must define one or more fields`() {
+    fun `an Object type must define one or more fields`() {
         expect<SchemaException>("An Object type must define one or more fields. Found none on type Empty") {
             schema { type<Empty>() }
         }
