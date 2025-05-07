@@ -103,9 +103,6 @@ class InputObjectsSpecificationTest {
     @Test
     fun `input objects should take fields from primary constructor`() {
         val schema = KGraphQL.schema {
-            inputType<NonDataClass> {
-                name = "NonDataClassInput"
-            }
             query("test") {
                 resolver { input: NonDataClass -> input }
             }

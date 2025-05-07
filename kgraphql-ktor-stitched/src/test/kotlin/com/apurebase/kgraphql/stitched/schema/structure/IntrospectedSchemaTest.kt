@@ -25,9 +25,6 @@ class IntrospectedSchemaTest {
             query("getEnum") {
                 resolver { -> TestEnum.TYPE1 }
             }
-            inputType<TestObject> {
-                name = "TestObjectInput"
-            }
             mutation("add") {
                 resolver { input: TestObject -> input }
             }

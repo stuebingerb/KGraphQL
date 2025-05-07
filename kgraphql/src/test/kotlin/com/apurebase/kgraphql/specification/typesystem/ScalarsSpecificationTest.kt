@@ -364,7 +364,7 @@ class ScalarsSpecificationTest {
                 }
             }
 
-            inputType<NewPart> {}
+            inputType<NewPart>()
         }
 
         val manufacturer = """Joe Bloggs"""

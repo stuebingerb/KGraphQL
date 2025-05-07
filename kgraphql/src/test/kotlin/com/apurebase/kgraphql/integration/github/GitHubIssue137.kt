@@ -15,6 +15,7 @@ class GitHubIssue137 {
     fun `testing abc`() {
         KGraphQL.schema {
             configure { wrapErrors = false }
+            inputType<InputType>()
             query("search") {
                 resolver { criteria: Criteria ->
                     criteria.inputs.joinToString { "${it.id}_${it.id2}: ${it.value}" }
@@ -33,8 +34,6 @@ class GitHubIssue137 {
                     ]
                 }
             """
-        ).also(::println)
-            .deserialize()
-            .extract<String>("data/search") shouldBeEqualTo "1_2: Search"
+        ).deserialize().extract<String>("data/search") shouldBeEqualTo "1_2: Search"
     }
 }

@@ -14,10 +14,6 @@ class InputObjectTest {
     @Test
     fun `property name should default to Kotlin name`() {
         val schema = KGraphQL.schema {
-            inputType<Person> {
-                name = "PersonInput"
-            }
-
             query("getPerson") {
                 resolver { name: String -> Person(name = name, age = 42) }
             }

@@ -353,7 +353,13 @@ open class SchemaCompilation(
             ?: throw SchemaException("Java class '${kClass.simpleName}' as inputType is not supported")
 
         val inputObjectDef =
-            definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName(), kClass)
+            definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName().let {
+                if (it.endsWith("Input")) {
+                    it
+                } else {
+                    "${it}Input"
+                }
+            }, kClass)
         val objectType = Type.Input(inputObjectDef)
         val typeProxy = TypeProxy(objectType)
         inputTypeProxies[kClass] = typeProxy

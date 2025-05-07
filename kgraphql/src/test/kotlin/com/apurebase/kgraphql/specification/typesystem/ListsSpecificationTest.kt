@@ -150,9 +150,6 @@ class ListsSpecificationTest {
             mutation("addObject") {
                 resolver { input: TestObject -> input }
             }
-            inputType<TestObject> {
-                name = "TestObjectInput"
-            }
         }
         val queryResponse = deserialize(schema.executeBlocking("{ getObject { list set } }"))
         assertThat(queryResponse.toString(), equalTo("{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"))
@@ -183,9 +180,6 @@ class ListsSpecificationTest {
             }
             mutation("addObject") {
                 resolver { input: TestObject -> input }
-            }
-            inputType<TestObject> {
-                name = "TestObjectInput"
             }
         }
         val variables = """

@@ -367,9 +367,6 @@ class StitchedSchemaTest {
                     query("dummy") {
                         resolver { -> "dummy" }
                     }
-                    inputType<TestObject> {
-                        name = "TestObjectInput"
-                    }
                     mutation("add") {
                         resolver { input: TestObject -> input }
                     }

@@ -254,9 +254,6 @@ class SchemaPrinterTest {
             query("dummy") {
                 resolver { -> "dummy" }
             }
-            inputType<TestObject> {
-                name = "TestObjectInput"
-            }
             mutation("add") {
                 resolver { input: TestObject -> input }
             }
@@ -645,9 +642,6 @@ class SchemaPrinterTest {
                 property(TestObject::name) {
                     description = "This is the name"
                 }
-            }
-            inputType<TestObject> {
-                name = "TestObjectInput"
             }
             enum<TestEnum> {
                 value(TestEnum.TYPE1) {
