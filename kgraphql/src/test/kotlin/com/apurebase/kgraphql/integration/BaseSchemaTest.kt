@@ -30,6 +30,10 @@ abstract class BaseSchemaTest {
     val davidFincher = Director("David Fincher", 43, listOf(bradPitt, morganFreeman, kevinSpacey))
     val se7en = Film(Id("Se7en", 1995), 1995, "Se7en", davidFincher)
 
+    // test film 3
+    val martinScorsese = Director("Martin Scorsese", 82, listOf())
+    val theBigShave = Film(Id("The Big Shave", 1967), 1967, "The Big Shave", martinScorsese, FilmType.SHORT_LENGTH)
+
     val rickyGervais = Actor("Ricky Gervais", 58)
 
     // new actors created via mutations in schema
@@ -43,6 +47,10 @@ abstract class BaseSchemaTest {
         query("number") {
             description = "returns little of big number"
             resolver { big: Boolean -> if (big) 10000 else 0 }
+        }
+        query("float") {
+            description = "returns the given float"
+            resolver { float: Float -> float }
         }
         query("film") {
             description = "mock film"
@@ -84,17 +92,18 @@ abstract class BaseSchemaTest {
                 when (rank) {
                     1 -> prestige
                     2 -> se7en
+                    3 -> theBigShave
                     else -> null
                 }
             }
         }
         query("filmsByType") {
             description = "film categorized by type"
-            resolver { type: FilmType -> listOf(prestige, se7en) }
+            resolver { type: FilmType -> listOf(prestige, se7en, theBigShave).filter { it.type == type } }
         }
         query("people") {
             description = "List of all people"
-            resolver { -> listOf(davidFincher, bradPitt, morganFreeman, christianBale, christopherNolan) }
+            resolver { -> listOf(davidFincher, bradPitt, morganFreeman, christianBale, christopherNolan, martinScorsese) }
         }
         query("randomPerson") {
             description = "not really random person"

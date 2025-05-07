@@ -8,9 +8,6 @@ import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.TypeDef
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.KTypeProjection
-import kotlin.reflect.full.createType
 
 interface Type : __Type {
 
@@ -24,7 +21,7 @@ interface Type : __Type {
 
     operator fun get(name: String): Field? = null
 
-    fun unwrapped(): Type = when (kind) {
+    override fun unwrapped(): Type = when (kind) {
         TypeKind.NON_NULL, TypeKind.LIST -> (ofType as Type).unwrapped()
         else -> this
     }
@@ -59,21 +56,6 @@ interface Type : __Type {
     fun isElementNullable() = isList() && unwrapList().kind != TypeKind.NON_NULL
 
     fun isInstance(value: Any?): Boolean = kClass?.isInstance(value) ?: false
-
-    fun toKType(): KType {
-        val unwrappedKClass: KClass<*> = requireNotNull(unwrapped().kClass) {
-            "This type cannot be represented as KType"
-        }
-
-        return if (isList()) {
-            listType().kClass.createType(
-                arguments = listOf(KTypeProjection.covariant(unwrappedKClass.createType(nullable = isElementNullable()))),
-                nullable = isNullable()
-            )
-        } else {
-            unwrappedKClass.createType(nullable = isNullable())
-        }
-    }
 
     val kClass: KClass<*>?
 

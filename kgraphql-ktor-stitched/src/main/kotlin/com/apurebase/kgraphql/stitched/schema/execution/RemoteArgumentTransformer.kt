@@ -1,12 +1,12 @@
 package com.apurebase.kgraphql.stitched.schema.execution
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.helpers.toValueNode
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__InputValue
-import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNode
 import com.apurebase.kgraphql.schema.model.ast.ArgumentNodes
@@ -14,16 +14,7 @@ import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.DoubleNode
-import com.fasterxml.jackson.databind.node.FloatNode
-import com.fasterxml.jackson.databind.node.IntNode
-import com.fasterxml.jackson.databind.node.LongNode
-import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
 
 class RemoteArgumentTransformer : ArgumentTransformer() {
     override fun transformArguments(
@@ -90,43 +81,5 @@ class RemoteArgumentTransformer : ArgumentTransformer() {
             requestContext,
             field
         )
-    }
-
-    private fun __Type.unwrapped(): __Type = when (kind) {
-        TypeKind.NON_NULL, TypeKind.LIST -> (ofType as __Type).unwrapped()
-        else -> this
-    }
-
-    private fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
-        is BooleanNode -> ValueNode.BooleanValueNode(booleanValue(), null)
-        is IntNode -> ValueNode.NumberValueNode(longValue(), null)
-        is LongNode -> ValueNode.NumberValueNode(longValue(), null)
-        is DoubleNode -> ValueNode.DoubleValueNode(doubleValue(), null)
-        is FloatNode -> ValueNode.DoubleValueNode(doubleValue(), null)
-        is TextNode -> if (expectedType.unwrapped().kind == TypeKind.ENUM) {
-            ValueNode.EnumValueNode(textValue(), null)
-        } else {
-            // TODO: what about multiline strings?
-            ValueNode.StringValueNode(textValue(), false, null)
-        }
-
-        is ArrayNode -> ValueNode.ListValueNode(map { it.toValueNode(expectedType) }, null)
-        is ObjectNode -> ValueNode.ObjectValueNode(
-            properties().filterNot { it.key.startsWith("__") }.map { prop ->
-                val inputFields = checkNotNull(expectedType.unwrapped().inputFields) {
-                    "Expected INPUT_OBJECT for ${expectedType.unwrapped().name} but got ${expectedType.kind}"
-                }
-                val expectedPropType = inputFields.first { it.name == prop.key }.type
-                ValueNode.ObjectValueNode.ObjectFieldNode(
-                    null,
-                    NameNode(prop.key, null),
-                    prop.value.toValueNode(expectedPropType)
-                )
-            },
-            null
-        )
-
-        is NullNode, null -> ValueNode.NullValueNode(null)
-        else -> error("Unexpected value: $this")
     }
 }

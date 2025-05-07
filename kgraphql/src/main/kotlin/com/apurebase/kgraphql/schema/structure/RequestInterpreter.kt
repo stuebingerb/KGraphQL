@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema.Companion.OPERATION_NAME_PARAM
+import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.execution.ExecutionOptions
@@ -21,10 +22,10 @@ import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode.FragmentSpreadNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FragmentNode.InlineFragmentNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionSetNode
+import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.toArguments
 import java.util.Stack
-import kotlin.reflect.full.starProjectedType
 
 class RequestInterpreter(private val schemaModel: SchemaModel) {
 
@@ -317,10 +318,10 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                     }
                 }.joinToString(prefix = "[", postfix = "]")
 
-                val operationName = requestedOperationName ?: (
-                    variables.get(String::class, String::class.starProjectedType, OPERATION_NAME_PARAM)
-                        ?: throw ValidationException("Must provide an operation name from: $operationNamesFound")
-                    )
+                val operationName = requestedOperationName ?: variables.get(
+                    BuiltInScalars.STRING.typeDef.toScalarType(),
+                    OPERATION_NAME_PARAM
+                )?.let { it as? ValueNode.StringValueNode }?.value
 
                 operations.firstOrNull { it.name?.value == operationName }
                     ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found $operationName")

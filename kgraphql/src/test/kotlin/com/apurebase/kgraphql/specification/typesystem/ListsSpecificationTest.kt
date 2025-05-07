@@ -69,7 +69,7 @@ class ListsSpecificationTest {
         invoking {
             schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables)
         } shouldThrow GraphQLError::class withMessage
-            "Invalid argument value [GAGA, null, DADA, PADA] from variable \$list, expected list with non-null arguments"
+            "argument 'null' is not valid value of type String"
     }
 
     @Test
@@ -206,7 +206,7 @@ class ListsSpecificationTest {
         )
         assertThat(
             mutationResponse.toString(),
-            equalTo("{data={addObject={list=[foo, bar, foo, bar], set=[bar, foo]}}}")
+            equalTo("{data={addObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}")
         )
     }
 
