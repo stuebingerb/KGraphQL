@@ -1,9 +1,11 @@
 name: Maven Publish
-
 on:
   release:
     types:
       - released
+
+permissions:
+  contents: read
 
 jobs:
   maven-publish:
