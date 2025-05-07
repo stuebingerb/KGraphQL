@@ -1,7 +1,9 @@
 name: Tests (Examples)
-
 on:
   push:
+
+permissions:
+  contents: read
 
 jobs:
   ktor:

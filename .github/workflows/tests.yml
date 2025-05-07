@@ -1,7 +1,9 @@
 name: Tests (Library)
-
 on:
   push:
+
+permissions:
+  contents: read
 
 jobs:
   test:

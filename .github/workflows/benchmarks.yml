@@ -1,7 +1,9 @@
 name: Benchmarks (Library)
-
 on:
   push:
+
+permissions:
+  contents: read
 
 jobs:
   test:
