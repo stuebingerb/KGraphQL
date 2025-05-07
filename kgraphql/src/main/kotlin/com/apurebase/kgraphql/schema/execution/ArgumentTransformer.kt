@@ -114,7 +114,8 @@ open class ArgumentTransformer {
                             value
                         )
 
-                    constructorParametersByName[fieldName] to transformValue(
+                    val parameterName = (inputField as? InputValue<*>)?.parameterName ?: fieldName
+                    constructorParametersByName[parameterName] to transformValue(
                         paramType,
                         valueField.value,
                         variables,
@@ -136,7 +137,9 @@ open class ArgumentTransformer {
                         parameter to null
                     } else {
                         // Value was not provided and parameter is required: error
-                        missingNonOptionalInputs.add(name ?: "Parameter #${parameter.index}")
+                        val inputField =
+                            type.unwrapped().inputFields?.firstOrNull { (it as? InputValue<*>)?.parameterName == name }
+                        missingNonOptionalInputs.add(inputField?.name ?: name ?: "Parameter #${parameter.index}")
                         null
                     }
                 }.toMap()

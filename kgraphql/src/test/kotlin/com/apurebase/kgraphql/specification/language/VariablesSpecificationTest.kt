@@ -153,7 +153,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `Advanced variables`() {
+    fun `advanced variables`() {
         val d = "$"
         val request = """
             mutation MultipleCreate(
@@ -198,7 +198,6 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         """.trimIndent()
 
         val result = execute(request, variables)
-
 
         assertNoErrors(result)
         assertThat(result.extract("data/createFirst/name"), equalTo("Jógvan"))

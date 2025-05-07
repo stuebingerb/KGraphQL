@@ -134,6 +134,11 @@ class NonNullSpecificationTest {
     @Test
     fun `missing non-nullable values without Kotlin default values should raise an error`() {
         val schema = KGraphQL.schema {
+            inputType<MyInput> {
+                property(MyInput::value1) {
+                    name = "valueOne"
+                }
+            }
             query("main") {
                 resolver { input: MyInput -> "${input.value1} - ${input.value2 ?: "Nada"} - ${input.value3}" }
             }
@@ -148,7 +153,7 @@ class NonNullSpecificationTest {
                 """.trimIndent()
             )
         } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Missing non-optional input fields: value1, value3"
+            message shouldBeEqualTo "Missing non-optional input fields: valueOne, value3"
         }
     }
 

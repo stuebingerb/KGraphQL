@@ -59,12 +59,12 @@ KGraphQL.schema {
 ## Kotlin Properties
 
 Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring
-and [deprecation](../deprecation.md) of kotlin properties
+and [deprecation](../deprecation.md) of kotlin properties as well as renaming.
 
 *Example*
 
 ```kotlin
-data class Person(val name: String, val age: Int)
+data class Person(val firstName: String, val lastName: String, val name: String, val age: Int)
 
 KGraphQL.schema {
     type<Person>{
@@ -72,9 +72,20 @@ KGraphQL.schema {
             ignore = true
         }
         property(Person::name){
-            deprecate("Person need no name")
+            name = "fullName"
+            deprecate("Use firstName and lastName")
         }
     }
+}
+```
+
+*Resulting SDL*
+
+```graphql
+type Person {
+  firstName: String!
+  fullName: String! @deprecated(reason: "Use firstName and lastName")
+  lastName: String!
 }
 ```
 
@@ -254,5 +265,5 @@ This feature can be used in production but does currently have some issues:
 1. The `useDefaultPrettyPrint` doesn't work
 1. Order of fields are not guaranteed to match the order that was requested
 1. Custom generic type resolvers are not supported
-1. Other than that it should work as expected
 1. Schema stitching is not supported
+1. Other than that it should work as expected
