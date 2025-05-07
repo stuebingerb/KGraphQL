@@ -13,6 +13,7 @@ import com.apurebase.kgraphql.schema.introspection.__Field
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.__Type
+import com.apurebase.kgraphql.schema.structure.validateName
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -138,21 +139,17 @@ open class MutableSchemaDefinition {
     fun addInputObject(input: TypeDef.Input<*>) = addType(input, inputObjects, "Input")
 
     private fun <T : Definition> addType(type: T, target: ArrayList<T>, typeCategory: String) {
-        if (type.name.startsWith("__")) {
-            throw SchemaException("Type name starting with \"__\" are excluded for introspection system")
-        }
+        validateName(type.name)
         if (type.checkEqualName(objects, scalars, unions, enums)) {
             throw SchemaException("Cannot add $typeCategory type with duplicated name ${type.name}")
         }
         target.add(type)
     }
 
+    // https://spec.graphql.org/October2021/#sec-Names
+    // "Names in GraphQL are case-sensitive. That is to say name, Name, and NAME all refer to different names."
     private fun Definition.checkEqualName(vararg collections: List<Definition>): Boolean {
-        return collections.fold(false) { acc, list -> acc || list.any { it.equalName(this) } }
-    }
-
-    private fun Definition.equalName(other: Definition): Boolean {
-        return this.name.equals(other.name, true)
+        return collections.fold(false) { acc, list -> acc || list.any { it.name == name } }
     }
 }
 

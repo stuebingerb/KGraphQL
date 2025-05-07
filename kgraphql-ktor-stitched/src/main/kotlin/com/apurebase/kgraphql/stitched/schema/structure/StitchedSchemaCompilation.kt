@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.schema.structure.SchemaCompilation
 import com.apurebase.kgraphql.schema.structure.SchemaModel
 import com.apurebase.kgraphql.schema.structure.Type
 import com.apurebase.kgraphql.schema.structure.TypeProxy
+import com.apurebase.kgraphql.schema.structure.validateName
 import com.apurebase.kgraphql.stitched.schema.configuration.StitchedSchemaConfiguration
 
 @ExperimentalAPI
@@ -53,9 +54,7 @@ class StitchedSchemaCompilation(
             val originalType: TypeProxy = (typesByName[typeName] as? TypeProxy)
                 ?: throw SchemaException("Stitched type $typeName does not exist")
             val stitchedFields = stitchedProperties.map { property ->
-                if (property.fieldName.startsWith("__")) {
-                    throw SchemaException("Illegal name '${property.fieldName}'. Names starting with '__' are reserved for introspection system")
-                }
+                validateName(property.fieldName)
                 if (originalType.fields?.any { it.name == property.fieldName } == true) {
                     throw SchemaException("Cannot add stitched field with duplicated name '${property.fieldName}'")
                 }

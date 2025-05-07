@@ -54,9 +54,9 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     fun `query union property with external fragment`() {
         val map = execute(
             "{actors{name, favourite{ ...actor, ...director, ...scenario }}}" +
-                    "fragment actor on Actor {name}" +
-                    "fragment director on Director {name age}" +
-                    "fragment scenario on Scenario{content(uppercase: false)} ", null
+                "fragment actor on Actor {name}" +
+                "fragment director on Director {name age}" +
+                "fragment scenario on Scenario{content(uppercase: false)} ", null
         )
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name")
@@ -250,7 +250,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `The member types of a Union type must all be Object base types`() {
-        expect<SchemaException>("The member types of a Union type must all be Object base types") {
+        expect<SchemaException>("The member types of a Union type must all be Object base types; Scalar, Interface and Union types may not be member types of a Union") {
             KGraphQL.schema {
                 unionType("invalid") {
                     type<String>()

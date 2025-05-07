@@ -37,7 +37,7 @@ class MapMergeTest {
         val existing = createMap("param" to existingValue)
         val update = jsonNodeFactory.textNode("value2")
 
-        expect<IllegalStateException>("different simple nodes") { existing.merge("param", update) }
+        expect<IllegalStateException>("trying to merge different simple nodes for param") { existing.merge("param", update) }
 
         assertThat(existing["param"], equalTo(existingValue))
     }
@@ -48,7 +48,7 @@ class MapMergeTest {
         val existing = createMap("param" to existingValue)
         val update = jsonNodeFactory.objectNode()
 
-        expect<IllegalStateException>("merge object with simple node") { existing.merge("param", update) }
+        expect<IllegalStateException>("trying to merge object with simple node for param") { existing.merge("param", update) }
 
         val expected: JsonNode? = jsonNodeFactory.textNode("value1")
         assertThat(existing["param"], equalTo(expected))
@@ -60,7 +60,7 @@ class MapMergeTest {
         val existing = createMap("param" to existingObj)
         val update = jsonNodeFactory.textNode("value2")
 
-        expect<IllegalStateException>("merge simple node with object node") { existing.merge("param", update) }
+        expect<IllegalStateException>("trying to merge simple node with object node for param") { existing.merge("param", update) }
 
         assertThat(existing["param"], equalTo(existingObj))
     }

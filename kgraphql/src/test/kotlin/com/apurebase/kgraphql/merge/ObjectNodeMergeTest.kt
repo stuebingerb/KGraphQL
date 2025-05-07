@@ -39,7 +39,7 @@ class ObjectNodeMergeTest {
         val existing = jsonNodeFactory.objectNode().put("param", "value1")
         val update = jsonNodeFactory.objectNode().put("param", "value2")
 
-        expect<IllegalStateException>("different simple nodes") { existing.merge(update) }
+        expect<IllegalStateException>("trying to merge different simple nodes for param") { existing.merge(update) }
 
         val expected: JsonNode? = jsonNodeFactory.textNode("value1")
         assertThat(existing.get("param"), equalTo(expected))
@@ -51,7 +51,7 @@ class ObjectNodeMergeTest {
         val update = jsonNodeFactory.objectNode()
         update.putObject("param")
 
-        expect<IllegalStateException>("merge object with simple node") { existing.merge(update) }
+        expect<IllegalStateException>("trying to merge object with simple node for param") { existing.merge(update) }
 
         val expected: JsonNode? = jsonNodeFactory.textNode("value1")
         assertThat(existing.get("param"), equalTo(expected))
@@ -63,7 +63,7 @@ class ObjectNodeMergeTest {
         val existingObj: JsonNode? = existing.putObject("param").put("other", "value1")
         val update = jsonNodeFactory.objectNode().put("param", "value2")
 
-        expect<IllegalStateException>("merge simple node with object node") { existing.merge(update) }
+        expect<IllegalStateException>("trying to merge simple node with object node for param") { existing.merge(update) }
 
         assertThat(existing.get("param"), equalTo(existingObj))
     }

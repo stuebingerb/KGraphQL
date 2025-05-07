@@ -73,7 +73,7 @@ fun executeEqualQueries(schema: Schema, expected: Map<*, *>, vararg queries: Str
 }
 
 class ExceptionMessageMatcher(message: String?) :
-    FeatureMatcher<Exception, String>(Matchers.containsString(message), "exception message is", "exception message") {
+    FeatureMatcher<Exception, String>(Matchers.equalTo(message), "exception message is", "exception message") {
 
     override fun featureValueOf(actual: Exception?): String? = actual?.message
 }

@@ -2,7 +2,7 @@ package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.ActorCalculateAgeInput
-import com.apurebase.kgraphql.ActorInput
+import com.apurebase.kgraphql.ActorExplicitInput
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.Director
 import com.apurebase.kgraphql.Film
@@ -127,7 +127,7 @@ abstract class BaseSchemaTest {
         }
         mutation("createActorWithInput") {
             description = "create new actor"
-            resolver { input: ActorInput ->
+            resolver { input: ActorExplicitInput ->
                 val actor = Actor(input.name, input.age)
                 createdActors.add(actor)
                 actor

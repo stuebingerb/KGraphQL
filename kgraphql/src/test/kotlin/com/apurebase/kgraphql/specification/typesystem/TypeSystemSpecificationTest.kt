@@ -5,24 +5,135 @@ import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldContain
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @Specification("3 Type System")
 class TypeSystemSpecificationTest {
 
-    class String
+    class String(val value: kotlin.String)
     class Type(val name: kotlin.String)
     class TypeInput(val name: kotlin.String)
     class InputType(val name: kotlin.String)
     class ParentType(val parentName: kotlin.String, val child: ChildType)
     class ChildType(val childName: kotlin.String)
-    class __Type
+    class __Type(val name: kotlin.String)
+
+    @Test
+    fun `type names should be case sensitive and underscores should be significant`() {
+        val schema = schema {
+            query("queryType") {
+                resolver { -> Type("type") }
+            }
+            type<Type> {
+                name = "Type"
+            }
+            type<TypeInput> {
+                name = "type"
+            }
+            type<InputType> {
+                name = "TYPE"
+            }
+            type<String> {
+                // Underscores are significant
+                name = "ty_pe"
+            }
+            inputType<Type> {
+                name = "TypeInput"
+            }
+            inputType<TypeInput> {
+                name = "typeInput"
+            }
+            inputType<InputType> {
+                name = "TYPEInput"
+            }
+            inputType<String> {
+                name = "type_input"
+            }
+        }
+
+        val sdl = schema.printSchema()
+        sdl shouldBeEqualTo """
+            type Query {
+              queryType: Type!
+            }
+            
+            type ty_pe {
+              value: String!
+            }
+            
+            type Type {
+              name: String!
+            }
+            
+            type type {
+              name: String!
+            }
+            
+            type TYPE {
+              name: String!
+            }
+            
+            input type_input {
+              value: String!
+            }
+
+            input TypeInput {
+              name: String!
+            }
+
+            input typeInput {
+              name: String!
+            }
+
+            input TYPEInput {
+              name: String!
+            }
+            
+        """.trimIndent()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["name", "Name", "NAME", "legal_name", "name1", "nameWithNumber_42", "_underscore", "_more_under_scores_", "even__", "more__underscores"])
+    @Specification("2.1.9 Names")
+    fun `legal names should be possible`(legalName: kotlin.String) {
+        val schema = schema {
+            type<Type> {
+                name = legalName
+            }
+            query("queryType") {
+                resolver { -> Type("type") }
+            }
+        }
+        schema.types.map { it.name } shouldContain legalName
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["special!", "1special", "big$", "ßpecial", "<UNK>pecial", "42", "speciäl"])
+    @Specification("2.1.9 Names")
+    fun `illegal names should result in an appropriate exception`(illegalName: kotlin.String) {
+        expect<SchemaException>("Illegal name '$illegalName'. Names must start with a letter or underscore, and may only contain [_a-zA-Z0-9]") {
+            schema {
+                type<Type> {
+                    name = illegalName
+                }
+                query("queryType") {
+                    resolver { -> Type("type") }
+                }
+            }
+        }
+    }
 
     @Test
     fun `all types within a GraphQL schema must have unique names`() {
         expect<SchemaException>("Cannot add Object type with duplicated name String") {
             schema {
                 type<String>()
+                query("getString") {
+                    resolver { -> String("string") }
+                }
             }
         }
         expect<SchemaException>("Cannot add Object type with duplicated name String") {
@@ -43,33 +154,76 @@ class TypeSystemSpecificationTest {
             schema {
                 type<Type>()
                 inputType<Type>()
+                query("getString") {
+                    resolver { -> Type("string") }
+                }
+            }
+        }
+        expect<SchemaException>("Cannot add Input type with duplicated name Type") {
+            schema {
+                type<Type>()
+                inputType<TypeInput> {
+                    name = "Type"
+                }
+            }
+        }
+        expect<SchemaException>("Cannot add Input type with duplicated name TypeInput") {
+            schema {
+                type<Type> {
+                    name = "TypeInput"
+                }
+                inputType<TypeInput>()
+            }
+        }
+        expect<SchemaException>("Cannot add Input type with duplicated name TypeInput") {
+            schema {
+                query("test") {
+                    resolver { input: TypeInput -> input }
+                }
             }
         }
     }
 
     @Test
     fun `all types and directives defined within a schema must not have a name which begins with __`() {
-        expect<SchemaException>("Type name starting with \"__\" are excluded for introspection system") {
+        expect<SchemaException>("Illegal name '__Type'. Names starting with '__' are reserved for introspection system") {
             schema {
                 type<__Type>()
             }
         }
-        expect<SchemaException>("Type name starting with \"__\" are excluded for introspection system") {
+        expect<SchemaException>("Illegal name '__Type'. Names starting with '__' are reserved for introspection system") {
             schema {
                 type<Type> {
                     name = "__Type"
                 }
             }
         }
-        expect<SchemaException>("Type name starting with \"__\" are excluded for introspection system") {
+        expect<SchemaException>("Illegal name '__Type'. Names starting with '__' are reserved for introspection system") {
             schema {
                 inputType<__Type>()
             }
         }
-        expect<SchemaException>("Type name starting with \"__\" are excluded for introspection system") {
+        expect<SchemaException>("Illegal name '__Type'. Names starting with '__' are reserved for introspection system") {
             schema {
                 inputType<Type> {
                     name = "__Type"
+                }
+            }
+        }
+        expect<SchemaException>("Illegal name '__Type'. Names starting with '__' are reserved for introspection system") {
+            schema {
+                query("testQuery") {
+                    resolver { -> __Type("name") }
+                }
+            }
+        }
+        expect<SchemaException>("Illegal name '__TypeInput'. Names starting with '__' are reserved for introspection system") {
+            schema {
+                query("testQuery") {
+                    resolver { -> Type("name") }
+                }
+                mutation("testMutation") {
+                    resolver { input: __Type -> Type(input.name) }
                 }
             }
         }

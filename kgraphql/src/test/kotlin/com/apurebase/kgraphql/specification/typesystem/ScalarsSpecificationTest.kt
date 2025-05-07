@@ -363,8 +363,6 @@ class ScalarsSpecificationTest {
                     newPart
                 }
             }
-
-            inputType<NewPart>()
         }
 
         val manufacturer = """Joe Bloggs"""
@@ -372,7 +370,7 @@ class ScalarsSpecificationTest {
 
         val response = deserialize(
             schema.executeBlocking(
-                "mutation Mutation(\$newPart: NewPart!) { addPart(newPart: \$newPart) { addedDate manufacturer } }",
+                "mutation Mutation(\$newPart: NewPartInput!) { addPart(newPart: \$newPart) { addedDate manufacturer } }",
                 """
                 {
                   "newPart": {
