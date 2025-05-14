@@ -4,8 +4,8 @@ import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldContain
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -55,7 +55,7 @@ class TypeSystemSpecificationTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               queryType: Type!
             }
@@ -247,7 +247,7 @@ class TypeSystemSpecificationTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type ChildType {
               childName: String!
             }
@@ -300,7 +300,7 @@ class TypeSystemSpecificationTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Mutation {
               addType(input: TypeInput!): Type!
             }
@@ -346,7 +346,7 @@ class TypeSystemSpecificationTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type ChildType {
               childName: String!
             }

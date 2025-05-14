@@ -1,15 +1,12 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.3 Interfaces")
@@ -28,19 +25,19 @@ class InterfacesSpecificationTest {
     @Test
     fun `Interfaces represent a list of named fields and their arguments`() {
         val map = deserialize(schema.executeBlocking("{simple{exe}}"))
-        assertThat(map.extract("data/simple/exe"), equalTo("EXE"))
+        map.extract<String>("data/simple/exe") shouldBe "EXE"
     }
 
     @Test
     fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`() {
-        invoking {
+        expect<ValidationException>("Property stuff on SimpleInterface does not exist") {
             schema.executeBlocking("{simple{exe, stuff}}")
-        } shouldThrow GraphQLError::class withMessage "Property stuff on SimpleInterface does not exist"
+        }
     }
 
     @Test
     fun `Query for fields of interface implementation can be done only by fragments`() {
         val map = deserialize(schema.executeBlocking("{simple{exe ... on Simple { stuff }}}"))
-        assertThat(map.extract("data/simple/stuff"), equalTo("CMD"))
+        map.extract<String>("data/simple/stuff") shouldBe "CMD"
     }
 }

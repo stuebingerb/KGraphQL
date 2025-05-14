@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.integration.github
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import org.amshove.kluent.shouldBeEqualTo
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
@@ -60,8 +60,8 @@ class GitHubIssue105 {
         }""".trimIndent()
         ).deserialize()
 
-        results.extract<String>("data/contactStatus/userId") shouldBeEqualTo "Leopard2A5"
-        results.extract<String>("data/contactStatus/__typename") shouldBeEqualTo "Onboarded"
+        results.extract<String>("data/contactStatus/userId") shouldBe "Leopard2A5"
+        results.extract<String>("data/contactStatus/__typename") shouldBe "Onboarded"
     }
 
     @Test
@@ -98,7 +98,7 @@ class GitHubIssue105 {
         }""".trimIndent()
         ).deserialize()
 
-        results.extract<String>("data/carrier/contactStatus/userId") shouldBeEqualTo "Leopard2A5"
-        results.extract<String>("data/carrier/contactStatus/__typename") shouldBeEqualTo "Onboarded"
+        results.extract<String>("data/carrier/contactStatus/userId") shouldBe "Leopard2A5"
+        results.extract<String>("data/carrier/contactStatus/__typename") shouldBe "Onboarded"
     }
 }

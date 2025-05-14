@@ -1,11 +1,10 @@
 package com.apurebase.kgraphql.merge
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.execution.merge
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class MapMergeTest {
@@ -18,7 +17,7 @@ class MapMergeTest {
 
         existing.merge("param2", update)
 
-        assertThat(existing["param2"], equalTo(update))
+        existing["param2"] shouldBe update
     }
 
     @Test
@@ -28,7 +27,7 @@ class MapMergeTest {
 
         existing.merge("sub", update)
 
-        assertThat(existing["sub"], equalTo(update))
+        existing["sub"] shouldBe update
     }
 
     @Test
@@ -37,9 +36,14 @@ class MapMergeTest {
         val existing = createMap("param" to existingValue)
         val update = jsonNodeFactory.textNode("value2")
 
-        expect<IllegalStateException>("trying to merge different simple nodes for param") { existing.merge("param", update) }
+        expect<IllegalStateException>("trying to merge different simple nodes for param") {
+            existing.merge(
+                "param",
+                update
+            )
+        }
 
-        assertThat(existing["param"], equalTo(existingValue))
+        existing["param"] shouldBe existingValue
     }
 
     @Test
@@ -48,10 +52,15 @@ class MapMergeTest {
         val existing = createMap("param" to existingValue)
         val update = jsonNodeFactory.objectNode()
 
-        expect<IllegalStateException>("trying to merge object with simple node for param") { existing.merge("param", update) }
+        expect<IllegalStateException>("trying to merge object with simple node for param") {
+            existing.merge(
+                "param",
+                update
+            )
+        }
 
         val expected: JsonNode? = jsonNodeFactory.textNode("value1")
-        assertThat(existing["param"], equalTo(expected))
+        existing["param"] shouldBe expected
     }
 
     @Test
@@ -60,9 +69,14 @@ class MapMergeTest {
         val existing = createMap("param" to existingObj)
         val update = jsonNodeFactory.textNode("value2")
 
-        expect<IllegalStateException>("trying to merge simple node with object node for param") { existing.merge("param", update) }
+        expect<IllegalStateException>("trying to merge simple node with object node for param") {
+            existing.merge(
+                "param",
+                update
+            )
+        }
 
-        assertThat(existing["param"], equalTo(existingObj))
+        existing["param"] shouldBe existingObj
     }
 
     private fun createMap(vararg pairs: Pair<String, JsonNode?>) = mutableMapOf(*pairs)

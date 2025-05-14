@@ -3,9 +3,8 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
 
@@ -56,13 +55,13 @@ class ParallelExecutionTest {
         val query = "{getAll{id,children{id}}}"
         val map = deserialize(suspendPropertySchema.executeBlocking(query))
 
-        MatcherAssert.assertThat(map.extract<Int>("data/getAll[0]/id"), CoreMatchers.equalTo(0))
-        MatcherAssert.assertThat(map.extract<Int>("data/getAll[500]/id"), CoreMatchers.equalTo(500))
-        MatcherAssert.assertThat(map.extract<Int>("data/getAll[766]/id"), CoreMatchers.equalTo(766))
+        map.extract<Int>("data/getAll[0]/id") shouldBe 0
+        map.extract<Int>("data/getAll[500]/id") shouldBe 500
+        map.extract<Int>("data/getAll[766]/id") shouldBe 766
 
-        MatcherAssert.assertThat(map.extract<Int>("data/getAll[5]/children[5]/id"), CoreMatchers.equalTo(55))
-        MatcherAssert.assertThat(map.extract<Int>("data/getAll[75]/children[9]/id"), CoreMatchers.equalTo(759))
-        MatcherAssert.assertThat(map.extract<Int>("data/getAll[888]/children[50]/id"), CoreMatchers.equalTo(8930))
+        map.extract<Int>("data/getAll[5]/children[5]/id") shouldBe 55
+        map.extract<Int>("data/getAll[75]/children[9]/id") shouldBe 759
+        map.extract<Int>("data/getAll[888]/children[50]/id") shouldBe 8930
     }
 
     val query = "{\n" + (0..999).joinToString("") { "automated_${it}\n" } + " }"
@@ -70,20 +69,20 @@ class ParallelExecutionTest {
     @Test
     fun `1000 synchronous resolvers sleeping with Thread sleep`() {
         val map = deserialize(syncResolversSchema.executeBlocking(query))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_0"), CoreMatchers.equalTo("0"))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_271"), CoreMatchers.equalTo("271"))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_314"), CoreMatchers.equalTo("314"))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_500"), CoreMatchers.equalTo("500"))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_999"), CoreMatchers.equalTo("999"))
+        map.extract<String>("data/automated_0") shouldBe "0"
+        map.extract<String>("data/automated_271") shouldBe "271"
+        map.extract<String>("data/automated_314") shouldBe "314"
+        map.extract<String>("data/automated_500") shouldBe "500"
+        map.extract<String>("data/automated_999") shouldBe "999"
     }
 
     @Test
     fun `1000 suspending resolvers sleeping with suspending delay`() {
         val map = deserialize(suspendResolverSchema.executeBlocking(query))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_0"), CoreMatchers.equalTo("0"))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_271"), CoreMatchers.equalTo("271"))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_314"), CoreMatchers.equalTo("314"))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_500"), CoreMatchers.equalTo("500"))
-        MatcherAssert.assertThat(map.extract<String>("data/automated_999"), CoreMatchers.equalTo("999"))
+        map.extract<String>("data/automated_0") shouldBe "0"
+        map.extract<String>("data/automated_271") shouldBe "271"
+        map.extract<String>("data/automated_314") shouldBe "314"
+        map.extract<String>("data/automated_500") shouldBe "500"
+        map.extract<String>("data/automated_999") shouldBe "999"
     }
 }

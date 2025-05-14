@@ -5,7 +5,7 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import com.apurebase.kgraphql.schema.execution.Executor
-import org.amshove.kluent.shouldBeEqualTo
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -36,7 +36,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
         assertThrows<IllegalArgumentException> { mapOnlyInclude.extract("data/film/year") }
 
         val mapNeither = execute("{film{title, year @include(if: true) @skip(if: false)}}")
-        mapNeither.extract<Int>("data/film/year") shouldBeEqualTo 2006
+        mapNeither.extract<Int>("data/film/year") shouldBe 2006
     }
 
     @Test
@@ -45,10 +45,10 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
         assertThrows<IllegalArgumentException> { mapWithSkip.extract("data/film") }
 
         val mapWithoutSkip = execute("{ number(big: true), film @skip(if: false) { title } }")
-        mapWithoutSkip.extract<String>("data/film/title") shouldBeEqualTo "Prestige"
+        mapWithoutSkip.extract<String>("data/film/title") shouldBe "Prestige"
 
         val mapWithInclude = execute("{ number(big: true), film @include(if: true) { title } }")
-        mapWithInclude.extract<String>("data/film/title") shouldBeEqualTo "Prestige"
+        mapWithInclude.extract<String>("data/film/title") shouldBe "Prestige"
 
         val mapWithoutInclude = execute("{ number(big: true), film @include(if: false) { title } }")
         assertThrows<IllegalArgumentException> { mapWithoutInclude.extract("data/film") }
@@ -105,7 +105,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
             "{film{title, year @include(if: true) @skip(if: false)}}",
             options = ExecutionOptions(executor = Executor.DataLoaderPrepared)
         )
-        mapNeither.extract<Int>("data/film/year") shouldBeEqualTo 2006
+        mapNeither.extract<Int>("data/film/year") shouldBe 2006
     }
 
     @Test
@@ -120,13 +120,13 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
             "{ number(big: true), film @skip(if: false) { title } }",
             options = ExecutionOptions(executor = Executor.DataLoaderPrepared)
         )
-        mapWithoutSkip.extract<String>("data/film/title") shouldBeEqualTo "Prestige"
+        mapWithoutSkip.extract<String>("data/film/title") shouldBe "Prestige"
 
         val mapWithInclude = execute(
             "{ number(big: true), film @include(if: true) { title } }",
             options = ExecutionOptions(executor = Executor.DataLoaderPrepared)
         )
-        mapWithInclude.extract<String>("data/film/title") shouldBeEqualTo "Prestige"
+        mapWithInclude.extract<String>("data/film/title") shouldBe "Prestige"
 
         val mapWithoutInclude = execute(
             "{ number(big: true), film @include(if: false) { title } }",

@@ -2,23 +2,20 @@ package com.apurebase.kgraphql.stitched.schema.structure
 
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExperimentalAPI
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.SchemaPrinter
 import com.apurebase.kgraphql.schema.SchemaPrinterConfig
 import com.apurebase.kgraphql.schema.execution.Execution
+import com.apurebase.kgraphql.shouldBeInstanceOf
 import com.apurebase.kgraphql.stitched.StitchedKGraphQL
 import com.apurebase.kgraphql.stitched.getRemoteSchema
 import com.apurebase.kgraphql.stitched.schema.configuration.StitchedSchemaConfiguration
 import com.apurebase.kgraphql.stitched.schema.execution.RemoteRequestExecutor
 import com.fasterxml.jackson.databind.JsonNode
-import org.amshove.kluent.invoking
-import org.amshove.kluent.`should be instance of`
-import org.amshove.kluent.shouldBe
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.withMessage
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.util.Locale
 import java.util.UUID
@@ -75,7 +72,7 @@ class StitchedSchemaTest {
             }
         }
 
-        schema.configuration `should be instance of` StitchedSchemaConfiguration::class
+        schema.configuration shouldBeInstanceOf StitchedSchemaConfiguration::class
         (schema.configuration as StitchedSchemaConfiguration).remoteExecutor shouldBe customRemoteRequestExecutor
     }
 
@@ -111,8 +108,8 @@ class StitchedSchemaTest {
             
         """.trimIndent()
 
-        SchemaPrinter().print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter().print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter().print(schema) shouldBe expectedSDL
+        SchemaPrinter().print(schema.introspected()) shouldBe expectedSDL
     }
 
     @Test
@@ -173,8 +170,8 @@ class StitchedSchemaTest {
             
         """.trimIndent()
 
-        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema) shouldBe expectedSDL
+        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema.introspected()) shouldBe expectedSDL
     }
 
     @Test
@@ -213,8 +210,8 @@ class StitchedSchemaTest {
 
         """.trimIndent()
 
-        SchemaPrinter().print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter().print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter().print(schema) shouldBe expectedSDL
+        SchemaPrinter().print(schema.introspected()) shouldBe expectedSDL
     }
 
     @Test
@@ -282,8 +279,8 @@ class StitchedSchemaTest {
 
         """.trimIndent()
 
-        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema) shouldBe expectedSDL
+        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema.introspected()) shouldBe expectedSDL
     }
 
     @Test
@@ -350,8 +347,8 @@ class StitchedSchemaTest {
 
         """.trimIndent()
 
-        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema) shouldBe expectedSDL
+        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true)).print(schema.introspected()) shouldBe expectedSDL
     }
 
     @Test
@@ -393,8 +390,8 @@ class StitchedSchemaTest {
             
         """.trimIndent()
 
-        SchemaPrinter().print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter().print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter().print(schema) shouldBe expectedSDL
+        SchemaPrinter().print(schema.introspected()) shouldBe expectedSDL
     }
 
     @Test
@@ -439,8 +436,8 @@ class StitchedSchemaTest {
             
         """.trimIndent()
 
-        SchemaPrinter().print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter().print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter().print(schema) shouldBe expectedSDL
+        SchemaPrinter().print(schema.introspected()) shouldBe expectedSDL
     }
 
     @Test
@@ -478,8 +475,8 @@ class StitchedSchemaTest {
             
         """.trimIndent()
 
-        SchemaPrinter().print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter().print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter().print(schema) shouldBe expectedSDL
+        SchemaPrinter().print(schema.introspected()) shouldBe expectedSDL
     }
 
     interface InterInter : Inter {
@@ -535,14 +532,14 @@ class StitchedSchemaTest {
             
         """.trimIndent()
 
-        SchemaPrinter().print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter().print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter().print(schema) shouldBe expectedSDL
+        SchemaPrinter().print(schema.introspected()) shouldBe expectedSDL
     }
 
     @Test
     fun `schema should prevent duplicate field names from stitching`() {
         data class SimpleClass(val existing: String)
-        invoking {
+        expect<SchemaException>("Cannot add stitched field with duplicated name 'existing'") {
             StitchedKGraphQL.stitchedSchema {
                 configure {
                     remoteExecutor = DummyRemoteRequestExecutor
@@ -568,9 +565,9 @@ class StitchedSchemaTest {
                     }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Cannot add stitched field with duplicated name 'existing'"
+        }
 
-        invoking {
+        expect<SchemaException>("Cannot add stitched field with duplicated name 'extension' for type 'SimpleClass'") {
             StitchedKGraphQL.stitchedSchema {
                 configure {
                     remoteExecutor = DummyRemoteRequestExecutor
@@ -601,13 +598,13 @@ class StitchedSchemaTest {
                     }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Cannot add stitched field with duplicated name 'extension' for type 'SimpleClass'"
+        }
     }
 
     @Test
     fun `schema should prevent invalid field names from stitching`() {
         data class SimpleClass(val existing: String)
-        invoking {
+        expect<SchemaException>("Illegal name '__extension'. Names starting with '__' are reserved for introspection system") {
             StitchedKGraphQL.stitchedSchema {
                 configure {
                     remoteExecutor = DummyRemoteRequestExecutor
@@ -633,12 +630,12 @@ class StitchedSchemaTest {
                     }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Illegal name '__extension'. Names starting with '__' are reserved for introspection system"
+        }
     }
 
     @Test
     fun `schema should prevent multiple local schema definitions`() {
-        invoking {
+        expect<SchemaException>("Local schema already defined") {
             StitchedKGraphQL.stitchedSchema {
                 configure {
                     remoteExecutor = DummyRemoteRequestExecutor
@@ -654,7 +651,7 @@ class StitchedSchemaTest {
                     }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Local schema already defined"
+        }
     }
 
     // TODO: make configurable? this doesn't seem like *always* intended
@@ -716,8 +713,8 @@ class StitchedSchemaTest {
             
         """.trimIndent()
 
-        SchemaPrinter().print(schema) shouldBeEqualTo expectedSDL
-        SchemaPrinter().print(schema.introspected()) shouldBeEqualTo expectedSDL
+        SchemaPrinter().print(schema) shouldBe expectedSDL
+        SchemaPrinter().print(schema.introspected()) shouldBe expectedSDL
 
         schema.executeBlocking(
             """
@@ -725,7 +722,7 @@ class StitchedSchemaTest {
               __type(name: "SimpleClass") { name kind fields { name } }
             }
             """.trimIndent()
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"__type":{"name":"SimpleClass","kind":"OBJECT","fields":[{"name":"existing"},{"name":"extension"},{"name":"extensionWithDefault"},{"name":"extensionWithOptional"}]}}}
         """.trimIndent()
     }

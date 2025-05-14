@@ -7,11 +7,9 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.execution.Executor
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBe
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.greaterThan
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -53,7 +51,7 @@ class ObjectsSpecificationTest {
             }
         }
 
-        schema.printSchema() shouldBeEqualTo """
+        schema.printSchema() shouldBe """
             type Query {
               underscore: Underscore!
             }
@@ -79,7 +77,7 @@ class ObjectsSpecificationTest {
             }
         }
 
-        schema.printSchema() shouldBeEqualTo """
+        schema.printSchema() shouldBe """
             type Query {
               underscore: Underscore!
             }
@@ -150,20 +148,20 @@ class ObjectsSpecificationTest {
 
         val result = schema.executeBlocking("{many{id, id2, value, active, smooth, name}}")
         with(result) {
-            assertThat(indexOf("\"name\""), greaterThan(indexOf("\"smooth\"")))
-            assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"active\"")))
-            assertThat(indexOf("\"active\""), greaterThan(indexOf("\"value\"")))
-            assertThat(indexOf("\"value\""), greaterThan(indexOf("\"id2\"")))
-            assertThat(indexOf("\"id2\""), greaterThan(indexOf("\"id\"")))
+            indexOf("\"name\"") shouldBeGreaterThan indexOf("\"smooth\"")
+            indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"active\"")
+            indexOf("\"active\"") shouldBeGreaterThan indexOf("\"value\"")
+            indexOf("\"value\"") shouldBeGreaterThan indexOf("\"id2\"")
+            indexOf("\"id2\"") shouldBeGreaterThan indexOf("\"id\"")
         }
 
         val result2 = schema.executeBlocking("{many{name, active, id2, value, smooth, id}}")
         with(result2) {
-            assertThat(indexOf("\"id\""), greaterThan(indexOf("\"smooth\"")))
-            assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"value\"")))
-            assertThat(indexOf("\"value\""), greaterThan(indexOf("\"id2\"")))
-            assertThat(indexOf("\"id2\""), greaterThan(indexOf("\"active\"")))
-            assertThat(indexOf("\"active\""), greaterThan(indexOf("\"name\"")))
+            indexOf("\"id\"") shouldBeGreaterThan indexOf("\"smooth\"")
+            indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"value\"")
+            indexOf("\"value\"") shouldBeGreaterThan indexOf("\"id2\"")
+            indexOf("\"id2\"") shouldBeGreaterThan indexOf("\"active\"")
+            indexOf("\"active\"") shouldBeGreaterThan indexOf("\"name\"")
         }
     }
 
@@ -176,10 +174,10 @@ class ObjectsSpecificationTest {
         val result =
             schema.executeBlocking("{many{active, ...Fields , smooth, id}} fragment Fields on ManyFields { id2, value }")
         with(result) {
-            assertThat(indexOf("\"id\""), greaterThan(indexOf("\"smooth\"")))
-            assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"value\"")))
-            assertThat(indexOf("\"value\""), greaterThan(indexOf("\"id2\"")))
-            assertThat(indexOf("\"id2\""), greaterThan(indexOf("\"active\"")))
+            indexOf("\"id\"") shouldBeGreaterThan indexOf("\"smooth\"")
+            indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"value\"")
+            indexOf("\"value\"") shouldBeGreaterThan indexOf("\"id2\"")
+            indexOf("\"id2\"") shouldBeGreaterThan indexOf("\"active\"")
         }
     }
 
@@ -196,10 +194,10 @@ class ObjectsSpecificationTest {
                 "fragment Few on FewFields { name } "
         )
         with(result) {
-            assertThat(indexOf("\"id\""), greaterThan(indexOf("\"smooth\"")))
-            assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"value\"")))
-            assertThat(indexOf("\"value\""), greaterThan(indexOf("\"id2\"")))
-            assertThat(indexOf("\"id2\""), greaterThan(indexOf("\"active\"")))
+            indexOf("\"id\"") shouldBeGreaterThan indexOf("\"smooth\"")
+            indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"value\"")
+            indexOf("\"value\"") shouldBeGreaterThan indexOf("\"id2\"")
+            indexOf("\"id2\"") shouldBeGreaterThan indexOf("\"active\"")
         }
     }
 
@@ -212,24 +210,24 @@ class ObjectsSpecificationTest {
         val result = schema.executeBlocking("{many{id, id2, value, id, active, smooth}}")
         with(result) {
             //ensure that "id" appears only once
-            assertThat(indexOf("\"id\""), equalTo(lastIndexOf("\"id\"")))
+            indexOf("\"id\"") shouldBe lastIndexOf("\"id\"")
 
-            assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"active\"")))
-            assertThat(indexOf("\"active\""), greaterThan(indexOf("\"value\"")))
-            assertThat(indexOf("\"value\""), greaterThan(indexOf("\"id2\"")))
-            assertThat(indexOf("\"id2\""), greaterThan(indexOf("\"id\"")))
+            indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"active\"")
+            indexOf("\"active\"") shouldBeGreaterThan indexOf("\"value\"")
+            indexOf("\"value\"") shouldBeGreaterThan indexOf("\"id2\"")
+            indexOf("\"id2\"") shouldBeGreaterThan indexOf("\"id\"")
         }
 
         val resultFragment =
             schema.executeBlocking("{many{id, id2, ...Many, active, smooth}} fragment Many on ManyFields{value, id}")
         with(resultFragment) {
             //ensure that "id" appears only once
-            assertThat(indexOf("\"id\""), equalTo(lastIndexOf("\"id\"")))
+            indexOf("\"id\"") shouldBe lastIndexOf("\"id\"")
 
-            assertThat(indexOf("\"smooth\""), greaterThan(indexOf("\"active\"")))
-            assertThat(indexOf("\"active\""), greaterThan(indexOf("\"value\"")))
-            assertThat(indexOf("\"value\""), greaterThan(indexOf("\"id2\"")))
-            assertThat(indexOf("\"id2\""), greaterThan(indexOf("\"id\"")))
+            indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"active\"")
+            indexOf("\"active\"") shouldBeGreaterThan indexOf("\"value\"")
+            indexOf("\"value\"") shouldBeGreaterThan indexOf("\"id2\"")
+            indexOf("\"id2\"") shouldBeGreaterThan indexOf("\"id\"")
         }
     }
 
@@ -276,12 +274,12 @@ class ObjectsSpecificationTest {
 
         val responseShortAfterLong = (schema.executeBlocking("{actor{long, short}}"))
         with(responseShortAfterLong) {
-            assertThat(indexOf("short"), greaterThan(indexOf("long")))
+            indexOf("short") shouldBeGreaterThan indexOf("long")
         }
 
         val responseLongAfterShort = (schema.executeBlocking("{actor{short, long}}"))
         with(responseLongAfterShort) {
-            assertThat(indexOf("long"), greaterThan(indexOf("short")))
+            indexOf("long") shouldBeGreaterThan indexOf("short")
         }
     }
 
@@ -304,7 +302,7 @@ class ObjectsSpecificationTest {
 
         val responseShortAfterLong = schema.executeBlocking("{long, short}")
         with(responseShortAfterLong) {
-            assertThat(indexOf("short"), greaterThan(indexOf("long")))
+            indexOf("short") shouldBeGreaterThan indexOf("long")
         }
     }
 }

@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.request
 import com.apurebase.kgraphql.schema.structure.dedentBlockStringValue
 import com.apurebase.kgraphql.schema.structure.getBlockStringIndentation
 import com.apurebase.kgraphql.schema.structure.printBlockString
-import org.amshove.kluent.shouldBeEqualTo
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class DedentBlockStringTest {
@@ -23,7 +23,7 @@ class DedentBlockStringTest {
             "    Yours,",
             "      GraphQL."
         )
-        dedentBlockStringValue(rawValue) shouldBeEqualTo joinLines(
+        dedentBlockStringValue(rawValue) shouldBe joinLines(
             "Hello,",
             "  World!",
             "",
@@ -45,7 +45,7 @@ class DedentBlockStringTest {
             "",
             ""
         )
-        dedentBlockStringValue(rawValue) shouldBeEqualTo joinLines(
+        dedentBlockStringValue(rawValue) shouldBe joinLines(
             "Hello,",
             "  World!",
             "",
@@ -67,7 +67,7 @@ class DedentBlockStringTest {
             "        ",
             "  "
         )
-        dedentBlockStringValue(rawValue) shouldBeEqualTo joinLines(
+        dedentBlockStringValue(rawValue) shouldBe joinLines(
             "Hello,",
             "  World!",
             "",
@@ -85,7 +85,7 @@ class DedentBlockStringTest {
             "    Yours,",
             "      GraphQL."
         )
-        dedentBlockStringValue(rawValue) shouldBeEqualTo joinLines(
+        dedentBlockStringValue(rawValue) shouldBe joinLines(
             "    Hello,",
             "  World!",
             "",
@@ -105,7 +105,7 @@ class DedentBlockStringTest {
             "      GraphQL. ",
             "               "
         )
-        dedentBlockStringValue(rawValue) shouldBeEqualTo joinLines(
+        dedentBlockStringValue(rawValue) shouldBe joinLines(
             "Hello,     ",
             "  World!   ",
             "           ",
@@ -120,48 +120,48 @@ class DedentBlockStringTest {
     ///////////////////////////////////////////
     @Test
     fun `returns zero for an empty array`() {
-        getBlockStringIndentation(listOf()) shouldBeEqualTo 0
+        getBlockStringIndentation(listOf()) shouldBe 0
     }
 
     @Test
     fun `do not take first line into account`() {
-        getBlockStringIndentation(listOf("  a")) shouldBeEqualTo 0
-        getBlockStringIndentation(listOf(" a", "  b")) shouldBeEqualTo 2
+        getBlockStringIndentation(listOf("  a")) shouldBe 0
+        getBlockStringIndentation(listOf(" a", "  b")) shouldBe 2
     }
 
     @Test
     fun `returns minimal indentation length`() {
-        getBlockStringIndentation(listOf("", " a", "  b")) shouldBeEqualTo 1
-        getBlockStringIndentation(listOf("", "  a", " b")) shouldBeEqualTo 1
-        getBlockStringIndentation(listOf("", "  a", " b", "c")) shouldBeEqualTo 0
+        getBlockStringIndentation(listOf("", " a", "  b")) shouldBe 1
+        getBlockStringIndentation(listOf("", "  a", " b")) shouldBe 1
+        getBlockStringIndentation(listOf("", "  a", " b", "c")) shouldBe 0
     }
 
     @Test
     fun `count both tab and space as single character`() {
-        getBlockStringIndentation(listOf("", "\ta", "          b")) shouldBeEqualTo 1
+        getBlockStringIndentation(listOf("", "\ta", "          b")) shouldBe 1
         getBlockStringIndentation(
             listOf(
                 "",
                 "\t a",
                 "          b"
             )
-        ) shouldBeEqualTo 2
+        ) shouldBe 2
         getBlockStringIndentation(
             listOf(
                 "",
                 " \t a",
                 "          b"
             )
-        ) shouldBeEqualTo 3
+        ) shouldBe 3
     }
 
     @Test
     fun `do not take empty lines into account`() {
-        getBlockStringIndentation(listOf("a", "\t")) shouldBeEqualTo 0
-        getBlockStringIndentation(listOf("a", " ")) shouldBeEqualTo 0
-        getBlockStringIndentation(listOf("a", " ", "  b")) shouldBeEqualTo 2
-        getBlockStringIndentation(listOf("a", " ", "  b")) shouldBeEqualTo 2
-        getBlockStringIndentation(listOf("a", "", " b")) shouldBeEqualTo 1
+        getBlockStringIndentation(listOf("a", "\t")) shouldBe 0
+        getBlockStringIndentation(listOf("a", " ")) shouldBe 0
+        getBlockStringIndentation(listOf("a", " ", "  b")) shouldBe 2
+        getBlockStringIndentation(listOf("a", " ", "  b")) shouldBe 2
+        getBlockStringIndentation(listOf("a", "", " b")) shouldBe 1
     }
 
     //////////////////////////////////////////
@@ -170,23 +170,23 @@ class DedentBlockStringTest {
     @Test
     fun `by default print block strings as single line`() {
         val str = "one liner"
-        printBlockString(str) shouldBeEqualTo "\"\"\"one liner\"\"\""
-        printBlockString(str, "", true) shouldBeEqualTo "\"\"\"\none liner\n\"\"\""
+        printBlockString(str) shouldBe "\"\"\"one liner\"\"\""
+        printBlockString(str, "", true) shouldBe "\"\"\"\none liner\n\"\"\""
     }
 
     @Test
     fun `correctly prints single-line with leading space`() {
         val str = "    space-led string"
-        printBlockString(str) shouldBeEqualTo "\"\"\"    space-led string\"\"\""
-        printBlockString(str, "", true) shouldBeEqualTo "\"\"\"    space-led string\n\"\"\""
+        printBlockString(str) shouldBe "\"\"\"    space-led string\"\"\""
+        printBlockString(str, "", true) shouldBe "\"\"\"    space-led string\n\"\"\""
     }
 
     @Test
     fun `correctly prints single-line with leading space and quotation`() {
         val str = "    space-led value \"quoted string\""
 
-        printBlockString(str) shouldBeEqualTo "\"\"\"    space-led value \"quoted string\"\n\"\"\""
-        printBlockString(str, "", true) shouldBeEqualTo "\"\"\"    space-led value \"quoted string\"\n\"\"\""
+        printBlockString(str) shouldBe "\"\"\"    space-led value \"quoted string\"\n\"\"\""
+        printBlockString(str, "", true) shouldBe "\"\"\"    space-led value \"quoted string\"\n\"\"\""
     }
 
     @Test
@@ -198,7 +198,7 @@ class DedentBlockStringTest {
             "     string"
         )
 
-        printBlockString(str) shouldBeEqualTo joinLines(
+        printBlockString(str) shouldBe joinLines(
             "\"\"\"",
             "    first  ",
             "  line     ",

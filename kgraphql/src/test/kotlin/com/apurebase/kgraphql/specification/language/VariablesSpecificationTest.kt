@@ -7,8 +7,7 @@ import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -21,17 +20,14 @@ class VariablesSpecificationTest : BaseSchemaTest() {
             variables = "{\"name\":\"Boguś Linda\", \"age\": 22}"
         )
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Any>>("data/createActor"),
-            equalTo(mapOf("name" to "Boguś Linda", "age" to 22))
-        )
+        map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf("name" to "Boguś Linda", "age" to 22)
     }
 
     @Test
     fun `query with int variable`() {
         val map = execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1}")
         assertNoErrors(map)
-        assertThat(map.extract<Int>("data/filmByRank/title"), equalTo("Prestige"))
+        map.extract<String>("data/filmByRank/title") shouldBe "Prestige"
     }
 
     // Json only has one number type, so "1" and "1.0" are the same, and input coercion should be able to handle
@@ -41,7 +37,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         val map =
             execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1.0}")
         assertNoErrors(map)
-        assertThat(map.extract<Int>("data/filmByRank/title"), equalTo("Prestige"))
+        map.extract<String>("data/filmByRank/title") shouldBe "Prestige"
     }
 
     @Test
@@ -55,35 +51,35 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     fun `query with float variable`() {
         val map = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 42.3}")
         assertNoErrors(map)
-        assertThat(map.extract<Float>("data/float"), equalTo(42.3))
+        map.extract<Float>("data/float") shouldBe 42.3
     }
 
     @Test
     fun `query with float variable in exponential notation`() {
         val map = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 2.1e1}")
         assertNoErrors(map)
-        assertThat(map.extract<Float>("data/float"), equalTo(2.1e1))
+        map.extract<Float>("data/float") shouldBe 2.1e1
     }
 
     @Test
     fun `query with float variable should allow integer input`() {
         val map = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 42}")
         assertNoErrors(map)
-        assertThat(map.extract<Float>("data/float"), equalTo(42.0))
+        map.extract<Float>("data/float") shouldBe 42.0
     }
 
     @Test
     fun `query with boolean variable`() {
         val map = execute(query = "query(\$big: Boolean!) {number(big: \$big)}", variables = "{\"big\": true}")
         assertNoErrors(map)
-        assertThat(map.extract<Int>("data/number"), equalTo(10000))
+        map.extract<Int>("data/number") shouldBe 10000
     }
 
     @Test
     fun `query with boolean variable default value`() {
         val map = execute(query = "query(\$big: Boolean = true) {number(big: \$big)}")
         assertNoErrors(map)
-        assertThat(map.extract<Int>("data/number"), equalTo(10000))
+        map.extract<Int>("data/number") shouldBe 10000
     }
 
     @Test
@@ -93,9 +89,8 @@ class VariablesSpecificationTest : BaseSchemaTest() {
             variables = "{\"type\": \"FULL_LENGTH\"}"
         )
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, String>>("data/filmsByType"),
-            equalTo(listOf(mapOf("title" to "Prestige"), mapOf("title" to "Se7en")))
+        map.extract<Map<String, String>>("data/filmsByType") shouldBe listOf(
+            mapOf("title" to "Prestige"), mapOf("title" to "Se7en")
         )
     }
 
@@ -106,10 +101,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
             variables = "{\"age\": 22}"
         )
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Any>>("data/createActor"),
-            equalTo(mapOf("name" to "Boguś Linda", "age" to 22))
-        )
+        map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf("name" to "Boguś Linda", "age" to 22)
     }
 
     @Test
@@ -121,10 +113,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
             variables = "{\"defaultAge\": 22}"
         )
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Any>>("data/createActor"),
-            equalTo(mapOf("name" to "Boguś Linda", "age" to 22))
-        )
+        map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf("name" to "Boguś Linda", "age" to 22)
     }
 
     @Test
@@ -135,10 +124,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
             variables = "{\"age\": 22, \"big\": true}"
         )
         assertNoErrors(map)
-        assertThat(
-            map.extract<String>("data/createActor/picture"),
-            equalTo("http://picture.server/pic/Boguś_Linda?big=true")
-        )
+        map.extract<String>("data/createActor/picture") shouldBe "http://picture.server/pic/Boguś_Linda?big=true"
     }
 
     @Test
@@ -200,14 +186,14 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         val result = execute(request, variables)
 
         assertNoErrors(result)
-        assertThat(result.extract("data/createFirst/name"), equalTo("Jógvan"))
-        assertThat(result.extract("data/createSecond/age"), equalTo(2))
-        assertThat(result.extract("data/inputFirst/name"), equalTo("Olsen"))
-        assertThat(result.extract("data/inputSecond/age"), equalTo(4))
-        assertThat(result.extract("data/agesFirst/name"), equalTo("Someone"))
-        assertThat(result.extract("data/agesSecond/age"), equalTo(15))
-        assertThat(result.extract("data/inputAgesFirst/name"), equalTo("Jógvan Olsen"))
-        assertThat(result.extract("data/inputAgesSecond/age"), equalTo(22))
+        result.extract<String>("data/createFirst/name") shouldBe "Jógvan"
+        result.extract<Int>("data/createSecond/age") shouldBe 2
+        result.extract<String>("data/inputFirst/name") shouldBe "Olsen"
+        result.extract<Int>("data/inputSecond/age") shouldBe 4
+        result.extract<String>("data/agesFirst/name") shouldBe "Someone"
+        result.extract<Int>("data/agesSecond/age") shouldBe 15
+        result.extract<String>("data/inputAgesFirst/name") shouldBe "Jógvan Olsen"
+        result.extract<Int>("data/inputAgesSecond/age") shouldBe 22
     }
 
     @Test
@@ -236,7 +222,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         val result = execute(request, variables)
 
         assertNoErrors(result)
-        assertThat(result.extract("data/agesFirst/name"), equalTo("Someone"))
-        assertThat(result.extract("data/agesSecond/age"), equalTo(15))
+        result.extract<String>("data/agesFirst/name") shouldBe "Someone"
+        result.extract<Int>("data/agesSecond/age") shouldBe 15
     }
 }

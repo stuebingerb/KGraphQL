@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit.jupiter.api)
-    testImplementation(libs.kluent)
+    testImplementation(libs.kotest)
     testImplementation(libs.ktor.server.test.host)
+    testImplementation(testFixtures(project(":kgraphql")))
 }

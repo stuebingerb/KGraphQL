@@ -1,7 +1,6 @@
 package com.apurebase.kgraphql.schema.model
 
 import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 
 class InputValueDef<T : Any>(

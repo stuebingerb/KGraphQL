@@ -7,10 +7,9 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaBuilderTest
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.Executor
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import nidomiro.kdataloader.ExecutionResult
-import org.amshove.kluent.shouldBeEqualTo
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -48,7 +47,7 @@ class DataLoaderPropertyDSLTest {
             }
             """.trimIndent()
         ).deserialize()
-        results.extract<String>("data/parent/child/data") shouldBeEqualTo "A 1 C 2 E 3 G 4"
+        results.extract<String>("data/parent/child/data") shouldBe "A 1 C 2 E 3 G 4"
     }
 
     class Parent(val data: String = "")
@@ -78,7 +77,7 @@ class DataLoaderPropertyDSLTest {
             }
         }
 
-        MatcherAssert.assertThat(schema.typeByKClass(SchemaBuilderTest.InputOne::class), CoreMatchers.notNullValue())
+        schema.typeByKClass(SchemaBuilderTest.InputOne::class) shouldNotBe null
     }
 
     data class Prop<T>(val resultType: KType, val resolver: () -> T)
@@ -102,7 +101,7 @@ class DataLoaderPropertyDSLTest {
             }
         }
 
-        MatcherAssert.assertThat(schema.typeByKClass(Int::class), CoreMatchers.notNullValue())
-        MatcherAssert.assertThat(schema.typeByKClass(String::class), CoreMatchers.notNullValue())
+        schema.typeByKClass(Int::class) shouldNotBe null
+        schema.typeByKClass(String::class) shouldNotBe null
     }
 }

@@ -1,6 +1,6 @@
 package com.apurebase.kgraphql.specification.language
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.executeEqualQueries
@@ -8,11 +8,10 @@ import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
 import com.apurebase.kgraphql.schema.execution.Executor
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeInstanceOf
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
+import com.apurebase.kgraphql.shouldBeInstanceOf
+import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 
 data class Actor(var name: String? = "", var age: Int? = 0)
@@ -89,31 +88,30 @@ class OperationsSpecificationTest {
         subscriptionResult = ""
         schema.executeBlocking("mutation {createActor(name : \"Kurt Russel\"){name}}")
 
-        subscriptionResult shouldBeEqualTo "{\"data\":{\"name\":\"Kurt Russel\"}}"
+        subscriptionResult shouldBe "{\"data\":{\"name\":\"Kurt Russel\"}}"
 
         subscriptionResult = ""
         schema.executeBlocking("mutation{createActor(name : \"Kurt Russel1\"){name}}")
-        subscriptionResult shouldBeEqualTo "{\"data\":{\"name\":\"Kurt Russel1\"}}"
+        subscriptionResult shouldBe "{\"data\":{\"name\":\"Kurt Russel1\"}}"
 
         subscriptionResult = ""
         schema.executeBlocking("mutation{createActor(name : \"Kurt Russel2\"){name}}")
-        subscriptionResult shouldBeEqualTo "{\"data\":{\"name\":\"Kurt Russel2\"}}"
+        subscriptionResult shouldBe "{\"data\":{\"name\":\"Kurt Russel2\"}}"
 
         schema.executeBlocking("subscription {unsubscriptionActor(subscription : \"mySubscription\"){name}}")
 
         subscriptionResult = ""
         schema.executeBlocking("mutation{createActor(name : \"Kurt Russel\"){name}}")
-        subscriptionResult shouldBeEqualTo ""
+        subscriptionResult shouldBe ""
     }
 
     @Test
     fun `Subscription return type must be the same as the publisher's`() {
-        invoking {
+        val exception = shouldThrowExactly<ExecutionException> {
             newSchema(Executor.Parallel).executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
-        } shouldThrow GraphQLError::class with {
-            originalError shouldBeInstanceOf SchemaException::class
-            message shouldBeEqualTo "Subscription return type must be the same as the publisher's"
         }
+        exception.originalError shouldBeInstanceOf SchemaException::class
+        exception shouldHaveMessage "Subscription return type must be the same as the publisher's"
     }
 }
 

@@ -5,8 +5,7 @@ import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 @Specification("2.7 Field Alias")
@@ -32,13 +31,13 @@ class FieldAliasSpecificationTest {
     fun `can define response object field name`() {
         val map =
             deserialize(schema.executeBlocking("{actor{ageMonths: age(inMonths : true) ageYears: age(inMonths : false)}}"))
-        assertThat(map.extract<Int>("data/actor/ageMonths"), equalTo(age * 12))
-        assertThat(map.extract<Int>("data/actor/ageYears"), equalTo(age))
+        map.extract<Int>("data/actor/ageMonths") shouldBe age * 12
+        map.extract<Int>("data/actor/ageYears") shouldBe age
     }
 
     @Test
     fun `top level of a query can be given alias`() {
         val map = deserialize(schema.executeBlocking("{ bogus : actor{name}}"))
-        assertThat(map.extract<String>("data/bogus/name"), equalTo(actorName))
+        map.extract<String>("data/bogus/name") shouldBe actorName
     }
 }

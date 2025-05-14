@@ -1,7 +1,6 @@
 package nidomiro.kdataloader
 
 import kotlinx.coroutines.Deferred
-import kotlin.jvm.JvmName
 import nidomiro.kdataloader.statistics.DataLoaderStatistics
 
 typealias BatchLoader<K, R> = suspend (ids: List<K>) -> List<ExecutionResult<R>>

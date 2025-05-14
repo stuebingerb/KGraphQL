@@ -4,10 +4,10 @@ import com.apurebase.kgraphql.Account
 import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.FilmType
-import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Scenario
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.context
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
@@ -18,19 +18,12 @@ import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.DefaultGenericTypeResolver
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.structure.Field
+import com.apurebase.kgraphql.shouldBeInstanceOf
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
-import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.hasItem
-import org.hamcrest.CoreMatchers.instanceOf
-import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.CoreMatchers.nullValue
-import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSupertypeOf
@@ -58,8 +51,8 @@ class SchemaBuilderTest {
 
         val scenarioType = testedSchema.model.queryTypes[Scenario::class]
             ?: throw Exception("Scenario type should be present in schema")
-        assertThat(scenarioType["author"], nullValue())
-        assertThat(scenarioType["content"], notNullValue())
+        scenarioType["author"] shouldBe null
+        scenarioType["content"] shouldNotBe null
     }
 
     @Test
@@ -74,13 +67,13 @@ class SchemaBuilderTest {
             ?: throw Exception("Account type should be present in schema")
 
         // id should exist because it is public
-        assertThat(scenarioType["id"], notNullValue())
+        scenarioType["id"] shouldNotBe null
 
         // username should exist because it is public
-        assertThat(scenarioType["username"], notNullValue())
+        scenarioType["username"] shouldNotBe null
 
         // password shouldn't exist because it's private
-        assertThat(scenarioType["password"], nullValue())
+        scenarioType["password"] shouldBe null
     }
 
     @Test
@@ -97,8 +90,8 @@ class SchemaBuilderTest {
         }
         val scenarioType = testedSchema.model.queryTypes[Scenario::class]
             ?: throw Exception("Scenario type should be present in schema")
-        assertThat(scenarioType.kind, equalTo(TypeKind.OBJECT))
-        assertThat(scenarioType["content"], notNullValue())
+        scenarioType.kind shouldBe TypeKind.OBJECT
+        scenarioType["content"] shouldNotBe null
     }
 
     @Test
@@ -120,8 +113,8 @@ class SchemaBuilderTest {
         val scenarioType = testedSchema.model.queryTypes[Scenario::class]
             ?: throw Exception("Scenario type should be present in schema")
 
-        assertThat(scenarioType.kind, equalTo(TypeKind.OBJECT))
-        assertThat(scenarioType["pdf"], notNullValue())
+        scenarioType.kind shouldBe TypeKind.OBJECT
+        scenarioType["pdf"] shouldNotBe null
     }
 
     @Test
@@ -156,8 +149,8 @@ class SchemaBuilderTest {
             ?: throw Exception("Scenario type should be present in schema")
 
         val unionField = scenarioType["pdf"]
-        assertThat(unionField, notNullValue())
-        assertThat(unionField, instanceOf(Field.Union::class.java))
+        unionField shouldNotBe null
+        unionField shouldBeInstanceOf Field.Union::class
     }
 
     @Test
@@ -176,10 +169,10 @@ class SchemaBuilderTest {
 
         val actorType = tested.model.queryTypes[Actor::class]
             ?: throw Exception("Actor type should be present in schema")
-        assertThat(actorType.kind, equalTo(TypeKind.OBJECT))
+        actorType.kind shouldBe TypeKind.OBJECT
         val property = actorType["linked"] ?: throw Exception("Actor should have ext property 'linked'")
-        assertThat(property, notNullValue())
-        assertThat(property.returnType.unwrapped().name, equalTo("Actor"))
+        property shouldNotBe null
+        property.returnType.unwrapped().name shouldBe "Actor"
     }
 
     @Test
@@ -210,10 +203,10 @@ class SchemaBuilderTest {
 
         val actorType = tested.model.queryTypes[Actor::class]
             ?: throw Exception("Actor type should be present in schema")
-        assertThat(actorType.kind, equalTo(TypeKind.OBJECT))
+        actorType.kind shouldBe TypeKind.OBJECT
         val property = actorType["linked"] ?: throw Exception("Actor should have ext property 'linked'")
-        assertThat(property, notNullValue())
-        assertThat(property.returnType.unwrapped().name, equalTo("Actor"))
+        property shouldNotBe null
+        property.returnType.unwrapped().name shouldBe "Actor"
 
         deserialize(tested.executeBlocking("{mainActor{name}}"))
         deserialize(tested.executeBlocking("{actorById(id: 1){name}}"))
@@ -252,7 +245,7 @@ class SchemaBuilderTest {
 
         val result =
             deserialize(schema.executeBlocking("query(\$type : TYPE = FULL_LENGTH){actor(type: \$type){name}}"))
-        assertThat(result.extract<String>("data/actor/name"), equalTo("Boguś Linda FULL_LENGTH"))
+        result.extract<String>("data/actor/name") shouldBe "Boguś Linda FULL_LENGTH"
     }
 
     @Test
@@ -282,8 +275,8 @@ class SchemaBuilderTest {
             inputType<InputTwo>()
         }
 
-        assertThat(schema.inputTypeByKClass(InputOne::class), notNullValue())
-        assertThat(schema.inputTypeByKClass(InputTwo::class), notNullValue())
+        schema.inputTypeByKClass(InputOne::class) shouldNotBe null
+        schema.inputTypeByKClass(InputTwo::class) shouldNotBe null
     }
 
     @Test
@@ -295,8 +288,8 @@ class SchemaBuilderTest {
             }
         }
 
-        assertThat(schema.inputTypeByKClass(InputOne::class), notNullValue())
-        assertThat(schema.inputTypeByKClass(InputTwo::class), notNullValue())
+        schema.inputTypeByKClass(InputOne::class) shouldNotBe null
+        schema.inputTypeByKClass(InputTwo::class) shouldNotBe null
     }
 
     private sealed class Maybe<out T> {
@@ -338,43 +331,31 @@ class SchemaBuilderTest {
         }
 
         deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name fields { type {ofType {kind name}}}}}}}}}")).let {
-            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/kind"), equalTo("OBJECT"))
-            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/name"), equalTo("SomeWithGenericType"))
-            assertThat(
-                it.extract("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/kind"),
-                equalTo("SCALAR")
-            )
-            assertThat(
-                it.extract("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/name"),
-                equalTo("String")
-            )
+            it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/kind") shouldBe "OBJECT"
+            it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/name") shouldBe "SomeWithGenericType"
+            it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/kind") shouldBe "SCALAR"
+            it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/name") shouldBe "String"
 
-            assertThat(it.extract("data/__schema/queryType/fields[1]/type/ofType/kind"), equalTo("OBJECT"))
-            assertThat(it.extract("data/__schema/queryType/fields[1]/type/ofType/name"), equalTo("SomeWithGenericType"))
-            assertThat(
-                it.extract("data/__schema/queryType/fields[1]/type/ofType/fields[0]/type/ofType/kind"),
-                equalTo("SCALAR")
-            )
-            assertThat(
-                it.extract("data/__schema/queryType/fields[1]/type/ofType/fields[0]/type/ofType/name"),
-                equalTo("String")
-            )
+            it.extract<String>("data/__schema/queryType/fields[1]/type/ofType/kind") shouldBe "OBJECT"
+            it.extract<String>("data/__schema/queryType/fields[1]/type/ofType/name") shouldBe "SomeWithGenericType"
+            it.extract<String>("data/__schema/queryType/fields[1]/type/ofType/fields[0]/type/ofType/kind") shouldBe "SCALAR"
+            it.extract<String>("data/__schema/queryType/fields[1]/type/ofType/fields[0]/type/ofType/name") shouldBe "String"
 
-            assertThat(it.extract("data/__schema/queryType/fields[2]/type/ofType/kind"), equalTo("SCALAR"))
-            assertThat(it.extract("data/__schema/queryType/fields[2]/type/ofType/name"), equalTo("String"))
+            it.extract<String>("data/__schema/queryType/fields[2]/type/ofType/kind") shouldBe "SCALAR"
+            it.extract<String>("data/__schema/queryType/fields[2]/type/ofType/name") shouldBe "String"
 
-            assertThat(it.extract("data/__schema/queryType/fields[3]/type/ofType/kind"), equalTo("SCALAR"))
-            assertThat(it.extract("data/__schema/queryType/fields[3]/type/ofType/name"), equalTo("String"))
+            it.extract<String>("data/__schema/queryType/fields[3]/type/ofType/kind") shouldBe "SCALAR"
+            it.extract<String>("data/__schema/queryType/fields[3]/type/ofType/name") shouldBe "String"
         }
 
         deserialize(schema.executeBlocking("{definedValueProp {value}}")).let {
-            assertThat(it.extract<String>("data/definedValueProp/value"), equalTo(33))
+            it.extract<Int>("data/definedValueProp/value") shouldBe 33
         }
         deserialize(schema.executeBlocking("{undefinedValueProp {anotherValue}}")).let {
-            assertThat(it.extract<String>("data/undefinedValueProp/anotherValue"), equalTo("foo"))
+            it.extract<String>("data/undefinedValueProp/anotherValue") shouldBe "foo"
         }
         deserialize(schema.executeBlocking("{definedValue}")).let {
-            assertThat(it.extract<String>("data/definedValue"), equalTo("good!"))
+            it.extract<String>("data/definedValue") shouldBe "good!"
         }
         expect<IllegalArgumentException>("Requested value is not defined!") {
             deserialize(schema.executeBlocking("{undefinedValue}"))
@@ -410,20 +391,14 @@ class SchemaBuilderTest {
         }
 
         deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name fields { type {ofType {kind name}}}}}}}}}")).let {
-            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/kind"), equalTo("OBJECT"))
-            assertThat(it.extract("data/__schema/queryType/fields[0]/type/ofType/name"), equalTo("LambdaWrapper"))
-            assertThat(
-                it.extract("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/kind"),
-                equalTo("SCALAR")
-            )
-            assertThat(
-                it.extract("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/name"),
-                equalTo("Int")
-            )
+            it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/kind") shouldBe "OBJECT"
+            it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/name") shouldBe "LambdaWrapper"
+            it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/kind") shouldBe "SCALAR"
+            it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/name") shouldBe "Int"
         }
 
         deserialize(schema.executeBlocking("{lambda {lambda}}")).let {
-            assertThat(it.extract<String>("data/lambda/lambda"), equalTo(1))
+            it.extract<Int>("data/lambda/lambda") shouldBe 1
         }
     }
 
@@ -440,18 +415,15 @@ class SchemaBuilderTest {
         }
 
         val intArg = schema.queryType.fields?.find { it.name == "data" }?.args?.find { it.name == "int" }
-        assertThat(intArg?.defaultValue, equalTo(expectedDefaultValue.toString()))
-        assertThat(intArg?.description, equalTo(expectedDescription))
+        intArg?.defaultValue shouldBe expectedDefaultValue.toString()
+        intArg?.description shouldBe expectedDescription
 
         val response = deserialize(schema.executeBlocking("{data}"))
-        assertThat(response.extract<Int>("data/data"), equalTo(33))
+        response.extract<Int>("data/data") shouldBe 33
 
         val introspection =
             deserialize(schema.executeBlocking("{__schema{queryType{fields{name, args{name, description, defaultValue}}}}}"))
-        assertThat(
-            introspection.extract<String>("data/__schema/queryType/fields[0]/args[0]/description"),
-            equalTo(expectedDescription)
-        )
+        introspection.extract<String>("data/__schema/queryType/fields[0]/args[0]/description") shouldBe expectedDescription
     }
 
     @Test
@@ -459,7 +431,6 @@ class SchemaBuilderTest {
         val expectedDescription = "Int Argument"
         val expectedDefaultValue = 33
         val schema = defaultSchema {
-
             configure {
                 introspection = false
             }
@@ -471,7 +442,7 @@ class SchemaBuilderTest {
             }
         }
 
-        expect<GraphQLError> {
+        expect<ValidationException>("GraphQL introspection is not allowed") {
             schema.executeBlocking("{__schema{queryType{fields{name, args{name, description, defaultValue}}}}}")
         }
     }
@@ -516,7 +487,7 @@ class SchemaBuilderTest {
         val georgeName = "George"
         val response =
             deserialize(schema.executeBlocking("{name}", context = context { +UserData(georgeName, "STUFF") }))
-        assertThat(response.extract<String>("data/name"), equalTo(georgeName))
+        response.extract<String>("data/name") shouldBe georgeName
     }
 
     @Test
@@ -544,8 +515,8 @@ class SchemaBuilderTest {
         }
         val response =
             deserialize(schema.executeBlocking("{actor{ nickname, name(addStuff: true) }}", context = context))
-        assertThat(response.extract<String>("data/actor/name"), equalTo("${georgeName}STUFF"))
-        assertThat(response.extract<String>("data/actor/nickname"), equalTo("Hodor and $georgeName"))
+        response.extract<String>("data/actor/name") shouldBe "${georgeName}STUFF"
+        response.extract<String>("data/actor/nickname") shouldBe "Hodor and $georgeName"
     }
 
     @Test
@@ -581,41 +552,41 @@ class SchemaBuilderTest {
         val response = deserialize(
             schema.executeBlocking(
                 "{" +
-                        "queryWith1Param(val1: 2) { val1 }" +
-                        "queryWith2Params(val1: 2, val2: \"3\") { val1, val2 }" +
-                        "queryWith3Params(val1: 2, val2: \"3\", val3: 4) { val1, val2, val3 }" +
-                        "queryWith4Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\") { val1, val2, val3, val4 }" +
-                        "queryWith5Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6) { val1, val2, val3, val4, val5 }" +
-                        "queryWith6Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6, val6: \"7\") { val1, val2, val3, val4, val5, val6 }" +
-                        "}"
+                    "queryWith1Param(val1: 2) { val1 }" +
+                    "queryWith2Params(val1: 2, val2: \"3\") { val1, val2 }" +
+                    "queryWith3Params(val1: 2, val2: \"3\", val3: 4) { val1, val2, val3 }" +
+                    "queryWith4Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\") { val1, val2, val3, val4 }" +
+                    "queryWith5Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6) { val1, val2, val3, val4, val5 }" +
+                    "queryWith6Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6, val6: \"7\") { val1, val2, val3, val4, val5, val6 }" +
+                    "}"
             )
         )
-        assertThat(response.extract<Int>("data/queryWith1Param/val1"), equalTo(2))
+        response.extract<Int>("data/queryWith1Param/val1") shouldBe 2
 
-        assertThat(response.extract<Int>("data/queryWith2Params/val1"), equalTo(2))
-        assertThat(response.extract<String>("data/queryWith2Params/val2"), equalTo("3"))
+        response.extract<Int>("data/queryWith2Params/val1") shouldBe 2
+        response.extract<String>("data/queryWith2Params/val2") shouldBe "3"
 
-        assertThat(response.extract<Int>("data/queryWith3Params/val1"), equalTo(2))
-        assertThat(response.extract<String>("data/queryWith3Params/val2"), equalTo("3"))
-        assertThat(response.extract<Int>("data/queryWith3Params/val3"), equalTo(4))
+        response.extract<Int>("data/queryWith3Params/val1") shouldBe 2
+        response.extract<String>("data/queryWith3Params/val2") shouldBe "3"
+        response.extract<Int>("data/queryWith3Params/val3") shouldBe 4
 
-        assertThat(response.extract<Int>("data/queryWith4Params/val1"), equalTo(2))
-        assertThat(response.extract<String>("data/queryWith4Params/val2"), equalTo("3"))
-        assertThat(response.extract<Int>("data/queryWith4Params/val3"), equalTo(4))
-        assertThat(response.extract<String>("data/queryWith4Params/val4"), equalTo("5"))
+        response.extract<Int>("data/queryWith4Params/val1") shouldBe 2
+        response.extract<String>("data/queryWith4Params/val2") shouldBe "3"
+        response.extract<Int>("data/queryWith4Params/val3") shouldBe 4
+        response.extract<String>("data/queryWith4Params/val4") shouldBe "5"
 
-        assertThat(response.extract<Int>("data/queryWith5Params/val1"), equalTo(2))
-        assertThat(response.extract<String>("data/queryWith5Params/val2"), equalTo("3"))
-        assertThat(response.extract<Int>("data/queryWith5Params/val3"), equalTo(4))
-        assertThat(response.extract<String>("data/queryWith5Params/val4"), equalTo("5"))
-        assertThat(response.extract<Int>("data/queryWith5Params/val5"), equalTo(6))
+        response.extract<Int>("data/queryWith5Params/val1") shouldBe 2
+        response.extract<String>("data/queryWith5Params/val2") shouldBe "3"
+        response.extract<Int>("data/queryWith5Params/val3") shouldBe 4
+        response.extract<String>("data/queryWith5Params/val4") shouldBe "5"
+        response.extract<Int>("data/queryWith5Params/val5") shouldBe 6
 
-        assertThat(response.extract<Int>("data/queryWith6Params/val1"), equalTo(2))
-        assertThat(response.extract<String>("data/queryWith6Params/val2"), equalTo("3"))
-        assertThat(response.extract<Int>("data/queryWith6Params/val3"), equalTo(4))
-        assertThat(response.extract<String>("data/queryWith6Params/val4"), equalTo("5"))
-        assertThat(response.extract<Int>("data/queryWith6Params/val5"), equalTo(6))
-        assertThat(response.extract<String>("data/queryWith6Params/val6"), equalTo("7"))
+        response.extract<Int>("data/queryWith6Params/val1") shouldBe 2
+        response.extract<String>("data/queryWith6Params/val2") shouldBe "3"
+        response.extract<Int>("data/queryWith6Params/val3") shouldBe 4
+        response.extract<String>("data/queryWith6Params/val4") shouldBe "5"
+        response.extract<Int>("data/queryWith6Params/val5") shouldBe 6
+        response.extract<String>("data/queryWith6Params/val6") shouldBe "7"
     }
 
     @Test
@@ -737,14 +708,14 @@ class SchemaBuilderTest {
             }
         }
 
-        assertThat(schema.typeByKClass(InputOne::class), notNullValue())
-        assertThat(schema.inputTypeByKClass(InputOne::class), notNullValue())
+        schema.typeByKClass(InputOne::class) shouldNotBe null
+        schema.inputTypeByKClass(InputOne::class) shouldNotBe null
 
         val introspection = deserialize(schema.executeBlocking("{__schema{types{name}}}"))
         val types = introspection.extract<List<Map<String, String>>>("data/__schema/types")
         val names = types.map { it["name"] }
-        assertThat(names, hasItem("TypeAsInput"))
-        assertThat(names, hasItem("TypeAsObject"))
+        names shouldContain "TypeAsInput"
+        names shouldContain "TypeAsObject"
     }
 
     @Test
@@ -759,23 +730,23 @@ class SchemaBuilderTest {
         val typesIntrospection = deserialize(schema.executeBlocking("{__schema{types{name}}}"))
         val types = typesIntrospection.extract<List<Map<String, String>>>("data/__schema/types")
         val names = types.map { it["name"] }
-        assertThat(names, hasItem("Short"))
+        names shouldContain "Short"
 
         val response =
             deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name }}}}}}"))
-        assertThat(response.extract("data/__schema/queryType/fields[0]/type/ofType/kind"), equalTo("SCALAR"))
-        assertThat(response.extract("data/__schema/queryType/fields[0]/type/ofType/name"), equalTo("Short"))
+        response.extract<String>("data/__schema/queryType/fields[0]/type/ofType/kind") shouldBe "SCALAR"
+        response.extract<String>("data/__schema/queryType/fields[0]/type/ofType/name") shouldBe "Short"
     }
 
     @Test
     fun `Resolver cannot return an Unit value`() {
-        invoking {
+        expect<SchemaException>("Resolver for 'main' has no return value") {
             KGraphQL.schema {
                 query("main") {
                     resolver { -> Unit }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Resolver for 'main' has no return value"
+        }
     }
 
     private inline fun <reified T : Any> SchemaBuilder.createGenericQuery(x: T) {
@@ -790,7 +761,7 @@ class SchemaBuilderTest {
             createGenericQuery(InputOne("generic"))
         }
 
-        assertThat(schema.typeByKClass(InputOne::class), notNullValue())
+        schema.typeByKClass(InputOne::class) shouldNotBe null
     }
 
     private inline fun <reified T : Any> SchemaBuilder.createGenericQueryWithoutReturns(x: T) {
@@ -801,12 +772,10 @@ class SchemaBuilderTest {
 
     @Test
     fun `not specifying return value explicitly with generic query creation throws exception`() {
-        invoking {
+        expect<SchemaException>("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()") {
             defaultSchema {
                 createGenericQueryWithoutReturns(InputOne("generic"))
             }
-        } shouldThrow SchemaException::class with {
-            message shouldBeEqualTo "If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()"
         }
     }
 
@@ -816,7 +785,7 @@ class SchemaBuilderTest {
             createGenericQuery(listOf("generic"))
         }
         val result = deserialize(schema.executeBlocking("{data}"))
-        assertThat(result.extract("data/data"), equalTo(listOf("generic")))
+        result.extract<List<String>>("data/data") shouldBe listOf("generic")
     }
 
     private inline fun <T : Any, reified P : Any> TypeDSL<T>.createGenericProperty(x: P) {
@@ -836,7 +805,7 @@ class SchemaBuilderTest {
             }
         }
 
-        assertThat(schema.typeByKClass(InputOne::class), notNullValue())
+        schema.typeByKClass(InputOne::class) shouldNotBe null
     }
 
     private inline fun <T : Any, reified P : Any> TypeDSL<T>.createGenericPropertyExplicitly(returnType: KType, x: P) {
@@ -865,14 +834,14 @@ class SchemaBuilderTest {
             }
         }
 
-        assertThat(schema.typeByKClass(Int::class), notNullValue())
-        assertThat(schema.typeByKClass(String::class), notNullValue())
+        schema.typeByKClass(Int::class) shouldNotBe null
+        schema.typeByKClass(String::class) shouldNotBe null
     }
 
     // https://github.com/aPureBase/KGraphQL/issues/106
     @Test
     fun `Java class as inputType should throw an appropriate exception`() {
-        invoking {
+        expect<SchemaException>("Java class 'LatLng' as inputType is not supported") {
             KGraphQL.schema {
                 query("test") {
                     resolver { radius: Double, location: LatLng ->
@@ -880,23 +849,21 @@ class SchemaBuilderTest {
                     }
                 }
             }
-        } shouldThrow SchemaException::class with {
-            message shouldBeEqualTo "Java class 'LatLng' as inputType is not supported"
         }
     }
 
     // https://github.com/stuebingerb/KGraphQL/issues/156
     @Test
     fun `empty schema should be invalid`() {
-        invoking {
+        expect<SchemaException>("Schema must define at least one query") {
             KGraphQL.schema {}
-        } shouldThrow SchemaException::class withMessage "Schema must define at least one query"
+        }
     }
 
     // https://github.com/stuebingerb/KGraphQL/issues/156
     @Test
     fun `schema without query should be invalid`() {
-        invoking {
+        expect<SchemaException>("Schema must define at least one query") {
             KGraphQL.schema {
                 mutation("dummy") {
                     resolver { -> "dummy" }
@@ -905,6 +872,6 @@ class SchemaBuilderTest {
                     resolver { -> "dummy" }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Schema must define at least one query"
+        }
     }
 }

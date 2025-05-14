@@ -1,9 +1,9 @@
 package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.execution.Executor
+import io.kotest.matchers.shouldBe
 import io.ktor.server.application.install
 import io.ktor.server.testing.testApplication
-import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class KtorConfigurationTest : KtorTest() {
@@ -21,10 +21,10 @@ class KtorConfigurationTest : KtorTest() {
                     }
                 }
                 checked = true
-                config.schema.configuration.executor shouldBeEqualTo Executor.Parallel
+                config.schema.configuration.executor shouldBe Executor.Parallel
             }
         }
-        checked shouldBeEqualTo true
+        checked shouldBe true
     }
 
     @Test
@@ -41,9 +41,9 @@ class KtorConfigurationTest : KtorTest() {
                     }
                 }
                 checked = true
-                config.schema.configuration.executor shouldBeEqualTo Executor.DataLoaderPrepared
+                config.schema.configuration.executor shouldBe Executor.DataLoaderPrepared
             }
         }
-        checked shouldBeEqualTo true
+        checked shouldBe true
     }
 }

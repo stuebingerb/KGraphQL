@@ -3,8 +3,8 @@ package com.apurebase.kgraphql.specification.introspection
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.maps.shouldContainAll
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class DocumentationSpecificationTest {
@@ -20,7 +20,7 @@ class DocumentationSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__schema{queryType{fields{name, description}}}}"))
-        assertThat(response.extract("data/__schema/queryType/fields[0]/description"), equalTo(expected))
+        response.extract<String>("data/__schema/queryType/fields[0]/description") shouldBe expected
     }
 
     @Test
@@ -37,7 +37,7 @@ class DocumentationSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__schema{mutationType{fields{name, description}}}}"))
-        assertThat(response.extract("data/__schema/mutationType/fields[0]/description"), equalTo(expected))
+        response.extract<String>("data/__schema/mutationType/fields[0]/description") shouldBe expected
     }
 
     data class Sample(val content: String)
@@ -55,7 +55,7 @@ class DocumentationSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__type(name: \"Sample\"){description}}"))
-        assertThat(response.extract("data/__type/description/"), equalTo(expected))
+        response.extract<String>("data/__type/description/") shouldBe expected
     }
 
     @Test
@@ -72,7 +72,7 @@ class DocumentationSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__type(name: \"Sample\"){description}}"))
-        assertThat(response.extract("data/__type/description/"), equalTo(expected))
+        response.extract<String>("data/__type/description/") shouldBe expected
     }
 
     @Test
@@ -91,7 +91,7 @@ class DocumentationSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__type(name: \"Sample\"){fields{description}}}"))
-        assertThat(response.extract("data/__type/fields[0]/description/"), equalTo(expected))
+        response.extract<String>("data/__type/fields[0]/description/") shouldBe expected
     }
 
     @Test
@@ -111,8 +111,10 @@ class DocumentationSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__type(name: \"Sample\"){fields{name, description}}}"))
-        assertThat(response.extract("data/__type/fields[1]/name/"), equalTo("add"))
-        assertThat(response.extract("data/__type/fields[1]/description/"), equalTo(expected))
+        response.extract<Map<String, Any?>>("data/__type/fields[1]") shouldContainAll mapOf(
+            "name" to "add",
+            "description" to expected
+        )
     }
 
     enum class SampleEnum { ONE, TWO, THREE }
@@ -134,8 +136,10 @@ class DocumentationSpecificationTest {
 
         val response =
             deserialize(schema.executeBlocking("{__type(name: \"SampleEnum\"){enumValues{name, description}}}"))
-        assertThat(response.extract("data/__type/enumValues[0]/name"), equalTo(SampleEnum.ONE.name))
-        assertThat(response.extract("data/__type/enumValues[0]/description"), equalTo(expected))
+        response.extract<Map<String, Any?>>("data/__type/enumValues[0]") shouldContainAll mapOf(
+            "name" to SampleEnum.ONE.name,
+            "description" to expected
+        )
     }
 
     data class Documented(val id: Int)
@@ -155,6 +159,6 @@ class DocumentationSpecificationTest {
 
         val response =
             deserialize(schema.executeBlocking("query { __type(name: \"Documented\") {  name, kind, description } }"))
-        assertThat(response.extract("data/__type/description"), equalTo(expected))
+        response.extract<String>("data/__type/description") shouldBe expected
     }
 }

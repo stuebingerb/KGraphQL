@@ -1,11 +1,9 @@
 package com.apurebase.kgraphql.schema
 
-import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.deserialize
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.withMessage
+import com.apurebase.kgraphql.expect
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -33,12 +31,12 @@ class SchemaInheritanceTest {
             query("c") { resolver { -> C(name, age) } }
         }
 
-        invoking {
+        expect<ValidationException>("Property id on B does not exist") {
             deserialize(schema.executeBlocking("{b{id, name, age}}"))
-        } shouldThrow GraphQLError::class withMessage "Property id on B does not exist"
+        }
 
-        invoking {
+        expect<ValidationException>("Property id on C does not exist") {
             deserialize(schema.executeBlocking("{c{id, name, age}}"))
-        } shouldThrow GraphQLError::class withMessage "Property id on C does not exist"
+        }
     }
 }

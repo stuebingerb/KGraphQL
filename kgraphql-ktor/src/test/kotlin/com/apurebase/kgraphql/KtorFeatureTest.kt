@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql
 
+import io.kotest.matchers.shouldBe
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -10,7 +11,6 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class KtorFeatureTest : KtorTest() {
@@ -29,8 +29,8 @@ class KtorFeatureTest : KtorTest() {
             field("hello")
         }
         runBlocking {
-            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"hello\":\"World!\"}}"
-            response.contentType() shouldBeEqualTo ContentType.Application.Json
+            response.bodyAsText() shouldBe "{\"data\":{\"hello\":\"World!\"}}"
+            response.contentType() shouldBe ContentType.Application.Json
         }
     }
 
@@ -49,8 +49,8 @@ class KtorFeatureTest : KtorTest() {
             field("hello")
         }
         runBlocking {
-            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"hello\":\"World! mutation\"}}"
-            response.contentType() shouldBeEqualTo ContentType.Application.Json
+            response.bodyAsText() shouldBe "{\"data\":{\"hello\":\"World! mutation\"}}"
+            response.contentType() shouldBe ContentType.Application.Json
         }
     }
 
@@ -87,8 +87,8 @@ class KtorFeatureTest : KtorTest() {
             }
         }
         runBlocking {
-            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"actor\":{\"name\":\"${georgeName}STUFF\"}}}"
-            response.contentType() shouldBeEqualTo ContentType.Application.Json
+            response.bodyAsText() shouldBe "{\"data\":{\"actor\":{\"name\":\"${georgeName}STUFF\"}}}"
+            response.contentType() shouldBe ContentType.Application.Json
         }
 
         response = server("query") {
@@ -97,8 +97,8 @@ class KtorFeatureTest : KtorTest() {
             }
         }
         runBlocking {
-            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"actor\":{\"nickname\":\"Hodor and $georgeName\"}}}"
-            response.contentType() shouldBeEqualTo ContentType.Application.Json
+            response.bodyAsText() shouldBe "{\"data\":{\"actor\":{\"nickname\":\"Hodor and $georgeName\"}}}"
+            response.contentType() shouldBe ContentType.Application.Json
         }
     }
 
@@ -134,8 +134,8 @@ class KtorFeatureTest : KtorTest() {
             }
         }
         runBlocking {
-            response.bodyAsText() shouldBeEqualTo "{\"data\":{\"test\":\"success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])\"}}"
-            response.contentType() shouldBeEqualTo ContentType.Application.Json
+            response.bodyAsText() shouldBe "{\"data\":{\"test\":\"success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])\"}}"
+            response.contentType() shouldBe ContentType.Application.Json
         }
     }
 
@@ -153,8 +153,8 @@ class KtorFeatureTest : KtorTest() {
             }
         }
         runBlocking {
-            response.bodyAsText() shouldBeEqualTo "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"line\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"GRAPHQL_VALIDATION_FAILED\"}}]}"
-            response.contentType() shouldBeEqualTo ContentType.Application.Json
+            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"line\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"GRAPHQL_VALIDATION_FAILED\"}}]}"
+            response.contentType() shouldBe ContentType.Application.Json
         }
     }
 
@@ -172,7 +172,7 @@ class KtorFeatureTest : KtorTest() {
             }
         }
         runBlocking {
-            response.status shouldBeEqualTo HttpStatusCode.Unauthorized
+            response.status shouldBe HttpStatusCode.Unauthorized
         }
     }
 }

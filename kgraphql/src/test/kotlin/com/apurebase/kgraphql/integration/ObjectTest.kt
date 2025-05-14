@@ -1,11 +1,9 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.withMessage
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class ObjectTest {
@@ -20,7 +18,7 @@ class ObjectTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Person {
               age: Int!
               name: String!
@@ -38,7 +36,7 @@ class ObjectTest {
               getPerson(name: "foo") { name age }
             }
         """.trimIndent()
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"getPerson":{"name":"foo","age":42}}}
         """.trimIndent()
     }
@@ -61,7 +59,7 @@ class ObjectTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Person {
               newAge: Int!
               newName: String!
@@ -79,14 +77,14 @@ class ObjectTest {
               getPerson(name: "foo") { newName newAge }
             }
         """.trimIndent()
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"getPerson":{"newName":"foo","newAge":42}}}
         """.trimIndent()
     }
 
     @Test
     fun `property name must not start with __ when configured`() {
-        invoking {
+        expect<SchemaException>("Illegal name '__name'. Names starting with '__' are reserved for introspection system") {
             KGraphQL.schema {
                 type<Person> {
                     property(Person::name) {
@@ -98,6 +96,6 @@ class ObjectTest {
                     resolver { name: String -> Person(name = name, age = 42) }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Illegal name '__name'. Names starting with '__' are reserved for introspection system"
+        }
     }
 }

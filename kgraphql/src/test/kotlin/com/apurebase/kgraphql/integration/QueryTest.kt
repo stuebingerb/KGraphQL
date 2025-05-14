@@ -1,18 +1,15 @@
 package com.apurebase.kgraphql.integration
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.helpers.getFields
 import com.apurebase.kgraphql.schema.execution.Execution
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 
 class QueryTest : BaseSchemaTest() {
@@ -20,136 +17,119 @@ class QueryTest : BaseSchemaTest() {
     fun `query nested selection set`() {
         val map = execute("{film{title, director{name, age}}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
-        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
-        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+        map.extract<String>("data/film/title") shouldBe prestige.title
+        map.extract<String>("data/film/director/name") shouldBe prestige.director.name
+        map.extract<Int>("data/film/director/age") shouldBe prestige.director.age
     }
 
     @Test
     fun `query collection field`() {
         val map = execute("{film{title, director{favActors{name, age}}}}")
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, String>>("data/film/director/favActors[0]"), equalTo(
-                mapOf(
-                    "name" to prestige.director.favActors[0].name,
-                    "age" to prestige.director.favActors[0].age
-                )
+        map.extract<Map<String, String>>("data/film/director/favActors[0]") shouldBe
+            mapOf(
+                "name" to prestige.director.favActors[0].name,
+                "age" to prestige.director.favActors[0].age
             )
-        )
     }
 
     @Test
     fun `query scalar field`() {
         val map = execute("{film{id}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/id"), equalTo("${prestige.id.literal}:${prestige.id.numeric}"))
+        map.extract<String>("data/film/id") shouldBe "${prestige.id.literal}:${prestige.id.numeric}"
     }
 
     @Test
     fun `query with selection set on collection`() {
         val map = execute("{film{title, director{favActors{name}}}}")
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, String>>("data/film/director/favActors[0]"),
-            equalTo(mapOf("name" to prestige.director.favActors[0].name))
-        )
+        map.extract<Map<String, String>>("data/film/director/favActors[0]") shouldBe mapOf("name" to prestige.director.favActors[0].name)
     }
 
     @Test
     fun `query with selection set on collection 2`() {
         val map = execute("{film{title, director{favActors{age}}}}")
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Int>>("data/film/director/favActors[0]"),
-            equalTo(mapOf("age" to prestige.director.favActors[0].age))
-        )
+        map.extract<Map<String, Int>>("data/film/director/favActors[0]") shouldBe mapOf("age" to prestige.director.favActors[0].age)
     }
 
     @Test
     fun `query with invalid field name`() {
-        invoking {
+        val exception = shouldThrowExactly<ValidationException> {
             execute("{film{title, director{name, favDish}}}")
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Property favDish on Director does not exist"
-            extensions shouldBeEqualTo mapOf(
-                "type" to "GRAPHQL_VALIDATION_FAILED"
-            )
         }
+        exception shouldHaveMessage  "Property favDish on Director does not exist"
+        exception.extensions shouldBe mapOf(
+            "type" to "GRAPHQL_VALIDATION_FAILED"
+        )
     }
 
     @Test
     fun `query with argument`() {
         val map = execute("{filmByRank(rank: 1){title}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/filmByRank/title"), equalTo("Prestige"))
+        map.extract<String>("data/filmByRank/title") shouldBe "Prestige"
     }
 
     @Test
     fun `query with argument 2`() {
         val map = execute("{filmByRank(rank: 2){title}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/filmByRank/title"), equalTo("Se7en"))
+        map.extract<String>("data/filmByRank/title") shouldBe "Se7en"
     }
 
     @Test
     fun `query with alias`() {
         val map = execute("{bestFilm: filmByRank(rank: 1){title}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/bestFilm/title"), equalTo("Prestige"))
+        map.extract<String>("data/bestFilm/title") shouldBe "Prestige"
     }
 
     @Test
     fun `query with field alias`() {
         val map = execute("{filmByRank(rank: 2){fullTitle: title}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/filmByRank/fullTitle"), equalTo("Se7en"))
+        map.extract<String>("data/filmByRank/fullTitle") shouldBe "Se7en"
     }
 
     @Test
     fun `query with multiple aliases`() {
         val map = execute("{bestFilm: filmByRank(rank: 1){title}, secondBestFilm: filmByRank(rank: 2){title}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/bestFilm/title"), equalTo("Prestige"))
-        assertThat(map.extract<String>("data/secondBestFilm/title"), equalTo("Se7en"))
+        map.extract<String>("data/bestFilm/title") shouldBe "Prestige"
+        map.extract<String>("data/secondBestFilm/title") shouldBe "Se7en"
     }
 
     @Test
     fun `query with ignored property`() {
-        invoking {
+        val exception = shouldThrowExactly<ValidationException> {
             execute("{scenario{author, content}}")
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Property author on Scenario does not exist"
-            extensions shouldBeEqualTo mapOf(
-                "type" to "GRAPHQL_VALIDATION_FAILED"
-            )
         }
+        exception shouldHaveMessage  "Property author on Scenario does not exist"
+        exception.extensions shouldBe mapOf(
+            "type" to "GRAPHQL_VALIDATION_FAILED"
+        )
     }
 
     @Test
     fun `query with interface`() {
         val map = execute("{randomPerson{name \n age}}")
-        assertThat(
-            map.extract<Map<String, String>>("data/randomPerson"), equalTo(
-                mapOf(
-                    "name" to davidFincher.name,
-                    "age" to davidFincher.age
-                )
+        map.extract<Map<String, String>>("data/randomPerson") shouldBe
+            mapOf(
+                "name" to davidFincher.name,
+                "age" to davidFincher.age
             )
-        )
     }
 
     @Test
     fun `query with collection elements interface`() {
         val map = execute("{people{name, age}}")
-        assertThat(
-            map.extract<Map<String, String>>("data/people[0]"), equalTo(
-                mapOf(
-                    "name" to davidFincher.name,
-                    "age" to davidFincher.age
-                )
+        map.extract<Map<String, String>>("data/people[0]") shouldBe
+            mapOf(
+                "name" to davidFincher.name,
+                "age" to davidFincher.age
             )
-        )
     }
 
     @Test
@@ -158,7 +138,7 @@ class QueryTest : BaseSchemaTest() {
         for (i in 0..4) {
             val isOld = map.extract<Boolean>("data/actors[$i]/isOld")
             val age = map.extract<Int>("data/actors[$i]/age")
-            assertThat(isOld, equalTo(age > 500))
+            isOld shouldBe (age > 500)
         }
     }
 
@@ -167,10 +147,7 @@ class QueryTest : BaseSchemaTest() {
         val map = execute("{actors{name, picture(big: true)}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
-            assertThat(
-                map.extract<String>("data/actors[$i]/picture"),
-                equalTo("http://picture.server/pic/$name?big=true")
-            )
+            map.extract<String>("data/actors[$i]/picture") shouldBe "http://picture.server/pic/$name?big=true"
         }
     }
 
@@ -179,10 +156,7 @@ class QueryTest : BaseSchemaTest() {
         val map = execute("{actors{name, picture}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
-            assertThat(
-                map.extract<String>("data/actors[$i]/picture"),
-                equalTo("http://picture.server/pic/$name?big=false")
-            )
+            map.extract<String>("data/actors[$i]/picture") shouldBe "http://picture.server/pic/$name?big=false"
         }
     }
 
@@ -191,10 +165,7 @@ class QueryTest : BaseSchemaTest() {
         val map = execute("{actors{name, pictureWithArgs}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
-            assertThat(
-                map.extract<String>("data/actors[$i]/pictureWithArgs"),
-                equalTo("http://picture.server/pic/$name?big=false")
-            )
+            map.extract<String>("data/actors[$i]/pictureWithArgs") shouldBe "http://picture.server/pic/$name?big=false"
         }
     }
 
@@ -219,31 +190,30 @@ class QueryTest : BaseSchemaTest() {
     @Test
     fun `query with transformed property`() {
         val map = execute("{scenario{id, content(uppercase: false)}}")
-        assertThat(map.extract<String>("data/scenario/content"), equalTo("Very long scenario"))
+        map.extract<String>("data/scenario/content") shouldBe "Very long scenario"
 
         val map2 = execute("{scenario{id, content(uppercase: true)}}")
-        assertThat(map2.extract<String>("data/scenario/content"), equalTo("VERY LONG SCENARIO"))
+        map2.extract<String>("data/scenario/content") shouldBe "VERY LONG SCENARIO"
     }
 
     @Test
     fun `query with invalid field arguments`() {
-        invoking {
+        val exception = shouldThrowExactly<ValidationException> {
             execute("{scenario{id(uppercase: true), content}}")
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Property id on type Scenario has no arguments, found: [uppercase]"
-            extensions shouldBeEqualTo mapOf(
-                "type" to "GRAPHQL_VALIDATION_FAILED"
-            )
         }
+        exception shouldHaveMessage "Property id on type Scenario has no arguments, found: [uppercase]"
+        exception.extensions shouldBe mapOf(
+            "type" to "GRAPHQL_VALIDATION_FAILED"
+        )
     }
 
     @Test
     fun `query with external fragment`() {
         val map = execute("{film{title, ...dir }} fragment dir on Film {director{name, age}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
-        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
-        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+        map.extract<String>("data/film/title") shouldBe prestige.title
+        map.extract<String>("data/film/director/name") shouldBe prestige.director.name
+        map.extract<Int>("data/film/director/age") shouldBe prestige.director.age
     }
 
     @Test
@@ -276,9 +246,9 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent()
         )
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
-        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
-        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+        map.extract<String>("data/film/title") shouldBe prestige.title
+        map.extract<String>("data/film/director/name") shouldBe prestige.director.name
+        map.extract<Int>("data/film/director/age") shouldBe prestige.director.age
     }
 
     @Test
@@ -315,9 +285,9 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent()
         )
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
-        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
-        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+        map.extract<String>("data/film/title") shouldBe prestige.title
+        map.extract<String>("data/film/director/name") shouldBe prestige.director.name
+        map.extract<Int>("data/film/director/age") shouldBe prestige.director.age
     }
 
     @Test
@@ -344,9 +314,9 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent()
         )
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
-        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
-        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+        map.extract<String>("data/film/title") shouldBe prestige.title
+        map.extract<String>("data/film/director/name") shouldBe prestige.director.name
+        map.extract<Int>("data/film/director/age") shouldBe prestige.director.age
     }
 
     @Test
@@ -362,9 +332,9 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent()
         )
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
-        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
-        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
+        map.extract<String>("data/film/title") shouldBe prestige.title
+        map.extract<String>("data/film/director/name") shouldBe prestige.director.name
+        map.extract<Int>("data/film/director/age") shouldBe prestige.director.age
     }
 
     @Test
@@ -385,17 +355,18 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent()
         )
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/title"), equalTo(prestige.title))
-        assertThat(map.extract<String>("data/film/director/name"), equalTo(prestige.director.name))
-        assertThat(map.extract<Int>("data/film/director/age"), equalTo(prestige.director.age))
-        assertThat(map.extract<String>("data/film/__typename"), equalTo("Film"))
+        map.extract<String>("data/film/title") shouldBe prestige.title
+        map.extract<String>("data/film/director/name") shouldBe prestige.director.name
+        map.extract<Int>("data/film/director/age") shouldBe prestige.director.age
+        map.extract<String>("data/film/__typename") shouldBe "Film"
 
     }
 
     @Test
     fun `query with missing fragment type`() {
-        invoking {
-            execute("""
+        val exception = shouldThrowExactly<ValidationException> {
+            execute(
+                """
                 {
                     film {
                         ...on MissingType {
@@ -403,44 +374,44 @@ class QueryTest : BaseSchemaTest() {
                         }
                     }
                 }
-            """.trimIndent())
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Unknown type MissingType in type condition on fragment"
-            extensions shouldBeEqualTo mapOf(
-                "type" to "GRAPHQL_VALIDATION_FAILED"
+            """.trimIndent()
             )
         }
+        exception shouldHaveMessage  "Unknown type MissingType in type condition on fragment"
+        exception.extensions shouldBe mapOf(
+            "type" to "GRAPHQL_VALIDATION_FAILED"
+        )
     }
 
     @Test
     fun `query with missing named fragment type`() {
-        invoking {
-            execute("""
+        val exception = shouldThrowExactly<ValidationException> {
+            execute(
+                """
                 {
                     film {
                         ...film_title
                     }
                 }
                 
-            """.trimIndent())
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Fragment film_title not found"
-            extensions shouldBeEqualTo mapOf(
-                "type" to "GRAPHQL_VALIDATION_FAILED"
+            """.trimIndent()
             )
         }
+        exception shouldHaveMessage  "Fragment film_title not found"
+        exception.extensions shouldBe mapOf(
+            "type" to "GRAPHQL_VALIDATION_FAILED"
+        )
     }
 
     @Test
     fun `query with missing selection set`() {
-        invoking {
+        val exception = shouldThrowExactly<ValidationException> {
             execute("{film}")
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Missing selection set on property film of type Film"
-            extensions shouldBeEqualTo mapOf(
-                "type" to "GRAPHQL_VALIDATION_FAILED"
-            )
         }
+        exception shouldHaveMessage  "Missing selection set on property film of type Film"
+        exception.extensions shouldBe mapOf(
+            "type" to "GRAPHQL_VALIDATION_FAILED"
+        )
     }
 
     data class SampleNode(val id: Int, val name: String, val fields: List<String>? = null)
@@ -482,9 +453,9 @@ class QueryTest : BaseSchemaTest() {
         """.trimIndent()
         ).deserialize()
 
-        result.extract<List<String>>("data/root/fields") shouldBeEqualTo listOf("fields")
-        result.extract<Int>("data/root/kids[0]/id") shouldBeEqualTo 1
-        result.extract<String>("data/root/kids[0]/name") shouldBeEqualTo "kids-Testing"
-        result.extract<List<String>>("data/root/kids[0]/fields") shouldBeEqualTo listOf("id", "fields", "name")
+        result.extract<List<String>>("data/root/fields") shouldBe listOf("fields")
+        result.extract<Int>("data/root/kids[0]/id") shouldBe 1
+        result.extract<String>("data/root/kids[0]/name") shouldBe "kids-Testing"
+        result.extract<List<String>>("data/root/kids[0]/fields") shouldBe listOf("id", "fields", "name")
     }
 }

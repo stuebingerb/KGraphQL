@@ -4,11 +4,10 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.execution.Executor
+import io.kotest.matchers.collections.shouldHaveSize
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import nidomiro.kdataloader.ExecutionResult
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.hasSize
 import org.junit.jupiter.api.RepeatedTest
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -102,8 +101,8 @@ class DataLoaderExecutionTest {
             )
         )
 
-        assertThat(result.extract<List<*>>("data/data1"), hasSize(250))
-        assertThat(result.extract<List<*>>("data/data2"), hasSize(200))
-        assertThat(result.extract<List<*>>("data/data3"), hasSize(1000))
+        result.extract<List<*>>("data/data1") shouldHaveSize 250
+        result.extract<List<*>>("data/data2") shouldHaveSize 200
+        result.extract<List<*>>("data/data3") shouldHaveSize 1000
     }
 }

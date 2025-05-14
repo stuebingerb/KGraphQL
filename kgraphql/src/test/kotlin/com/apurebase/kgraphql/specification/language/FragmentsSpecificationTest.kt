@@ -1,25 +1,22 @@
 package com.apurebase.kgraphql.specification.language
 
 import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.executeEqualQueries
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.request.Introspection
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 @Specification("2.8 Fragments")
 class FragmentsSpecificationTest {
@@ -85,8 +82,8 @@ class FragmentsSpecificationTest {
             )
         )
         assertNoErrors(response)
-        assertThat(response.extract("data/actor/actualActor/name"), equalTo("Boguś Linda"))
-        assertThrows<IllegalArgumentException> { response.extract("data/actor/actualActor/age") }
+        response.extract<String>("data/actor/actualActor/name") shouldBe "Boguś Linda"
+        shouldThrowExactly<IllegalArgumentException> { response.extract("data/actor/actualActor/age") }
     }
 
     @Test
@@ -97,13 +94,13 @@ class FragmentsSpecificationTest {
             val name = map.extract<String>("data/people[$i]/name")
             when (name) {
                 "David Fincher" /* director */ -> {
-                    assertThat(map.extract<List<*>>("data/people[$i]/favActors"), notNullValue())
-                    assertThrows<IllegalArgumentException> { map.extract("data/people[$i]/isOld") }
+                    map.extract<List<*>>("data/people[$i]/favActors") shouldNotBe null
+                    shouldThrowExactly<IllegalArgumentException> { map.extract("data/people[$i]/isOld") }
                 }
 
                 "Brad Pitt" /* actor */ -> {
-                    assertThat(map.extract<Boolean>("data/people[$i]/isOld"), notNullValue())
-                    assertThrows<IllegalArgumentException> { map.extract("data/people[$i]/favActors") }
+                    map.extract<Boolean>("data/people[$i]/isOld") shouldNotBe null
+                    shouldThrowExactly<IllegalArgumentException> { map.extract("data/people[$i]/favActors") }
                 }
             }
         }
@@ -118,13 +115,13 @@ class FragmentsSpecificationTest {
             val name = map.extract<String>("data/people[$i]/name")
             when (name) {
                 "David Fincher" /* director */ -> {
-                    assertThat(map.extract<List<*>>("data/people[$i]/favActors"), notNullValue())
-                    assertThrows<IllegalArgumentException> { map.extract("data/people[$i]/isOld") }
+                    map.extract<List<*>>("data/people[$i]/favActors") shouldNotBe null
+                    shouldThrowExactly<IllegalArgumentException> { map.extract("data/people[$i]/isOld") }
                 }
 
                 "Brad Pitt" /* actor */ -> {
-                    assertThat(map.extract<Boolean>("data/people[$i]/isOld"), notNullValue())
-                    assertThrows<IllegalArgumentException> { map.extract("data/people[$i]/favActors") }
+                    map.extract<Boolean>("data/people[$i]/isOld") shouldNotBe null
+                    shouldThrowExactly<IllegalArgumentException> { map.extract("data/people[$i]/favActors") }
                 }
             }
         }
@@ -135,14 +132,14 @@ class FragmentsSpecificationTest {
         val map = baseTestSchema.execute(Introspection.query())
         val fields = map.extract<List<Map<String, *>>>("data/__schema/types[0]/fields")
 
-        fields.forEach { field ->
-            assertThat(field["name"], notNullValue())
+        fields.forAll { field ->
+            field["name"] shouldNotBe null
         }
     }
 
     @Test
     fun `queries with recursive fragments are denied`() {
-        invoking {
+        expect<ValidationException>("Fragment spread circular references are not allowed") {
             baseTestSchema.execute(
                 """
             query IntrospectionQuery {
@@ -163,12 +160,12 @@ class FragmentsSpecificationTest {
             }
         """
             )
-        } shouldThrow GraphQLError::class withMessage "Fragment spread circular references are not allowed"
+        }
     }
 
     @Test
     fun `queries with duplicated fragments are denied`() {
-        invoking {
+        expect<ValidationException>("There can be only one fragment named film_title.") {
             baseTestSchema.execute(
                 """
             {
@@ -189,7 +186,7 @@ class FragmentsSpecificationTest {
             }
         """
             )
-        } shouldThrow GraphQLError::class withMessage "There can be only one fragment named film_title."
+        }
     }
 
     sealed class TopUnion(val field: String) {
@@ -229,7 +226,7 @@ class FragmentsSpecificationTest {
             }
             """.trimIndent()
         ).deserialize()
-        nameResult.extract<List<String>>("data/unions/names") shouldBeEqualTo listOf("name1", "name2")
+        nameResult.extract<List<String>>("data/unions/names") shouldBe listOf("name1", "name2")
 
         val numberResult = schema.executeBlocking(
             """
@@ -245,8 +242,8 @@ class FragmentsSpecificationTest {
             }
             """.trimIndent()
         ).deserialize()
-        numberResult.extract<List<Int>>("data/unions/numbers") shouldBeEqualTo listOf(1, 2)
-        numberResult.extract<List<Boolean>>("data/unions/booleans") shouldBeEqualTo listOf(true, false)
+        numberResult.extract<List<Int>>("data/unions/numbers") shouldBe listOf(1, 2)
+        numberResult.extract<List<Boolean>>("data/unions/booleans") shouldBe listOf(true, false)
     }
 
     data class Outer(val inner1: Inner, val inner2: Inner)
@@ -288,26 +285,23 @@ class FragmentsSpecificationTest {
         )
 
         val deserialized = deserialize(response)
-        assertThat(
-            deserialized, equalTo(
-                mapOf(
-                    "data" to mapOf(
-                        "outer" to mapOf(
-                            "inner1" to mapOf(
-                                "name" to "test1",
-                                "testProperty2" to "test1.testProperty2",
-                                "testProperty1" to "test1.testProperty1",
-                            ),
-                            "inner2" to mapOf(
-                                "name" to "test2",
-                                "testProperty1" to "test2.testProperty1",
-                                "testProperty2" to "test2.testProperty2",
-                            ),
-                        )
+        deserialized shouldBe
+            mapOf(
+                "data" to mapOf(
+                    "outer" to mapOf(
+                        "inner1" to mapOf(
+                            "name" to "test1",
+                            "testProperty2" to "test1.testProperty2",
+                            "testProperty1" to "test1.testProperty1",
+                        ),
+                        "inner2" to mapOf(
+                            "name" to "test2",
+                            "testProperty1" to "test2.testProperty1",
+                            "testProperty2" to "test2.testProperty2",
+                        ),
                     )
                 )
             )
-        )
     }
 
     // https://github.com/aPureBase/KGraphQL/issues/197
@@ -334,24 +328,21 @@ class FragmentsSpecificationTest {
         )
 
         val deserialized = deserialize(response)
-        assertThat(
-            deserialized, equalTo(
-                mapOf(
-                    "data" to mapOf(
-                        "outer" to mapOf(
-                            "inner1" to mapOf(
-                                "name" to "test1",
-                                "testProperty2" to "test1.testProperty2",
-                            ),
-                            "inner2" to mapOf(
-                                "name" to "test2",
-                                "testProperty1" to "test2.testProperty1",
-                                "testProperty2" to "test2.testProperty2",
-                            ),
-                        )
+        deserialized shouldBe
+            mapOf(
+                "data" to mapOf(
+                    "outer" to mapOf(
+                        "inner1" to mapOf(
+                            "name" to "test1",
+                            "testProperty2" to "test1.testProperty2",
+                        ),
+                        "inner2" to mapOf(
+                            "name" to "test2",
+                            "testProperty1" to "test2.testProperty1",
+                            "testProperty2" to "test2.testProperty2",
+                        ),
                     )
                 )
             )
-        )
     }
 }

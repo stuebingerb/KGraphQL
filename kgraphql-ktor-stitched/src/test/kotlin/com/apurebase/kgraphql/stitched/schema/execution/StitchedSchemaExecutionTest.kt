@@ -11,6 +11,7 @@ import com.apurebase.kgraphql.stitched.getRemoteSchema
 import com.apurebase.kgraphql.stitched.schema.structure.StitchedSchemaTest.Face
 import com.apurebase.kgraphql.stitched.schema.structure.StitchedSchemaTest.Inter
 import com.apurebase.kgraphql.stitched.schema.structure.StitchedSchemaTest.InterInter
+import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -22,7 +23,6 @@ import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json.Default.decodeFromString
 import kotlinx.serialization.json.Json.Default.encodeToString
 import kotlinx.serialization.json.JsonObject
-import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalAPI::class)
@@ -174,7 +174,7 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ remote1 }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":"remote1"}}
         """.trimIndent()
 
@@ -182,7 +182,7 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ remote2 }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote2":"remote2"}}
         """.trimIndent()
     }
@@ -229,7 +229,7 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ local remote1 remote2 }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"local":"local","remote1":"remote1","remote2":"remote2"}}
         """.trimIndent()
     }
@@ -262,7 +262,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               local: String!
               remote1: Remote1!
@@ -278,7 +278,7 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ remote1 { __typename foo1 } }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"__typename":"Remote1","foo1":"remote1.foo1"}}}
         """.trimIndent()
     }
@@ -317,7 +317,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               local: String!
               remote: RemoteParent!
@@ -338,7 +338,7 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ remote { __typename foo child { __typename childFoo childChild { __typename childFoo childChild { __typename } } } } }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote":{"__typename":"RemoteParent","foo":"parent","child":{"__typename":"RemoteChild","childFoo":"child","childChild":{"__typename":"RemoteChild","childFoo":"childChild","childChild":null}}}}}
         """.trimIndent()
     }
@@ -399,7 +399,7 @@ class StitchedSchemaExecutionTest {
             }
 
             val sdl = client.get("local?schema").bodyAsText()
-            sdl shouldBeEqualTo """
+            sdl shouldBe """
                 type Query {
                   local: String!
                   remote1: RemoteParent!
@@ -426,7 +426,7 @@ class StitchedSchemaExecutionTest {
             client.post("local") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(graphqlRequest("{ remote1 { __typename foo child { __typename childFoo childChild { __typename childChildFoo stitchedField } } } }"))
-            }.bodyAsText() shouldBeEqualTo """
+            }.bodyAsText() shouldBe """
             {"data":{"remote1":{"__typename":"RemoteParent","foo":"parent","child":{"__typename":"RemoteChild","childFoo":"child","childChild":{"__typename":"RemoteChildChild","childChildFoo":"childChild","stitchedField":"fromRemote2"}}}}}
         """.trimIndent()
         }
@@ -471,7 +471,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               local: String!
               remote(type: String!): RemoteUnion
@@ -505,7 +505,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote":{"__typename":"RemoteB","foo2":"remote.union.B","bar2":42}}}
         """.trimIndent()
 
@@ -524,7 +524,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote":{"__typename":"RemoteA","foo1":"remote.union.A"}}}
         """.trimIndent()
 
@@ -543,7 +543,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote":null}}
         """.trimIndent()
     }
@@ -605,7 +605,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Local {
               localFoo: String!
             }
@@ -676,7 +676,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"local":{"localFoo":"local"},"remote1":{"__typename":"Remote1","foo1":"remote1.foo1"},"remote2":{"__typename":"RemoteB","foo2":"remote.union","bar2":42}}}
         """.trimIndent()
 
@@ -715,7 +715,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote2WithChild":{"__typename":"RemoteWithUnionChild","foo":"foo","child":{"__typename":"RemoteB","foo2":"foo2","bar2":1337},"localChild":{"__typename":"Local","localFoo":"fromRemote2WithChild"}}}}
         """.trimIndent()
 
@@ -742,7 +742,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote2WithChild":{"__typename":"RemoteWithUnionChild","foo":"foo","child":{"__typename":"RemoteB","foo2":"foo2","bar2":1337}}}}
         """.trimIndent()
     }
@@ -802,7 +802,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Local {
               localFoo: String!
             }
@@ -857,7 +857,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"__typename":"Remote1","foo1":"remote1.foo1","stitchedRemote":{"__typename":"Remote2","foo2":"remote2Foo","bar2":42},"stitchedLocal":{"__typename":"Local","localFoo":"local"}}}}
         """.trimIndent()
     }
@@ -890,7 +890,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               local: String!
               remote1: RemoteEnum!
@@ -914,7 +914,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":"REMOTE1"}}
         """.trimIndent()
     }
@@ -958,7 +958,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Mutation {
               remote1Mutation: Remote1!
             }
@@ -979,7 +979,7 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("mutation { remote1Mutation { foo1 } }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1Mutation":{"foo1":"remote1.mutationFoo1"}}}
         """.trimIndent()
 
@@ -987,7 +987,7 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ remote2 }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote2":"remote2"}}
         """.trimIndent()
     }
@@ -1059,7 +1059,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Local {
               foo1: String!
             }
@@ -1108,7 +1108,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"localMutation":null}}
         """.trimIndent()
 
@@ -1123,7 +1123,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"optionalIntMutation":null}}
         """.trimIndent()
 
@@ -1141,7 +1141,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"booleanMutation":{"foo1":"true"},"enumMutation":{"foo1":"REMOTE1"},"enumListMutation":[{"foo1":"REMOTE2"},{"foo1":"REMOTE1"}],"stringMutation":{"foo1":"bar1"}}}
         """.trimIndent()
 
@@ -1158,7 +1158,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"defaultIntMutation":{"foo1":"42"},"intMutation":{"foo1":"1337"},"optionalIntMutation":null}}
         """.trimIndent()
 
@@ -1173,7 +1173,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"objectMutation":{"foo1":"complexMutationFoo-processed"}}}
         """.trimIndent()
     }
@@ -1227,7 +1227,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Mutation {
               invertBoolean(toInvert: Boolean!): Boolean!
             }
@@ -1275,7 +1275,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"getBoolean":true,"getInt":7}}
         """.trimIndent()
 
@@ -1304,7 +1304,7 @@ class StitchedSchemaExecutionTest {
                     variables
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"getBoolean":true,"getInt":7,"getFloat":13.37,"getObject":{"foo":"foo\nbar","bar":8,"foobar":3.51,"enum":"REMOTE1","list":[true,false,true]}}}
         """.trimIndent()
 
@@ -1320,7 +1320,7 @@ class StitchedSchemaExecutionTest {
                     variables
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"invertBoolean":false}}
         """.trimIndent()
     }
@@ -1369,7 +1369,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               getRemoteChild(bar: String!): RemoteChild!
               getRemoteObject(foo: String!): RemoteObject!
@@ -1403,7 +1403,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"getRemoteObject":{"foo":"foo1","stitchedChild":{"bar":"bar1"}}}}
         """.trimIndent()
 
@@ -1432,7 +1432,7 @@ class StitchedSchemaExecutionTest {
                     variables
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"getRemoteObject":{"foo":"fooVar","stitchedChild":{"bar":"barVar"}}}}
         """.trimIndent()
 
@@ -1458,7 +1458,7 @@ class StitchedSchemaExecutionTest {
                     variables
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"getRemoteObject":{"foo":"fooVar","__typename":"RemoteObject","stitchedChild":{"bar":"barVar"}}}}
         """.trimIndent()
     }
@@ -1512,7 +1512,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               getRemoteChild(bar: String!): RemoteChild!
               getRemoteObject(foo: String!): RemoteObject!
@@ -1546,7 +1546,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"getRemoteObject":{"notFoo":"foo1","stitchedChild":{"bar":"bar1"}}}}
         """.trimIndent()
 
@@ -1575,7 +1575,7 @@ class StitchedSchemaExecutionTest {
                     variables
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"getRemoteObject":{"notFoo":"fooVar","stitchedChild":{"bar":"barVar"}}}}
         """.trimIndent()
 
@@ -1601,7 +1601,7 @@ class StitchedSchemaExecutionTest {
                     variables
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"getRemoteObject":{"notFoo":"fooVar","__typename":"RemoteObject","stitchedChild":{"bar":"barVar"}}}}
         """.trimIndent()
     }
@@ -1629,7 +1629,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Mutation {
               createRemote1(foo1: String!): Remote1!
             }
@@ -1660,7 +1660,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"createRemote1":{"foo1":"a very very long foo","truncatedFoo1":"a very ver...","veryTruncatedFoo1":"a ..."}}}
         """.trimIndent()
     }
@@ -1708,7 +1708,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               remote1: Remote1!
               remote2: String!
@@ -1733,7 +1733,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"foo1":"remote1.foo1"}}}
         """.trimIndent()
 
@@ -1748,7 +1748,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"foo1":"remote1.foo1","stitchedRemote2":"remote2"}}}
         """.trimIndent()
     }
@@ -1792,7 +1792,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               remote1: RemoteEnum!
               remote2: Remote2!
@@ -1823,7 +1823,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote2":{"bar2":42,"stitchedEnum":"REMOTE1"}}}
         """.trimIndent()
 
@@ -1839,7 +1839,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote2":{"s1":"REMOTE1","s2":"REMOTE1"}}}
         """.trimIndent()
 
@@ -1855,7 +1855,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"errors":[{"message":"Property nonexisting on Remote2 does not exist","locations":[{"line":2,"column":13}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
     }
@@ -1893,7 +1893,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Local {
               isLocal: Boolean!
               remoteFoo: String!
@@ -1919,7 +1919,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"local":{"remoteFoo":"local","stitched":"remote1"}}}
         """.trimIndent()
     }
@@ -1980,7 +1980,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               remote1(enum: RemoteEnum!): RemoteEnum!
               remote2(enum: RemoteEnum!): Remote2TypeWithEnum!
@@ -2010,7 +2010,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"one":{"localEnum":"REMOTE1","stitchedEnum":"REMOTE1"},"two":{"localEnum":"REMOTE2","stitchedEnum":"REMOTE2"}}}
         """.trimIndent()
     }
@@ -2067,7 +2067,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Local {
               isLocal: Boolean!
               remoteFoo: String!
@@ -2103,7 +2103,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"foo1":"remote1.foo1","stitchedRemote2":{"foo2":"remote2Foo","bar2":42}}}}
         """.trimIndent()
 
@@ -2118,7 +2118,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"foo1":"remote1.foo1","stitchedRemote2":{"foo2":"remote2Foo"},"stitchedLocal":{"remoteFoo":"remote1.foo1","isLocal":true}}}}
         """.trimIndent()
     }
@@ -2170,7 +2170,7 @@ class StitchedSchemaExecutionTest {
             }
 
             val sdl = client.get("local?schema").bodyAsText()
-            sdl shouldBeEqualTo """
+            sdl shouldBe """
                 type Query {
                   local(fooInput: String!): String!
                   remoteFoo: Remote!
@@ -2195,7 +2195,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                     )
                 )
-            }.bodyAsText() shouldBeEqualTo """
+            }.bodyAsText() shouldBe """
                 {"data":{"remoteFoo":{"foo":"foo","stitchedLocal":"foo"}}}
             """.trimIndent()
 
@@ -2210,7 +2210,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                     )
                 )
-            }.bodyAsText() shouldBeEqualTo """
+            }.bodyAsText() shouldBe """
                 {"data":{"remoteNull":{"foo":null,"stitchedLocal":null}}}
             """.trimIndent()
         }
@@ -2262,7 +2262,7 @@ class StitchedSchemaExecutionTest {
             }
 
             val sdl = client.get("local?schema").bodyAsText()
-            sdl shouldBeEqualTo """
+            sdl shouldBe """
                 type Query {
                   local(optionalFooInput: String): String!
                   remoteFoo: Remote!
@@ -2287,7 +2287,7 @@ class StitchedSchemaExecutionTest {
                         """.trimIndent()
                     )
                 )
-            }.bodyAsText() shouldBeEqualTo """
+            }.bodyAsText() shouldBe """
                 {"data":{"remoteFoo":{"foo":"foo","stitchedLocal":"foo"}}}
             """.trimIndent()
 
@@ -2302,7 +2302,7 @@ class StitchedSchemaExecutionTest {
                         """.trimIndent()
                     )
                 )
-            }.bodyAsText() shouldBeEqualTo """
+            }.bodyAsText() shouldBe """
                 {"data":{"remoteNull":{"foo":null,"stitchedLocal":"called with null"}}}
             """.trimIndent()
         }
@@ -2350,7 +2350,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               local(fooInput: String!): String!
               remoteFoo(input: String!): Remote!
@@ -2374,7 +2374,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remoteFoo":{"foo":"foo","stitchedLocal":"foo"}}}
         """.trimIndent()
 
@@ -2389,7 +2389,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"local":"a very \"special\" kind\t\r\bf\n\n of \\t foo"}}
         """.trimIndent()
 
@@ -2404,7 +2404,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remoteFoo":{"foo":"a very \"special\" kind\t\r\bf\n\n of \\t foo","stitchedLocal":"a very \"special\" kind\t\r\bf\n\n of \\t foo"}}}
         """.trimIndent()
     }
@@ -2459,7 +2459,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               remote1: Remote1!
               remote2(barValue: Int, fooValue: String!): Remote2!
@@ -2490,7 +2490,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"foo1":"remote1.foo1","stitchedRemote2":{"foo2":"remote1.foo1","bar2":42}}}}
         """.trimIndent()
 
@@ -2505,7 +2505,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"foo1":"remote1.foo1","stitchedRequiredRemote2":{"foo2":"foo","bar2":13}}}}
         """.trimIndent()
 
@@ -2520,7 +2520,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"foo1":"remote1.foo1","stitchedRemote2":{"foo2":"remote1.foo1","bar2":43}}}}
         """.trimIndent()
     }
@@ -2567,7 +2567,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Child {
               childFoo: String!
             }
@@ -2605,7 +2605,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"__typename":"Remote1WithChild","foo1":"remote1","stitchedRemote2":{"__typename":"Remote2","foo2":"childFoo","bar2":13},"child":{"__typename":"Child","childFoo":"childFoo"}}}}
         """.trimIndent()
     }
@@ -2660,7 +2660,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Query {
               remote1(foos: [String!]!): [Remote1!]!
               remote2WithList: RemoteWithList!
@@ -2689,7 +2689,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote2WithList":{"foo":"remoteWithList","bars":["bar1","bar3","bar2"],"barObjects":[{"foo1":"bar1"},{"foo1":"bar3"},{"foo1":"bar2"}]}}}
         """.trimIndent()
     }
@@ -2717,7 +2717,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Face implements Inter & InterInter {
               value: String!
               value2: Boolean!
@@ -2743,7 +2743,7 @@ class StitchedSchemaExecutionTest {
             setBody(
                 graphqlRequest("{interface{value, __typename ... on Face{value2}}}")
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"interface":{"value":"~~MOCK~~","__typename":"Face","value2":false}}}
         """.trimIndent()
     }
@@ -2798,7 +2798,7 @@ class StitchedSchemaExecutionTest {
         }
 
         val sdl = client.get("local?schema").bodyAsText()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type CommonType {
               fromSchema: String!
             }
@@ -2850,7 +2850,7 @@ class StitchedSchemaExecutionTest {
                     """.trimIndent()
                 )
             )
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"data":{"remote1":{"__typename":"Remote1Type","foo":"remote1Foo","common":{"__typename":"CommonType","fromSchema":"remote1"}},"remote2":{"__typename":"Remote2Type","foo":"remote2Foo","common":{"__typename":"CommonType","fromSchema":"remote2"}}}}
         """.trimIndent()
     }
@@ -2913,7 +2913,7 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failSyntax }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"errors":[{"message":"Property failSyntax on Query does not exist","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
@@ -2922,21 +2922,21 @@ class StitchedSchemaExecutionTest {
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failLocal }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"errors":[{"message":"don't call me local!","locations":[],"path":[],"extensions":{"type":"INTERNAL_SERVER_ERROR","detail":{"localErrorKey":"localErrorValue"}}}]}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failRemote }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"errors":[{"message":"don't call me remote!","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"BAD_USER_INPUT","remoteUrl":"remote","remoteOperation":"failRemote","remoteErrorKey":["remoteErrorValue1","remoteErrorValue2"]}}]}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failRemote2 }"))
-        }.bodyAsText() shouldBeEqualTo """
+        }.bodyAsText() shouldBe """
             {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"INTERNAL_SERVER_ERROR","remoteUrl":"remote","remoteOperation":"failRemote2"}}]}
         """.trimIndent()
     }

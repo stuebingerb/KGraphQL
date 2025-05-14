@@ -5,8 +5,7 @@ import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class EnumTest : BaseSchemaTest() {
@@ -15,15 +14,15 @@ class EnumTest : BaseSchemaTest() {
     fun `query with enum field`() {
         val map = execute("{film{type}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/film/type"), equalTo("FULL_LENGTH"))
+        map.extract<String>("data/film/type") shouldBe "FULL_LENGTH"
     }
 
     @Test
     fun `query with enum argument`() {
         val map = execute("{ films: filmsByType(type: FULL_LENGTH){title, type}}")
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/films[0]/type"), equalTo("FULL_LENGTH"))
-        assertThat(map.extract<String>("data/films[1]/type"), equalTo("FULL_LENGTH"))
+        map.extract<String>("data/films[0]/type") shouldBe "FULL_LENGTH"
+        map.extract<String>("data/films[1]/type") shouldBe "FULL_LENGTH"
     }
 
     @Test
@@ -47,6 +46,6 @@ class EnumTest : BaseSchemaTest() {
         ).deserialize()
 
         assertNoErrors(map)
-        assertThat(map.extract<String>("data/search"), equalTo("You searched for: FULL_LENGTH"))
+        map.extract<String>("data/search") shouldBe "You searched for: FULL_LENGTH"
     }
 }

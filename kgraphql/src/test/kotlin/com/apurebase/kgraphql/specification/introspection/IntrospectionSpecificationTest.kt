@@ -1,24 +1,21 @@
 package com.apurebase.kgraphql.specification.introspection
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldNotBeEqualTo
-import org.amshove.kluent.shouldNotContain
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.not
-import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.CoreMatchers.startsWith
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.hasSize
-import org.hamcrest.collection.IsEmptyCollection.empty
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldBeUnique
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldNotStartWith
 import org.junit.jupiter.api.Test
 
 class IntrospectionSpecificationTest {
@@ -31,7 +28,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        assertThat(schema.findTypeByName("String"), notNullValue())
+        schema.findTypeByName("String") shouldNotBe null
     }
 
     data class Data(val string: String)
@@ -45,7 +42,7 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{sample{string, __typename}}"))
-        assertThat(response.extract("data/sample/__typename"), equalTo("Data"))
+        response.extract<String>("data/sample/__typename") shouldBe "Data"
     }
 
     @Test
@@ -57,7 +54,7 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__typename}"))
-        assertThat(response.extract("data/__typename"), equalTo("Query"))
+        response.extract<String>("data/__typename") shouldBe "Query"
     }
 
     @Test
@@ -72,7 +69,7 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("mutation {__typename}"))
-        assertThat(response.extract("data/__typename"), equalTo("Mutation"))
+        response.extract<String>("data/__typename") shouldBe "Mutation"
     }
 
     @Test
@@ -83,14 +80,15 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        invoking {
+        expect<ValidationException>("Property __typename on String does not exist") {
             schema.executeBlocking("{sample{string{__typename}}}")
-        } shouldThrow GraphQLError::class withMessage "Property __typename on String does not exist"
+        }
     }
 
     enum class SampleEnum {
         VALUE
     }
+
     data class EnumData(val enum: SampleEnum)
 
     @Test
@@ -103,9 +101,9 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        invoking {
+        expect<ValidationException>("Property __typename on SampleEnum does not exist") {
             schema.executeBlocking("{sample{enum{__typename}}}")
-        } shouldThrow GraphQLError::class withMessage "Property __typename on SampleEnum does not exist"
+        }
     }
 
     data class Union1(val one: String)
@@ -153,7 +151,7 @@ class IntrospectionSpecificationTest {
             )
         )
 
-        assertThat(response.extract("data/data/union/__typename"), equalTo("Union1"))
+        response.extract<String>("data/data/union/__typename") shouldBe "Union1"
     }
 
     @Test
@@ -165,9 +163,9 @@ class IntrospectionSpecificationTest {
         }
 
         val dataReturnType = schema.queryType.fields?.find { it.name == "data" }?.type!!
-        assertThat(dataReturnType.kind, equalTo(TypeKind.NON_NULL))
-        assertThat(dataReturnType.ofType?.kind, equalTo(TypeKind.LIST))
-        assertThat(dataReturnType.ofType?.ofType?.kind, equalTo(TypeKind.NON_NULL))
+        dataReturnType.kind shouldBe TypeKind.NON_NULL
+        dataReturnType.ofType?.kind shouldBe TypeKind.LIST
+        dataReturnType.ofType?.ofType?.kind shouldBe TypeKind.NON_NULL
     }
 
     @Test
@@ -179,7 +177,7 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__schema{queryType{fields{name}}}}"))
-        assertThat(response.extract("data/__schema/queryType/fields[0]/name"), equalTo("data"))
+        response.extract<String>("data/__schema/queryType/fields[0]/name") shouldBe "data"
     }
 
     @Test
@@ -191,8 +189,8 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__type(name: \"String\"){kind, name, description}}"))
-        assertThat(response.extract("data/__type/name"), equalTo("String"))
-        assertThat(response.extract("data/__type/kind"), equalTo("SCALAR"))
+        response.extract<String>("data/__type/name") shouldBe "String"
+        response.extract<String>("data/__type/kind") shouldBe "SCALAR"
     }
 
     data class IntString(val int: Int, val string: String)
@@ -208,10 +206,10 @@ class IntrospectionSpecificationTest {
         val inputValues = schema.queryType.fields?.first()?.args
             ?: throw AssertionError("Expected non null field")
 
-        assertThat(inputValues[0].name, equalTo("int"))
-        assertThat(inputValues[0].type.ofType?.name, equalTo("Int"))
-        assertThat(inputValues[1].name, equalTo("string"))
-        assertThat(inputValues[1].type.ofType?.name, equalTo("String"))
+        inputValues[0].name shouldBe "int"
+        inputValues[0].type.ofType?.name shouldBe "Int"
+        inputValues[1].name shouldBe "string"
+        inputValues[1].type.ofType?.name shouldBe "String"
     }
 
     @Test
@@ -231,8 +229,8 @@ class IntrospectionSpecificationTest {
         val inputValues = schema.findTypeByName("IntString")?.fields?.find { it.name == "float" }?.args
             ?: throw AssertionError("Expected non null field")
 
-        assertThat(inputValues[0].name, equalTo("doubleIt"))
-        assertThat(inputValues[0].type.ofType?.name, equalTo("Boolean"))
+        inputValues[0].name shouldBe "doubleIt"
+        inputValues[0].type.ofType?.name shouldBe "Boolean"
     }
 
     interface Inter {
@@ -256,8 +254,8 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{interface{value, __typename ... on Face{value2}}}"))
-        assertThat(response.extract("data/interface/__typename"), equalTo("Face"))
-        assertThat(response.extract("data/interface/value2"), equalTo(false))
+        response.extract<String>("data/interface/__typename") shouldBe "Face"
+        response.extract<Boolean>("data/interface/value2") shouldBe false
     }
 
     interface InterInter : Inter {
@@ -277,19 +275,19 @@ class IntrospectionSpecificationTest {
         }
 
         val possibleTypesOfInter = schema.findTypeByName("Inter")?.possibleTypes?.map { it.name }
-        assertThat(possibleTypesOfInter, equalTo(listOf("Face")))
+        possibleTypesOfInter shouldBe listOf("Face")
 
         val possibleTypesOfInterInter = schema.findTypeByName("InterInter")?.possibleTypes?.map { it.name }
-        assertThat(possibleTypesOfInterInter, equalTo(listOf("Face")))
+        possibleTypesOfInterInter shouldBe listOf("Face")
 
         val interfacesOfFace = schema.findTypeByName("Face")?.interfaces?.map { it.name }
-        assertThat(interfacesOfFace, equalTo(listOf("Inter", "InterInter")))
+        interfacesOfFace shouldBe listOf("Inter", "InterInter")
 
         val interfacesOfInterInter = schema.findTypeByName("InterInter")?.interfaces?.map { it.name }
-        assertThat(interfacesOfInterInter, equalTo(listOf("Inter")))
+        interfacesOfInterInter shouldBe listOf("Inter")
 
         val interfacesOfInter = schema.findTypeByName("Inter")?.interfaces?.map { it.name }
-        assertThat(interfacesOfInter, equalTo(emptyList()))
+        interfacesOfInter.shouldBeEmpty()
     }
 
     data class Book(val id: String)
@@ -314,13 +312,13 @@ class IntrospectionSpecificationTest {
     @Test
     fun `union types possible types are supported`() {
         val possibleTypes = unionSchema.findTypeByName("FaceBook")?.possibleTypes?.map { it.name }
-        assertThat(possibleTypes, equalTo(listOf<String?>("Face", "Book")))
+        possibleTypes shouldBe listOf("Face", "Book")
     }
 
     @Test
     fun `union types should not be duplicated`() {
         val facebookCount = unionSchema.model.allTypes.map { it.name }.count { it == "FaceBook" }
-        assertThat(facebookCount, equalTo(1))
+        facebookCount shouldBe 1
     }
 
     @Test
@@ -334,8 +332,8 @@ class IntrospectionSpecificationTest {
         val map = deserialize(schema.executeBlocking(Introspection.query()))
         val fields = map.extract<List<Map<String, *>>>("data/__schema/types[0]/fields")
 
-        fields.forEach { field ->
-            assertThat(field["name"] as String, not(startsWith("__")))
+        fields.forAll { field ->
+            field["name"] as String shouldNotStartWith "__"
         }
     }
 
@@ -350,11 +348,8 @@ class IntrospectionSpecificationTest {
         val map = deserialize(schema.executeBlocking(Introspection.query()))
         val types = map.extract<List<Map<Any, *>>>("data/__schema/types")
 
-        val typenames = types.map { type -> type["name"] as String }.sorted()
-
-        for (i in typenames.indices) {
-            typenames[i] shouldNotBeEqualTo typenames.getOrNull(i + 1)
-        }
+        val typenames = types.map { type -> type["name"] as String }
+        typenames.shouldBeUnique()
     }
 
     @Test
@@ -379,30 +374,30 @@ class IntrospectionSpecificationTest {
             )
         )
 
-        assertThat(response.extract<List<*>>("data/__schema/directives"), hasSize(3))
+        response.extract<List<*>>("data/__schema/directives") shouldHaveSize 3
 
-        assertThat(response.extract("data/__schema/directives[0]/name"), equalTo("skip"))
-        assertThat(response.extract("data/__schema/directives[0]/isRepeatable"), equalTo(false))
-        assertThat(response.extract<List<*>>("data/__schema/directives[0]/args"), hasSize(1))
-        assertThat(response.extract("data/__schema/directives[0]/args[0]/name"), equalTo("if"))
-        assertThat(response.extract("data/__schema/directives[0]/args[0]/type/kind"), equalTo("NON_NULL"))
-        assertThat(response.extract("data/__schema/directives[0]/args[0]/type/ofType/name"), equalTo("Boolean"))
-        assertThat(response.extract("data/__schema/directives[0]/args[0]/type/ofType/kind"), equalTo("SCALAR"))
+        response.extract<String>("data/__schema/directives[0]/name") shouldBe "skip"
+        response.extract<Boolean>("data/__schema/directives[0]/isRepeatable") shouldBe false
+        response.extract<List<*>>("data/__schema/directives[0]/args") shouldHaveSize 1
+        response.extract<String>("data/__schema/directives[0]/args[0]/name") shouldBe "if"
+        response.extract<String>("data/__schema/directives[0]/args[0]/type/kind") shouldBe "NON_NULL"
+        response.extract<String>("data/__schema/directives[0]/args[0]/type/ofType/name") shouldBe "Boolean"
+        response.extract<String>("data/__schema/directives[0]/args[0]/type/ofType/kind") shouldBe "SCALAR"
 
-        assertThat(response.extract("data/__schema/directives[1]/name"), equalTo("include"))
-        assertThat(response.extract("data/__schema/directives[1]/isRepeatable"), equalTo(false))
-        assertThat(response.extract<List<*>>("data/__schema/directives[1]/args"), hasSize(1))
-        assertThat(response.extract("data/__schema/directives[1]/args[0]/name"), equalTo("if"))
-        assertThat(response.extract("data/__schema/directives[1]/args[0]/type/kind"), equalTo("NON_NULL"))
-        assertThat(response.extract("data/__schema/directives[1]/args[0]/type/ofType/name"), equalTo("Boolean"))
-        assertThat(response.extract("data/__schema/directives[1]/args[0]/type/ofType/kind"), equalTo("SCALAR"))
+        response.extract<String>("data/__schema/directives[1]/name") shouldBe "include"
+        response.extract<Boolean>("data/__schema/directives[1]/isRepeatable") shouldBe false
+        response.extract<List<*>>("data/__schema/directives[1]/args") shouldHaveSize 1
+        response.extract<String>("data/__schema/directives[1]/args[0]/name") shouldBe "if"
+        response.extract<String>("data/__schema/directives[1]/args[0]/type/kind") shouldBe "NON_NULL"
+        response.extract<String>("data/__schema/directives[1]/args[0]/type/ofType/name") shouldBe "Boolean"
+        response.extract<String>("data/__schema/directives[1]/args[0]/type/ofType/kind") shouldBe "SCALAR"
 
-        assertThat(response.extract("data/__schema/directives[2]/name"), equalTo("deprecated"))
-        assertThat(response.extract("data/__schema/directives[2]/isRepeatable"), equalTo(false))
-        assertThat(response.extract<List<*>>("data/__schema/directives[2]/args"), hasSize(1))
-        assertThat(response.extract("data/__schema/directives[2]/args[0]/name"), equalTo("reason"))
-        assertThat(response.extract("data/__schema/directives[2]/args[0]/type/kind"), equalTo("SCALAR"))
-        assertThat(response.extract("data/__schema/directives[2]/args[0]/type/name"), equalTo("String"))
+        response.extract<String>("data/__schema/directives[2]/name") shouldBe "deprecated"
+        response.extract<Boolean>("data/__schema/directives[2]/isRepeatable") shouldBe false
+        response.extract<List<*>>("data/__schema/directives[2]/args") shouldHaveSize 1
+        response.extract<String>("data/__schema/directives[2]/args[0]/name") shouldBe "reason"
+        response.extract<String>("data/__schema/directives[2]/args[0]/type/name") shouldBe "String"
+        response.extract<String>("data/__schema/directives[2]/args[0]/type/kind") shouldBe "SCALAR"
     }
 
     /**
@@ -417,7 +412,7 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__schema{queryType{interfaces{name}}}}"))
-        assertThat(response.extract<List<*>>("data/__schema/queryType/interfaces"), empty())
+        response.extract<List<*>>("data/__schema/queryType/interfaces").shouldBeEmpty()
     }
 
     /**
@@ -434,10 +429,10 @@ class IntrospectionSpecificationTest {
         val response =
             deserialize(schema.executeBlocking("{__schema{directives{name, onField, onFragment, onOperation}}}"))
         val directives = response.extract<List<Map<String, *>>>("data/__schema/directives")
-        directives.forEach { directive ->
-            assertThat(directive["onField"], notNullValue())
-            assertThat(directive["onFragment"], notNullValue())
-            assertThat(directive["onOperation"], notNullValue())
+        directives.forAll { directive ->
+            directive["onField"] shouldNotBe null
+            directive["onFragment"] shouldNotBe null
+            directive["onOperation"] shouldNotBe null
         }
     }
 
