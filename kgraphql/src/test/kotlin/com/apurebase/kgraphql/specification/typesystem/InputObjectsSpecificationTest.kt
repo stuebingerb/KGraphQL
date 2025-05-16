@@ -1,18 +1,13 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.nullValue
-import org.hamcrest.CoreMatchers.startsWith
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 
 class InputObjectsSpecificationTest {
@@ -40,7 +35,7 @@ class InputObjectsSpecificationTest {
         }
         val variables = objectMapper.writeValueAsString(two)
         val response = deserialize(schema.executeBlocking("query(\$two: InputTwo!){test(input: \$two)}", variables))
-        assertThat(response.extract<String>("data/test"), startsWith("success"))
+        response.extract<String>("data/test") shouldBe "success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])"
     }
 
     @Test
@@ -64,8 +59,8 @@ class InputObjectsSpecificationTest {
                 objectMapper.writeValueAsString(variables)
             )
         )
-        assertThat(response.extract("data/success"), equalTo("SUCCESS"))
-        assertThat(response.extract("data/null"), nullValue())
+        response.extract<String>("data/success") shouldBe "SUCCESS"
+        response.extract<Any?>("data/null") shouldBe null
     }
 
     // https://github.com/aPureBase/KGraphQL/issues/93
@@ -79,7 +74,7 @@ class InputObjectsSpecificationTest {
             }
         }
 
-        invoking {
+        val exception = shouldThrowExactly<InvalidInputValueException> {
             schema.executeBlocking(
                 """
                 {
@@ -87,12 +82,11 @@ class InputObjectsSpecificationTest {
                 }
                 """
             )
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Property 'valu1' on 'MyInput' does not exist"
-            extensions shouldBeEqualTo mapOf(
-                "type" to "BAD_USER_INPUT"
-            )
         }
+        exception shouldHaveMessage "Property 'valu1' on 'MyInput' does not exist"
+        exception.extensions shouldBe mapOf(
+            "type" to "BAD_USER_INPUT"
+        )
     }
 
     // Non-data class with a constructor parameter that is not a property
@@ -109,7 +103,7 @@ class InputObjectsSpecificationTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type NonDataClass {
               param2: Int!
               param3: Boolean
@@ -133,7 +127,7 @@ class InputObjectsSpecificationTest {
             }
             """.trimIndent()
         )
-        response1 shouldBeEqualTo """
+        response1 shouldBe """
             {"data":{"test":{"param2":8,"param3":null}}}
         """.trimIndent()
 
@@ -144,7 +138,7 @@ class InputObjectsSpecificationTest {
             }
             """.trimIndent()
         )
-        response2 shouldBeEqualTo """
+        response2 shouldBe """
             {"data":{"test":{"param2":5,"param3":true}}}
         """.trimIndent()
     }

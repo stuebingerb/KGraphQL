@@ -10,7 +10,7 @@ dependencies {
     implementation(libs.ktor.server.core)
 
     testImplementation(libs.junit.jupiter.api)
-    testImplementation(libs.kluent)
+    testImplementation(libs.kotest)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.server.auth)
 }

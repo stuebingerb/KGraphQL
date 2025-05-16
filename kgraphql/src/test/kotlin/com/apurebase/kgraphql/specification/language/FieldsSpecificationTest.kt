@@ -5,8 +5,7 @@ import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 @Specification("2.5 Fields")
@@ -26,7 +25,7 @@ class FieldsSpecificationTest {
     fun `field may itself contain a selection set`() {
         val response = deserialize(schema.executeBlocking("{actor{id, actualActor{name, age}}}"))
         val map = response.extract<Map<String, Any>>("data/actor/actualActor")
-        MatcherAssert.assertThat(map, CoreMatchers.equalTo(mapOf("name" to "Boguś Linda", "age" to age)))
+        map shouldBe mapOf("name" to "Boguś Linda", "age" to age)
     }
 }
 

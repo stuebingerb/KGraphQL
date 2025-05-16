@@ -1,20 +1,15 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
-import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -44,30 +39,30 @@ class ScalarsSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{ int float double string boolean }"))
-        assertThat(response.extract<Int>("data/int"), equalTo(1))
-        assertThat(response.extract<Float>("data/float"), equalTo(2.0))
-        assertThat(response.extract<Double>("data/double"), equalTo(3.0))
-        assertThat(response.extract<String>("data/string"), equalTo("foo"))
-        assertThat(response.extract<Boolean>("data/boolean"), equalTo(true))
+        response.extract<Int>("data/int") shouldBe 1
+        response.extract<Float>("data/float") shouldBe 2.0
+        response.extract<Double>("data/double") shouldBe 3.0
+        response.extract<String>("data/string") shouldBe "foo"
+        response.extract<Boolean>("data/boolean") shouldBe true
     }
 
     @Test
     fun `extended scalars should not be available by default`() {
-        invoking {
+        expect<SchemaException>("An Object type must define one or more fields. Found none on type Long") {
             KGraphQL.schema {
                 query("long") {
                     resolver<Long> { 1L }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "An Object type must define one or more fields. Found none on type Long"
+        }
 
-        invoking {
+        expect<SchemaException>("An Object type must define one or more fields. Found none on type Short") {
             KGraphQL.schema {
                 query("short") {
                     resolver<Short> { 2.toShort() }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "An Object type must define one or more fields. Found none on type Short"
+        }
     }
 
     @Test
@@ -83,8 +78,8 @@ class ScalarsSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{ long short }"))
-        assertThat(response.extract<Long>("data/long"), equalTo(9223372036854775807L))
-        assertThat(response.extract<Int>("data/short"), equalTo(2))
+        response.extract<Long>("data/long") shouldBe 9223372036854775807L
+        response.extract<Int>("data/short") shouldBe 2
     }
 
     data class Person(val uuid: UUID, val name: String)
@@ -111,15 +106,15 @@ class ScalarsSpecificationTest {
         }
 
         val queryResponse = deserialize(testedSchema.executeBlocking("{ person{ uuid } }"))
-        assertThat(queryResponse.extract<String>("data/person/uuid"), equalTo(uuid.toString()))
+        queryResponse.extract<String>("data/person/uuid") shouldBe uuid.toString()
 
         val mutationResponse = deserialize(
             testedSchema.executeBlocking(
                 "mutation { createPerson(uuid: \"$uuid\", name: \"John\"){ uuid name } }"
             )
         )
-        assertThat(mutationResponse.extract<String>("data/createPerson/uuid"), equalTo(uuid.toString()))
-        assertThat(mutationResponse.extract<String>("data/createPerson/name"), equalTo("John"))
+        mutationResponse.extract<String>("data/createPerson/uuid") shouldBe uuid.toString()
+        mutationResponse.extract<String>("data/createPerson/name") shouldBe "John"
     }
 
     @Test
@@ -133,10 +128,8 @@ class ScalarsSpecificationTest {
             }
         }
 
-        invoking {
+        expect<InvalidInputValueException>("Cannot coerce to type of Int as '${Integer.MAX_VALUE.toLong() + 2L}' is greater than (2^-31)-1") {
             schema.executeBlocking("mutation { Int(int: ${Integer.MAX_VALUE.toLong() + 2L}) }")
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Cannot coerce to type of Int as '${Integer.MAX_VALUE.toLong() + 2L}' is greater than (2^-31)-1"
         }
     }
 
@@ -151,7 +144,7 @@ class ScalarsSpecificationTest {
             }
         }
         val map = deserialize(schema.executeBlocking("mutation { float(float: 1) }"))
-        assertThat(map.extract<Double>("data/float"), equalTo(1.0))
+        map.extract<Double>("data/float") shouldBe 1.0
     }
 
     @Test
@@ -171,7 +164,7 @@ class ScalarsSpecificationTest {
         val randomUUID = UUID.randomUUID()
         val map =
             deserialize(testedSchema.executeBlocking("query(\$id: ID = \"$randomUUID\"){ personById(id: \$id) { uuid, name } }"))
-        assertThat(map.extract<String>("data/personById/uuid"), equalTo(randomUUID.toString()))
+        map.extract<String>("data/personById/uuid") shouldBe randomUUID.toString()
     }
 
 
@@ -186,9 +179,9 @@ class ScalarsSpecificationTest {
             }
         }
 
-        invoking {
+        expect<InvalidInputValueException>("Cannot coerce \"223\" to numeric constant") {
             schema.executeBlocking("mutation { Int(int: \"223\") }")
-        } shouldThrow GraphQLError::class withMessage "Cannot coerce \"223\" to numeric constant"
+        }
     }
 
     data class Number(val int: Int)
@@ -208,7 +201,7 @@ class ScalarsSpecificationTest {
 
         val value = 3434
         val response = deserialize(schema.executeBlocking("{ number(number: $value) }"))
-        assertThat(response.extract<Int>("data/number"), equalTo(value))
+        response.extract<Int>("data/number") shouldBe value
     }
 
     data class Bool(val boolean: Boolean)
@@ -228,7 +221,7 @@ class ScalarsSpecificationTest {
 
         val value = true
         val response = deserialize(schema.executeBlocking("{ boolean(boolean: $value) }"))
-        assertThat(response.extract<Boolean>("data/boolean"), equalTo(value))
+        response.extract<Boolean>("data/boolean") shouldBe value
     }
 
     data class Boo(val boolean: Boolean)
@@ -254,7 +247,7 @@ class ScalarsSpecificationTest {
 
         val value = 232.33
         val response = deserialize(schema.executeBlocking("{ double(double: $value) }"))
-        assertThat(response.extract<Double>("data/double"), equalTo(value))
+        response.extract<Double>("data/double") shouldBe value
     }
 
     @Test
@@ -325,22 +318,17 @@ class ScalarsSpecificationTest {
             }
         """.trimIndent()
 
-        try {
-            val response = deserialize(schema.executeBlocking(req, values))
-            assertThat(response.extract<Boolean>("data/boo"), equalTo(booValue))
-            assertThat(response.extract<Int>("data/sho"), equalTo(shoValue.toInt()))
-            assertThat(response.extract<Int>("data/lon"), equalTo(lonValue.toInt()))
-            assertThat(response.extract<Double>("data/dob"), equalTo(dobValue))
-            assertThat(response.extract<Int>("data/num"), equalTo(numValue))
-            assertThat(response.extract<String>("data/str"), equalTo(strValue))
+        val response = deserialize(schema.executeBlocking(req, values))
+        response.extract<Boolean>("data/boo") shouldBe booValue
+        response.extract<Int>("data/sho") shouldBe shoValue.toInt()
+        response.extract<Int>("data/lon") shouldBe lonValue.toInt()
+        response.extract<Double>("data/dob") shouldBe dobValue
+        response.extract<Int>("data/num") shouldBe numValue
+        response.extract<String>("data/str") shouldBe strValue
 
-            assertThat(response.extract<Boolean>("data/multi/boo"), equalTo(false))
-            assertThat(response.extract<String>("data/multi/str"), equalTo("String"))
-            assertThat(response.extract<Int>("data/multi/num"), equalTo(25))
-        } catch (e: GraphQLError) {
-            println(e.prettyPrint())
-            throw e
-        }
+        response.extract<Boolean>("data/multi/boo") shouldBe false
+        response.extract<String>("data/multi/str") shouldBe "String"
+        response.extract<Int>("data/multi/num") shouldBe 25
     }
 
     data class NewPart(val manufacturer: String, val name: String, val oem: Boolean, val addedDate: LocalDate)
@@ -384,7 +372,7 @@ class ScalarsSpecificationTest {
             )
         )
 
-        assertThat(response.extract<String>("data/addPart/manufacturer"), equalTo(manufacturer))
-        assertThat(response.extract<String>("data/addPart/addedDate"), equalTo(addedDate))
+        response.extract<String>("data/addPart/manufacturer") shouldBe manufacturer
+        response.extract<String>("data/addPart/addedDate") shouldBe addedDate
     }
 }

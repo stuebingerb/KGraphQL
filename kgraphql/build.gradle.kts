@@ -2,6 +2,7 @@ import kotlinx.benchmark.gradle.JvmBenchmarkTarget
 
 plugins {
     id("library-conventions")
+    id("java-test-fixtures")
     alias(libs.plugins.kotlinx.benchmark)
 }
 
@@ -37,11 +38,13 @@ dependencies {
     implementation(libs.caffeine)
     implementation(libs.deferredJsonBuilder)
 
-    testImplementation(libs.hamcrest)
-    testImplementation(libs.kluent)
+    testImplementation(libs.kotest)
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.params)
     testImplementation(libs.kotlinx.coroutines.debug)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    testFixturesImplementation(libs.kotest)
+
     benchmarkImplementation(libs.kotlinx.benchmark.runtime)
 }

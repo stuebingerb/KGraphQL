@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql
 
+import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -8,7 +9,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
-import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class KtorMultipleEndpoints : KtorTest() {
@@ -39,12 +39,12 @@ class KtorMultipleEndpoints : KtorTest() {
         client.post("/open") {
             header(HttpHeaders.ContentType, "application/json;charset=UTF-8")
             setBody(query)
-        }.bodyAsText() shouldBeEqualTo "{\"data\":{\"check\":\"Open\"}}"
+        }.bodyAsText() shouldBe "{\"data\":{\"check\":\"Open\"}}"
 
         client.post("/closed") {
             header(HttpHeaders.ContentType, "application/json;charset=UTF-8")
             setBody(query)
-        }.bodyAsText() shouldBeEqualTo "{\"data\":{\"check\":\"Closed\"}}"
+        }.bodyAsText() shouldBe "{\"data\":{\"check\":\"Closed\"}}"
     }
 
     @Test
@@ -57,7 +57,7 @@ class KtorMultipleEndpoints : KtorTest() {
             }
         }
 
-        client.get("/graphql").status shouldBeEqualTo HttpStatusCode.NotFound
+        client.get("/graphql").status shouldBe HttpStatusCode.NotFound
     }
 
     @Test
@@ -76,8 +76,8 @@ class KtorMultipleEndpoints : KtorTest() {
                 .readText()
 
         val response = client.get("/graphql")
-        response.status shouldBeEqualTo HttpStatusCode.OK
-        response.bodyAsText() shouldBeEqualTo playgroundHtml
+        response.status shouldBe HttpStatusCode.OK
+        response.bodyAsText() shouldBe playgroundHtml
     }
 
     @Test
@@ -91,8 +91,8 @@ class KtorMultipleEndpoints : KtorTest() {
         }
 
         val response = client.get("/graphql?schema")
-        response.status shouldBeEqualTo HttpStatusCode.OK
-        response.bodyAsText() shouldBeEqualTo """
+        response.status shouldBe HttpStatusCode.OK
+        response.bodyAsText() shouldBe """
             type Query {
               check: String!
             }
@@ -111,6 +111,6 @@ class KtorMultipleEndpoints : KtorTest() {
             }
         }
 
-        client.get("/graphql?schema").status shouldBeEqualTo HttpStatusCode.NotFound
+        client.get("/graphql?schema").status shouldBe HttpStatusCode.NotFound
     }
 }

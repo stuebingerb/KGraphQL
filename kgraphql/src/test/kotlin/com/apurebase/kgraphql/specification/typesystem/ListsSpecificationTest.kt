@@ -1,17 +1,13 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.CoreMatchers.nullValue
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.7 Lists")
@@ -32,9 +28,9 @@ class ListsSpecificationTest {
 
         val response =
             deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
-        assertThat(response.extract<String>("data/list[0]"), equalTo("GAGA"))
-        assertThat(response.extract<String>("data/list[1]"), equalTo("DADA"))
-        assertThat(response.extract<String>("data/list[2]"), equalTo("PADA"))
+        response.extract<String>("data/list[0]") shouldBe "GAGA"
+        response.extract<String>("data/list[1]") shouldBe "DADA"
+        response.extract<String>("data/list[2]") shouldBe "PADA"
     }
 
     @Test
@@ -51,7 +47,7 @@ class ListsSpecificationTest {
 
         val response =
             deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
-        assertThat(response.extract<String>("data/list[1]"), nullValue())
+        response.extract<String>("data/list[1]") shouldBe null
     }
 
     @Test
@@ -66,10 +62,9 @@ class ListsSpecificationTest {
             { "list": ["GAGA", null, "DADA", "PADA"] }
         """.trimIndent()
 
-        invoking {
+        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
             schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables)
-        } shouldThrow GraphQLError::class withMessage
-            "argument 'null' is not valid value of type String"
+        }
     }
 
     @Test
@@ -86,7 +81,7 @@ class ListsSpecificationTest {
 
         val response =
             deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
-        assertThat(response.extract<String>("data/list[0]"), equalTo("GAGA"))
+        response.extract<String>("data/list[0]") shouldBe "GAGA"
     }
 
     @Test
@@ -104,7 +99,7 @@ class ListsSpecificationTest {
 
         val response =
             deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
-        assertThat(response.extract<String>("data/list"), nullValue())
+        response.extract<String>("data/list") shouldBe null
     }
 
     @Test
@@ -121,7 +116,7 @@ class ListsSpecificationTest {
 
         val response =
             deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
-        assertThat(response.extract<Any>("data/list"), notNullValue())
+        response.extract<Any>("data/list") shouldNotBe null
     }
 
     @Test
@@ -136,7 +131,7 @@ class ListsSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{ list }"))
-        assertThat(response.extract<Iterable<String>>("data/list"), equalTo(getResult()))
+        response.extract<Iterable<String>>("data/list") shouldBe getResult()
     }
 
     @Test
@@ -152,7 +147,7 @@ class ListsSpecificationTest {
             }
         }
         val queryResponse = deserialize(schema.executeBlocking("{ getObject { list set } }"))
-        assertThat(queryResponse.toString(), equalTo("{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"))
+        queryResponse.toString() shouldBe "{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"
         val mutationResponse = deserialize(
             schema.executeBlocking(
                 """
@@ -164,10 +159,7 @@ class ListsSpecificationTest {
                 """.trimIndent()
             )
         )
-        assertThat(
-            mutationResponse.toString(),
-            equalTo("{data={addObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}")
-        )
+        mutationResponse.toString() shouldBe "{data={addObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"
     }
 
     @Test
@@ -186,7 +178,7 @@ class ListsSpecificationTest {
             { "inputData": { "list": ["foo", "bar", "foo", "bar"], "set": ["foo", "bar", "foo", "bar"] } }
         """.trimIndent()
         val queryResponse = deserialize(schema.executeBlocking("{ getObject { list set } }"))
-        assertThat(queryResponse.toString(), equalTo("{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"))
+        queryResponse.toString() shouldBe "{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"
         val mutationResponse = deserialize(
             schema.executeBlocking(
                 """
@@ -198,10 +190,7 @@ class ListsSpecificationTest {
                 """.trimIndent(), variables
             )
         )
-        assertThat(
-            mutationResponse.toString(),
-            equalTo("{data={addObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}")
-        )
+        mutationResponse.toString() shouldBe "{data={addObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"
     }
 
     // https://github.com/stuebingerb/KGraphQL/issues/110
@@ -214,9 +203,9 @@ class ListsSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{ getNestedList }"))
-        assertThat(
-            response.extract<List<List<String>>>("data/getNestedList"),
-            equalTo(listOf(listOf("foo", "bar"), listOf("foobar")))
+        response.extract<List<List<String>>>("data/getNestedList") shouldBe listOf(
+            listOf("foo", "bar"),
+            listOf("foobar")
         )
     }
 
@@ -256,17 +245,8 @@ class ListsSpecificationTest {
                 """.trimIndent()
             )
         )
-        assertThat(
-            response.extract<List<*>>("data/createNestedLists/nested1"),
-            equalTo(listOf(listOf("foo", "bar", null)))
-        )
-        assertThat(
-            response.extract<List<*>>("data/createNestedLists/nested2"),
-            equalTo(listOf(listOf(listOf(listOf(listOf("foobar"))))))
-        )
-        assertThat(
-            response.extract<List<*>>("data/createNestedLists/nested3"),
-            nullValue()
-        )
+        response.extract<List<*>>("data/createNestedLists/nested1") shouldBe listOf(listOf("foo", "bar", null))
+        response.extract<List<*>>("data/createNestedLists/nested2") shouldBe listOf(listOf(listOf(listOf(listOf("foobar")))))
+        response.extract<List<*>>("data/createNestedLists/nested3") shouldBe null
     }
 }

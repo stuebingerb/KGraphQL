@@ -3,8 +3,8 @@ package nidomiro.kdataloader.factories
 import nidomiro.kdataloader.BatchLoader
 import nidomiro.kdataloader.DataLoaderOptions
 import nidomiro.kdataloader.ExecutionResult
-import nidomiro.kdataloader.TimedAutoDispatcherImpl
 import nidomiro.kdataloader.TimedAutoDispatcherDataLoaderOptions
+import nidomiro.kdataloader.TimedAutoDispatcherImpl
 
 class TimedAutoDispatcherDataLoaderFactory<K, R>(
     optionsFactory: () -> TimedAutoDispatcherDataLoaderOptions<K, R>,

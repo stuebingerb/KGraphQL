@@ -103,7 +103,16 @@ abstract class BaseSchemaTest {
         }
         query("people") {
             description = "List of all people"
-            resolver { -> listOf(davidFincher, bradPitt, morganFreeman, christianBale, christopherNolan, martinScorsese) }
+            resolver { ->
+                listOf(
+                    davidFincher,
+                    bradPitt,
+                    morganFreeman,
+                    christianBale,
+                    christopherNolan,
+                    martinScorsese
+                )
+            }
         }
         query("randomPerson") {
             description = "not really random person"

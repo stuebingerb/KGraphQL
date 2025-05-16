@@ -4,20 +4,19 @@ import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.amshove.kluent.shouldBeEqualTo
-import org.hamcrest.FeatureMatcher
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
-import org.hamcrest.Matchers.instanceOf
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.shouldBe
 import java.io.File
+import java.io.FileNotFoundException
 
 val objectMapper = jacksonObjectMapper()
 
+@JvmName("deserializeString")
 fun deserialize(json: String): Map<*, *> {
     return objectMapper.readValue(json, HashMap::class.java)
 }
 
-fun String.deserialize(): java.util.HashMap<*, *> = objectMapper.readValue(this, HashMap::class.java)
+fun String.deserialize(): Map<*, *> = deserialize(this)
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Map<*, *>.extract(path: String): T {
@@ -52,34 +51,16 @@ fun assertNoErrors(map: Map<*, *>) {
     if (map["data"] == null) throw AssertionError("Data is null")
 }
 
-inline fun <reified T : Exception> expect(message: String? = null, block: () -> Unit) {
-    try {
-        block()
-        throw AssertionError("No exception caught")
-    } catch (e: Exception) {
-        assertThat(e, instanceOf(T::class.java))
-        if (message != null) {
-            assertThat(e, ExceptionMessageMatcher(message))
-        }
-    }
-}
-
 fun executeEqualQueries(schema: Schema, expected: Map<*, *>, vararg queries: String) {
     queries.map { request ->
         schema.executeBlocking(request).deserialize()
-    }.forEach { map ->
-        map shouldBeEqualTo expected
+    }.forAll { map ->
+        map shouldBe expected
     }
 }
 
-class ExceptionMessageMatcher(message: String?) :
-    FeatureMatcher<Exception, String>(Matchers.equalTo(message), "exception message is", "exception message") {
-
-    override fun featureValueOf(actual: Exception?): String? = actual?.message
-}
-
-@Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-fun Any.getResourceAsFile(name: String): File = this::class.java.classLoader.getResource(name).toURI().let(::File)
+fun Any.getResourceAsFile(name: String): File =
+    this::class.java.classLoader.getResource(name)?.toURI()?.let(::File) ?: throw FileNotFoundException()
 
 object ResourceFiles {
     val kitchenSinkQuery = getResourceAsFile("kitchen-sink.graphql").readText()

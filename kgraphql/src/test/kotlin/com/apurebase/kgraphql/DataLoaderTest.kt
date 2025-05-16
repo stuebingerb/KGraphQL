@@ -3,15 +3,13 @@ package com.apurebase.kgraphql
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.execution.Executor
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import nidomiro.kdataloader.ExecutionResult
-import org.amshove.kluent.shouldBeEqualTo
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.Assertions.assertTimeoutPreemptively
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.RepeatedTest
@@ -253,32 +251,32 @@ class DataLoaderTest {
                 DynamicTest.dynamicTest("test-$it") {
                     val result = schema.executeBlocking(query).also(::println).deserialize()
 
-                    result.extract<String>("data/abc[0]/value") shouldBeEqualTo "Testing 1"
-                    result.extract<String>("data/abc[0]/person/fullName") shouldBeEqualTo "Jógvan Olsen"
-                    result.extract<String>("data/abc[0]/simpleChild/value") shouldBeEqualTo "NewChild!"
-                    result.extract<String?>("data/abc[0]/simpleChild/person") shouldBeEqualTo null
-                    result.extract<String?>("data/abc[0]/simpleChild/simpleChild/value") shouldBeEqualTo "NewChild!"
+                    result.extract<String>("data/abc[0]/value") shouldBe "Testing 1"
+                    result.extract<String>("data/abc[0]/person/fullName") shouldBe "Jógvan Olsen"
+                    result.extract<String>("data/abc[0]/simpleChild/value") shouldBe "NewChild!"
+                    result.extract<String?>("data/abc[0]/simpleChild/person") shouldBe null
+                    result.extract<String?>("data/abc[0]/simpleChild/simpleChild/value") shouldBe "NewChild!"
 
-                    result.extract<String>("data/abc[1]/value") shouldBeEqualTo "Testing 2"
-                    result.extract<String?>("data/abc[1]/person") shouldBeEqualTo null
-                    result.extract<String>("data/abc[1]/simpleChild/value") shouldBeEqualTo "NewChild!"
-                    result.extract<String?>("data/abc[1]/simpleChild/person") shouldBeEqualTo null
-                    result.extract<String?>("data/abc[1]/simpleChild/simpleChild/value") shouldBeEqualTo "NewChild!"
+                    result.extract<String>("data/abc[1]/value") shouldBe "Testing 2"
+                    result.extract<String?>("data/abc[1]/person") shouldBe null
+                    result.extract<String>("data/abc[1]/simpleChild/value") shouldBe "NewChild!"
+                    result.extract<String?>("data/abc[1]/simpleChild/person") shouldBe null
+                    result.extract<String?>("data/abc[1]/simpleChild/simpleChild/value") shouldBe "NewChild!"
 
-                    result.extract<String>("data/abc[2]/value") shouldBeEqualTo "Testing 3"
-                    result.extract<String?>("data/abc[2]/person/fullName") shouldBeEqualTo "Høgni Juul"
-                    result.extract<String>("data/abc[2]/simpleChild/value") shouldBeEqualTo "NewChild!"
-                    result.extract<String?>("data/abc[2]/simpleChild/person") shouldBeEqualTo null
-                    result.extract<String?>("data/abc[2]/simpleChild/simpleChild/value") shouldBeEqualTo "NewChild!"
+                    result.extract<String>("data/abc[2]/value") shouldBe "Testing 3"
+                    result.extract<String?>("data/abc[2]/person/fullName") shouldBe "Høgni Juul"
+                    result.extract<String>("data/abc[2]/simpleChild/value") shouldBe "NewChild!"
+                    result.extract<String?>("data/abc[2]/simpleChild/person") shouldBe null
+                    result.extract<String?>("data/abc[2]/simpleChild/simpleChild/value") shouldBe "NewChild!"
 
                     if (withTypeName) {
-                        result.extract<String>("data/abc[0]/__typename") shouldBeEqualTo "ABC"
-                        result.extract<String>("data/abc[0]/person/__typename") shouldBeEqualTo "Person"
-                        result.extract<String>("data/abc[0]/simpleChild/__typename") shouldBeEqualTo "ABC"
-                        result.extract<String>("data/abc[1]/__typename") shouldBeEqualTo "ABC"
-                        result.extract<String>("data/abc[1]/simpleChild/__typename") shouldBeEqualTo "ABC"
-                        result.extract<String>("data/abc[2]/__typename") shouldBeEqualTo "ABC"
-                        result.extract<String>("data/abc[2]/simpleChild/__typename") shouldBeEqualTo "ABC"
+                        result.extract<String>("data/abc[0]/__typename") shouldBe "ABC"
+                        result.extract<String>("data/abc[0]/person/__typename") shouldBe "Person"
+                        result.extract<String>("data/abc[0]/simpleChild/__typename") shouldBe "ABC"
+                        result.extract<String>("data/abc[1]/__typename") shouldBe "ABC"
+                        result.extract<String>("data/abc[1]/simpleChild/__typename") shouldBe "ABC"
+                        result.extract<String>("data/abc[2]/__typename") shouldBe "ABC"
+                        result.extract<String>("data/abc[2]/simpleChild/__typename") shouldBe "ABC"
                     }
                 }
             }
@@ -336,11 +334,7 @@ class DataLoaderTest {
             """.trimIndent()
 
             val result = schema.executeBlocking(query).also(::println).deserialize()
-
-            MatcherAssert.assertThat(
-                result.extract<String>("data/abc[0]/simpleChild/value"),
-                CoreMatchers.equalTo("NewChild!")
-            )
+            result.extract<String>("data/abc[0]/simpleChild/value") shouldBe "NewChild!"
         }
     }
 
@@ -387,9 +381,9 @@ class DataLoaderTest {
             """.trimIndent()
             val result = schema.executeBlocking(query).also(::println).deserialize()
 
-            result.extract<String>("data/abc[0]/person/fullName") shouldBeEqualTo "${jogvan.firstName} ${jogvan.lastName}"
-            result.extract<String?>("data/abc[1]/person") shouldBeEqualTo null
-            result.extract<String>("data/abc[2]/person/fullName") shouldBeEqualTo "${juul.firstName} ${juul.lastName}"
+            result.extract<String>("data/abc[0]/person/fullName") shouldBe "${jogvan.firstName} ${jogvan.lastName}"
+            result.extract<String?>("data/abc[1]/person") shouldBe null
+            result.extract<String>("data/abc[2]/person/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
         }
     }
 
@@ -414,8 +408,8 @@ class DataLoaderTest {
             val result = schema.executeBlocking(query).also(::println).deserialize()
 
 
-            result.extract<String>("data/people[0]/respondsTo/fullName") shouldBeEqualTo "${juul.firstName} ${juul.lastName}"
-            result.extract<String>("data/people[1]/colleagues[0]/fullName") shouldBeEqualTo "${jogvan.firstName} ${jogvan.lastName}"
+            result.extract<String>("data/people[0]/respondsTo/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
+            result.extract<String>("data/people[1]/colleagues[0]/fullName") shouldBe "${jogvan.firstName} ${jogvan.lastName}"
         }
     }
 
@@ -437,13 +431,13 @@ class DataLoaderTest {
             """.trimIndent()
 
             val result = schema.executeBlocking(query).also(::println).deserialize()
-            counters.treeChild.prepare.get() shouldBeEqualTo 2
-            counters.treeChild.loader.get() shouldBeEqualTo 1
+            counters.treeChild.prepare.get() shouldBe 2
+            counters.treeChild.loader.get() shouldBe 1
 
 
-            result.extract<Int>("data/tree[1]/id") shouldBeEqualTo 2
-            result.extract<Int>("data/tree[0]/child/id") shouldBeEqualTo 14
-            result.extract<Int>("data/tree[1]/child/id") shouldBeEqualTo 15
+            result.extract<Int>("data/tree[1]/id") shouldBe 2
+            result.extract<Int>("data/tree[0]/child/id") shouldBe 14
+            result.extract<Int>("data/tree[1]/child/id") shouldBe 15
         }
     }
 
@@ -461,13 +455,13 @@ class DataLoaderTest {
 
             val result = schema.executeBlocking(query).also(::println).deserialize()
 
-            counters.treeChild.prepare.get() shouldBeEqualTo 4
-            counters.treeChild.loader.get() shouldBeEqualTo 1
+            counters.treeChild.prepare.get() shouldBe 4
+            counters.treeChild.loader.get() shouldBe 1
 
-            result.extract<Int>("data/first[1]/id") shouldBeEqualTo 2
-            result.extract<Int>("data/first[0]/child/id") shouldBeEqualTo 14
-            result.extract<Int>("data/first[1]/child/id") shouldBeEqualTo 15
-            result.extract<Int>("data/second[1]/child/id") shouldBeEqualTo 15
+            result.extract<Int>("data/first[1]/id") shouldBe 2
+            result.extract<Int>("data/first[0]/child/id") shouldBe 14
+            result.extract<Int>("data/first[1]/child/id") shouldBe 15
+            result.extract<Int>("data/second[1]/child/id") shouldBe 15
 
         }
     }

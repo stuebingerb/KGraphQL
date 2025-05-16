@@ -1,19 +1,17 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.ExecutionException
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.execution.Executor
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeInstanceOf
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
-import org.hamcrest.CoreMatchers.nullValue
-import org.hamcrest.MatcherAssert.assertThat
+import com.apurebase.kgraphql.shouldBeInstanceOf
+import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.8 Non-null")
@@ -26,11 +24,10 @@ class NonNullSpecificationTest {
                 resolver { string: String? -> string!! }
             }
         }
-        invoking {
+        val exception = shouldThrowExactly<ExecutionException> {
             schema.executeBlocking("{nonNull}")
-        } shouldThrow GraphQLError::class with {
-            originalError shouldBeInstanceOf java.lang.NullPointerException::class
         }
+        exception.originalError shouldBeInstanceOf java.lang.NullPointerException::class
     }
 
     @Test
@@ -42,10 +39,10 @@ class NonNullSpecificationTest {
         }
 
         val responseOmittedInput = deserialize(schema.executeBlocking("{nullable}"))
-        assertThat(responseOmittedInput.extract<Any?>("data/nullable"), nullValue())
+        responseOmittedInput.extract<Any?>("data/nullable") shouldBe null
 
         val responseNullInput = deserialize(schema.executeBlocking("{nullable(input: null)}"))
-        assertThat(responseNullInput.extract<Any?>("data/nullable"), nullValue())
+        responseNullInput.extract<Any?>("data/nullable") shouldBe null
     }
 
     @Test
@@ -55,10 +52,8 @@ class NonNullSpecificationTest {
                 resolver { input: String -> input }
             }
         }
-        invoking {
+        expect<ValidationException>("Missing value for non-nullable argument input on the field 'nonNull'") {
             schema.executeBlocking("{nonNull}")
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Missing value for non-nullable argument input on the field 'nonNull'"
         }
     }
 
@@ -70,7 +65,9 @@ class NonNullSpecificationTest {
             }
         }
 
-        schema.executeBlocking("query(\$arg: String!){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
+        expect<InvalidInputValueException>("Invalid variable ${'$'}arg argument type String, expected String!\n") {
+            schema.executeBlocking("query(\$arg: String){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
+        }
     }
 
     data class Type1(val value: String)
@@ -105,8 +102,8 @@ class NonNullSpecificationTest {
             }
             """.trimIndent()
         ).deserialize().run {
-            extract<String>("data/data/items[0]/value") shouldBeEqualTo "Stuff"
-            extract<String?>("data/data/items[1]").shouldBeNull()
+            extract<String>("data/data/items[0]/value") shouldBe "Stuff"
+            extract<String?>("data/data/items[1]") shouldBe null
         }
     }
 
@@ -127,7 +124,7 @@ class NonNullSpecificationTest {
             }
             """.trimIndent()
         ).deserialize().run {
-            extract<String>("data/main") shouldBeEqualTo "Hello - Nada - 42"
+            extract<String>("data/main") shouldBe "Hello - Nada - 42"
         }
     }
 
@@ -144,7 +141,7 @@ class NonNullSpecificationTest {
             }
         }
 
-        invoking {
+        expect<InvalidInputValueException>("Missing non-optional input fields: valueOne, value3") {
             schema.executeBlocking(
                 """
                 {
@@ -152,8 +149,6 @@ class NonNullSpecificationTest {
                 }
                 """.trimIndent()
             )
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Missing non-optional input fields: valueOne, value3"
         }
     }
 
@@ -174,7 +169,7 @@ class NonNullSpecificationTest {
             }
             """.trimIndent()
         ).deserialize().run {
-            extract<String>("data/main") shouldBeEqualTo "Hello - World"
+            extract<String>("data/main") shouldBe "Hello - World"
         }
     }
 
@@ -195,7 +190,7 @@ class NonNullSpecificationTest {
             }
             """.trimIndent()
         ).deserialize().run {
-            extract<String>("data/main") shouldBeEqualTo "Hello - World, again"
+            extract<String>("data/main") shouldBe "Hello - World, again"
         }
     }
 }

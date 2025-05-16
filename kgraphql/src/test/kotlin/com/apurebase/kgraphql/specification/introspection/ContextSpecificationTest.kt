@@ -4,8 +4,7 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class ContextSpecificationTest {
@@ -20,10 +19,7 @@ class ContextSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__schema{queryType{fields{args{name}}}}}"))
-        MatcherAssert.assertThat(
-            response.extract("data/__schema/queryType/fields[0]/args[0]/name"),
-            CoreMatchers.equalTo("limit")
-        )
+        response.extract<String>("data/__schema/queryType/fields[0]/args[0]/name") shouldBe "limit"
     }
 
     @Test
@@ -39,9 +35,6 @@ class ContextSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{__schema{mutationType{fields{args{name}}}}}"))
-        MatcherAssert.assertThat(
-            response.extract("data/__schema/mutationType/fields[0]/args[0]/name"),
-            CoreMatchers.equalTo("input")
-        )
+        response.extract<String>("data/__schema/mutationType/fields[0]/args[0]/name") shouldBe "input"
     }
 }

@@ -6,8 +6,7 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.executeEqualQueries
 import com.apurebase.kgraphql.schema.execution.Executor
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 @Specification("2.6 Arguments")
@@ -76,9 +75,15 @@ class ArgumentsSpecificationTest {
     @Test
     fun `many arguments can exist on given field`() {
         val response = deserialize(schema.executeBlocking("{actor{favDishes(size: 2, prefix: \"b\")}}"))
-        assertThat(
-            response,
-            equalTo(mapOf<String, Any>("data" to mapOf("actor" to mapOf("favDishes" to listOf("burger", "bread")))))
+        response shouldBe mapOf<String, Any>(
+            "data" to mapOf(
+                "actor" to mapOf(
+                    "favDishes" to listOf(
+                        "burger",
+                        "bread"
+                    )
+                )
+            )
         )
     }
 
@@ -97,22 +102,19 @@ class ArgumentsSpecificationTest {
             }
         """.trimIndent()
         val response = deserialize(schema.executeBlocking(request))
-        assertThat(
-            response, equalTo(
-                mapOf<String, Any>(
-                    "data" to mapOf(
-                        "actor" to mapOf(
-                            "none" to age,
-                            "one" to age + 1,
-                            "two" to age + 2 + 3,
-                            "three" to age + 4 + 5 + 6,
-                            "four" to age + 7 + 8 + 9 + 10,
-                            "five" to age + 11 + 12 + 13 + 14 + 15
-                        )
+        response shouldBe
+            mapOf<String, Any>(
+                "data" to mapOf(
+                    "actor" to mapOf(
+                        "none" to age,
+                        "one" to age + 1,
+                        "two" to age + 2 + 3,
+                        "three" to age + 4 + 5 + 6,
+                        "four" to age + 7 + 8 + 9 + 10,
+                        "five" to age + 11 + 12 + 13 + 14 + 15
                     )
                 )
             )
-        )
     }
 
     @Test
@@ -145,16 +147,13 @@ class ArgumentsSpecificationTest {
         """.trimIndent()
 
         val response = deserialize(schema.executeBlocking(request))
-        assertThat(
-            response, equalTo(
-                mapOf<String, Any>(
-                    "data" to mapOf<String, Any>(
-                        "actor" to mapOf<String, Any>(
-                            "greeting" to "Hello, John Doe!"
-                        )
+        response shouldBe
+            mapOf<String, Any>(
+                "data" to mapOf<String, Any>(
+                    "actor" to mapOf<String, Any>(
+                        "greeting" to "Hello, John Doe!"
                     )
                 )
             )
-        )
     }
 }

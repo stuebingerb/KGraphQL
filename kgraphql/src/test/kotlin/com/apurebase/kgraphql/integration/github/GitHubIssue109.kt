@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.integration.github
 import com.apurebase.kgraphql.KGraphQL
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.amshove.kluent.shouldContain
+import io.kotest.matchers.collections.shouldContain
 import org.junit.jupiter.api.Test
 
 class GitHubIssue109 {

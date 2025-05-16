@@ -1,17 +1,12 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
-import org.amshove.kluent.withMessage
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class MutationTest : BaseSchemaTest() {
@@ -22,9 +17,9 @@ class MutationTest : BaseSchemaTest() {
     fun `simple mutation multiple fields`() {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){name, age}}")
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Any>>("data/createActor"),
-            equalTo(mapOf("name" to testActor.name, "age" to testActor.age))
+        map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf(
+            "name" to testActor.name,
+            "age" to testActor.age
         )
     }
 
@@ -32,54 +27,41 @@ class MutationTest : BaseSchemaTest() {
     fun `simple mutation single field`() {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){name}}")
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Any>>("data/createActor"),
-            equalTo(mapOf<String, Any>("name" to testActor.name))
-        )
+        map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("name" to testActor.name)
     }
 
     @Test
     fun `simple mutation single field 2`() {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Any>>("data/createActor"),
-            equalTo(mapOf<String, Any>("age" to testActor.age))
-        )
+        map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("age" to testActor.age)
     }
 
     @Test
     fun `invalid mutation name`() {
-        invoking {
+        expect<ValidationException>("Property createBanana on Mutation does not exist") {
             execute("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
-        } shouldThrow GraphQLError::class withMessage "Property createBanana on Mutation does not exist"
+        }
     }
 
     @Test
     fun `invalid argument type`() {
-        invoking {
+        expect<InvalidInputValueException>("Cannot coerce \"fwfwf\" to numeric constant") {
             execute("mutation {createActor(name: \"${testActor.name}\", age: \"fwfwf\"){age}}")
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Cannot coerce \"fwfwf\" to numeric constant"
         }
-
     }
 
     @Test
     fun `invalid arguments number`() {
-        invoking {
+        expect<ValidationException>("createActor does support arguments [name, age]. Found arguments [name, age, bananan]") {
             execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
-        } shouldThrow ValidationException::class with {
-            message shouldBeEqualTo "createActor does support arguments [name, age]. Found arguments [name, age, bananan]"
         }
     }
 
     @Test
     fun `invalid arguments number with NotIntrospected class`() {
-        invoking {
+        expect<ValidationException>("createActorWithContext does support arguments [name, age]. Found arguments [name, age, bananan]") {
             execute("mutation {createActorWithContext(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
-        } shouldThrow ValidationException::class with {
-            message shouldBeEqualTo "createActorWithContext does support arguments [name, age]. Found arguments [name, age, bananan]"
         }
     }
 
@@ -87,17 +69,14 @@ class MutationTest : BaseSchemaTest() {
     fun `mutation with alias`() {
         val map = execute("mutation {caine : createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         assertNoErrors(map)
-        assertThat(map.extract<Map<String, Any>>("data/caine"), equalTo(mapOf<String, Any>("age" to testActor.age)))
+        map.extract<Map<String, Any>>("data/caine") shouldBe mapOf<String, Any>("age" to testActor.age)
     }
 
     @Test
     fun `mutation with field alias`() {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){howOld: age}}")
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Any>>("data/createActor"),
-            equalTo(mapOf<String, Any>("howOld" to testActor.age))
-        )
+        map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("howOld" to testActor.age)
     }
 
     @Test
@@ -107,9 +86,6 @@ class MutationTest : BaseSchemaTest() {
             variables = "{\"newActor\": {\"name\": \"${testActor.name}\", \"age\": ${testActor.age}}}"
         )
         assertNoErrors(map)
-        assertThat(
-            map.extract<Map<String, Any>>("data/createActorWithAliasedInputType"),
-            equalTo(mapOf<String, Any>("name" to testActor.name))
-        )
+        map.extract<Map<String, Any>>("data/createActorWithAliasedInputType") shouldBe mapOf<String, Any>("name" to testActor.name)
     }
 }

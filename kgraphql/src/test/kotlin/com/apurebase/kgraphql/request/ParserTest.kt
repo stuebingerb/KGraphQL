@@ -1,6 +1,6 @@
 package com.apurebase.kgraphql.request
 
-import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.InvalidSyntaxException
 import com.apurebase.kgraphql.ResourceFiles.kitchenSinkQuery
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DocumentNode
@@ -19,11 +19,9 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode.ListValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.NullValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.NumberValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.StringValueNode
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeInstanceOf
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
+import com.apurebase.kgraphql.shouldBeInstanceOf
+import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class ParserTest {
@@ -50,34 +48,34 @@ class ParserTest {
 
     private fun shouldThrowSyntaxError(
         src: Source,
-        block: GraphQLError.() -> Pair<Int, Int>?
-    ) = invoking { parse(src) } shouldThrow GraphQLError::class with {
+        block: InvalidSyntaxException.() -> Pair<Int, Int>?
+    ) = shouldThrowExactly<InvalidSyntaxException> { parse(src) }.run {
         block()?.let {
-            locations!!.size shouldBeEqualTo 1
+            locations!!.size shouldBe 1
             locations!!.first().run {
-                line shouldBeEqualTo it.first
-                column shouldBeEqualTo it.second
+                line shouldBe it.first
+                column shouldBe it.second
             }
         }
     }
 
-    private fun shouldThrowSyntaxError(src: String, block: GraphQLError.() -> Pair<Int, Int>?) = shouldThrowSyntaxError(
+    private fun shouldThrowSyntaxError(src: String, block: InvalidSyntaxException.() -> Pair<Int, Int>?) = shouldThrowSyntaxError(
         Source(src), block
     )
 
     @Test
     fun `parse provides useful errors`() {
-        invoking { parse("{") } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Syntax Error: Expected Name, found <EOF>."
-            positions!!.size shouldBeEqualTo 1
-            locations!!.size shouldBeEqualTo 1
-            positions!!.first() shouldBeEqualTo 1
+        shouldThrowExactly<InvalidSyntaxException> { parse("{") }.run {
+            message shouldBe "Syntax Error: Expected Name, found <EOF>."
+            positions!!.size shouldBe 1
+            locations!!.size shouldBe 1
+            positions!!.first() shouldBe 1
             locations!!.first().run {
-                line shouldBeEqualTo 1
-                column shouldBeEqualTo 2
+                line shouldBe 1
+                column shouldBe 2
             }
 
-            prettyPrint() shouldBeEqualTo """
+            prettyPrint() shouldBe """
                         |Syntax Error: Expected Name, found <EOF>.
                         |
                         |GraphQL request:1:2
@@ -94,27 +92,27 @@ class ParserTest {
             |
         """.trimMargin()
         ) {
-            message shouldBeEqualTo "Syntax Error: Expected \"on\", found Name \"Type\"."
+            message shouldBe "Syntax Error: Expected \"on\", found Name \"Type\"."
             3 to 26
         }
 
         shouldThrowSyntaxError("{ field: {} }") {
-            message shouldBeEqualTo "Syntax Error: Expected Name, found \"{\"."
+            message shouldBe "Syntax Error: Expected Name, found \"{\"."
             1 to 10
         }
 
         shouldThrowSyntaxError("notanoperation Foo { field }") {
-            message shouldBeEqualTo "Syntax Error: Unexpected Name \"notanoperation\"."
+            message shouldBe "Syntax Error: Unexpected Name \"notanoperation\"."
             1 to 1
         }
 
         shouldThrowSyntaxError("...") {
-            message shouldBeEqualTo "Syntax Error: Unexpected \"...\"."
+            message shouldBe "Syntax Error: Unexpected \"...\"."
             1 to 1
         }
 
         shouldThrowSyntaxError("{ \"\"") {
-            message shouldBeEqualTo "Syntax Error: Expected Name, found String \"\"."
+            message shouldBe "Syntax Error: Expected Name, found String \"\"."
             1 to 3
         }
     }
@@ -122,7 +120,7 @@ class ParserTest {
     @Test
     fun `parse provides useful error when using source`() {
         shouldThrowSyntaxError(Source("query", "MyQuery.graphql")) {
-            prettyPrint() shouldBeEqualTo """
+            prettyPrint() shouldBe """
                         |Syntax Error: Expected "{", found <EOF>.
                         |
                         |MyQuery.graphql:1:6
@@ -141,7 +139,7 @@ class ParserTest {
     @Test
     fun `parses constant default values`() {
         shouldThrowSyntaxError("query Foo(\$x: Complex = { a: { b: [ \$var ] } }) { field }") {
-            message shouldBeEqualTo "Syntax Error: Unexpected \"\$\"."
+            message shouldBe "Syntax Error: Unexpected \"\$\"."
             1 to 37
         }
     }
@@ -154,7 +152,7 @@ class ParserTest {
     @Test
     fun `does not accept fragments named 'on'`() {
         shouldThrowSyntaxError("fragment on on on { on }") {
-            message shouldBeEqualTo "Syntax Error: Unexpected Name \"on\"."
+            message shouldBe "Syntax Error: Unexpected Name \"on\"."
             1 to 10
         }
     }
@@ -162,7 +160,7 @@ class ParserTest {
     @Test
     fun `does not accept fragments spread of 'on'`() {
         shouldThrowSyntaxError("{ ...on }") {
-            message shouldBeEqualTo "Syntax Error: Expected Name, found \"}\"."
+            message shouldBe "Syntax Error: Expected Name, found \"}\"."
             1 to 9
         }
     }
@@ -179,7 +177,7 @@ class ParserTest {
             (definitions[0] as OperationDefinitionNode).selectionSet.run {
                 (selections.first() as FieldNode).run {
                     (arguments!!.first().value as StringValueNode).run {
-                        value shouldBeEqualTo "Has a \u0A0A multi-byte character."
+                        value shouldBe "Has a \u0A0A multi-byte character."
                     }
                 }
             }
@@ -278,100 +276,100 @@ class ParserTest {
         """.trimMargin()
         ).run {
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 41
+                start shouldBe 0
+                end shouldBe 41
             }
-            definitions.size shouldBeEqualTo 1
+            definitions.size shouldBe 1
             (definitions.first() as OperationDefinitionNode).run {
                 loc!!.run {
-                    start shouldBeEqualTo 0
-                    end shouldBeEqualTo 40
+                    start shouldBe 0
+                    end shouldBe 40
                 }
-                operation shouldBeEqualTo QUERY
-                name shouldBeEqualTo null
-                variableDefinitions!!.size shouldBeEqualTo 0
-                directives!!.size shouldBeEqualTo 0
+                operation shouldBe QUERY
+                name shouldBe null
+                variableDefinitions!!.size shouldBe 0
+                directives!!.size shouldBe 0
                 selectionSet.run {
                     loc!!.run {
-                        start shouldBeEqualTo 0
-                        end shouldBeEqualTo 40
+                        start shouldBe 0
+                        end shouldBe 40
                     }
-                    selections.size shouldBeEqualTo 1
+                    selections.size shouldBe 1
                     (selections.first() as FieldNode).run {
                         loc!!.run {
-                            start shouldBeEqualTo 4
-                            end shouldBeEqualTo 38
+                            start shouldBe 4
+                            end shouldBe 38
                         }
-                        alias shouldBeEqualTo null
+                        alias shouldBe null
                         name.loc!!.run {
-                            start shouldBeEqualTo 4
-                            end shouldBeEqualTo 8
+                            start shouldBe 4
+                            end shouldBe 8
                         }
-                        name.value shouldBeEqualTo "node"
-                        arguments!!.size shouldBeEqualTo 1
+                        name.value shouldBe "node"
+                        arguments!!.size shouldBe 1
                         arguments!!.first().run {
-                            name.value shouldBeEqualTo "id"
+                            name.value shouldBe "id"
                             name.loc!!.run {
-                                start shouldBeEqualTo 9
-                                end shouldBeEqualTo 11
+                                start shouldBe 9
+                                end shouldBe 11
                             }
                             (value as NumberValueNode).run {
                                 this shouldBeInstanceOf NumberValueNode::class
                                 loc!!.run {
-                                    start shouldBeEqualTo 13
-                                    end shouldBeEqualTo 14
+                                    start shouldBe 13
+                                    end shouldBe 14
                                 }
-                                value shouldBeEqualTo 4
+                                value shouldBe 4
                             }
                             loc!!.run {
-                                start shouldBeEqualTo 9
-                                end shouldBeEqualTo 14
+                                start shouldBe 9
+                                end shouldBe 14
                             }
                         }
 
-                        directives!!.size shouldBeEqualTo 0
+                        directives!!.size shouldBe 0
                         selectionSet!!.run {
                             this shouldBeInstanceOf SelectionSetNode::class
                             loc!!.run {
-                                start shouldBeEqualTo 16
-                                end shouldBeEqualTo 38
+                                start shouldBe 16
+                                end shouldBe 38
                             }
-                            selections.size shouldBeEqualTo 2
+                            selections.size shouldBe 2
                             (selections.first() as FieldNode).run {
                                 this shouldBeInstanceOf FieldNode::class
                                 loc!!.run {
-                                    start shouldBeEqualTo 22
-                                    end shouldBeEqualTo 24
+                                    start shouldBe 22
+                                    end shouldBe 24
                                 }
-                                alias shouldBeEqualTo null
+                                alias shouldBe null
                                 name.run {
                                     loc!!.run {
-                                        start shouldBeEqualTo 22
-                                        end shouldBeEqualTo 24
+                                        start shouldBe 22
+                                        end shouldBe 24
                                     }
-                                    value shouldBeEqualTo "id"
+                                    value shouldBe "id"
                                 }
-                                arguments!!.size shouldBeEqualTo 0
-                                directives!!.size shouldBeEqualTo 0
-                                selectionSet shouldBeEqualTo null
+                                arguments!!.size shouldBe 0
+                                directives!!.size shouldBe 0
+                                selectionSet shouldBe null
                             }
 
                             (selections[1] as FieldNode).run {
                                 this shouldBeInstanceOf FieldNode::class
                                 loc!!.run {
-                                    start shouldBeEqualTo 30
-                                    end shouldBeEqualTo 34
+                                    start shouldBe 30
+                                    end shouldBe 34
                                 }
-                                alias shouldBeEqualTo null
+                                alias shouldBe null
                                 name.run {
                                     loc!!.run {
-                                        start shouldBeEqualTo 30
-                                        end shouldBeEqualTo 34
-                                        value shouldBeEqualTo "name"
+                                        start shouldBe 30
+                                        end shouldBe 34
+                                        value shouldBe "name"
                                     }
-                                    arguments!!.size shouldBeEqualTo 0
-                                    directives!!.size shouldBeEqualTo 0
-                                    selectionSet shouldBeEqualTo null
+                                    arguments!!.size shouldBe 0
+                                    directives!!.size shouldBe 0
+                                    selectionSet shouldBe null
                                 }
                             }
                         }
@@ -395,65 +393,66 @@ class ParserTest {
         ).run {
             this shouldBeInstanceOf DocumentNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 30
+                start shouldBe 0
+                end shouldBe 30
             }
-            definitions.size shouldBeEqualTo 1
-            (definitions.first() as OperationDefinitionNode).run {
+            definitions.size shouldBe 1
+            definitions.first().run {
                 this shouldBeInstanceOf OperationDefinitionNode::class
+                this as OperationDefinitionNode
                 loc!!.run {
-                    start shouldBeEqualTo 0
-                    end shouldBeEqualTo 29
+                    start shouldBe 0
+                    end shouldBe 29
                 }
-                operation shouldBeEqualTo QUERY
-                name shouldBeEqualTo null
-                variableDefinitions!!.size shouldBeEqualTo 0
-                directives!!.size shouldBeEqualTo 0
+                operation shouldBe QUERY
+                name shouldBe null
+                variableDefinitions!!.size shouldBe 0
+                directives!!.size shouldBe 0
                 selectionSet.run {
                     loc!!.run {
-                        start shouldBeEqualTo 6
-                        end shouldBeEqualTo 29
+                        start shouldBe 6
+                        end shouldBe 29
                     }
-                    selections.size shouldBeEqualTo 1
+                    selections.size shouldBe 1
                     (selections.first() as FieldNode).run {
                         this shouldBeInstanceOf FieldNode::class
                         loc!!.run {
-                            start shouldBeEqualTo 10
-                            end shouldBeEqualTo 27
+                            start shouldBe 10
+                            end shouldBe 27
                         }
-                        alias shouldBeEqualTo null
+                        alias shouldBe null
                         name.run {
                             loc!!.run {
-                                start shouldBeEqualTo 10
-                                end shouldBeEqualTo 14
+                                start shouldBe 10
+                                end shouldBe 14
                             }
-                            value shouldBeEqualTo "node"
+                            value shouldBe "node"
                         }
-                        arguments!!.size shouldBeEqualTo 0
-                        directives!!.size shouldBeEqualTo 0
+                        arguments!!.size shouldBe 0
+                        directives!!.size shouldBe 0
                         selectionSet!!.run {
                             loc!!.run {
-                                start shouldBeEqualTo 15
-                                end shouldBeEqualTo 27
+                                start shouldBe 15
+                                end shouldBe 27
                             }
-                            selections.size shouldBeEqualTo 1
+                            selections.size shouldBe 1
                             (selections.first() as FieldNode).run {
                                 this shouldBeInstanceOf FieldNode::class
                                 loc!!.run {
-                                    start shouldBeEqualTo 21
-                                    end shouldBeEqualTo 23
+                                    start shouldBe 21
+                                    end shouldBe 23
                                 }
-                                alias shouldBeEqualTo null
+                                alias shouldBe null
                                 name.run {
                                     loc!!.run {
-                                        start shouldBeEqualTo 21
-                                        end shouldBeEqualTo 23
+                                        start shouldBe 21
+                                        end shouldBe 23
                                     }
-                                    value shouldBeEqualTo "id"
+                                    value shouldBe "id"
                                 }
-                                arguments!!.size shouldBeEqualTo 0
-                                directives!!.size shouldBeEqualTo 0
-                                selectionSet shouldBeEqualTo null
+                                arguments!!.size shouldBe 0
+                                directives!!.size shouldBe 0
+                                selectionSet shouldBe null
                             }
                         }
                     }
@@ -465,7 +464,7 @@ class ParserTest {
     @Test
     fun `allows parsing without source location information`() {
         val result = parse("{ id }", Parser.Options(noLocation = true))
-        result.loc shouldBeEqualTo null
+        result.loc shouldBe null
     }
 
     @Test
@@ -473,15 +472,15 @@ class ParserTest {
         val source = Source("{ id }")
         val result = parse(source)
 
-        result.loc!!.source shouldBeEqualTo source
+        result.loc!!.source shouldBe source
     }
 
     @Test
     fun `contains references to start and end tokens`() {
         val result = parse("{ id }")
 
-        result.loc!!.startToken.kind shouldBeEqualTo SOF
-        result.loc!!.endToken.kind shouldBeEqualTo EOF
+        result.loc!!.startToken.kind shouldBe SOF
+        result.loc!!.endToken.kind shouldBe EOF
     }
 
     //================================================//
@@ -495,8 +494,8 @@ class ParserTest {
         parseValue("null").run {
             this shouldBeInstanceOf NullValueNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 4
+                start shouldBe 0
+                end shouldBe 4
             }
         }
     }
@@ -506,29 +505,28 @@ class ParserTest {
         (parseValue("[123 \"abc\"]") as ListValueNode).run {
             this shouldBeInstanceOf ListValueNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 11
+                start shouldBe 0
+                end shouldBe 11
             }
-            values.size shouldBeEqualTo 2
+            values.size shouldBe 2
             (values[0] as NumberValueNode).run {
                 this shouldBeInstanceOf NumberValueNode::class
                 loc!!.run {
-                    start shouldBeEqualTo 1
-                    end shouldBeEqualTo 4
+                    start shouldBe 1
+                    end shouldBe 4
                 }
-                value shouldBeEqualTo 123
+                value shouldBe 123
             }
             (values[1] as StringValueNode).run {
                 this shouldBeInstanceOf StringValueNode::class
                 loc!!.run {
-                    start shouldBeEqualTo 5
-                    end shouldBeEqualTo 10
+                    start shouldBe 5
+                    end shouldBe 10
                 }
-                value shouldBeEqualTo "abc"
-                block shouldBeEqualTo false
+                value shouldBe "abc"
+                block shouldBe false
             }
         }
-
     }
 
     @Test
@@ -536,27 +534,27 @@ class ParserTest {
         (parseValue("[\"\"\"long\"\"\" \"short\"]") as ListValueNode).run {
             this shouldBeInstanceOf ListValueNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 20
+                start shouldBe 0
+                end shouldBe 20
             }
-            values.size shouldBeEqualTo 2
+            values.size shouldBe 2
             (values[0] as StringValueNode).run {
                 this shouldBeInstanceOf StringValueNode::class
                 loc!!.run {
-                    start shouldBeEqualTo 1
-                    end shouldBeEqualTo 11
+                    start shouldBe 1
+                    end shouldBe 11
                 }
-                value shouldBeEqualTo "long"
-                block shouldBeEqualTo true
+                value shouldBe "long"
+                block shouldBe true
             }
             (values[1] as StringValueNode).run {
                 this shouldBeInstanceOf StringValueNode::class
                 loc!!.run {
-                    start shouldBeEqualTo 12
-                    end shouldBeEqualTo 19
+                    start shouldBe 12
+                    end shouldBe 19
                 }
-                value shouldBeEqualTo "short"
-                block shouldBeEqualTo false
+                value shouldBe "short"
+                block shouldBe false
             }
         }
     }
@@ -572,15 +570,15 @@ class ParserTest {
         (parseType("String") as NamedTypeNode).run {
             this shouldBeInstanceOf NamedTypeNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 6
+                start shouldBe 0
+                end shouldBe 6
             }
             name.run {
                 loc!!.run {
-                    start shouldBeEqualTo 0
-                    end shouldBeEqualTo 6
+                    start shouldBe 0
+                    end shouldBe 6
                 }
-                value shouldBeEqualTo "String"
+                value shouldBe "String"
             }
         }
     }
@@ -590,15 +588,15 @@ class ParserTest {
         (parseType("MyType") as NamedTypeNode).run {
             this shouldBeInstanceOf NamedTypeNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 6
+                start shouldBe 0
+                end shouldBe 6
             }
             name.run {
                 loc!!.run {
-                    start shouldBeEqualTo 0
-                    end shouldBeEqualTo 6
+                    start shouldBe 0
+                    end shouldBe 6
                 }
-                value shouldBeEqualTo "MyType"
+                value shouldBe "MyType"
             }
         }
     }
@@ -608,21 +606,21 @@ class ParserTest {
         (parseType("[MyType]") as ListTypeNode).run {
             this shouldBeInstanceOf ListTypeNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 8
+                start shouldBe 0
+                end shouldBe 8
             }
             (type as NamedTypeNode).run {
                 this shouldBeInstanceOf NamedTypeNode::class
                 loc!!.run {
-                    start shouldBeEqualTo 1
-                    end shouldBeEqualTo 7
+                    start shouldBe 1
+                    end shouldBe 7
                 }
                 name.run {
                     loc!!.run {
-                        start shouldBeEqualTo 1
-                        end shouldBeEqualTo 7
+                        start shouldBe 1
+                        end shouldBe 7
                     }
-                    value shouldBeEqualTo "MyType"
+                    value shouldBe "MyType"
                 }
             }
         }
@@ -633,21 +631,21 @@ class ParserTest {
         (parseType("MyType!") as NonNullTypeNode).run {
             this shouldBeInstanceOf NonNullTypeNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 7
+                start shouldBe 0
+                end shouldBe 7
             }
             (type as NamedTypeNode).run {
                 this shouldBeInstanceOf NamedTypeNode::class
                 loc!!.run {
-                    start shouldBeEqualTo 0
-                    end shouldBeEqualTo 6
+                    start shouldBe 0
+                    end shouldBe 6
                 }
                 name.run {
                     loc!!.run {
-                        start shouldBeEqualTo 0
-                        end shouldBeEqualTo 6
+                        start shouldBe 0
+                        end shouldBe 6
                     }
-                    value shouldBeEqualTo "MyType"
+                    value shouldBe "MyType"
                 }
             }
         }
@@ -658,27 +656,27 @@ class ParserTest {
         (parseType("[MyType!]") as ListTypeNode).run {
             this shouldBeInstanceOf ListTypeNode::class
             loc!!.run {
-                start shouldBeEqualTo 0
-                end shouldBeEqualTo 9
+                start shouldBe 0
+                end shouldBe 9
             }
             (type as NonNullTypeNode).run {
                 this shouldBeInstanceOf NonNullTypeNode::class
                 loc!!.run {
-                    start shouldBeEqualTo 1
-                    end shouldBeEqualTo 8
+                    start shouldBe 1
+                    end shouldBe 8
                 }
                 (type as NamedTypeNode).run {
                     this shouldBeInstanceOf NamedTypeNode::class
                     loc!!.run {
-                        start shouldBeEqualTo 1
-                        end shouldBeEqualTo 7
+                        start shouldBe 1
+                        end shouldBe 7
                     }
                     name.run {
                         loc!!.run {
-                            start shouldBeEqualTo 1
-                            end shouldBeEqualTo 7
+                            start shouldBe 1
+                            end shouldBe 7
                         }
-                        value shouldBeEqualTo "MyType"
+                        value shouldBe "MyType"
                     }
                 }
             }

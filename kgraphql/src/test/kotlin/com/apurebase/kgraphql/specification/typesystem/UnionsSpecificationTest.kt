@@ -2,7 +2,6 @@ package com.apurebase.kgraphql.specification.typesystem
 
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionException
-import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.ValidationException
@@ -14,14 +13,9 @@ import com.apurebase.kgraphql.helpers.getFields
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.execution.Execution
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.with
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert
+import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 @Specification("3.1.4 Unions")
 class UnionsSpecificationTest : BaseSchemaTest() {
@@ -36,16 +30,9 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             val name = map.extract<String>("data/actors[$i]/name")
             val favourite = map.extract<Map<String, String>>("data/actors[$i]/favourite")
             when (name) {
-                "Brad Pitt" -> MatcherAssert.assertThat(favourite, CoreMatchers.equalTo(mapOf("name" to "Tom Hardy")))
-                "Tom Hardy" -> MatcherAssert.assertThat(
-                    favourite,
-                    CoreMatchers.equalTo(mapOf("age" to 43, "name" to "Christopher Nolan"))
-                )
-
-                "Morgan Freeman" -> MatcherAssert.assertThat(
-                    favourite,
-                    CoreMatchers.equalTo(mapOf("content" to "DUMB"))
-                )
+                "Brad Pitt" -> favourite shouldBe mapOf("name" to "Tom Hardy")
+                "Tom Hardy" -> favourite shouldBe mapOf("age" to 43, "name" to "Christopher Nolan")
+                "Morgan Freeman" -> favourite shouldBe mapOf("content" to "DUMB")
             }
         }
     }
@@ -62,26 +49,17 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             val name = map.extract<String>("data/actors[$i]/name")
             val favourite = map.extract<Map<String, String>>("data/actors[$i]/favourite")
             when (name) {
-                "Brad Pitt" -> MatcherAssert.assertThat(favourite, CoreMatchers.equalTo(mapOf("name" to "Tom Hardy")))
-                "Tom Hardy" -> MatcherAssert.assertThat(
-                    favourite,
-                    CoreMatchers.equalTo(mapOf("age" to 43, "name" to "Christopher Nolan"))
-                )
-
-                "Morgan Freeman" -> MatcherAssert.assertThat(
-                    favourite,
-                    CoreMatchers.equalTo(mapOf("content" to "DUMB"))
-                )
+                "Brad Pitt" -> favourite shouldBe mapOf("name" to "Tom Hardy")
+                "Tom Hardy" -> favourite shouldBe mapOf("age" to 43, "name" to "Christopher Nolan")
+                "Morgan Freeman" -> favourite shouldBe mapOf("content" to "DUMB")
             }
         }
     }
 
     @Test
     fun `query union property with invalid selection set`() {
-        invoking {
+        expect<ValidationException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]") {
             execute("{actors{name, favourite{ name }}}")
-        } shouldThrow GraphQLError::class with {
-            message shouldBeEqualTo "Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]"
         }
     }
 
@@ -100,46 +78,16 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 }
             }""".trimIndent()
         )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[0]/name/"),
-            CoreMatchers.equalTo("Brad Pitt")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[0]/favourite/__typename"),
-            CoreMatchers.equalTo("Actor")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[1]/name/"),
-            CoreMatchers.equalTo("Morgan Freeman")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[1]/favourite/__typename"),
-            CoreMatchers.equalTo("Scenario")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[2]/name/"),
-            CoreMatchers.equalTo("Kevin Spacey")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[2]/favourite/__typename"),
-            CoreMatchers.equalTo("Actor")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[3]/name/"),
-            CoreMatchers.equalTo("Tom Hardy")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[3]/favourite/__typename"),
-            CoreMatchers.equalTo("Director")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[4]/name/"),
-            CoreMatchers.equalTo("Christian Bale")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[4]/favourite/__typename"),
-            CoreMatchers.equalTo("Actor")
-        )
+        result.extract<String>("data/actors[0]/name/") shouldBe "Brad Pitt"
+        result.extract<String>("data/actors[0]/favourite/__typename") shouldBe "Actor"
+        result.extract<String>("data/actors[1]/name/") shouldBe "Morgan Freeman"
+        result.extract<String>("data/actors[1]/favourite/__typename") shouldBe "Scenario"
+        result.extract<String>("data/actors[2]/name/") shouldBe "Kevin Spacey"
+        result.extract<String>("data/actors[2]/favourite/__typename") shouldBe "Actor"
+        result.extract<String>("data/actors[3]/name/") shouldBe "Tom Hardy"
+        result.extract<String>("data/actors[3]/favourite/__typename") shouldBe "Director"
+        result.extract<String>("data/actors[4]/name/") shouldBe "Christian Bale"
+        result.extract<String>("data/actors[4]/favourite/__typename") shouldBe "Actor"
     }
 
     @Test
@@ -154,31 +102,16 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 }
             }""".trimIndent()
         )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[0]/favourite/__typename"),
-            CoreMatchers.equalTo("Actor")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[1]/favourite/__typename"),
-            CoreMatchers.equalTo("Scenario")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[2]/favourite/__typename"),
-            CoreMatchers.equalTo("Actor")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[3]/favourite/__typename"),
-            CoreMatchers.equalTo("Director")
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[4]/favourite/__typename"),
-            CoreMatchers.equalTo("Actor")
-        )
+        result.extract<String>("data/actors[0]/favourite/__typename") shouldBe "Actor"
+        result.extract<String>("data/actors[1]/favourite/__typename") shouldBe "Scenario"
+        result.extract<String>("data/actors[2]/favourite/__typename") shouldBe "Actor"
+        result.extract<String>("data/actors[3]/favourite/__typename") shouldBe "Director"
+        result.extract<String>("data/actors[4]/favourite/__typename") shouldBe "Actor"
     }
 
     @Test
     fun `a union type should require a selection for all potential types`() {
-        invoking {
+        expect<ValidationException>("Missing selection set for type Scenario") {
             execute(
                 """{
                 actors {
@@ -190,8 +123,6 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 }
             }""".trimIndent()
             )
-        } shouldThrow ValidationException::class with {
-            message shouldBeEqualTo "Missing selection set for type Scenario"
         }
     }
 
@@ -210,27 +141,15 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }""".trimIndent()
         )
 
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[5]/name"),
-            CoreMatchers.equalTo(rickyGervais.name)
-        )
-        MatcherAssert.assertThat(
-            result.extract("data/actors[5]/nullableFavourite"),
-            CoreMatchers.equalTo(null)
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[3]/name"),
-            CoreMatchers.equalTo(tomHardy.name)
-        )
-        MatcherAssert.assertThat(
-            result.extract<String>("data/actors[3]/nullableFavourite/name"),
-            CoreMatchers.equalTo(christopherNolan.name)
-        )
+        result.extract<String>("data/actors[5]/name") shouldBe rickyGervais.name
+        result.extract<Any?>("data/actors[5]/nullableFavourite") shouldBe null
+        result.extract<String>("data/actors[3]/name") shouldBe tomHardy.name
+        result.extract<String>("data/actors[3]/nullableFavourite/name") shouldBe christopherNolan.name
     }
 
     @Test
     fun `Non nullable union types should fail`() {
-        invoking {
+        expect<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was null") {
             execute(
                 """{
                     actors(all: true) {
@@ -243,8 +162,6 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                     }
                 }""".trimIndent()
             )
-        } shouldThrow ExecutionException::class with {
-            message shouldBeEqualTo "Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was null"
         }
     }
 
@@ -325,20 +242,20 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         }
             .executeBlocking(
                 """
-            {
-                f: returnUnion(isB: false) {
-                    ... on BBB { i }
-                    ... on CCC { s }
+                {
+                    f: returnUnion(isB: false) {
+                        ... on BBB { i }
+                        ... on CCC { s }
+                    }
+                    t: returnUnion(isB: true) {
+                        ... on BBB { i }
+                        ... on CCC { s }                
+                    }
                 }
-                t: returnUnion(isB: true) {
-                    ... on BBB { i }
-                    ... on CCC { s }                
-                }
-            }
-        """.trimIndent()
+                """.trimIndent()
             ).deserialize().run {
-                extract<String>("data/f/s") shouldBeEqualTo "String"
-                extract<Int>("data/t/i") shouldBeEqualTo 1
+                extract<String>("data/f/s") shouldBe "String"
+                extract<Int>("data/t/i") shouldBe 1
             }
     }
 
@@ -368,9 +285,9 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
         """.trimIndent()
         ).deserialize().run {
-            extract<Int>("data/returnUnion/i") shouldBeEqualTo 1
-            assertThrows<IllegalArgumentException> { extract("data/returnUnion/s") }
-            extract<List<String>>("data/returnUnion/fields") shouldBeEqualTo listOf("i", "fields", "s")
+            extract<Int>("data/returnUnion/i") shouldBe 1
+            shouldThrowExactly<IllegalArgumentException> { extract("data/returnUnion/s") }
+            extract<List<String>>("data/returnUnion/fields") shouldBe listOf("i", "fields", "s")
         }
     }
 
@@ -400,8 +317,8 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
         """.trimIndent()
         ).deserialize().run {
-            extract<String>("data/returnUnion[0]/__typename") shouldBeEqualTo "PrefixValue1"
-            extract<String>("data/returnUnion[1]/__typename") shouldBeEqualTo "PrefixValue2"
+            extract<String>("data/returnUnion[0]/__typename") shouldBe "PrefixValue1"
+            extract<String>("data/returnUnion[1]/__typename") shouldBe "PrefixValue2"
         }
     }
 }

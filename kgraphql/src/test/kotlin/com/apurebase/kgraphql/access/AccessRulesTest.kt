@@ -6,8 +6,7 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.MatcherAssert.assertThat
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class AccessRulesTest {
@@ -44,7 +43,7 @@ class AccessRulesTest {
             schema.executeBlocking("{black_mamba{name}}", context = context { +"LAKERS" })
         ).extract<String>("data/black_mamba/name")
 
-        assertThat(kobe, equalTo("KOBE"))
+        kobe shouldBe "KOBE"
     }
 
     @Test
@@ -58,10 +57,7 @@ class AccessRulesTest {
 
     @Test
     fun `allow property resolver access rule`() {
-        assertThat(
-            deserialize(schema.executeBlocking("{white_mamba {item}}")).extract<String>("data/white_mamba/item"),
-            equalTo("item")
-        )
+        deserialize(schema.executeBlocking("{white_mamba {item}}")).extract<String>("data/white_mamba/item") shouldBe "item"
     }
 
     @Test

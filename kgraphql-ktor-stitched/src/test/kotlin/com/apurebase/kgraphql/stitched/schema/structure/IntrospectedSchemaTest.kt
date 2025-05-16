@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.stitched.schema.structure
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.SchemaPrinter
-import org.amshove.kluent.shouldBeEqualTo
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class IntrospectedSchemaTest {
@@ -35,6 +35,6 @@ class IntrospectedSchemaTest {
             schema.executeBlocking(Introspection.query())
         )
 
-        SchemaPrinter().print(schemaFromIntrospection) shouldBeEqualTo SchemaPrinter().print(schema)
+        SchemaPrinter().print(schemaFromIntrospection) shouldBe SchemaPrinter().print(schema)
     }
 }

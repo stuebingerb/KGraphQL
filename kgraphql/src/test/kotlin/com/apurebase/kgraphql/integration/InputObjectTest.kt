@@ -1,11 +1,9 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
-import org.amshove.kluent.withMessage
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class InputObjectTest {
@@ -24,7 +22,7 @@ class InputObjectTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Mutation {
               addPerson(person: PersonInput!): Person!
             }
@@ -51,7 +49,7 @@ class InputObjectTest {
               getPerson(name: "foo") { name age }
             }
         """.trimIndent()
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"getPerson":{"name":"foo","age":42}}}
         """.trimIndent()
 
@@ -61,7 +59,7 @@ class InputObjectTest {
               addPerson(person: { name: "bar", age: 20 }) { name age }
             }
         """.trimIndent()
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"addPerson":{"name":"bar","age":20}}}
         """.trimIndent()
 
@@ -75,7 +73,7 @@ class InputObjectTest {
             }
         """.trimIndent(),
             variables = variables
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"addPerson":{"name":"foobar","age":60}}}
         """.trimIndent()
     }
@@ -103,7 +101,7 @@ class InputObjectTest {
         }
 
         val sdl = schema.printSchema()
-        sdl shouldBeEqualTo """
+        sdl shouldBe """
             type Mutation {
               addPerson(person: PersonInput!): Person!
             }
@@ -130,7 +128,7 @@ class InputObjectTest {
               getPerson(name: "foo") { name age }
             }
         """.trimIndent()
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"getPerson":{"name":"foo","age":42}}}
         """.trimIndent()
 
@@ -140,7 +138,7 @@ class InputObjectTest {
               addPerson(person: { inputName: "bar", inputAge: 20 }) { name age }
             }
         """.trimIndent()
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"addPerson":{"name":"bar","age":20}}}
         """.trimIndent()
 
@@ -154,14 +152,14 @@ class InputObjectTest {
             }
         """.trimIndent(),
             variables = variables
-        ) shouldBeEqualTo """
+        ) shouldBe """
             {"data":{"addPerson":{"name":"foobar","age":60}}}
         """.trimIndent()
     }
 
     @Test
     fun `property name must not start with __ when configured`() {
-        invoking {
+        expect<SchemaException>("Illegal name '__name'. Names starting with '__' are reserved for introspection system") {
             KGraphQL.schema {
                 inputType<Person> {
                     property(Person::name) {
@@ -173,6 +171,6 @@ class InputObjectTest {
                     resolver { person: Person -> person }
                 }
             }
-        } shouldThrow SchemaException::class withMessage "Illegal name '__name'. Names starting with '__' are reserved for introspection system"
+        }
     }
 }

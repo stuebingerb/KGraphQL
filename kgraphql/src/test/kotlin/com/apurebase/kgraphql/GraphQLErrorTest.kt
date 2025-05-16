@@ -1,11 +1,11 @@
 package com.apurebase.kgraphql
 
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class GraphQLErrorTest {
@@ -30,7 +30,7 @@ class GraphQLErrorTest {
             })
         }.toString()
 
-        graphqlError.serialize() shouldBeEqualTo expectedJson
+        graphqlError.serialize() shouldBe expectedJson
     }
 
     @Test
@@ -64,7 +64,7 @@ class GraphQLErrorTest {
             })
         }.toString()
 
-        graphqlError.serialize() shouldBeEqualTo expectedJson
+        graphqlError.serialize() shouldBe expectedJson
     }
 
     @Test
@@ -110,6 +110,6 @@ class GraphQLErrorTest {
             })
         }.toString()
 
-        graphqlError.serialize() shouldBeEqualTo expectedJson
+        graphqlError.serialize() shouldBe expectedJson
     }
 }

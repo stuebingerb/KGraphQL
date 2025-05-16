@@ -1,7 +1,7 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.KGraphQL
-import org.amshove.kluent.shouldBeEqualTo
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -61,7 +61,7 @@ class SchemaPrinterTest {
             type<Author>()
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Author {
               books: [Book!]!
               name: String!
@@ -88,7 +88,7 @@ class SchemaPrinterTest {
             type<NestedLists>()
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type NestedLists {
               nested1: [[String]!]!
               nested2: [[[[[String!]]!]]!]!
@@ -135,7 +135,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Author {
               books: [Book!]!
               name: String!
@@ -180,7 +180,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Child1 {
               one: String!
             }
@@ -213,7 +213,7 @@ class SchemaPrinterTest {
             type<OtherInterface>()
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Complex implements BaseInterface & OtherInterface {
               base: String!
               extra: Int!
@@ -259,7 +259,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Mutation {
               add(input: TestObjectInput!): TestObject!
             }
@@ -295,7 +295,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             scalar LocalDate
             
             scalar UUID
@@ -320,7 +320,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Query {
               dummy: String!
             }
@@ -359,7 +359,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Query {
               getNullString: String
               getObject(nullObject: Boolean!): TestObject
@@ -390,7 +390,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Mutation {
               addFloat(float: Float!): Float!
               addString(string: String!): String!
@@ -412,7 +412,7 @@ class SchemaPrinterTest {
             enum<TestEnum>()
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Query {
               dummy: String!
             }
@@ -450,7 +450,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type Mutation {
               addStringWithDefault(prefix: String! = "_", string: String!, suffix: String): String!
             }
@@ -500,7 +500,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             type DeprecatedObject {
               new: String!
               old: String! @deprecated(reason: "deprecated old value")
@@ -576,7 +576,7 @@ class SchemaPrinterTest {
                 includeSchemaDefinition = true,
                 includeDescriptions = true
             )
-        ).print(schema) shouldBeEqualTo """
+        ).print(schema) shouldBe """
             schema {
               "Query object"
               query: Query
@@ -666,7 +666,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = false)).print(schema) shouldBeEqualTo """
+        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = false)).print(schema) shouldBe """
             type Mutation {
               addObject(toAdd: TestObjectInput!): TestObject!
             }
@@ -704,7 +704,7 @@ class SchemaPrinterTest {
             type<TestObject>()
         }
 
-        SchemaPrinter(SchemaPrinterConfig(includeBuiltInDirectives = true)).print(schema) shouldBeEqualTo """
+        SchemaPrinter(SchemaPrinterConfig(includeBuiltInDirectives = true)).print(schema) shouldBe """
             type Query {
               dummy: String!
             }
@@ -731,7 +731,7 @@ class SchemaPrinterTest {
             type<TestObject>()
         }
 
-        SchemaPrinter(SchemaPrinterConfig(includeSchemaDefinition = true)).print(schema) shouldBeEqualTo """
+        SchemaPrinter(SchemaPrinterConfig(includeSchemaDefinition = true)).print(schema) shouldBe """
             schema {
               query: Query
             }
@@ -758,7 +758,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             schema {
               query: Query
             }
@@ -785,7 +785,7 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBeEqualTo """
+        SchemaPrinter().print(schema) shouldBe """
             schema {
               query: Query
             }
