@@ -5,6 +5,7 @@ plugins {
     id("kotlin-conventions")
     id("org.jetbrains.dokka")
     id("com.vanniktech.maven.publish")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 group = "de.stuebingerb"
@@ -58,4 +59,10 @@ mavenPublishing {
             developerConnection.set("scm:git:https://github.com/stuebingerb/KGraphQL.git")
         }
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom("$rootDir/config/detekt.yml")
 }

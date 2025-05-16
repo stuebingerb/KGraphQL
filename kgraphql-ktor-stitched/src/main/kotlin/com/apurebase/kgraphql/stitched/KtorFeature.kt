@@ -44,7 +44,7 @@ class StitchedGraphQL(val schema: Schema) {
 
         var endpoint: String = "/graphql"
 
-        fun context(block:  ContextBuilder.(ApplicationCall) -> Unit) {
+        fun context(block: ContextBuilder.(ApplicationCall) -> Unit) {
             contextSetup = block
         }
 

@@ -1,0 +1,67 @@
+# override default values from https://github.com/detekt/detekt/blob/main/detekt-core/src/main/resources/default-detekt-config.yml
+style:
+  MaxLineLength:
+    active: false
+  ForbiddenComment:
+    active: false
+  LoopWithTooManyJumpStatements:
+    active: false
+  MagicNumber:
+    active: false
+  ReturnCount:
+    active: false
+  ThrowsCount:
+    active: false
+  UnusedImports:
+    active: true
+  UnusedPrivateProperty:
+    allowedNames: 'i'
+    excludes: &testFolders
+      - '**/test/**'
+  UtilityClassWithPublicConstructor:
+    active: false
+  WildcardImport:
+    active: true
+    excludeImports: []
+
+performance:
+  SpreadOperator:
+    active: false
+
+naming:
+  ClassNaming:
+    active: false
+  ConstructorParameterNaming:
+    active: false
+  FunctionNaming:
+    active: false
+  MatchingDeclarationName:
+    active: false
+  TopLevelPropertyNaming:
+    active: false
+  VariableNaming:
+    active: false
+
+exceptions:
+  SwallowedException:
+    active: false
+  TooGenericExceptionCaught:
+    active: false
+  TooGenericExceptionThrown:
+    excludes: *testFolders
+
+complexity:
+  ComplexCondition:
+    active: false
+  CyclomaticComplexMethod:
+    active: false
+  LargeClass:
+    active: false
+  LongMethod:
+    active: false
+  LongParameterList:
+    active: false
+  NestedBlockDepth:
+    active: false
+  TooManyFunctions:
+    active: false

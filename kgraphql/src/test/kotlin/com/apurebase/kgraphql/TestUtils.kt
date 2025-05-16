@@ -24,16 +24,12 @@ fun <T> Map<*, *>.extract(path: String): T {
     try {
         return tokens.fold(this as Any?) { workingMap, token ->
             if (token.contains('[')) {
-                if (!(workingMap as Map<*, *>).containsKey(token.substringBefore('['))) {
-                    throw IllegalArgumentException()
-                }
+                require((workingMap as Map<*, *>).containsKey(token.substringBefore('[')))
                 val list = workingMap[token.substringBefore('[')]
                 val index = token.substring(token.indexOf('[') + 1, token.length - 1).toInt()
                 (list as List<*>)[index]
             } else {
-                if (!(workingMap as Map<*, *>).containsKey(token)) {
-                    throw IllegalArgumentException()
-                }
+                require((workingMap as Map<*, *>).containsKey(token))
                 workingMap[token]
             }
         } as T

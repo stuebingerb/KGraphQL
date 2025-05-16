@@ -9,7 +9,7 @@ be useful when implementing an integration layer for a frontend that orchestrate
 UI with all the required data in a single request, without having to think about CORS.
 
 By linking properties to remote queries, one can also enhance individual schemas by e.g. automatically resolving
-identifiers. 
+identifiers.
 
 In KGraphQL, schema stitching is configured via the `stitchedSchema` DSL. Each stitched schema has 1-n *remote* schemas,
 and up to one *local* schema.

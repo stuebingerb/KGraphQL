@@ -18,4 +18,3 @@ interface ScalarCoercion<Scalar, Raw> {
      */
     fun deserialize(raw: Raw, valueNode: ValueNode): Scalar
 }
-

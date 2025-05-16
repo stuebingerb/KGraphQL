@@ -443,8 +443,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
                 else -> invoke(*transformedArgs.toTypedArray())
             }
+        } catch (e: GraphQLError) {
+            throw e
         } catch (e: Throwable) {
-            if (schema.configuration.wrapErrors && e !is GraphQLError) {
+            if (schema.configuration.wrapErrors) {
                 throw ExecutionException(e.message ?: "", node = executionNode, cause = e)
             } else {
                 throw e

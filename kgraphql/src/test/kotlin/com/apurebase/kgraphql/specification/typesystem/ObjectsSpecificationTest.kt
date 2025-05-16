@@ -272,12 +272,12 @@ class ObjectsSpecificationTest {
             }
         }
 
-        val responseShortAfterLong = (schema.executeBlocking("{actor{long, short}}"))
+        val responseShortAfterLong = schema.executeBlocking("{actor{long, short}}")
         with(responseShortAfterLong) {
             indexOf("short") shouldBeGreaterThan indexOf("long")
         }
 
-        val responseLongAfterShort = (schema.executeBlocking("{actor{short, long}}"))
+        val responseLongAfterShort = schema.executeBlocking("{actor{short, long}}")
         with(responseLongAfterShort) {
             indexOf("long") shouldBeGreaterThan indexOf("short")
         }

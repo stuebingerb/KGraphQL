@@ -166,7 +166,7 @@ schema {
 ```
 
 Both, `InputType` and `ParentType` are explicitly configured, and therefore will keep their original name (a custom
-`name` is not required). 
+`name` is not required).
 
 ```graphql
 type ChildType {

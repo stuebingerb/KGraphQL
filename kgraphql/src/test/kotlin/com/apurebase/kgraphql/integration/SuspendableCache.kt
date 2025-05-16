@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
-open class SuspendCache<K, V>(
+open class SuspendCache<K : Any, V>(
     private val cache: AsyncCache<K, V>,
     private val onGet: suspend (K) -> V,
 ) : CoroutineScope, AsyncCache<K, V> by cache {
@@ -23,8 +23,11 @@ open class SuspendCache<K, V>(
         try {
             getAsync(key).await()
         } catch (e: CompletionException) {
-            if (e.cause != null) throw e.cause!!
-            else throw e
+            if (e.cause != null) {
+                throw e.cause!!
+            } else {
+                throw e
+            }
         }
     }
 
@@ -40,12 +43,13 @@ open class SuspendCache<K, V>(
     }
 
     companion object {
-        fun <K, V> suspendCache(
+        fun <K : Any, V> suspendCache(
             timeoutDuration: Duration = 2.minutes,
             block: suspend (K) -> V,
         ) = runBlocking { suspendCache(timeoutDuration, block) }
 
-        fun <K, V> CoroutineScope.suspendCache(
+        @Suppress("UPPER_BOUND_VIOLATED_BASED_ON_JAVA_ANNOTATIONS")
+        fun <K : Any, V> CoroutineScope.suspendCache(
             timeoutDuration: Duration = 2.minutes,
             block: suspend (K) -> V,
         ) = Caffeine.newBuilder()
