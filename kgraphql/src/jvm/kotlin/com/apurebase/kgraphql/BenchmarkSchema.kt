@@ -26,7 +26,8 @@ object BenchmarkSchema {
         ones.find { it.name == name }?.let { ModelTwo(it, FakeIntRange(it.quantity..12)) }
     }
 
-    val threeResolver: suspend () -> ModelThree = { ModelThree("", ones.map { ModelTwo(it, FakeIntRange(it.quantity..10)) }) }
+    val threeResolver: suspend () -> ModelThree =
+        { ModelThree("", ones.map { ModelTwo(it, FakeIntRange(it.quantity..10)) }) }
 
     object HasOneResolver {
         fun oneResolver(): List<ModelOne> {

@@ -39,37 +39,33 @@ data class Source(
             val subLineColumnNum = columnNum % 80
             val subLines = locationLine.chunked(80)
 
-            return (
-                    locationStr +
-                            printPrefixedLines(
-                                listOf(
-                                    listOf("$lineNum", subLines[0]),
-                                    subLines.slice(1..(subLineIndex + 1)).map { listOf("", it) }.flatten(),
-                                    listOf(" ", whitespace(subLineColumnNum - 1) + "^"),
-                                    listOf("", subLines[subLineIndex + 1])
-                                )
-                            )
+            return locationStr +
+                printPrefixedLines(
+                    listOf(
+                        listOf("$lineNum", subLines[0]),
+                        subLines.slice(1..(subLineIndex + 1)).map { listOf("", it) }.flatten(),
+                        listOf(" ", whitespace(subLineColumnNum - 1) + "^"),
+                        listOf("", subLines[subLineIndex + 1])
                     )
+                )
         }
 
-        return (
-                locationStr +
-                        printPrefixedLines(
-                            listOf(
-                                // Lines specified like this: ["prefix", "string"],
-                                listOf("${lineNum - 1}", lines.getOrNull(lineIndex - 1)),
-                                listOf("$lineNum", locationLine),
-                                listOf("", whitespace(columnNum - 1) + "^"),
-                                listOf("${lineNum + 1}", lines.getOrNull(lineIndex + 1))
-                            )
-                        )
+        return locationStr +
+            printPrefixedLines(
+                listOf(
+                    // Lines specified like this: ["prefix", "string"],
+                    listOf("${lineNum - 1}", lines.getOrNull(lineIndex - 1)),
+                    listOf("$lineNum", locationLine),
+                    listOf("", whitespace(columnNum - 1) + "^"),
+                    listOf("${lineNum + 1}", lines.getOrNull(lineIndex + 1))
                 )
+            )
     }
 
     private fun printPrefixedLines(lines: List<List<String?>>): String {
         val existingLines = lines.filter { it.getOrNull(1) != null }
 
-        val padLen = existingLines.map { it[0]?.length ?: error("item line length is null") }.maxOrNull()
+        val padLen = existingLines.maxOfOrNull { it[0]?.length ?: error("item line length is null") }
             ?: error("line is null")
         return existingLines.joinToString("\n") {
             lpad(padLen, it[0]!!) + if (it.getOrNull(1).isNullOrBlank()) " |" else " | " + it[1]

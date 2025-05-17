@@ -11,11 +11,10 @@ class ContextBuilder(block: ContextBuilder.() -> Unit) {
     }
 
     fun <T : Any> inject(kClass: KClass<T>, component: T) {
-        if (components[kClass] == null) {
-            components[kClass] = component
-        } else {
-            throw IllegalArgumentException("There's already object of type $kClass in this context -> ${components[kClass]}")
+        require(components[kClass] == null) {
+            "There's already object of type $kClass in this context -> ${components[kClass]}"
         }
+        components[kClass] = component
     }
 
     inline infix fun <reified T : Any> inject(component: T) {
@@ -30,4 +29,3 @@ class ContextBuilder(block: ContextBuilder.() -> Unit) {
 fun context(block: ContextBuilder.() -> Unit): Context {
     return Context(ContextBuilder(block).components)
 }
-

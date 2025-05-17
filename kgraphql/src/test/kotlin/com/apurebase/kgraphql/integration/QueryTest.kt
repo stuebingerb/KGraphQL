@@ -59,7 +59,7 @@ class QueryTest : BaseSchemaTest() {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{film{title, director{name, favDish}}}")
         }
-        exception shouldHaveMessage  "Property favDish on Director does not exist"
+        exception shouldHaveMessage "Property favDish on Director does not exist"
         exception.extensions shouldBe mapOf(
             "type" to "GRAPHQL_VALIDATION_FAILED"
         )
@@ -106,7 +106,7 @@ class QueryTest : BaseSchemaTest() {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{scenario{author, content}}")
         }
-        exception shouldHaveMessage  "Property author on Scenario does not exist"
+        exception shouldHaveMessage "Property author on Scenario does not exist"
         exception.extensions shouldBe mapOf(
             "type" to "GRAPHQL_VALIDATION_FAILED"
         )
@@ -377,7 +377,7 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent()
             )
         }
-        exception shouldHaveMessage  "Unknown type MissingType in type condition on fragment"
+        exception shouldHaveMessage "Unknown type MissingType in type condition on fragment"
         exception.extensions shouldBe mapOf(
             "type" to "GRAPHQL_VALIDATION_FAILED"
         )
@@ -397,7 +397,7 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent()
             )
         }
-        exception shouldHaveMessage  "Fragment film_title not found"
+        exception shouldHaveMessage "Fragment film_title not found"
         exception.extensions shouldBe mapOf(
             "type" to "GRAPHQL_VALIDATION_FAILED"
         )
@@ -408,7 +408,7 @@ class QueryTest : BaseSchemaTest() {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{film}")
         }
-        exception shouldHaveMessage  "Missing selection set on property film of type Film"
+        exception shouldHaveMessage "Missing selection set on property film of type Film"
         exception.extensions shouldBe mapOf(
             "type" to "GRAPHQL_VALIDATION_FAILED"
         )

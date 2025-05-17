@@ -51,7 +51,7 @@ class StitchedSchemaCompilation(
         }
 
         definition.stitchedProperties.groupBy { it.typeName }.forEach { (typeName, stitchedProperties) ->
-            val originalType: TypeProxy = (typesByName[typeName] as? TypeProxy)
+            val originalType: TypeProxy = typesByName[typeName] as? TypeProxy
                 ?: throw SchemaException("Stitched type $typeName does not exist")
             val stitchedFields = stitchedProperties.map { property ->
                 validateName(property.fieldName)

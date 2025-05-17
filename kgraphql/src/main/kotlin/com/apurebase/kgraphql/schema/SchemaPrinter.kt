@@ -160,18 +160,18 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
         //  https://spec.graphql.org/draft/#sec-Input-Objects
         val inputTypes = buildString {
             schemaTypes[TypeKind.INPUT_OBJECT]?.forEachIndexed { index, type ->
-                    if (index > 0) {
-                        appendLine()
-                    }
-                    appendDescription(type)
-                    appendLine("input ${type.name}${type.implements()} {")
-                    val indentation = "  "
-                    type.inputFields.sortedByName().forEach { field ->
-                        appendDescription(field, indentation)
-                        appendLine("${indentation}${field.name}: ${field.type.typeReference()}${field.deprecationInfo()}")
-                    }
-                    appendLine("}")
+                if (index > 0) {
+                    appendLine()
                 }
+                appendDescription(type)
+                appendLine("input ${type.name}${type.implements()} {")
+                val indentation = "  "
+                type.inputFields.sortedByName().forEach { field ->
+                    appendDescription(field, indentation)
+                    appendLine("${indentation}${field.name}: ${field.type.typeReference()}${field.deprecationInfo()}")
+                }
+                appendLine("}")
+            }
         }
 
         // Directives

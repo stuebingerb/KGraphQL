@@ -348,9 +348,7 @@ class SchemaBuilderTest {
             it.extract<String>("data/__schema/queryType/fields[3]/type/ofType/name") shouldBe "String"
         }
 
-        deserialize(schema.executeBlocking("{definedValueProp {value}}")).let {
-            it.extract<Int>("data/definedValueProp/value") shouldBe 33
-        }
+        deserialize(schema.executeBlocking("{definedValueProp {value}}")).extract<Int>("data/definedValueProp/value") shouldBe 33
         deserialize(schema.executeBlocking("{undefinedValueProp {anotherValue}}")).let {
             it.extract<String>("data/undefinedValueProp/anotherValue") shouldBe "foo"
         }
@@ -397,9 +395,7 @@ class SchemaBuilderTest {
             it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/name") shouldBe "Int"
         }
 
-        deserialize(schema.executeBlocking("{lambda {lambda}}")).let {
-            it.extract<Int>("data/lambda/lambda") shouldBe 1
-        }
+        deserialize(schema.executeBlocking("{lambda {lambda}}")).extract<Int>("data/lambda/lambda") shouldBe 1
     }
 
     @Test

@@ -26,6 +26,6 @@ open class DefaultGenericTypeResolver : GenericTypeResolver {
     override fun resolveMonad(type: KType): KType =
         throw SchemaException(
             "Could not resolve resulting type for monad $type. " +
-                    "Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types"
+                "Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types"
         )
 }

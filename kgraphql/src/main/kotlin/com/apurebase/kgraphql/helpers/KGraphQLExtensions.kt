@@ -31,7 +31,7 @@ fun Execution.getFields(): List<String> = when (this) {
             listOf(key)
         } else {
             children
-                .filterNot { (it is Execution.Node && it.children.isNotEmpty()) }
+                .filterNot { it is Execution.Node && it.children.isNotEmpty() }
                 .flatMap(Execution::getFields)
         }
     }
@@ -48,7 +48,7 @@ fun Collection<*>.toJsonElement(): JsonElement {
             is Number -> list.add(JsonPrimitive(value))
             is Boolean -> list.add(JsonPrimitive(value))
             is String -> list.add(JsonPrimitive(value))
-            is Map<*, *> -> list.add((value).toJsonElement())
+            is Map<*, *> -> list.add(value.toJsonElement())
             is Collection<*> -> list.add(value.toJsonElement())
             is Array<*> -> list.add(value.toList().toJsonElement())
             else -> list.add(JsonPrimitive(value.toString())) // other type
@@ -69,7 +69,7 @@ fun Map<*, *>.toJsonElement(): JsonElement {
             is Number -> map[key] = JsonPrimitive(value)
             is Boolean -> map[key] = JsonPrimitive(value)
             is String -> map[key] = JsonPrimitive(value)
-            is Map<*, *> -> map[key] = (value).toJsonElement()
+            is Map<*, *> -> map[key] = value.toJsonElement()
             is Collection<*> -> map[key] = value.toJsonElement()
             is Array<*> -> map[key] = value.toList().toJsonElement()
             else -> map[key] = JsonPrimitive(value.toString())  // other type

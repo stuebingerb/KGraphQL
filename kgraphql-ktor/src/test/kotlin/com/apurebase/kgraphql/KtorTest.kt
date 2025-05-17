@@ -34,7 +34,7 @@ open class KtorTest {
                 install(GraphQL) {
                     context(ctxBuilder)
                     wrap { next ->
-                        authenticate(optional = (authHeader == null)) { next() }
+                        authenticate(optional = authHeader == null) { next() }
                     }
                     schema(block)
                 }

@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.`kotlin-dsl`
-
 repositories {
     gradlePluginPortal()
 }
@@ -12,4 +10,5 @@ dependencies {
     implementation(libs.kotlin.gradle)
     implementation(libs.dokka.gradle)
     implementation(libs.mavenPublish.gradle)
+    implementation(libs.detekt.gradle)
 }

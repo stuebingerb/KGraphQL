@@ -35,7 +35,8 @@ open class FunctionExecutionBenchmark {
 
     private val arg1 = 3
     private val arg2 = "CODE"
-    private val implementation = { int: Int, string: String -> "${int * ThreadLocalRandom.current().nextDouble()} $string" }
+    private val implementation =
+        { int: Int, string: String -> "${int * ThreadLocalRandom.current().nextDouble()} $string" }
 
     @Setup
     fun setup() {
