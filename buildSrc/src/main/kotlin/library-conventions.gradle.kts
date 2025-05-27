@@ -66,3 +66,16 @@ detekt {
     allRules = false
     config.setFrom("$rootDir/config/detekt.yml")
 }
+
+// Exclude test fixtures from publication, as we use them only internally
+plugins.withId("org.gradle.java-test-fixtures") {
+    val component = components["java"] as AdhocComponentWithVariants
+    component.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
+    component.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
+
+    // Workaround to not publish test fixtures sources added by com.vanniktech.maven.publish plugin
+    // TODO: Remove as soon as https://github.com/vanniktech/gradle-maven-publish-plugin/issues/779 is closed
+    afterEvaluate {
+        component.withVariantsFromConfiguration(configurations["testFixturesSourcesElements"]) { skip() }
+    }
+}
