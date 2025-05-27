@@ -12,10 +12,10 @@ group = "de.stuebingerb"
 version = "0.30.0"
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
     compilerOptions {
-        apiVersion.set(KotlinVersion.KOTLIN_2_0)
-        languageVersion.set(KotlinVersion.KOTLIN_2_0)
+        apiVersion.set(KotlinVersion.KOTLIN_2_1)
+        languageVersion.set(KotlinVersion.KOTLIN_2_1)
     }
 }
 
