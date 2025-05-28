@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.helpers
 
 import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
+import com.apurebase.kgraphql.schema.builtin.ExtendedBuiltInScalars
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Type
@@ -130,4 +131,6 @@ fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
     else -> error("Unexpected value: $this")
 }
 
-private fun __Type.isInt() = unwrapped().name == BuiltInScalars.INT.typeDef.name
+// A list of types that are "int", i.e. do not accept floating point values
+private fun __Type.isInt() =
+    unwrapped().name == BuiltInScalars.INT.typeDef.name || unwrapped().name == ExtendedBuiltInScalars.LONG.typeDef.name || unwrapped().name == ExtendedBuiltInScalars.SHORT.typeDef.name

@@ -44,6 +44,8 @@ abstract class BaseSchemaTest {
             useDefaultPrettyPrinter = true
         }
 
+        extendedScalars()
+
         query("number") {
             description = "returns little of big number"
             resolver { big: Boolean -> if (big) 10000 else 0 }
@@ -90,6 +92,28 @@ abstract class BaseSchemaTest {
             description = "ranked films"
             resolver { rank: Int ->
                 when (rank) {
+                    1 -> prestige
+                    2 -> se7en
+                    3 -> theBigShave
+                    else -> null
+                }
+            }
+        }
+        query("filmByRankLong") {
+            description = "ranked films"
+            resolver { rank: Long ->
+                when (rank) {
+                    1L -> prestige
+                    2L -> se7en
+                    3L -> theBigShave
+                    else -> null
+                }
+            }
+        }
+        query("filmByRankShort") {
+            description = "ranked films"
+            resolver { rank: Short ->
+                when (rank.toInt()) {
                     1 -> prestige
                     2 -> se7en
                     3 -> theBigShave
