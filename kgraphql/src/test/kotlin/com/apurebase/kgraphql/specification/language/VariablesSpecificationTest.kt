@@ -47,6 +47,40 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         }
     }
 
+    // Json only has one number type, so "1" and "1.0" are the same, and input coercion should be able to handle
+    // the value accordingly
+    @Test
+    fun `query with long variable should allow whole floating point numbers`() {
+        val map =
+            execute(query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}", variables = "{\"rank\": 1.0}")
+        assertNoErrors(map)
+        map.extract<String>("data/filmByRankLong/title") shouldBe "Prestige"
+    }
+
+    @Test
+    fun `query with long variable should not allow floating point numbers that are not whole`() {
+        expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
+            execute(query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}", variables = "{\"rank\": 1.01}")
+        }
+    }
+
+    // Json only has one number type, so "1" and "1.0" are the same, and input coercion should be able to handle
+    // the value accordingly
+    @Test
+    fun `query with short variable should allow whole floating point numbers`() {
+        val map =
+            execute(query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}", variables = "{\"rank\": 1.0}")
+        assertNoErrors(map)
+        map.extract<String>("data/filmByRankShort/title") shouldBe "Prestige"
+    }
+
+    @Test
+    fun `query with short variable should not allow floating point numbers that are not whole`() {
+        expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
+            execute(query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}", variables = "{\"rank\": 1.01}")
+        }
+    }
+
     @Test
     fun `query with float variable`() {
         val map = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 42.3}")

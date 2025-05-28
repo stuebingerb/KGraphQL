@@ -142,7 +142,7 @@ object LONG_COERCION : StringScalarCoercion<Long> {
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> valueNode.value
         else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to expected numeric constant",
+            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
             valueNode
         )
     }
