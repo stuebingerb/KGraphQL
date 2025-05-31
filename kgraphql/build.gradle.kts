@@ -25,6 +25,12 @@ benchmark {
             jmhVersion = "1.37"
         }
     }
+
+    configurations {
+        register("requestCachingBenchmark") {
+            include("com.apurebase.kgraphql.RequestCachingBenchmark")
+        }
+    }
 }
 
 dependencies {
@@ -35,7 +41,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.jackson.core.databind)
     implementation(libs.jackson.module.kotlin)
-    implementation(libs.caffeine)
+    implementation(libs.aedile)
     implementation(libs.deferredJsonBuilder)
 
     testImplementation(libs.kotest)
