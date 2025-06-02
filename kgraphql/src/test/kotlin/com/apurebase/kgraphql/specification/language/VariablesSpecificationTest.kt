@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.specification.language
 
 import com.apurebase.kgraphql.InvalidInputValueException
+import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
@@ -52,7 +53,10 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     @Test
     fun `query with long variable should allow whole floating point numbers`() {
         val map =
-            execute(query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}", variables = "{\"rank\": 1.0}")
+            execute(
+                query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}",
+                variables = "{\"rank\": 1.0}"
+            )
         assertNoErrors(map)
         map.extract<String>("data/filmByRankLong/title") shouldBe "Prestige"
     }
@@ -60,7 +64,10 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     @Test
     fun `query with long variable should not allow floating point numbers that are not whole`() {
         expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
-            execute(query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}", variables = "{\"rank\": 1.01}")
+            execute(
+                query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}",
+                variables = "{\"rank\": 1.01}"
+            )
         }
     }
 
@@ -69,7 +76,10 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     @Test
     fun `query with short variable should allow whole floating point numbers`() {
         val map =
-            execute(query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}", variables = "{\"rank\": 1.0}")
+            execute(
+                query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}",
+                variables = "{\"rank\": 1.0}"
+            )
         assertNoErrors(map)
         map.extract<String>("data/filmByRankShort/title") shouldBe "Prestige"
     }
@@ -77,7 +87,10 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     @Test
     fun `query with short variable should not allow floating point numbers that are not whole`() {
         expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
-            execute(query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}", variables = "{\"rank\": 1.01}")
+            execute(
+                query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}",
+                variables = "{\"rank\": 1.01}"
+            )
         }
     }
 
@@ -258,5 +271,64 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         assertNoErrors(result)
         result.extract<String>("data/agesFirst/name") shouldBe "Someone"
         result.extract<Int>("data/agesSecond/age") shouldBe 15
+    }
+
+    @Test
+    fun `invalid properties should result in appropriate errors`() {
+        data class SampleObject(val id: String, val name: String)
+
+        val schema = KGraphQL.schema {
+            type<SampleObject> {
+                property("readonlyExtension") {
+                    resolver { obj: SampleObject -> "${obj.id}-${obj.name}" }
+                }
+            }
+            query("getSample") {
+                resolver { id: String -> SampleObject(id, "$id-name") }
+            }
+            query("validateSample") {
+                resolver { sample: SampleObject -> sample.id == "valid" }
+            }
+        }
+        schema.printSchema() shouldBe """
+            type Query {
+              getSample(id: String!): SampleObject!
+              validateSample(sample: SampleObjectInput!): Boolean!
+            }
+            
+            type SampleObject {
+              id: String!
+              name: String!
+              readonlyExtension: String!
+            }
+            
+            input SampleObjectInput {
+              id: String!
+              name: String!
+            }
+            
+        """.trimIndent()
+
+        expect<InvalidInputValueException>("Property 'readonlyExtension' on 'SampleObjectInput' does not exist") {
+            schema.executeBlocking(
+                """
+                {
+                    validateSample(sample: {id: "valid", name: "name", readonlyExtension: "readonlyExtension"})
+                }
+                """.trimIndent()
+            )
+        }
+
+        // It should not matter if SampleObjectInput is provided directly or via variables, the error message should be equal
+        expect<InvalidInputValueException>("Property 'readonlyExtension' on 'SampleObjectInput' does not exist") {
+            schema.executeBlocking(
+                """
+                query (${'$'}sample: SampleObjectInput!) {
+                    validateSample(sample: ${'$'}sample)
+                }
+                """.trimIndent(),
+                variables = "{ \"sample\": {\"id\": \"valid\", \"name\": \"name\", \"readonlyExtension\": \"readonlyExtension\"}}"
+            )
+        }
     }
 }

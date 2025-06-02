@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.helpers
 
+import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
 import com.apurebase.kgraphql.schema.builtin.ExtendedBuiltInScalars
 import com.apurebase.kgraphql.schema.execution.Execution
@@ -117,7 +118,11 @@ fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
             val inputFields = checkNotNull(expectedType.unwrapped().inputFields) {
                 "Expected INPUT_OBJECT for ${expectedType.unwrapped().name} but got ${expectedType.kind}"
             }
-            val expectedPropType = inputFields.first { it.name == prop.key }.type
+            val expectedPropType = inputFields.firstOrNull { it.name == prop.key }?.type
+                ?: throw InvalidInputValueException(
+                    "Property '${prop.key}' on '${expectedType.unwrapped().name}' does not exist",
+                    null
+                )
             ValueNode.ObjectValueNode.ObjectFieldNode(
                 null,
                 NameNode(prop.key, null),
