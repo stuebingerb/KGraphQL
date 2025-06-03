@@ -2895,8 +2895,10 @@ class StitchedSchemaExecutionTest {
                         resolver<String> {
                             throw GraphQLError(
                                 message = "don't call me local!",
-                                extensionsErrorType = BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name,
-                                extensionsErrorDetail = mapOf("localErrorKey" to "localErrorValue")
+                                extensions = mapOf(
+                                    "type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name,
+                                    "detail" to mapOf("localErrorKey" to "localErrorValue")
+                                )
                             )
                         }
                     }
@@ -2930,14 +2932,14 @@ class StitchedSchemaExecutionTest {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failRemote }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"don't call me remote!","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"BAD_USER_INPUT","remoteUrl":"remote","remoteOperation":"failRemote","remoteErrorKey":["remoteErrorValue1","remoteErrorValue2"]}}]}
+            {"errors":[{"message":"don't call me remote!","locations":[{"line":1,"column":3}],"path":[],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote","type":"BAD_USER_INPUT","remoteErrorKey":["remoteErrorValue1","remoteErrorValue2"]}}]}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failRemote2 }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"INTERNAL_SERVER_ERROR","remoteUrl":"remote","remoteOperation":"failRemote2"}}]}
+            {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":3}],"path":[],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote2","type":"INTERNAL_SERVER_ERROR"}}]}
         """.trimIndent()
     }
 

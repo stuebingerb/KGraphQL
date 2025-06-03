@@ -10,7 +10,9 @@ import com.apurebase.kgraphql.schema.execution.Execution
 class RemoteExecutionException(message: String, node: Execution.Remote) : GraphQLError(
     message = message,
     nodes = listOf(node.selectionNode),
-    extensionsErrorType = BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name,
-    extensionsErrorDetail = mapOf("remoteUrl" to node.remoteUrl, "remoteOperation" to node.remoteOperation)
+    extensions = mapOf(
+        "type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name,
+        "detail" to mapOf("remoteUrl" to node.remoteUrl, "remoteOperation" to node.remoteOperation)
+    )
 )
 

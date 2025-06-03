@@ -45,24 +45,9 @@ open class GraphQLError(
     val originalError: Throwable? = null,
 
     /**
-     * The type of the error, based on Apollo Server's built-in error codes:
-     *   https://www.apollographql.com/docs/apollo-server/data/errors#built-in-error-codes
-     *
-     * For supported built-in codes see [BuiltInErrorCodes].
-     */
-    @Deprecated(message = "Use extensions with key 'type'")
-    val extensionsErrorType: String = BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name,
-
-    /**
-     * Details regarding this error.
-     */
-    @Deprecated(message = "Use extensions with key 'detail'")
-    val extensionsErrorDetail: Map<String, Any?>? = null,
-
-    /**
      * Custom error extensions.
      */
-    open val extensions: Map<String, Any?>? = null
+    open val extensions: Map<String, Any?>? = mapOf("type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name)
 ) : Exception(message) {
 
     /**
@@ -116,13 +101,9 @@ open class GraphQLError(
                 put("path", buildJsonArray {
                     // TODO: Build this path. https://spec.graphql.org/June2018/#example-90475
                 })
-                val legacyExtensions = mutableMapOf<String, Any?>().apply {
-                    put("type", extensionsErrorType)
-                    extensionsErrorDetail?.let { detail ->
-                        put("detail", detail)
-                    }
+                extensions?.let {
+                    put("extensions", it.toJsonElement())
                 }
-                put("extensions", (legacyExtensions + extensions.orEmpty()).toJsonElement())
             }
         })
     }.toString()
