@@ -182,7 +182,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with nulabble generic input type`() {
+    fun `query with nullable generic input type`() {
         val map = execute("{actorsByTagsNullable{name}}")
         assertNoErrors(map)
     }
@@ -374,7 +374,7 @@ class QueryTest : BaseSchemaTest() {
                         }
                     }
                 }
-            """.trimIndent()
+                """.trimIndent()
             )
         }
         exception shouldHaveMessage "Unknown type MissingType in type condition on fragment"
@@ -393,8 +393,7 @@ class QueryTest : BaseSchemaTest() {
                         ...film_title
                     }
                 }
-                
-            """.trimIndent()
+                """.trimIndent()
             )
         }
         exception shouldHaveMessage "Fragment film_title not found"
@@ -426,8 +425,8 @@ class QueryTest : BaseSchemaTest() {
                 }
             }
             type<SampleNode> {
-                property<List<SampleNode>>("children") {
-                    resolver { parent, amount: Int, node: Execution.Node ->
+                property("children") {
+                    resolver { _, amount: Int, node: Execution.Node ->
                         (1..amount).map {
                             SampleNode(it, "${node.aliasOrKey}-Testing", fields = node.getFields())
                         }
@@ -450,7 +449,7 @@ class QueryTest : BaseSchemaTest() {
                 id
                 name
             }
-        """.trimIndent()
+            """.trimIndent()
         ).deserialize()
 
         result.extract<List<String>>("data/root/fields") shouldBe listOf("fields")
