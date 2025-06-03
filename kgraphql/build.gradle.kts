@@ -35,7 +35,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.jackson.core.databind)
     implementation(libs.jackson.module.kotlin)
-    implementation(libs.caffeine)
+    implementation(libs.aedile)
     implementation(libs.deferredJsonBuilder)
 
     testImplementation(libs.kotest)

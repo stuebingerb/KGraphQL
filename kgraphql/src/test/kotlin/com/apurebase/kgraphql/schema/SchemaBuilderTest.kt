@@ -527,14 +527,15 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `There is clear message when query resolver is not present`() {
+    fun `there should be a clear message when query resolver is not present`() {
         expect<IllegalArgumentException>("resolver has to be specified for query [name]") {
             KGraphQL.schema {
-                query("name") { "STUFF" }
+                query("name") { }
             }
         }
     }
 
+    @Suppress("unused")
     class SixValues(
         val val1: Int = 1,
         val val2: String = "2",
@@ -739,7 +740,7 @@ class SchemaBuilderTest {
         expect<SchemaException>("Resolver for 'main' has no return value") {
             KGraphQL.schema {
                 query("main") {
-                    resolver { -> Unit }
+                    resolver { -> }
                 }
             }
         }
