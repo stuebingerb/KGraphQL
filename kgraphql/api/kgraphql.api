@@ -42,11 +42,9 @@ public final class com/apurebase/kgraphql/ExtensionsKt {
 }
 
 public class com/apurebase/kgraphql/GraphQLError : java/lang/Exception {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getExtensions ()Ljava/util/Map;
-	public final fun getExtensionsErrorDetail ()Ljava/util/Map;
-	public final fun getExtensionsErrorType ()Ljava/lang/String;
 	public final fun getLocations ()Ljava/util/List;
 	public final fun getNodes ()Ljava/util/List;
 	public final fun getOriginalError ()Ljava/lang/Throwable;
