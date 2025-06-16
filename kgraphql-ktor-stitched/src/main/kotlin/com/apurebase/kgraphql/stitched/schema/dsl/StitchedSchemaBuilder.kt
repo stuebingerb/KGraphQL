@@ -52,14 +52,14 @@ class StitchedSchemaBuilder {
 
     private fun mergeSchemaDefinitions(local: SchemaDefinition, stitched: StitchedSchemaDefinition) =
         StitchedSchemaDefinition(
-            objects = local.objects + stitched.objects,
+            objects = (local.objects + stitched.objects).distinctBy { it.kClass },
             queries = local.queries + stitched.queries,
-            scalars = local.scalars + stitched.scalars,
+            scalars = (local.scalars + stitched.scalars).distinctBy { it.kClass },
             mutations = local.mutations + stitched.mutations,
             subscriptions = local.subscriptions + stitched.subscriptions,
-            enums = local.enums + stitched.enums,
+            enums = (local.enums + stitched.enums).distinctBy { it.kClass },
             unions = local.unions + stitched.unions,
-            directives = local.directives + stitched.directives,
+            directives = (local.directives + stitched.directives).distinct(),
             inputObjects = local.inputObjects + stitched.inputObjects,
             remoteSchemas = stitched.remoteSchemas,
             stitchedProperties = stitched.stitchedProperties
