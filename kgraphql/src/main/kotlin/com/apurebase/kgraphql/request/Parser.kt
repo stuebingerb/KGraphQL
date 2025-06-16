@@ -56,11 +56,6 @@ open class Parser {
 
     constructor(source: String, options: Options? = null) : this(Source(source), options)
 
-    constructor(lexer: Lexer, options: Options? = null) {
-        this.options = options ?: Options()
-        this.lexer = lexer
-    }
-
     /**
      * Converts a name lex token into a name parse node.
      */

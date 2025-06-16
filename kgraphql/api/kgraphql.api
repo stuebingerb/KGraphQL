@@ -148,38 +148,18 @@ public final class com/apurebase/kgraphql/request/IntrospectionKt {
 }
 
 public final class com/apurebase/kgraphql/request/Lexer {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/lang/Object;Lcom/apurebase/kgraphql/schema/model/ast/Token;Lcom/apurebase/kgraphql/schema/model/ast/Token;II)V
-	public synthetic fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/lang/Object;Lcom/apurebase/kgraphql/schema/model/ast/Token;Lcom/apurebase/kgraphql/schema/model/ast/Token;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Source;)V
 	public final fun advance ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public final fun component1 ()Lcom/apurebase/kgraphql/schema/model/ast/Source;
-	public final fun component2 ()Ljava/lang/Object;
-	public final fun component3 ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public final fun component4 ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public final fun component5 ()I
-	public final fun component6 ()I
-	public final fun copy (Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/lang/Object;Lcom/apurebase/kgraphql/schema/model/ast/Token;Lcom/apurebase/kgraphql/schema/model/ast/Token;II)Lcom/apurebase/kgraphql/request/Lexer;
-	public static synthetic fun copy$default (Lcom/apurebase/kgraphql/request/Lexer;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/lang/Object;Lcom/apurebase/kgraphql/schema/model/ast/Token;Lcom/apurebase/kgraphql/schema/model/ast/Token;IIILjava/lang/Object;)Lcom/apurebase/kgraphql/request/Lexer;
-	public fun equals (Ljava/lang/Object;)Z
 	public final fun getLastToken ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public final fun getLine ()I
-	public final fun getLineStart ()I
-	public final fun getOptions ()Ljava/lang/Object;
 	public final fun getSource ()Lcom/apurebase/kgraphql/schema/model/ast/Source;
 	public final fun getToken ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public fun hashCode ()I
 	public final fun lookahead ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
 	public final fun setLastToken (Lcom/apurebase/kgraphql/schema/model/ast/Token;)V
-	public final fun setLine (I)V
-	public final fun setLineStart (I)V
 	public final fun setToken (Lcom/apurebase/kgraphql/schema/model/ast/Token;)V
-	public fun toString ()Ljava/lang/String;
 }
 
 public class com/apurebase/kgraphql/request/Parser {
 	public static final field Companion Lcom/apurebase/kgraphql/request/Parser$Companion;
-	public fun <init> (Lcom/apurebase/kgraphql/request/Lexer;Lcom/apurebase/kgraphql/request/Parser$Options;)V
-	public synthetic fun <init> (Lcom/apurebase/kgraphql/request/Lexer;Lcom/apurebase/kgraphql/request/Parser$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Source;Lcom/apurebase/kgraphql/request/Parser$Options;)V
 	public synthetic fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Source;Lcom/apurebase/kgraphql/request/Parser$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/request/Parser$Options;)V

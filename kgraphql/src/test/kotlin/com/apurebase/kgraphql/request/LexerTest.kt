@@ -34,11 +34,11 @@ import org.junit.jupiter.api.Test
 internal class LexerTest {
 
     private fun lexOne(str: String, block: Token.() -> Unit = { }) {
-        block(Lexer(str).advance())
+        block(Lexer(Source(str)).advance())
     }
 
     private fun lexSecond(str: String, block: Token.() -> Unit = { }) {
-        block(Lexer(str).also { it.advance() }.advance())
+        block(Lexer(Source(str)).also { it.advance() }.advance())
     }
 
     private fun shouldThrowSyntaxError(str: String, expect: InvalidSyntaxException.() -> Unit) {
@@ -1086,7 +1086,7 @@ internal class LexerTest {
     // ----------- isPunctuatorTokenKind -----------//
     // ---------------------------------------------//
     private fun isPunctuatorToken(text: String): Boolean {
-        return Lexer(text).advance().kind.isPunctuatorTokenKind
+        return Lexer(Source(text)).advance().kind.isPunctuatorTokenKind
     }
 
     @Test
