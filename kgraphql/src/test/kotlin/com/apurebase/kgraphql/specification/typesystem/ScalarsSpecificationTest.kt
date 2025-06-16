@@ -233,7 +233,7 @@ class ScalarsSpecificationTest {
     data class Multi(val boo: Boo, val str: String, val num: Num)
 
     @Test
-    fun `Schema may declare custom double scalar type`() {
+    fun `schema may declare custom double scalar type`() {
         val schema = KGraphQL.schema {
             floatScalar<Dob> {
                 deserialize = ::Dob
@@ -251,7 +251,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    fun `Scalars within input variables`() {
+    fun `scalars within input variables`() {
         val schema = KGraphQL.schema {
             booleanScalar<Boo> {
                 deserialize = ::Boo
@@ -296,7 +296,7 @@ class ScalarsSpecificationTest {
         val d = '$'
 
         val req = """
-            query Query(${d}boo: Boo!,  ${d}sho: Sho!, ${d}lon: Lon!, ${d}dob: Dob!, ${d}num: Num!, ${d}str: Str!) {
+            query Query(${d}boo: Boo!, ${d}sho: Sho!, ${d}lon: Lon!, ${d}dob: Dob!, ${d}num: Num!, ${d}str: Str!) {
                 boo(boo: ${d}boo)
                 sho(sho: ${d}sho)
                 lon(lon: ${d}lon)
@@ -307,7 +307,7 @@ class ScalarsSpecificationTest {
             }
         """.trimIndent()
 
-        val values = """
+        var variables = """
             {
                 "boo": $booValue,
                 "sho": $shoValue,
@@ -318,23 +318,47 @@ class ScalarsSpecificationTest {
             }
         """.trimIndent()
 
-        val response = deserialize(schema.executeBlocking(req, values))
-        response.extract<Boolean>("data/boo") shouldBe booValue
-        response.extract<Int>("data/sho") shouldBe shoValue.toInt()
-        response.extract<Int>("data/lon") shouldBe lonValue.toInt()
-        response.extract<Double>("data/dob") shouldBe dobValue
-        response.extract<Int>("data/num") shouldBe numValue
-        response.extract<String>("data/str") shouldBe strValue
+        deserialize(schema.executeBlocking(req, variables)).run {
+            extract<Boolean>("data/boo") shouldBe booValue
+            extract<Int>("data/sho") shouldBe shoValue.toInt()
+            extract<Int>("data/lon") shouldBe lonValue.toInt()
+            extract<Double>("data/dob") shouldBe dobValue
+            extract<Int>("data/num") shouldBe numValue
+            extract<String>("data/str") shouldBe strValue
+            extract<Boolean>("data/multi/boo") shouldBe false
+            extract<String>("data/multi/str") shouldBe "String"
+            extract<Int>("data/multi/num") shouldBe 25
+        }
 
-        response.extract<Boolean>("data/multi/boo") shouldBe false
-        response.extract<String>("data/multi/str") shouldBe "String"
-        response.extract<Int>("data/multi/num") shouldBe 25
+        // Second request with variables of "incorrect" type (json does not differentiate between 1 and 1.0)
+        variables = """
+            {
+                "boo": $booValue,
+                "sho": $shoValue.0,
+                "lon": $lonValue.0,
+                "dob": $dobValue,
+                "num": $numValue.0,
+                "str": "$strValue"
+            }
+        """.trimIndent()
+
+        deserialize(schema.executeBlocking(req, variables)).run {
+            extract<Boolean>("data/boo") shouldBe booValue
+            extract<Int>("data/sho") shouldBe shoValue.toInt()
+            extract<Int>("data/lon") shouldBe lonValue.toInt()
+            extract<Double>("data/dob") shouldBe dobValue
+            extract<Int>("data/num") shouldBe numValue
+            extract<String>("data/str") shouldBe strValue
+            extract<Boolean>("data/multi/boo") shouldBe false
+            extract<String>("data/multi/str") shouldBe "String"
+            extract<Int>("data/multi/num") shouldBe 25
+        }
     }
 
     data class NewPart(val manufacturer: String, val name: String, val oem: Boolean, val addedDate: LocalDate)
 
     @Test
-    fun `Schema may declare LocalDate custom scalar`() {
+    fun `schema may declare LocalDate custom scalar`() {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
