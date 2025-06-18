@@ -1,8 +1,6 @@
 package com.apurebase.kgraphql.helpers
 
 import com.apurebase.kgraphql.InvalidInputValueException
-import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
-import com.apurebase.kgraphql.schema.builtin.ExtendedBuiltInScalars
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Type
@@ -81,25 +79,19 @@ fun Map<*, *>.toJsonElement(): JsonElement {
 }
 
 /**
- * Converts this [JsonNode] to a [ValueNode], applying special treatment for doubles and floats:
+ * Converts this [JsonNode] to a [ValueNode], applying special treatment for doubles and floats, as specified by
+ * https://spec.graphql.org/October2021/#sec-Scalars.Input-Coercion:
  *
- * Json does not differentiate between "1" and "1.0" (cf. https://json-schema.org/understanding-json-schema/reference/numeric),
- * and while it is allowed to pass "1" for a Double, it is not allowed to pass "1.0" for an Int.
- * So when the [expectedType] is INT *and* the value is a whole number, we convert a Json "1.0"
- * to [ValueNode.NumberValueNode] instead of [ValueNode.DoubleValueNode].
+ * "GraphQL has different constant literals to represent integer and floating-point input values, and coercion rules
+ * may apply differently depending on which type of input value is encountered. GraphQL may be parameterized by
+ * variables, the values of which are often serialized when sent over a transport like HTTP. Since some common
+ * serializations (ex. JSON) do not discriminate between integer and floating-point values, they are interpreted as an
+ * integer input value if they have an empty fractional part (ex. 1.0) and otherwise as floating-point input value."
  */
 fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
     is BooleanNode -> ValueNode.BooleanValueNode(booleanValue(), null)
-    is IntNode -> ValueNode.NumberValueNode(longValue(), null)
-    is LongNode -> ValueNode.NumberValueNode(longValue(), null)
-
-    is DoubleNode -> if (expectedType.isInt() && doubleValue() % 1.0 == 0.0) {
-        ValueNode.NumberValueNode(longValue(), null)
-    } else {
-        ValueNode.DoubleValueNode(doubleValue(), null)
-    }
-
-    is FloatNode -> if (expectedType.isInt() && doubleValue() % 1.0 == 0.0) {
+    is IntNode, is LongNode -> ValueNode.NumberValueNode(longValue(), null)
+    is DoubleNode, is FloatNode -> if (doubleValue() % 1.0 == 0.0) {
         ValueNode.NumberValueNode(longValue(), null)
     } else {
         ValueNode.DoubleValueNode(doubleValue(), null)
@@ -135,7 +127,3 @@ fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
     is NullNode, null -> ValueNode.NullValueNode(null)
     else -> error("Unexpected value: $this")
 }
-
-// A list of types that are "int", i.e. do not accept floating point values
-private fun __Type.isInt() =
-    unwrapped().name == BuiltInScalars.INT.typeDef.name || unwrapped().name == ExtendedBuiltInScalars.LONG.typeDef.name || unwrapped().name == ExtendedBuiltInScalars.SHORT.typeDef.name
