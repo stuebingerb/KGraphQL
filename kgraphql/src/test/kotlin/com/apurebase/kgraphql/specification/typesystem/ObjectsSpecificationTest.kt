@@ -10,6 +10,7 @@ import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import nidomiro.kdataloader.ExecutionResult
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -36,6 +37,181 @@ class ObjectsSpecificationTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `all fields defined within an Object type must have a unique name`() {
+        data class Person(val name: String, val age: Int)
+
+        expect<SchemaException>("Cannot add extension field with duplicated name 'age'") {
+            schema {
+                type<Person> {
+                    property("age") {
+                        resolver { person: Person -> person.age.toString() }
+                    }
+                }
+
+                query("getPerson") {
+                    resolver { -> Person("foo", 42) }
+                }
+            }
+        }
+
+        expect<SchemaException>("Cannot add dataloaded field with duplicated name 'age'") {
+            schema {
+                type<Person> {
+                    dataProperty<Int, String>("age") {
+                        prepare { person: Person -> person.age }
+                        loader { ages -> ages.map { ExecutionResult.Success(it.toString()) } }
+                    }
+                }
+
+                query("getPerson") {
+                    resolver { -> Person("foo", 42) }
+                }
+            }
+        }
+
+        expect<SchemaException>("Cannot add union field with duplicated name 'age'") {
+            schema {
+                type<Person> {
+                    unionProperty("age") {
+                        returnType = unionType("PersonUnion") {
+                            type<Person>()
+                        }
+                        resolver { person: Person -> person.age.toString() }
+                    }
+                }
+
+                query("getPerson") {
+                    resolver { -> Person("foo", 42) }
+                }
+            }
+        }
+
+        // Conflicts should not only be detected with kotlin properties but also with previous extensions
+        expect<SchemaException>("Cannot add dataloaded field with duplicated name 'newAge'") {
+            schema {
+                type<Person> {
+                    property("newAge") {
+                        resolver { person: Person -> person.age + 1 }
+                    }
+                    dataProperty<Int, Int>("newAge") {
+                        prepare { person: Person -> person.age }
+                        loader { ages -> ages.map { ExecutionResult.Success(it + 1) } }
+                    }
+                }
+
+                query("getPerson") {
+                    resolver { -> Person("foo", 42) }
+                }
+            }
+        }
+
+        // We process fields in fixed order, not as they were configured: even though the union property
+        // was added first, the regular property still "wins"
+        expect<SchemaException>("Cannot add union field with duplicated name 'newAge'") {
+            schema {
+                type<Person> {
+                    unionProperty("newAge") {
+                        returnType = unionType("PersonUnion") {
+                            type<Person>()
+                        }
+                        resolver { person: Person -> person.age.toString() }
+                    }
+                    property("newAge") {
+                        resolver { person: Person -> person.age + 1 }
+                    }
+                }
+
+                query("getPerson") {
+                    resolver { -> Person("foo", 42) }
+                }
+            }
+        }
+
+        // If the original property is ignored, a new one should be able to take its name
+        var schema = schema {
+            type<Person> {
+                property(Person::age) {
+                    ignore = true
+                }
+                property("age") {
+                    resolver { person: Person -> person.age.toString() }
+                }
+            }
+
+            query("getPerson") {
+                resolver { -> Person("foo", 42) }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type Person {
+              age: String!
+              name: String!
+            }
+
+            type Query {
+              getPerson: Person!
+            }
+            
+        """.trimIndent()
+
+        // If the original property is renamed, a new one should be able to take its original name
+        schema = schema {
+            type<Person> {
+                property(Person::age) {
+                    name = "oldAge"
+                }
+                property("age") {
+                    resolver { person: Person -> person.age.toString() }
+                }
+            }
+
+            query("getPerson") {
+                resolver { -> Person("foo", 42) }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type Person {
+              age: String!
+              name: String!
+              oldAge: Int!
+            }
+
+            type Query {
+              getPerson: Person!
+            }
+            
+        """.trimIndent()
+
+        // Names are case-sensitive, so different case should be allowed
+        schema = schema {
+            type<Person> {
+                property("Age") {
+                    resolver { person: Person -> person.age.toString() }
+                }
+            }
+
+            query("getPerson") {
+                resolver { -> Person("foo", 42) }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type Person {
+              age: Int!
+              Age: String!
+              name: String!
+            }
+
+            type Query {
+              getPerson: Person!
+            }
+            
+        """.trimIndent()
     }
 
     @Test
@@ -232,7 +408,7 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    fun `All arguments defined within a field must not have a name which begins with __`() {
+    fun `all arguments defined within a field must not have a name which begins with __`() {
         expect<SchemaException>("Illegal name '__id'. Names starting with '__' are reserved for introspection system") {
             schema {
                 query("many") { resolver { __id: String -> ManyFields(__id) } }

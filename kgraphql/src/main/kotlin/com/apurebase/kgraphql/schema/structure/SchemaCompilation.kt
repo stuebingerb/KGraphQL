@@ -338,7 +338,26 @@ open class SchemaCompilation(
 
         val __typenameField = typenameField(FunctionWrapper.on(typenameResolver, true))
 
-        val declaredFields = kotlinFields + extensionFields + unionFields + dataloadExtensionFields
+        // https://spec.graphql.org/October2021/#sec-Objects.Type-Validation
+        val declaredFields = kotlinFields.toMutableList<Field>()
+        extensionFields.forEach {
+            if (declaredFields.any { field -> field.name == it.name }) {
+                throw SchemaException("Cannot add extension field with duplicated name '${it.name}'")
+            }
+            declaredFields.add(it)
+        }
+        unionFields.forEach {
+            if (declaredFields.any { field -> field.name == it.name }) {
+                throw SchemaException("Cannot add union field with duplicated name '${it.name}'")
+            }
+            declaredFields.add(it)
+        }
+        dataloadExtensionFields.forEach {
+            if (declaredFields.any { field -> field.name == it.name }) {
+                throw SchemaException("Cannot add dataloaded field with duplicated name '${it.name}'")
+            }
+            declaredFields.add(it)
+        }
 
         if (declaredFields.isEmpty()) {
             throw SchemaException("An Object type must define one or more fields. Found none on type ${objectDef.name}")

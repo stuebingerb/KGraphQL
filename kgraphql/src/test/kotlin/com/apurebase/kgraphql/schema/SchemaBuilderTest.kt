@@ -805,13 +805,6 @@ class SchemaBuilderTest {
         schema.typeByKClass(InputOne::class) shouldNotBe null
     }
 
-    private inline fun <T : Any, reified P : Any> TypeDSL<T>.createGenericPropertyExplicitly(returnType: KType, x: P) {
-        property("data") {
-            resolver { _ -> x }
-            setReturnType(returnType)
-        }
-    }
-
     data class Prop<T>(val resultType: KType, val resolver: () -> T)
 
     @Test
@@ -825,8 +818,11 @@ class SchemaBuilderTest {
                 resolver { -> "dummy" }
             }
             type<Scenario> {
-                props.forEach { prop ->
-                    createGenericPropertyExplicitly(prop.resultType, prop.resolver())
+                props.forEachIndexed { index, prop ->
+                    property("data_$index") {
+                        resolver { _ -> prop.resolver }
+                        setReturnType(prop.resultType)
+                    }
                 }
             }
         }

@@ -5,7 +5,6 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaBuilderTest
-import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -52,17 +51,6 @@ class DataLoaderPropertyDSLTest {
 
     class Parent(val data: String = "")
 
-    private inline fun <T : Any, reified P : Any> TypeDSL<T>.createGenericDataProperty(
-        returnType: KType,
-        crossinline resolver: () -> P
-    ) {
-        dataProperty<T, P>("data") {
-            prepare { it }
-            loader { it.map { ExecutionResult.Success(resolver()) } }
-            setReturnType(returnType)
-        }
-    }
-
     @Test
     fun `specifying return type explicitly allows generic data property creation`() {
         val schema = defaultSchema {
@@ -73,7 +61,11 @@ class DataLoaderPropertyDSLTest {
                 resolver { -> "dummy" }
             }
             type<Scenario> {
-                createGenericDataProperty(typeOf<SchemaBuilderTest.InputOne>()) { SchemaBuilderTest.InputOne("generic") }
+                dataProperty("data") {
+                    prepare { it }
+                    loader { it.map { ExecutionResult.Success(SchemaBuilderTest.InputOne("generic")) } }
+                    setReturnType(typeOf<SchemaBuilderTest.InputOne>())
+                }
             }
         }
 
@@ -95,8 +87,12 @@ class DataLoaderPropertyDSLTest {
                 resolver { -> "dummy" }
             }
             type<Scenario> {
-                props.forEach { prop ->
-                    createGenericDataProperty(prop.resultType, prop.resolver)
+                props.forEachIndexed { index, prop ->
+                    dataProperty("data_$index") {
+                        prepare { it }
+                        loader { it.map { ExecutionResult.Success(prop.resolver()) } }
+                        setReturnType(prop.resultType)
+                    }
                 }
             }
         }
