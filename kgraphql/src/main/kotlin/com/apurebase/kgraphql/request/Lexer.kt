@@ -27,23 +27,18 @@ import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SPREAD
 import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.STRING
 import com.apurebase.kgraphql.schema.structure.dedentBlockStringValue
 
-data class Lexer(
-    val source: Source,
-    val options: Any? = null,
-
+class Lexer(val source: Source) {
     /** The previously focused non-ignored token. */
-    var lastToken: Token = Token(SOF),
+    var lastToken: Token = Token(SOF)
 
     /** The currently focused non-ignored token. */
-    var token: Token = lastToken,
+    var token: Token = lastToken
 
     /** The (1-indexed) line containing the current token. */
-    var line: Int = 1,
+    private var line: Int = 1
 
     /** The character offset at which the current line begins.*/
-    var lineStart: Int = 0
-) {
-    constructor(source: String) : this(Source(source))
+    private var lineStart: Int = 0
 
     /**
      * Advances the token stream to the next non-ignored token.
@@ -441,9 +436,7 @@ data class Lexer(
     }
 
     // _ A-Z a-z
-    private fun isNameStart(code: Int?) = (
-            code == 95 || (code in 65..90) || (code in 97..122)
-            )
+    private fun isNameStart(code: Int?) = code == 95 || (code in 65..90) || (code in 97..122)
 
     /**
      * Reads a block string token from the source file.
