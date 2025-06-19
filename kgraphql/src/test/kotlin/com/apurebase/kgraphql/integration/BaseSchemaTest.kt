@@ -10,6 +10,7 @@ import com.apurebase.kgraphql.FilmType
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.IdScalarSupport
 import com.apurebase.kgraphql.Person
+import com.apurebase.kgraphql.Rank
 import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
@@ -39,12 +40,17 @@ abstract class BaseSchemaTest {
     // new actors created via mutations in schema
     val createdActors = mutableListOf<Actor>()
 
-    val testedSchema = defaultSchema {
+    private val testedSchema = defaultSchema {
         configure {
             useDefaultPrettyPrinter = true
         }
 
         extendedScalars()
+
+        intScalar<Rank> {
+            deserialize = ::Rank
+            serialize = Rank::value
+        }
 
         query("number") {
             description = "returns little of big number"
@@ -114,6 +120,17 @@ abstract class BaseSchemaTest {
             description = "ranked films"
             resolver { rank: Short ->
                 when (rank.toInt()) {
+                    1 -> prestige
+                    2 -> se7en
+                    3 -> theBigShave
+                    else -> null
+                }
+            }
+        }
+        query("filmByCustomRank") {
+            description = "ranked films"
+            resolver { rank: Rank ->
+                when (rank.value) {
                     1 -> prestige
                     2 -> se7en
                     3 -> theBigShave
