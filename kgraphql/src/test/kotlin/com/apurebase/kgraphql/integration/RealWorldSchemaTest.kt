@@ -1,9 +1,10 @@
-package com.apurebase.kgraphql.integration.github
+package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.KGraphQL
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-class GitHubIssue75 {
+class RealWorldSchemaTest {
     data class SearchHit(val spanData: Span)
     data class Tag(val key: String, val type: String, val value: String)
     data class LogPoint(val timestamp: Int, val fields: List<LogPointField>)
@@ -40,6 +41,7 @@ class GitHubIssue75 {
         }
     }
 
+    // https://github.com/stuebingerb/KGraphQL/issues/75
     @Test
     fun `issue-75 object is not of declaring class - full sample`() {
         val schema = KGraphQL.schema {
@@ -116,7 +118,7 @@ class GitHubIssue75 {
             }
         }
 
-        schema.executeBlocking(
+        val result = schema.executeBlocking(
             """
             query findTrace(${'$'}traceID: String!) {
               findTrace(traceID: ${'$'}traceID) {
@@ -135,5 +137,49 @@ class GitHubIssue75 {
             }
         """, "{\"traceID\": \"646851f15cb2dad1\"}"
         )
+
+        result shouldBe """
+            {
+              "data" : {
+                "findTrace" : {
+                  "traceID" : "646851f15cb2dad1",
+                  "spans" : [ {
+                    "spanID" : "32b1133c2e838c56",
+                    "tags" : [ {
+                      "key" : "_tracestep_stack",
+                      "value" : "sample text",
+                      "__typename" : "Tag"
+                    }, {
+                      "key" : "_tracestep_main",
+                      "value" : "true",
+                      "__typename" : "Tag"
+                    }, {
+                      "key" : "internal.span.format",
+                      "value" : "proto",
+                      "__typename" : "Tag"
+                    } ],
+                    "__typename" : "Span"
+                  }, {
+                    "spanID" : "7381e3787bb621db",
+                    "tags" : [ {
+                      "key" : "_tracestep_stack",
+                      "value" : "sample text",
+                      "__typename" : "Tag"
+                    }, {
+                      "key" : "_tracestep_main",
+                      "value" : "false",
+                      "__typename" : "Tag"
+                    }, {
+                      "key" : "internal.span.format",
+                      "value" : "proto",
+                      "__typename" : "Tag"
+                    } ],
+                    "__typename" : "Span"
+                  } ],
+                  "__typename" : "Trace"
+                }
+              }
+            }
+        """.trimIndent()
     }
 }

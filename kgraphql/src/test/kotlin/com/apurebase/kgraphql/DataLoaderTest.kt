@@ -61,9 +61,7 @@ class DataLoaderTest {
         val treeChild: AtomicProperty = AtomicProperty()
     )
 
-    fun schema(
-        block: SchemaBuilder.() -> Unit = {}
-    ): Pair<DefaultSchema, AtomicCounters> {
+    fun schema(block: SchemaBuilder.() -> Unit = {}): Pair<DefaultSchema, AtomicCounters> {
         val counters = AtomicCounters()
 
         val schema = defaultSchema {
@@ -109,7 +107,15 @@ class DataLoaderTest {
 
             query("abc") {
                 resolver { ->
-                    (1..3).map { ABC("Testing $it", if (it == 2) null else it) }
+                    (1..3).map {
+                        ABC(
+                            "Testing $it", if (it == 2) {
+                                null
+                            } else {
+                                it
+                            }
+                        )
+                    }
                 }
             }
 
@@ -129,7 +135,6 @@ class DataLoaderTest {
                     }
                 }
 
-                @Suppress("BlockingMethodInNonBlockingContext")
                 property("simpleChild") {
                     resolver {
                         delay((1..5L).random())
@@ -145,7 +150,11 @@ class DataLoaderTest {
                         personIds.map {
                             delay(1)
                             ExecutionResult.Success(
-                                if (it == null || it < 1) null else allPeople[it - 1]
+                                if (it == null || it < 1) {
+                                    null
+                                } else {
+                                    allPeople[it - 1]
+                                }
                             )
                         }
                     }
@@ -153,7 +162,11 @@ class DataLoaderTest {
                 property("personOld") {
                     resolver {
                         delay(1)
-                        if (it.personId == null || it.personId < 1) null else allPeople[it.personId - 1]
+                        if (it.personId == null || it.personId < 1) {
+                            null
+                        } else {
+                            allPeople[it.personId - 1]
+                        }
                     }
                 }
 
@@ -170,7 +183,13 @@ class DataLoaderTest {
                             }
                             delay(1)
                             ExecutionResult.Success(
-                                (1..7).map { if (it % 2 == 0) ABC(a1) else ABC(a2) }
+                                (1..7).map {
+                                    if (it % 2 == 0) {
+                                        ABC(a1)
+                                    } else {
+                                        ABC(a2)
+                                    }
+                                }
                             )
                         }
                     }
@@ -192,7 +211,6 @@ class DataLoaderTest {
                 }
 
             }
-
 
             type<Tree> {
                 dataProperty<Int, Tree>("child") {
@@ -243,8 +261,11 @@ class DataLoaderTest {
                     }
                 }
             """.trimIndent().let {
-                if (withTypeName) it
-                else it.replace("__typename", "")
+                if (withTypeName) {
+                    it
+                } else {
+                    it.replace("__typename", "")
+                }
             }
 
             val test: (Int) -> DynamicTest = {
@@ -292,12 +313,11 @@ class DataLoaderTest {
             }
         }
 
-
         return fn(true) + fn(false)
     }
 
-    @RepeatedTest(repeatTimes, name = "Nested array loaders")
-    fun `Nested array loaders`() {
+    @RepeatedTest(repeatTimes)
+    fun `nested array loaders`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
             val query = """
@@ -314,12 +334,35 @@ class DataLoaderTest {
                 }                
             """.trimIndent()
 
-            schema.executeBlocking(query).also(::println).deserialize()
+            val result = schema.executeBlocking(query).deserialize()
+            result.extract<String>("data/people[0]/fullName") shouldBe "${jogvan.firstName} ${jogvan.lastName}"
+            result.extract<String>("data/people[0]/colleagues[0]/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+            result.extract<String>("data/people[0]/colleagues[0]/respondsTo/fullName") shouldBe "${otherOne.firstName} ${otherOne.lastName}"
+            result.extract<String>("data/people[0]/colleagues[1]/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
+            result.extract<String>("data/people[0]/colleagues[1]/respondsTo/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+
+            result.extract<String>("data/people[1]/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+            result.extract<String>("data/people[1]/colleagues[0]/fullName") shouldBe "${jogvan.firstName} ${jogvan.lastName}"
+            result.extract<String>("data/people[1]/colleagues[0]/respondsTo/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
+            result.extract<String>("data/people[1]/colleagues[1]/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
+            result.extract<String>("data/people[1]/colleagues[1]/respondsTo/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+            result.extract<String>("data/people[1]/colleagues[2]/fullName") shouldBe "${otherOne.firstName} ${otherOne.lastName}"
+            result.extract<String>("data/people[1]/colleagues[2]/respondsTo") shouldBe null
+
+            result.extract<String>("data/people[2]/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
+            result.extract<String>("data/people[2]/colleagues[0]/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+            result.extract<String>("data/people[2]/colleagues[0]/respondsTo/fullName") shouldBe "${otherOne.firstName} ${otherOne.lastName}"
+            result.extract<String>("data/people[2]/colleagues[1]/fullName") shouldBe "${jogvan.firstName} ${jogvan.lastName}"
+            result.extract<String>("data/people[2]/colleagues[1]/respondsTo/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
+
+            result.extract<String>("data/people[3]/fullName") shouldBe "${otherOne.firstName} ${otherOne.lastName}"
+            result.extract<String>("data/people[3]/colleagues[0]/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+            result.extract<String>("data/people[3]/colleagues[0]/respondsTo/fullName") shouldBe "${otherOne.firstName} ${otherOne.lastName}"
         }
     }
 
-    @RepeatedTest(repeatTimes, name = "Old basic resolvers in new executor")
-    fun `Old basic resolvers in new executor`() {
+    @RepeatedTest(repeatTimes)
+    fun `old basic resolvers in new executor`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
             val query = """
@@ -333,13 +376,13 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            val result = schema.executeBlocking(query).also(::println).deserialize()
+            val result = schema.executeBlocking(query).deserialize()
             result.extract<String>("data/abc[0]/simpleChild/value") shouldBe "NewChild!"
         }
     }
 
-    @RepeatedTest(repeatTimes, name = "Very basic new Level executor")
-    fun `Very basic new Level executor`() {
+    @RepeatedTest(repeatTimes)
+    fun `very basic new level executor`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
 
@@ -358,11 +401,29 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            schema.executeBlocking(query).also(::println).deserialize()
+            val result = schema.executeBlocking(query).deserialize()
+            result.extract<Int>("data/people[0]/id") shouldBe jogvan.id
+            result.extract<String>("data/people[0]/fullName") shouldBe "${jogvan.firstName} ${jogvan.lastName}"
+            result.extract<String>("data/people[0]/respondsTo/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
+            result.extract<String>("data/people[0]/respondsTo/respondsTo/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+
+            result.extract<Int>("data/people[1]/id") shouldBe beinisson.id
+            result.extract<String>("data/people[1]/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+            result.extract<String>("data/people[1]/respondsTo/fullName") shouldBe "${otherOne.firstName} ${otherOne.lastName}"
+            result.extract<String>("data/people[1]/respondsTo/respondsTo") shouldBe null
+
+            result.extract<Int>("data/people[2]/id") shouldBe juul.id
+            result.extract<String>("data/people[2]/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
+            result.extract<String>("data/people[2]/respondsTo/fullName") shouldBe "${beinisson.firstName} ${beinisson.lastName}"
+            result.extract<String>("data/people[2]/respondsTo/respondsTo/fullName") shouldBe "${otherOne.firstName} ${otherOne.lastName}"
+
+            result.extract<Int>("data/people[3]/id") shouldBe otherOne.id
+            result.extract<String>("data/people[3]/fullName") shouldBe "${otherOne.firstName} ${otherOne.lastName}"
+            result.extract<String>("data/people[3]/respondsTo") shouldBe null
         }
     }
 
-    @RepeatedTest(repeatTimes, name = "dataloader with nullable prepare keys")
+    @RepeatedTest(repeatTimes)
     fun `dataloader with nullable prepare keys`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -379,16 +440,16 @@ class DataLoaderTest {
                     }
                 }
             """.trimIndent()
-            val result = schema.executeBlocking(query).also(::println).deserialize()
 
+            val result = schema.executeBlocking(query).deserialize()
             result.extract<String>("data/abc[0]/person/fullName") shouldBe "${jogvan.firstName} ${jogvan.lastName}"
             result.extract<String?>("data/abc[1]/person") shouldBe null
             result.extract<String>("data/abc[2]/person/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
         }
     }
 
-    @RepeatedTest(repeatTimes, name = "Basic dataloader test")
-    fun `Basic dataloader test`() {
+    @RepeatedTest(repeatTimes)
+    fun `basic dataloader test`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
 
@@ -405,15 +466,14 @@ class DataLoaderTest {
                     fullName
                 }
             """.trimIndent()
-            val result = schema.executeBlocking(query).also(::println).deserialize()
 
-
+            val result = schema.executeBlocking(query).deserialize()
             result.extract<String>("data/people[0]/respondsTo/fullName") shouldBe "${juul.firstName} ${juul.lastName}"
             result.extract<String>("data/people[1]/colleagues[0]/fullName") shouldBe "${jogvan.firstName} ${jogvan.lastName}"
         }
     }
 
-    @RepeatedTest(repeatTimes, name = "basic data loader")
+    @RepeatedTest(repeatTimes)
     fun `basic data loader`() {
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
@@ -430,18 +490,17 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            val result = schema.executeBlocking(query).also(::println).deserialize()
-            counters.treeChild.prepare.get() shouldBe 2
-            counters.treeChild.loader.get() shouldBe 1
-
-
+            val result = schema.executeBlocking(query).deserialize()
             result.extract<Int>("data/tree[1]/id") shouldBe 2
             result.extract<Int>("data/tree[0]/child/id") shouldBe 14
             result.extract<Int>("data/tree[1]/child/id") shouldBe 15
+
+            counters.treeChild.prepare.get() shouldBe 2
+            counters.treeChild.loader.get() shouldBe 1
         }
     }
 
-    @RepeatedTest(repeatTimes, name = "data loader cache per request only")
+    @RepeatedTest(repeatTimes)
     fun `data loader cache per request only`() {
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
@@ -453,20 +512,18 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            val result = schema.executeBlocking(query).also(::println).deserialize()
-
-            counters.treeChild.prepare.get() shouldBe 4
-            counters.treeChild.loader.get() shouldBe 1
-
+            val result = schema.executeBlocking(query).deserialize()
             result.extract<Int>("data/first[1]/id") shouldBe 2
             result.extract<Int>("data/first[0]/child/id") shouldBe 14
             result.extract<Int>("data/first[1]/child/id") shouldBe 15
             result.extract<Int>("data/second[1]/child/id") shouldBe 15
 
+            counters.treeChild.prepare.get() shouldBe 4
+            counters.treeChild.loader.get() shouldBe 1
         }
     }
 
-    @RepeatedTest(repeatTimes, name = "multiple layers of dataLoaders")
+    @RepeatedTest(repeatTimes)
     fun `multiple layers of dataLoaders`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()

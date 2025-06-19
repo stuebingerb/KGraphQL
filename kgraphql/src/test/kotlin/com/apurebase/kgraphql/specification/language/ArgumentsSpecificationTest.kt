@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.specification.language
 
 import com.apurebase.kgraphql.Actor
+import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
@@ -8,6 +9,7 @@ import com.apurebase.kgraphql.executeEqualQueries
 import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 @Specification("2.6 Arguments")
 class ArgumentsSpecificationTest {
@@ -155,5 +157,53 @@ class ArgumentsSpecificationTest {
                     )
                 )
             )
+    }
+
+    data class Agenda(
+        val date: LocalDate,
+        val slots: List<Slots>,
+        val hasSlotsAvailable: Boolean
+    )
+
+    data class Slots(
+        val hour: Int
+    )
+
+    // https://github.com/aPureBase/KGraphQL/issues/144
+    @Test
+    fun `arguments with lists should preserve generic type`() {
+        val schema = schema {
+            stringScalar<LocalDate> {
+                serialize = { date -> date.toString() }
+                deserialize = { dateString -> LocalDate.parse(dateString) }
+            }
+
+            query("slots") {
+                resolver { limit: Int, tags: List<String> ->
+                    listOf(Agenda(date = LocalDate.of(2025, 6, 19), slots = listOf(Slots(1)), hasSlotsAvailable = true))
+                }.withArgs {
+                    arg<Int> { name = "limit"; defaultValue = 7 }
+                    arg<List<String>> { name = "tags"; defaultValue = emptyList() }
+                }
+            }
+        }
+
+        val result = schema.executeBlocking(
+            """
+            {
+                slots {
+                    date
+                    hasSlotsAvailable
+                    slots {
+                        hour
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+
+        result shouldBe """
+            {"data":{"slots":[{"date":"2025-06-19","hasSlotsAvailable":true,"slots":[{"hour":1}]}]}}
+        """.trimIndent()
     }
 }

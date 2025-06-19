@@ -91,7 +91,7 @@ fun Map<*, *>.toJsonElement(): JsonElement {
 fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
     is BooleanNode -> ValueNode.BooleanValueNode(booleanValue(), null)
     is IntNode, is LongNode -> ValueNode.NumberValueNode(longValue(), null)
-    is DoubleNode, is FloatNode -> if (doubleValue() % 1.0 == 0.0) {
+    is DoubleNode, is FloatNode -> if (doubleValue().isWholeNumber()) {
         ValueNode.NumberValueNode(longValue(), null)
     } else {
         ValueNode.DoubleValueNode(doubleValue(), null)
@@ -127,3 +127,5 @@ fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
     is NullNode, null -> ValueNode.NullValueNode(null)
     else -> error("Unexpected value: $this")
 }
+
+internal fun Double.isWholeNumber() = this % 1.0 == 0.0
