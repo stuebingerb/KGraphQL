@@ -2,6 +2,7 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/de.stuebingerb/kgraphql.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22de.stuebingerb%22%20AND%20a:%22kgraphql%22)
 [![CodeQL](https://github.com/stuebingerb/KGraphQL/actions/workflows/codeql.yml/badge.svg)](https://github.com/stuebingerb/KGraphQL/actions/workflows/codeql.yml)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fstuebingerb%2FKGraphQL.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fstuebingerb%2FKGraphQL?ref=badge_shield)
 
 KGraphQL is a [Kotlin](https://kotlinlang.org/) implementation of [GraphQL](http://graphql.org/) based
 on [aPureBase/KGraphQL](https://github.com/aPureBase/KGraphQL). It provides a rich DSL to set up the GraphQL schema.
@@ -61,3 +62,6 @@ GraphQL specification: https://spec.graphql.org/
 ## License
 
 KGraphQL is Open Source software released under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fstuebingerb%2FKGraphQL.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fstuebingerb%2FKGraphQL?ref=badge_large)
