@@ -4,6 +4,7 @@ plugins {
     id("library-conventions")
     id("java-test-fixtures")
     alias(libs.plugins.kotlinx.benchmark)
+    alias(libs.plugins.kotlinx.kover)
 }
 
 lateinit var benchmarkImplementation: String
