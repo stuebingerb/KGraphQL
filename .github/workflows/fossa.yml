@@ -19,4 +19,3 @@ jobs:
         uses: fossas/fossa-action@65a5a12203e31a5fcc54154db9c52647f84b1169 # v1
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
-          run-tests: true
