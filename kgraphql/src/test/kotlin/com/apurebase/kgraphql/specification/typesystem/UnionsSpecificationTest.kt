@@ -16,6 +16,7 @@ import com.apurebase.kgraphql.schema.execution.Execution
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 @Specification("3.1.4 Unions")
 class UnionsSpecificationTest : BaseSchemaTest() {
@@ -319,6 +320,159 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         ).deserialize().run {
             extract<String>("data/returnUnion[0]/__typename") shouldBe "PrefixValue1"
             extract<String>("data/returnUnion[1]/__typename") shouldBe "PrefixValue2"
+        }
+    }
+
+    @Suppress("unused")
+    sealed class ContactStatus {
+        data class NotInvited(
+            val dummy: String = "dummy" // because no empty types in gql
+        ) : ContactStatus()
+
+        data class Invited(
+            val invitationId: String,
+            val invitedAt: Instant
+        ) : ContactStatus()
+
+        data class Onboarded(
+            val onboardedAt: Instant = Instant.now(),
+            val userId: String
+        ) : ContactStatus()
+    }
+
+    data class Carrier(
+        val contactStatus: ContactStatus
+    )
+
+    // https://github.com/aPureBase/KGraphQL/issues/105
+    @Test
+    fun `sealed classes unions should allow requesting __typename`() {
+        val schema = KGraphQL.schema {
+            longScalar<Instant> {
+                serialize = { it.toEpochMilli() }
+                deserialize = { Instant.ofEpochMilli(it) }
+            }
+            unionType<ContactStatus>()
+            query("contactStatus") {
+                resolver { -> ContactStatus.Onboarded(userId = "someUserId") }
+            }
+        }
+        val results = schema.executeBlocking(
+            """
+            {
+                contactStatus {
+                    ... on NotInvited {
+                        dummy
+                    }
+                    ... on Invited {
+                        invitedAt
+                        invitationId
+                    }
+                    ... on Onboarded {
+                        onboardedAt
+                        userId
+                    }
+                    __typename
+                }
+            }
+            """.trimIndent()
+        ).deserialize()
+
+        results.extract<String>("data/contactStatus/userId") shouldBe "someUserId"
+        results.extract<String>("data/contactStatus/__typename") shouldBe "Onboarded"
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/105
+    @Test
+    fun `inner sealed classes unions should allow requesting __typename`() {
+        val schema = KGraphQL.schema {
+            longScalar<Instant> {
+                serialize = { it.toEpochMilli() }
+                deserialize = { Instant.ofEpochMilli(it) }
+            }
+            unionType<ContactStatus>()
+            query("carrier") {
+                resolver { -> Carrier(ContactStatus.Onboarded(userId = "someUserId")) }
+            }
+        }
+
+        val results = schema.executeBlocking(
+            """
+            {
+                carrier {
+                    contactStatus {
+                        ... on NotInvited {
+                            dummy
+                        }
+                        ... on Invited {
+                            invitedAt
+                            invitationId
+                        }
+                        ... on Onboarded {
+                            onboardedAt
+                            userId
+                        }
+                        __typename
+                    }
+                }
+            }
+            """.trimIndent()
+        ).deserialize()
+
+        results.extract<String>("data/carrier/contactStatus/userId") shouldBe "someUserId"
+        results.extract<String>("data/carrier/contactStatus/__typename") shouldBe "Onboarded"
+    }
+
+    data class Wrapper(
+        val items: List<QualificationItem>
+    )
+
+    sealed class QualificationItem {
+        data class Qual1(val id: String) : QualificationItem()
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/109
+    @Test
+    fun `list of union type should work as expected`() {
+        val schema = KGraphQL.schema {
+            unionType<QualificationItem>()
+
+            query("foo") {
+                resolver { ->
+                    Wrapper(listOf(QualificationItem.Qual1("12345")))
+                }
+            }
+        }
+
+        val result = schema.executeBlocking(
+            """
+                query IntrospectionQuery {
+                    __schema {
+                        types {
+                            name
+                            fields(includeDeprecated: true) {
+                                name
+                                type {
+                                    name
+                                }
+                            }
+                            possibleTypes {
+                                name
+                            }
+                        }
+                    }
+                }
+            """
+        ).deserialize()
+
+        val types = result.extract<List<Map<String, Any>>>("data/__schema/types")
+        types.first { it["name"] == "QualificationItem" }.let {
+            it["fields"] shouldBe null
+            it["possibleTypes"] shouldBe listOf(mapOf("name" to "Qual1"))
+        }
+        types.first { it["name"] == "Qual1" }.let {
+            it["fields"] shouldBe listOf(mapOf("name" to "id", "type" to mapOf("name" to null)))
+            it["possibleTypes"] shouldBe null
         }
     }
 }
