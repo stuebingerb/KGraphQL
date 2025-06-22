@@ -24,7 +24,6 @@ open class StitchedSchemaConfigurationDSL : SchemaConfigurationDSL() {
             useDefaultPrettyPrinter = useDefaultPrettyPrinter,
             coroutineDispatcher = coroutineDispatcher,
             wrapErrors = wrapErrors,
-            executor = executor,
             timeout = timeout,
             introspection = introspection,
             plugins = plugins,

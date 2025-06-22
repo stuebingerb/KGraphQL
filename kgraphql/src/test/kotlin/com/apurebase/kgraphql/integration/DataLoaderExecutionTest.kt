@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.collections.shouldHaveSize
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -22,7 +21,6 @@ class DataLoaderExecutionTest {
 
     val schema = defaultSchema {
         configure {
-            executor = Executor.DataLoaderPrepared
             timeout = null
         }
 
