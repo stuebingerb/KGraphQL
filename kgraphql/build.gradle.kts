@@ -37,7 +37,6 @@ dependencies {
     implementation(libs.jackson.core.databind)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.aedile)
-    implementation(libs.deferredJsonBuilder)
 
     testImplementation(libs.kotest)
     testImplementation(libs.junit.jupiter.api)

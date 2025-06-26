@@ -82,13 +82,12 @@ public abstract interface class com/apurebase/kgraphql/configuration/PluginConfi
 }
 
 public class com/apurebase/kgraphql/configuration/SchemaConfiguration {
-	public fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ZLjava/util/Map;Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;)V
-	public synthetic fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ZLjava/util/Map;Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLjava/lang/Long;ZLjava/util/Map;Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;)V
+	public synthetic fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLjava/lang/Long;ZLjava/util/Map;Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun get (Lkotlin/reflect/KClass;)Ljava/lang/Object;
 	public final fun getArgumentTransformer ()Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;
 	public final fun getCoroutineDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public final fun getDocumentParserCacheMaximumSize ()J
-	public final fun getExecutor ()Lcom/apurebase/kgraphql/schema/execution/Executor;
 	public final fun getGenericTypeResolver ()Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;
 	public final fun getIntrospection ()Z
 	public final fun getObjectMapper ()Lcom/fasterxml/jackson/databind/ObjectMapper;
@@ -613,7 +612,6 @@ public class com/apurebase/kgraphql/schema/dsl/SchemaConfigurationDSL {
 	public final fun getAcceptSingleValueAsArray ()Z
 	public final fun getCoroutineDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public final fun getDocumentParserCacheMaximumSize ()J
-	public final fun getExecutor ()Lcom/apurebase/kgraphql/schema/execution/Executor;
 	public final fun getGenericTypeResolver ()Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;
 	public final fun getIntrospection ()Z
 	public final fun getObjectMapper ()Lcom/fasterxml/jackson/databind/ObjectMapper;
@@ -626,7 +624,6 @@ public class com/apurebase/kgraphql/schema/dsl/SchemaConfigurationDSL {
 	public final fun setAcceptSingleValueAsArray (Z)V
 	public final fun setCoroutineDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public final fun setDocumentParserCacheMaximumSize (J)V
-	public final fun setExecutor (Lcom/apurebase/kgraphql/schema/execution/Executor;)V
 	public final fun setGenericTypeResolver (Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;)V
 	public final fun setIntrospection (Z)V
 	public final fun setObjectMapper (Lcom/fasterxml/jackson/databind/ObjectMapper;)V
@@ -836,19 +833,6 @@ public class com/apurebase/kgraphql/schema/execution/ArgumentTransformer {
 	public fun transformArguments (Ljava/lang/String;Ljava/lang/Object;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/ArgumentNodes;Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/schema/execution/Execution;Lcom/apurebase/kgraphql/Context;Lcom/apurebase/kgraphql/schema/model/FunctionWrapper;)Ljava/util/List;
 }
 
-public final class com/apurebase/kgraphql/schema/execution/DataLoaderPreparedRequestExecutor : com/apurebase/kgraphql/schema/execution/RequestExecutor {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/DefaultSchema;)V
-	public final fun getSchema ()Lcom/apurebase/kgraphql/schema/DefaultSchema;
-	public fun suspendExecute (Lcom/apurebase/kgraphql/schema/execution/ExecutionPlan;Lcom/apurebase/kgraphql/request/VariablesJson;Lcom/apurebase/kgraphql/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public final class com/apurebase/kgraphql/schema/execution/DataLoaderPreparedRequestExecutor$ExecutionContext {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/execution/DataLoaderPreparedRequestExecutor;Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/Context;Ljava/util/Map;)V
-	public final fun getLoaders ()Ljava/util/Map;
-	public final fun getRequestContext ()Lcom/apurebase/kgraphql/Context;
-	public final fun getVariables ()Lcom/apurebase/kgraphql/request/Variables;
-}
-
 public class com/apurebase/kgraphql/schema/execution/DefaultGenericTypeResolver : com/apurebase/kgraphql/schema/execution/GenericTypeResolver {
 	public fun <init> ()V
 	public fun resolveMonad (Lkotlin/reflect/KType;)Lkotlin/reflect/KType;
@@ -899,14 +883,12 @@ public final class com/apurebase/kgraphql/schema/execution/Execution$Union : com
 
 public final class com/apurebase/kgraphql/schema/execution/ExecutionOptions {
 	public fun <init> ()V
-	public fun <init> (Lcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;)V
-	public synthetic fun <init> (Lcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/apurebase/kgraphql/schema/execution/Executor;
-	public final fun component2 ()Ljava/lang/Long;
-	public final fun copy (Lcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;)Lcom/apurebase/kgraphql/schema/execution/ExecutionOptions;
-	public static synthetic fun copy$default (Lcom/apurebase/kgraphql/schema/execution/ExecutionOptions;Lcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ILjava/lang/Object;)Lcom/apurebase/kgraphql/schema/execution/ExecutionOptions;
+	public fun <init> (Ljava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/Long;)Lcom/apurebase/kgraphql/schema/execution/ExecutionOptions;
+	public static synthetic fun copy$default (Lcom/apurebase/kgraphql/schema/execution/ExecutionOptions;Ljava/lang/Long;ILjava/lang/Object;)Lcom/apurebase/kgraphql/schema/execution/ExecutionOptions;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getExecutor ()Lcom/apurebase/kgraphql/schema/execution/Executor;
 	public final fun getTimeout ()Ljava/lang/Long;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -954,14 +936,6 @@ public final class com/apurebase/kgraphql/schema/execution/ExecutionPlan : java/
 	public fun toArray ([Ljava/lang/Object;)[Ljava/lang/Object;
 }
 
-public final class com/apurebase/kgraphql/schema/execution/Executor : java/lang/Enum {
-	public static final field DataLoaderPrepared Lcom/apurebase/kgraphql/schema/execution/Executor;
-	public static final field Parallel Lcom/apurebase/kgraphql/schema/execution/Executor;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/execution/Executor;
-	public static fun values ()[Lcom/apurebase/kgraphql/schema/execution/Executor;
-}
-
 public abstract interface class com/apurebase/kgraphql/schema/execution/GenericTypeResolver {
 	public static final field Companion Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver$Companion;
 	public abstract fun resolveMonad (Lkotlin/reflect/KType;)Lkotlin/reflect/KType;
@@ -986,7 +960,8 @@ public final class com/apurebase/kgraphql/schema/execution/ParallelRequestExecut
 }
 
 public final class com/apurebase/kgraphql/schema/execution/ParallelRequestExecutor$ExecutionContext {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/execution/ParallelRequestExecutor;Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/Context;)V
+	public fun <init> (Lcom/apurebase/kgraphql/schema/execution/ParallelRequestExecutor;Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/Context;Ljava/util/Map;)V
+	public final fun getLoaders ()Ljava/util/Map;
 	public final fun getRequestContext ()Lcom/apurebase/kgraphql/Context;
 	public final fun getVariables ()Lcom/apurebase/kgraphql/request/Variables;
 }

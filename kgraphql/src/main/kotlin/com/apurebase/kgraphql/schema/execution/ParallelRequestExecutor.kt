@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.job
 import nidomiro.kdataloader.DataLoader
 import kotlin.reflect.KProperty1
 
@@ -28,8 +29,31 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
     inner class ExecutionContext(
         val variables: Variables,
-        val requestContext: Context
+        val requestContext: Context,
+        val loaders: Map<Field.DataLoader<*, *, *>, DataLoader<Any?, *>>
     )
+
+    private suspend fun ExecutionPlan.constructLoaders(): Map<Field.DataLoader<*, *, *>, DataLoader<Any?, *>> =
+        coroutineScope {
+            val loaders = mutableMapOf<Field.DataLoader<*, *, *>, DataLoader<Any?, *>>()
+
+            suspend fun Collection<Execution>.look() {
+                forEach { execution ->
+                    when (execution) {
+                        is Execution.Fragment -> execution.elements.look()
+                        is Execution.Node -> {
+                            execution.children.look()
+                            if (execution.field is Field.DataLoader<*, *, *>) {
+                                loaders[execution.field] =
+                                    execution.field.loader.constructNew(coroutineContext.job) as DataLoader<Any?, *>
+                            }
+                        }
+                    }
+                }
+            }
+            operations.look()
+            loaders
+        }
 
     private val argumentsHandler = schema.configuration.argumentTransformer
 
@@ -49,9 +73,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         coroutineScope {
             val root = jsonNodeFactory.objectNode()
             val data = root.putObject("data")
+            val loaders = plan.constructLoaders()
 
             val resultMap = plan.toMapAsync(dispatcher) {
-                val ctx = ExecutionContext(Variables(variables, it.variables), context)
+                val ctx = ExecutionContext(Variables(variables, it.variables), context, loaders)
                 if (shouldInclude(ctx, it)) {
                     writeOperation(
                         isSubscription = plan.isSubscription,
@@ -369,11 +394,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             ctx = ctx
         )
 
-        // as this isn't the DataLoaderPreparedRequestExecutor. We'll use this instant workaround instead.
-        val loader = field.loader.constructNew(null) as DataLoader<Any?, Any?>
-        val value = loader.loadAsync(preparedValue)
-        loader.dispatch()
-
+        val value = ctx.loaders[field]!!.loadAsync(preparedValue)
         return createNode(ctx, value.await(), node, field.returnType)
     }
 
