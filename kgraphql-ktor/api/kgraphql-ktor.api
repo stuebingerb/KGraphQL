@@ -51,7 +51,7 @@ public final class com/apurebase/kgraphql/GraphqlRequest {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/apurebase/kgraphql/GraphqlRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/GraphqlRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/GraphqlRequest$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/GraphqlRequest;
@@ -59,6 +59,7 @@ public synthetic class com/apurebase/kgraphql/GraphqlRequest$$serializer : kotli
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/GraphqlRequest;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/GraphqlRequest$Companion {
