@@ -168,7 +168,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedDirective$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedDirective$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedDirective$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedDirective;
@@ -176,6 +176,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedDirective;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedDirective$Companion {
@@ -201,7 +202,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedEnumValue$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedEnumValue$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedEnumValue$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedEnumValue;
@@ -209,6 +210,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedEnumValue;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedEnumValue$Companion {
@@ -239,7 +241,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedField$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedField$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedField$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedField;
@@ -247,6 +249,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedField;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedField$Companion {
@@ -277,7 +280,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedInputValue$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedInputValue$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedInputValue$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedInputValue;
@@ -285,6 +288,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedInputValue;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedInputValue$Companion {
@@ -324,7 +328,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun unwrapped ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedRootOperation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedRootOperation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedRootOperation$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedRootOperation;
@@ -332,6 +336,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedRootOperation;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedRootOperation$Companion {
@@ -361,7 +366,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedSchema$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedSchema$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedSchema$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedSchema;
@@ -369,6 +374,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedSchema;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedSchema$Companion {
@@ -409,7 +415,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun unwrapped ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedType$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedType$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedType$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedType;
@@ -417,6 +423,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectedType;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectedType$Companion {
@@ -435,7 +442,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspectio
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectionData$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectionData$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectionData$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectionData;
@@ -443,6 +450,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectionData;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectionData$Companion {
@@ -461,7 +469,7 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspectio
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectionResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/apurebase/kgraphql/stitched/schema/structure/IntrospectionResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectionResponse$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectionResponse;
@@ -469,6 +477,7 @@ public synthetic class com/apurebase/kgraphql/stitched/schema/structure/Introspe
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/apurebase/kgraphql/stitched/schema/structure/IntrospectionResponse;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/structure/IntrospectionResponse$Companion {
