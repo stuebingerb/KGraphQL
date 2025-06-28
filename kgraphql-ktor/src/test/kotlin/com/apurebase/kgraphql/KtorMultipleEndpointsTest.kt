@@ -11,7 +11,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Test
 
-class KtorMultipleEndpoints : KtorTest() {
+class KtorMultipleEndpointsTest : KtorTest() {
 
     @Test
     fun `basic multiple endpoints test`() = testApplication {
