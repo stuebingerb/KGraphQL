@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.schema.dsl
 import com.apurebase.kgraphql.configuration.PluginConfiguration
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
-import com.apurebase.kgraphql.schema.execution.Executor
 import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -20,7 +19,6 @@ open class SchemaConfigurationDSL {
     var acceptSingleValueAsArray: Boolean = true
     var coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
     var wrapErrors: Boolean = true
-    var executor: Executor = Executor.Parallel
     var timeout: Long? = null
     var introspection: Boolean = true
     var genericTypeResolver: GenericTypeResolver = GenericTypeResolver.DEFAULT
@@ -43,7 +41,6 @@ open class SchemaConfigurationDSL {
             useDefaultPrettyPrinter = useDefaultPrettyPrinter,
             coroutineDispatcher = coroutineDispatcher,
             wrapErrors = wrapErrors,
-            executor = executor,
             timeout = timeout,
             introspection = introspection,
             plugins = plugins,

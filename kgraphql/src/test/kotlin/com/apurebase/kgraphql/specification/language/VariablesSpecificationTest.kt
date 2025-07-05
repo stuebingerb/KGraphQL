@@ -10,7 +10,6 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 @Specification("2.10 Variables")
@@ -166,18 +165,6 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         val result = execute(
             query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!) {createActor(name: \$name, age: \$age){name, age}}",
             variables = "{\"age\": 22}"
-        )
-        assertNoErrors(result)
-        result.extract<Map<String, Any>>("data/createActor") shouldBe mapOf("name" to "Boguś Linda", "age" to 22)
-    }
-
-    @Test
-    @Disabled("I don't think this should actually be supported?")
-    fun `query with variables and default value pointing to another variable`() {
-        val result = execute(
-            query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int = \$defaultAge, \$defaultAge : Int!) " +
-                "{createActor(name: \$name, age: \$age){name, age}}",
-            variables = "{\"defaultAge\": 22}"
         )
         assertNoErrors(result)
         result.extract<Map<String, Any>>("data/createActor") shouldBe mapOf("name" to "Boguś Linda", "age" to 22)
