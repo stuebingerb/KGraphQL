@@ -4,33 +4,48 @@ weight: 1
 ---
 
 As defined by specification, scalar represents a primitive value in GraphQL. In KGraphQL, besides built-in scalar types,
-client code can declare custom scalar type, which can coerce to String, Boolean, Int, Long or Float (Kotlin Double).
+client code can declare custom scalar type, which can coerce to `String`, `Boolean`, `Int`, `Long` or `Float` (`kotlin.Double`).
 
-KGraphQL provides a group of DSL methods: `stringScalar { }`, `booleanScalar { }`, `intScalar{ }`, `longScalar{ }`,
-`floatScalar{ }`. They differ only by the Kotlin primitive type they coerce to.
+KGraphQL provides a group of DSL methods to define scalars:
 
-Scalar has to define its coercion functions `deserialize` and `serialize` or coercion object which implements correct
-subtype of `com.apurebase.kgraphql.schema.scalar.ScalarCoercion`.
+* `stringScalar { }`
+* `booleanScalar { }`
+* `intScalar { }`
+* `longScalar { }`
+* `floatScalar { }`
 
-*Example of direct coercion functions declaration*
+They differ only by the Kotlin primitive type they coerce to.
 
-```kotlin
-stringScalar<UUID> {
-  deserialize = { uuid: String -> UUID.fromString(uuid) }
-  serialize = UUID::toString
-}
-```
+Every scalar has to define its coercion functions `deserialize` and `serialize`, or a coercion object that implements the
+correct subtype of `com.apurebase.kgraphql.schema.scalar.ScalarCoercion`:
 
-*Example of coercion object declaration*
-
-```kotlin
-stringScalar<UUID> {
-  coercion = object : StringScalarCoercion<UUID> {
-    override fun serialize(instance: UUID): String = instance.toString()
-    override fun deserialize(raw: String, valueNode: ValueNode?): UUID = UUID.fromString(raw)
-  }
-}
-```
+=== "Example (direct coercion function)"
+    ```kotlin
+    stringScalar<UUID> {
+      deserialize = { uuid: String -> UUID.fromString(uuid) }
+      serialize = UUID::toString
+    }
+    ```
+=== "Example (coercion object)"
+    ```kotlin
+    stringScalar<UUID> {
+      coercion = object : StringScalarCoercion<UUID> {
+        override fun serialize(instance: UUID): String = instance.toString()
+        override fun deserialize(raw: String, valueNode: ValueNode?): UUID = UUID.fromString(raw)
+      }
+    }
+    ```
 
 In addition to the built-in types, KGraphQL provides support for `Long` and `Short` which can be added to a schema
 using `extendedScalars()`.
+
+=== "Example"
+    ```kotlin
+    val schema = KGraphQL.schema {
+        extendedScalars()
+    
+        query("getLong") {
+            resolver { -> 3L }
+        }
+    }
+    ```
