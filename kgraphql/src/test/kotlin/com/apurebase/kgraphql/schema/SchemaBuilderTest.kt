@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.FilmType
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.context
@@ -84,7 +85,11 @@ class SchemaBuilderTest {
             }
             type<Scenario> {
                 transformation(Scenario::content) { content: String, capitalized: Boolean? ->
-                    if (capitalized == true) content.replaceFirstChar { it.uppercase() } else content
+                    if (capitalized == true) {
+                        content.replaceFirstChar { it.uppercase() }
+                    } else {
+                        content
+                    }
                 }
             }
         }
@@ -94,10 +99,56 @@ class SchemaBuilderTest {
         scenarioType["content"] shouldNotBe null
     }
 
+    // https://github.com/stuebingerb/KGraphQL/issues/321
+    @Test
+    fun `transformations should change the return type`() {
+        data class Foo(val id: Int, val name: String?, val nameWithDefault: String?, val transformedId: Int)
+
+        val numbers = mapOf(1 to "one", 2 to "two")
+        val testedSchema = schema {
+            query("foo") {
+                resolver { id: Int -> Foo(id, numbers[id], numbers[id], id) }
+            }
+            type<Foo> {
+                transformation(Foo::nameWithDefault) { nameWithDefault: String?, ctx: Context ->
+                    nameWithDefault ?: "(no name)"
+                }
+                transformation(Foo::transformedId) { transformedId: Int, ctx: Context ->
+                    transformedId.toString()
+                }
+            }
+        }
+
+        testedSchema.executeBlocking(
+            "{ foo(id: 1) { id name nameWithDefault transformedId } }"
+        ) shouldBe """
+            {"data":{"foo":{"id":1,"name":"one","nameWithDefault":"one","transformedId":"1"}}}
+        """.trimIndent()
+
+        testedSchema.executeBlocking(
+            "{ foo(id: 3) { id name nameWithDefault transformedId } }"
+        ) shouldBe """
+            {"data":{"foo":{"id":3,"name":null,"nameWithDefault":"(no name)","transformedId":"3"}}}
+        """.trimIndent()
+
+        testedSchema.printSchema() shouldBe """
+            type Foo {
+              id: Int!
+              name: String
+              nameWithDefault: String!
+              transformedId: String!
+            }
+            
+            type Query {
+              foo(id: Int!): Foo!
+            }
+            
+        """.trimIndent()
+    }
+
     @Test
     fun `extension property DSL`() {
         val testedSchema = defaultSchema {
-
             query("scenario") {
                 resolver { -> Scenario(Id("GKalus", 234234), "Gamil Kalus", "TOO LONG") }
             }
@@ -120,7 +171,6 @@ class SchemaBuilderTest {
     @Test
     fun `union type DSL`() {
         val tested = defaultSchema {
-
             query("scenario") {
                 resolver { -> Scenario(Id("GKalus", 234234), "Gamil Kalus", "TOO LONG") }
             }
@@ -500,7 +550,11 @@ class SchemaBuilderTest {
                 }
 
                 transformation(Actor::name) { name: String, addStuff: Boolean?, ctx: Context ->
-                    if (addStuff == true) name + ctx[UserData::class]?.stuff else name
+                    if (addStuff == true) {
+                        name + ctx[UserData::class]?.stuff
+                    } else {
+                        name
+                    }
                 }
             }
         }
