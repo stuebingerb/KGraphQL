@@ -2,7 +2,6 @@ package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
-import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -67,7 +66,6 @@ class DataLoaderTest {
         val schema = defaultSchema {
             configure {
                 useDefaultPrettyPrinter = true
-                executor = Executor.DataLoaderPrepared
             }
 
             query("people") {
