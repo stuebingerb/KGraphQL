@@ -32,43 +32,43 @@ open class TypeDSL<T : Any>(
 
     val dataloadedExtensionProperties = mutableSetOf<PropertyDef.DataLoadedFunction<T, *, *>>()
 
-    fun <R, E> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E) -> R) {
+    fun <R1, R2, E> transformation(kProperty: KProperty1<T, R1>, function: suspend (R1, E) -> R2) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W) -> R) {
+    fun <R1, R2, E, W> transformation(kProperty: KProperty1<T, R1>, function: suspend (R1, E, W) -> R2) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q) -> R) {
+    fun <R1, R2, E, W, Q> transformation(kProperty: KProperty1<T, R1>, function: suspend (R1, E, W, Q) -> R2) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q, A> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q, A) -> R) {
+    fun <R1, R2, E, W, Q, A> transformation(kProperty: KProperty1<T, R1>, function: suspend (R1, E, W, Q, A) -> R2) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q, A, S> transformation(kProperty: KProperty1<T, R>, function: suspend (R, E, W, Q, A, S) -> R) {
+    fun <R1, R2, E, W, Q, A, S> transformation(kProperty: KProperty1<T, R1>, function: suspend (R1, E, W, Q, A, S) -> R2) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q, A, S, B> transformation(
-        kProperty: KProperty1<T, R>,
-        function: suspend (R, E, W, Q, A, S, B) -> R
+    fun <R1, R2, E, W, Q, A, S, B> transformation(
+        kProperty: KProperty1<T, R1>,
+        function: suspend (R1, E, W, Q, A, S, B) -> R2
     ) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q, A, S, B, U> transformation(
-        kProperty: KProperty1<T, R>,
-        function: suspend (R, E, W, Q, A, S, B, U) -> R
+    fun <R1, R2, E, W, Q, A, S, B, U> transformation(
+        kProperty: KProperty1<T, R1>,
+        function: suspend (R1, E, W, Q, A, S, B, U) -> R2
     ) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
 
-    fun <R, E, W, Q, A, S, B, U, C> transformation(
-        kProperty: KProperty1<T, R>,
-        function: suspend (R, E, W, Q, A, S, B, U, C) -> R
+    fun <R1, R2, E, W, Q, A, S, B, U, C> transformation(
+        kProperty: KProperty1<T, R1>,
+        function: suspend (R1, E, W, Q, A, S, B, U, C) -> R2
     ) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
     }
