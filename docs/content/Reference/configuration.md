@@ -15,14 +15,13 @@ KGraphQL schema allows configuration of the following properties:
 | introspection                  | Schema allows introspection (also affects SDL). Introspection can be disabled in production to reduce attack surface. | `true`                                                                                                                                                                   |
 | plugins                        | (unused?)                                                                                                             |                                                                                                                                                                          |
 
-*Example*
-
-```kotlin
-KGraphQL.schema {
-    configure {
-        useDefaultPrettyPrinter = true
-        objectMapper = jacksonObjectMapper()
-        useCachingDocumentParser = false
+=== "Example"
+    ```kotlin
+    KGraphQL.schema {
+        configure {
+            useDefaultPrettyPrinter = true
+            objectMapper = jacksonObjectMapper()
+            useCachingDocumentParser = false
+        }
     }
-}
-```
+    ```

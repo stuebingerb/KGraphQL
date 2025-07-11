@@ -8,86 +8,238 @@ customize types. Besides, only member properties are inspected.
 `type` method is entry point to Type DSL.
 See [Extension Properties](#extension-properties), [Kotlin Properties](#kotlin-properties), [Union Properties](#union-properties).
 
-*Example*
+=== "Example"
+    ```kotlin
+    data class Person(val name: String, val age: Int)
 
-```kotlin
-data class Person(val name: String, val age: Int)
-
-KGraphQL.schema {
-    type<Person>{
-        description = "Human"
-    }
-}
-```
-
-**KProperty1<T, R>.ignore**
-extension function `ignore()` makes KGraphQL ignore its receiver property.
-
-*Example*
-
-```kotlin
-data class Person(val name: String, val age: Int)
-
-KGraphQL.schema {
-    type<Person>{
-        Person::age.ignore()
-    }
-}
-```
-
-**transformation(KProperty1<T, R>) {}**
-
-`transformation` method allows schema creator to attach data transformation on any kotlin property of type. Like
-operations, `transformation` has property `resolver` which is used to declare data transformation.
-
-*Example*
-
-```kotlin
-data class Person(val name: String, val age: Int)
-
-KGraphQL.schema {
-    type<Person>{
-        transformation(Person::age) {
-            //inMonths is nullable, so client can fetch age property without passing any value to this argument
-            //if(null == true) evaluates to false, if(null) is invalid kotlin code
-            age: Int , inMonths : Boolean? -> if(inMonths == true) age * 12 else age
+    val schema = KGraphQL.schema {
+        query("person") {
+            resolver { -> Person("John Smith", 42) }
+        }
+        type<Person>{
+            description = "Human"
         }
     }
-}
-```
+    ```
+=== "SDL"
+    ```graphql
+    type Person {
+      age: Int!
+      name: String!
+    }
+    
+    type Query {
+      person: Person!
+    }
+    ```
 
 ## Kotlin Properties
 
 Kotlin properties are automatically inspected during schema creation. Schema DSL allows ignoring
-and [deprecation](../deprecation.md) of kotlin properties as well as renaming.
+and [deprecation](../deprecation.md) of kotlin properties as well as renaming or transforming.
 
-*Example*
+=== "Example"
+    ```kotlin
+    data class Person(val firstName: String, val lastName: String, val name: String, val age: Int)
 
-```kotlin
-data class Person(val firstName: String, val lastName: String, val name: String, val age: Int)
-
-KGraphQL.schema {
-    type<Person>{
-        property(Person::age){
-            ignore = true
+    val schema = KGraphQL.schema {
+        query("person") {
+            resolver { -> Person("John", "Smith", "John Smith", 42) }
         }
-        property(Person::name){
-            name = "fullName"
-            deprecate("Use firstName and lastName")
+        type<Person>{
+            property(Person::age){
+                ignore = true
+            }
+            property(Person::name){
+                name = "fullName"
+                deprecate("Use firstName and lastName")
+            }
         }
     }
-}
-```
+    ```
+=== "SDL"
+    ```graphql
+    type Person {
+      firstName: String!
+      fullName: String! @deprecated(reason: "Use firstName and lastName")
+      lastName: String!
+    }
+    
+    type Query {
+      person: Person!
+    }
+    ```
 
-*Resulting SDL*
+**KProperty1<T, R>.ignore**
 
-```graphql
-type Person {
-  firstName: String!
-  fullName: String! @deprecated(reason: "Use firstName and lastName")
-  lastName: String!
-}
-```
+The extension function `ignore()` makes KGraphQL ignore its receiver property.
+
+=== "Example"
+    ```kotlin
+    data class Person(val name: String, val age: Int)
+    
+    val schema = KGraphQL.schema {
+        query("person") {
+            resolver { -> Person("John Smith", 42) }
+        }
+        type<Person>{
+            Person::age.ignore()
+        }
+    }
+    ```
+=== "SDL"
+    ```graphql
+    type Person {
+      name: String!
+    }
+    
+    type Query {
+      person: Person!
+    }
+    ```
+
+**transformation(KProperty1<T, R>) {}**
+
+The `transformation` function allows to attach data transformation on any existing Kotlin property.
+
+=== "Example"
+    ```kotlin
+    data class Person(val name: String, val age: Int)
+    
+    val schema = KGraphQL.schema {
+        query("person") {
+            resolver { -> Person("John Smith", 42) }
+        }
+        type<Person> {
+            transformation(Person::age) { age: Int, inMonths: Boolean? ->
+                if (inMonths == true) {
+                    age * 12
+                } else {
+                    age
+                }
+            }
+        }
+    }
+    ```
+=== "Query"
+    ```graphql
+    {
+      person {
+        years: age
+        months: age(inMonths: true)
+      }
+    }
+    ```
+=== "Response"
+    ```json
+    {
+      "data": {
+        "person": {
+          "years": 42,
+          "months": 504
+        }
+      }
+    }
+    ```
+
+Transformations can also be used to change the return type of a property, e.g. to make nullable
+properties non-nullable:
+
+=== "Example"
+    ```kotlin
+    data class Person(val name: String?, val age: Int)
+    
+    val schema = KGraphQL.schema {
+        query("person") {
+            resolver { -> Person(null, 42) }
+        }
+        type<Person> {
+            transformation(Person::name) { name: String?, ctx: Context ->
+                name ?: "(no name)"
+            }
+        }
+    }
+    ```
+=== "Query"
+    ```graphql
+    {
+      person {
+        name
+      }
+    }
+    ```
+=== "Response"
+    ```json
+    {
+      "data": {
+        "person": {
+          "name": "(no name)"
+        }
+      }
+    }
+    ```
+=== "SDL"
+    ```graphql
+    type Person {
+      age: Int!
+      name: String!
+    }
+    
+    type Query {
+      person: Person!
+    }
+    ```
+
+Transformations can even change the type to a completely different class:
+
+=== "Example"
+    ```kotlin
+    data class Person(val name: String, val age: Int)
+    
+    val schema = KGraphQL.schema {
+        query("person") {
+            resolver { -> Person("John Smith", 42) }
+        }
+        type<Person> {
+            transformation(Person::age) { age: Int, ctx: Context ->
+                if (age == 42) {
+                    "fourty-two"
+                } else {
+                    age.toString()
+                }
+            }
+        }
+    }
+    ```
+=== "Query"
+    ```graphql
+    {
+      person {
+        age
+      }
+    }
+    ```
+=== "Response"
+    ```json
+    {
+      "data": {
+        "person": {
+          "age": "fourty-two"
+        }
+      }
+    }
+    ```
+=== "SDL"
+    ```graphql
+    type Person {
+      age: String!
+      name: String!
+    }
+    
+    type Query {
+      person: Person!
+    }
+    ```
 
 ## Extension Properties
 
@@ -98,19 +250,18 @@ after main entity is resolved.
 
 `property` method accepts [resolver](../resolver.md) and can be subject of [deprecation](../deprecation.md).
 
-*Example*
-
-```kotlin
-data class Person(val name: String, val age: Int)
-
-KGraphQL.schema {
-    type<Person>{
-        property<Boolean>("isChild"){
-            resolver { person -> (person.age <= 18) }
+=== "Example"
+    ```kotlin
+    data class Person(val name: String, val age: Int)
+    
+    KGraphQL.schema {
+        type<Person>{
+            property<Boolean>("isChild"){
+                resolver { person -> (person.age <= 18) }
+            }
         }
     }
-}
-```
+    ```
 
 ## Union Properties
 
@@ -121,28 +272,27 @@ creation of [union type](unions.md).
 Union type resolver is not type checked. Invalid resolver implementation which would return value of type other than
 members of union type will fail in runtime.
 
-*Example*
-
-```kotlin
-data class UnionMember1(val one : String)
-
-data class UnionMember2(val two : String)
-
-data class Person(val name: String, val age: Int)
-
-KGraphQL.schema {
-    type<Person>{
-        unionProperty("union"){
-            nullable = true // Defaults to false
-            returnType = unionType("UnionExample"){
-                 type<UnionMember1>()
-                 type<UnionMember2>()
+=== "Example"
+    ```kotlin
+    data class UnionMember1(val one : String)
+    
+    data class UnionMember2(val two : String)
+    
+    data class Person(val name: String, val age: Int)
+    
+    KGraphQL.schema {
+        type<Person>{
+            unionProperty("union"){
+                nullable = true // Defaults to false
+                returnType = unionType("UnionExample"){
+                     type<UnionMember1>()
+                     type<UnionMember2>()
+                }
+                resolver { person -> if (person.age <= 18) UnionMember1("one") else UnionMember2("two") }
             }
-            resolver { person -> if (person.age <= 18) UnionMember1("one") else UnionMember2("two") }
         }
     }
-}
-```
+    ```
 
 ## Data Loaded Properties
 
@@ -154,16 +304,17 @@ here: [The GraphQL Dataloader Pattern: Visualized](https://medium.com/@__xuorig_
 
 Imagine having this query:
 
-```graphql
-{
-  people(first: 10) {
-    name
-    friends(first: 5) {
-      name
+=== "Query"
+    ```graphql
+    {
+      people(first: 10) {
+        name
+        friends(first: 5) {
+          name
+        }
+      }
     }
-  }
-}
-```
+    ```
 
 Running this against a Database would execute 11 SQL queries:
 First fetch the 10 people. Then loop through each of them and fetch their first 5 friends one by one.
@@ -181,82 +332,77 @@ configure {
 }
 ```
 
-*Example*
-
-```kotlin
-data class Person(val id: Int, val name: String)
-val people = (1..5).map { Person(it, "Name-$it") }
-...
-configure {
-    executor = Executor.DataLoaderPrepared
-}
-query("people") {
-    resolver { -> people }
-}
-type<Person> {
-    // Int - defines the key that will be sent from the [prepare] into [loader]
-    // Person? - defines the return type that the [loader] is required to return.
-    // the loader is then required to return it in a map format like Map<Int, Person?>
-    dataProperty<Int, Person?>("nextPerson") {
-        prepare { person, skipAmount: Int -> person.id + skipAmount }
-        loader { ids ->
-            ids.map {
-                ExecutionResult.Success(people[it-1])
+=== "Example"
+    ```kotlin
+    data class Person(val id: Int, val name: String)
+    val people = (1..5).map { Person(it, "Name-$it") }
+    ...
+    configure {
+        executor = Executor.DataLoaderPrepared
+    }
+    query("people") {
+        resolver { -> people }
+    }
+    type<Person> {
+        // Int - defines the key that will be sent from the [prepare] into [loader]
+        // Person? - defines the return type that the [loader] is required to return.
+        // the loader is then required to return it in a map format like Map<Int, Person?>
+        dataProperty<Int, Person?>("nextPerson") {
+            prepare { person, skipAmount: Int -> person.id + skipAmount }
+            loader { ids ->
+                ids.map {
+                    ExecutionResult.Success(people[it-1])
+                }
             }
         }
     }
-}
-```
-
-*GraphQL Query example:*
-
-```graphql
-{
-    people {
-        name
-        nextPerson(skipAmount: 2) {
-          name
+    ```
+=== "Query"
+    ```graphql
+    {
+        people {
+            name
+            nextPerson(skipAmount: 2) {
+              name
+            }
         }
     }
-}
-```
-
-Returns:
-
-```json
-{
-  "data": {
-    "people": [
-      {
-        "name": "Name-1",
-        "nextPerson": {
-          "name": "Name-3"
-        }
-      },
-      {
-        "name": "Name-2",
-        "nextPerson": {
-          "name": "Name-4"
-        }
-      },
-      {
-        "name": "Name-3",
-        "nextPerson": {
-          "name": "Name-5"
-        }
-      },
-      {
-        "name": "Name-4",
-        "nextPerson": null
-      },
-      {
-        "name": "Name-5",
-        "nextPerson": null
+    ```
+=== "Response"
+    ```json
+    {
+      "data": {
+        "people": [
+          {
+            "name": "Name-1",
+            "nextPerson": {
+              "name": "Name-3"
+            }
+          },
+          {
+            "name": "Name-2",
+            "nextPerson": {
+              "name": "Name-4"
+            }
+          },
+          {
+            "name": "Name-3",
+            "nextPerson": {
+              "name": "Name-5"
+            }
+          },
+          {
+            "name": "Name-4",
+            "nextPerson": null
+          },
+          {
+            "name": "Name-5",
+            "nextPerson": null
+          }
+        ]
       }
-    ]
-  }
-}
-```
+    }
+    ```
 
 ### Current known issues
 

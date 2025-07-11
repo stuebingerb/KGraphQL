@@ -14,48 +14,46 @@ identifiers.
 In KGraphQL, schema stitching is configured via the `stitchedSchema` DSL. Each stitched schema has 1-n *remote* schemas,
 and up to one *local* schema.
 
-*Example*:
-
-```kotlin
-stitchedSchema {
-    configure {
-        remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
-    }
-    localSchema {
-        query("local") {
-            resolver { -> "local" }
+=== "Example"
+    ```kotlin
+    stitchedSchema {
+        configure {
+            remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
+        }
+        localSchema {
+            query("local") {
+                resolver { -> "local" }
+            }
+        }
+        remoteSchema("remote1") {
+            ...
+        }
+        remoteSchema("remote2") {
+            ...
         }
     }
-    remoteSchema("remote1") {
-        ...
-    }
-    remoteSchema("remote2") {
-        ...
-    }
-}
-```
+    ```
 
 ### Remote Schema Fetching
 
 Remote schemas are usually fetched via introspection query.
 
-*Example*:
-
-```kotlin
-remoteSchema(url) {
-    runBlocking {
-        val responseText = httpClient.post(url) {
-            setBody(
-                TextContent(
-                    text = graphQLJson.toJson(mapOf("query" to Introspection.query())),
-                    contentType = ContentType.Application.Json
+=== "Example"
+    ```kotlin
+    remoteSchema(url) {
+        runBlocking {
+            val responseText = httpClient.post(url) {
+                setBody(
+                    TextContent(
+                        text = graphQLJson.toJson(mapOf("query" to Introspection.query())),
+                        contentType = ContentType.Application.Json
+                    )
                 )
-            )
-        }.bodyAsText()
-        IntrospectedSchema.fromIntrospectionResponse(responseText)
+            }.bodyAsText()
+            IntrospectedSchema.fromIntrospectionResponse(responseText)
+        }
     }
-}
-```
+    ```
 
 ### Duplicate Types
 
@@ -84,21 +82,20 @@ Fragments based on remote types work but cannot use Kotlin's type system to dete
 Therefore, queries including fragments must also request the `__typename`. Future implementation might automatically
 include this.
 
-*Example*:
-
-```graphql
-query {
-    getRemote {
-        __typename
-        foo
-        child {
+=== "Query"
+    ```graphql
+    query {
+        getRemote {
             __typename
-            ...on RemoteA { specialA }
-            ...on RemoteB { specialB }
+            foo
+            child {
+                __typename
+                ...on RemoteA { specialA }
+                ...on RemoteB { specialB }
+            }
         }
     }
-}
-```
+    ```
 
 ### Local "Remote" Execution
 
@@ -106,15 +103,14 @@ Due to current implementation details, properties stitched to a *local* query wi
 `RemoteRequestExecutor`, and therefore the schema has to provide a `localUrl`. Future implementation will likely support
 actual local execution.
 
-*Example:*
-
-```kotlin
-stitchedSchema {
-    configure {
-        localUrl = "/graphql"
+=== "Example"
+    ```kotlin
+    stitchedSchema {
+        configure {
+            localUrl = "/graphql"
+        }
     }
-}
-```
+    ```
 
 ### Linking Properties
 
@@ -125,21 +121,20 @@ calls during execution. The following example adds two fields to the `Type1` typ
 - `stitched2`, which executes the remote query `getStitched2` and provides the value of the property `foo` from the
   parent type as argument named `fooValue`
 
-*Example:*
-
-```kotlin
-type("Type1") {
-    stitchedProperty("stitched1") {
-        nullable = false
-        remoteQuery("getStitched1")
-    }
-    stitchedProperty("stitched2") {
-        remoteQuery("getStitched2").withArgs {
-            arg { name = "fooValue"; parentFieldName = "foo" }
+=== "Example"
+    ```kotlin
+    type("Type1") {
+        stitchedProperty("stitched1") {
+            nullable = false
+            remoteQuery("getStitched1")
+        }
+        stitchedProperty("stitched2") {
+            remoteQuery("getStitched2").withArgs {
+                arg { name = "fooValue"; parentFieldName = "foo" }
+            }
         }
     }
-}
-```
+    ```
 
 Stitched properties are nullable by default, and if a parent property is `null`, the remote execution is skipped and
 results in a value of `null` for the stitched property itself.
