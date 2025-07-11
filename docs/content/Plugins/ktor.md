@@ -27,18 +27,19 @@ You first need to add the KGraphQL-ktor package to your dependency
 To set up KGraphQL you'll need to install the GraphQL feature like you would any
 other [ktor feature](https://ktor.io/servers/features.html).
 
-```kotlin
-fun Application.module() {
-  install(GraphQL) {
-    playground = true 
-    schema {
-      query("hello") {
-        resolver { -> "World!" }
+=== "Example"
+    ```kotlin
+    fun Application.module() {
+      install(GraphQL) {
+        playground = true 
+        schema {
+          query("hello") {
+            resolver { -> "World!" }
+          }
+        }
       }
     }
-  }
-}
-```
+    ```
 
 Now you have a fully working GraphQL server. We have also set `playground = true`, so when running this you will be able
 to open [http://localhost:8080/graphql](http://localhost:8080/graphql) _(your port number may vary)_ in your browser and
@@ -62,11 +63,12 @@ set of configuration as described in the table below.
 Sometimes you would need to wrap your route within something. A good example of this would be the `authenticate`
 function provided by [ktor Authentication feature](https://ktor.io/docs/server-auth.html).
 
-```kotlin
-wrap {
-  authenticate(optional = true, build = it)
-}
-```
+=== "Example"
+    ```kotlin
+    wrap {
+      authenticate(optional = true, build = it)
+    }
+    ```
 
 This works great alongside the [context](#context) to provide a context to the KGraphQL resolvers.
 
@@ -74,31 +76,30 @@ This works great alongside the [context](#context) to provide a context to the K
 
 To get access to the context
 
-```kotlin
-context { call ->
-  // access to authentication is only available if this is wrapped inside a `authenticate` before hand. 
-  call.authentication.principal<User>()?.let {
-    +it
-  }
-}
-schema {
-  query("hello") {
-    resolver { ctx: Context ->
-      val user = ctx.get<User>()!!
-      "Hello ${user.name}"
+=== "Example"
+    ```kotlin
+    context { call ->
+      // access to authentication is only available if this is wrapped inside a `authenticate` before hand. 
+      call.authentication.principal<User>()?.let {
+        +it
+      }
     }
-  }  
-}
-```
+    schema {
+      query("hello") {
+        resolver { ctx: Context ->
+          val user = ctx.get<User>()!!
+          "Hello ${user.name}"
+        }
+      }  
+    }
+    ```
 
 ## Schema Definition Language (SDL)
 
 The [Schema Definition Language](https://graphql.org/learn/schema/#type-language) (or Type System Definition Language) is a human-readable, language-agnostic
 representation of a GraphQL schema.
 
-See the following comparison:
-
-=== "KGraphQL"
+=== "Example"
     ```kotlin
     schema {
         data class SampleData(
