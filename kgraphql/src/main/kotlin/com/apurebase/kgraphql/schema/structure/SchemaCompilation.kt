@@ -509,7 +509,7 @@ open class SchemaCompilation(
         kqlProperty: PropertyDef.Kotlin<*, *>?,
         transformation: Transformation<*, *>?
     ): Field.Kotlin<*, *> {
-        val returnType = handlePossiblyWrappedType(kProperty.returnType, TypeCategory.QUERY)
+        val returnType = handlePossiblyWrappedType(transformation?.kFunction?.returnType ?: kProperty.returnType, TypeCategory.QUERY)
         val inputValues = if (transformation != null) {
             handleInputValues("$kProperty transformation", transformation.transformation, emptyList())
         } else {

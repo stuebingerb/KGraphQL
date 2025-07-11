@@ -76,7 +76,11 @@ class KtorFeatureTest : KtorTest() {
                 }
 
                 transformation(Actor::name) { name: String, addStuff: Boolean?, ctx: Context ->
-                    if (addStuff == true) name + ctx[UserData::class]?.stuff else name
+                    if (addStuff == true) {
+                        name + ctx[UserData::class]?.stuff
+                    } else {
+                        name
+                    }
                 }
             }
         }
