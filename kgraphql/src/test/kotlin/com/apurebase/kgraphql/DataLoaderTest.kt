@@ -120,7 +120,6 @@ class DataLoaderTest {
             }
 
             type<ABC> {
-
                 dataProperty<String, Int>("B") {
                     loader { keys ->
                         println("== Running [B] loader with keys: $keys ==")
@@ -159,6 +158,7 @@ class DataLoaderTest {
                         }
                     }
                 }
+
                 property("personOld") {
                     resolver {
                         delay(1)
@@ -424,7 +424,7 @@ class DataLoaderTest {
     }
 
     @RepeatedTest(repeatTimes)
-    fun `dataloader with nullable prepare keys`() {
+    fun `data loader with nullable prepare keys`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
 
@@ -449,7 +449,7 @@ class DataLoaderTest {
     }
 
     @RepeatedTest(repeatTimes)
-    fun `basic dataloader test`() {
+    fun `basic data loader test`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
 
@@ -482,7 +482,11 @@ class DataLoaderTest {
                 {
                     tree { # <-- 2
                         id
-                        child(buzz: 3) {
+                        firstChild: child(buzz: 3) {
+                            id
+                            value
+                        }
+                        otherChild: child(buzz: 6) {
                             id
                             value
                         }
@@ -491,11 +495,14 @@ class DataLoaderTest {
             """.trimIndent()
 
             val result = schema.executeBlocking(query).deserialize()
+            result.extract<Int>("data/tree[0]/id") shouldBe 1
+            result.extract<Int>("data/tree[0]/firstChild/id") shouldBe 14
+            result.extract<Int>("data/tree[0]/otherChild/id") shouldBe 17
             result.extract<Int>("data/tree[1]/id") shouldBe 2
-            result.extract<Int>("data/tree[0]/child/id") shouldBe 14
-            result.extract<Int>("data/tree[1]/child/id") shouldBe 15
+            result.extract<Int>("data/tree[1]/firstChild/id") shouldBe 15
+            result.extract<Int>("data/tree[1]/otherChild/id") shouldBe 18
 
-            counters.treeChild.prepare.get() shouldBe 2
+            counters.treeChild.prepare.get() shouldBe 4
             counters.treeChild.loader.get() shouldBe 1
         }
     }
@@ -512,21 +519,39 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            val result = schema.executeBlocking(query).deserialize()
-            result.extract<Int>("data/first[1]/id") shouldBe 2
+            var result = schema.executeBlocking(query).deserialize()
+            result.extract<Int>("data/first[0]/id") shouldBe 1
             result.extract<Int>("data/first[0]/child/id") shouldBe 14
+            result.extract<Int>("data/first[1]/id") shouldBe 2
             result.extract<Int>("data/first[1]/child/id") shouldBe 15
+            result.extract<Int>("data/second[0]/id") shouldBe 1
+            result.extract<Int>("data/second[0]/child/id") shouldBe 14
+            result.extract<Int>("data/second[1]/id") shouldBe 2
             result.extract<Int>("data/second[1]/child/id") shouldBe 15
 
             counters.treeChild.prepare.get() shouldBe 4
             counters.treeChild.loader.get() shouldBe 1
+
+            // New request should load again
+            result = schema.executeBlocking(query).deserialize()
+            result.extract<Int>("data/first[0]/id") shouldBe 1
+            result.extract<Int>("data/first[0]/child/id") shouldBe 14
+            result.extract<Int>("data/first[1]/id") shouldBe 2
+            result.extract<Int>("data/first[1]/child/id") shouldBe 15
+            result.extract<Int>("data/second[0]/id") shouldBe 1
+            result.extract<Int>("data/second[0]/child/id") shouldBe 14
+            result.extract<Int>("data/second[1]/id") shouldBe 2
+            result.extract<Int>("data/second[1]/child/id") shouldBe 15
+
+            counters.treeChild.prepare.get() shouldBe 8
+            counters.treeChild.loader.get() shouldBe 2
         }
     }
 
     @RepeatedTest(repeatTimes)
-    fun `multiple layers of dataLoaders`() {
+    fun `multiple layers of data loaders`() {
         assertTimeoutPreemptively(timeout) {
-            val (schema) = schema()
+            val (schema, counters) = schema()
 
             val query = """
                 {
@@ -557,9 +582,13 @@ class DataLoaderTest {
                 }
             """.trimIndent()
 
-            schema.executeBlocking(query).also(::println).deserialize()
+            schema.executeBlocking(query).deserialize()
 
-//            throw TODO("Assert results")
+            counters.abcB.prepare.get() shouldBe 58824
+            counters.abcB.loader.get() shouldBe 6
+
+            counters.abcChildren.prepare.get() shouldBe 8403
+            counters.abcChildren.loader.get() shouldBe 5
         }
     }
 }
