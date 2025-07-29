@@ -14,4 +14,4 @@ exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "e
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-javaTime = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 h2 = { module = "com.h2database:h2", version = "2.3.232" }
-hikari = { module = "com.zaxxer:HikariCP", version = "6.3.2" }
+hikari = { module = "com.zaxxer:HikariCP", version = "7.0.0" }
