@@ -107,7 +107,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         selectionSet: SelectionSetNode?,
         propertyName: NameNode? = null
     ): List<Execution> = if (!selectionSet?.selections.isNullOrEmpty()) {
-        selectionSet!!.selections.map {
+        selectionSet.selections.map {
             handleReturnTypeChildOrFragment(it, type, ctx)
         }
     } else if (type.unwrapped().fields?.isNotEmpty() == true) {

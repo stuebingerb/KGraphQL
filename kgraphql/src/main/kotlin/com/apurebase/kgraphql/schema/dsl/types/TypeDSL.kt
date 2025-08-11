@@ -23,14 +23,15 @@ open class TypeDSL<T : Any>(
     var name = kClass.defaultKQLTypeName()
 
     private val transformationProperties = mutableSetOf<Transformation<T, *>>()
-
     private val extensionProperties = mutableSetOf<PropertyDef.Function<T, *>>()
-
     private val unionProperties = mutableSetOf<PropertyDef.Union<T>>()
-
     private val describedKotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
 
     val dataloadedExtensionProperties = mutableSetOf<PropertyDef.DataLoadedFunction<T, *, *>>()
+
+    fun <R1, R2> transformation(kProperty: KProperty1<T, R1>, function: suspend (R1) -> R2) {
+        transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
+    }
 
     fun <R1, R2, E> transformation(kProperty: KProperty1<T, R1>, function: suspend (R1, E) -> R2) {
         transformationProperties.add(Transformation(kProperty, FunctionWrapper.on(function, true)))
