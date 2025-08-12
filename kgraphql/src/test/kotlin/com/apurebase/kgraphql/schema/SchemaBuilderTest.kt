@@ -110,10 +110,10 @@ class SchemaBuilderTest {
                 resolver { id: Int -> Foo(id, numbers[id], numbers[id], id) }
             }
             type<Foo> {
-                transformation(Foo::nameWithDefault) { nameWithDefault: String?, ctx: Context ->
+                transformation(Foo::nameWithDefault) { nameWithDefault: String? ->
                     nameWithDefault ?: "(no name)"
                 }
-                transformation(Foo::transformedId) { transformedId: Int, ctx: Context ->
+                transformation(Foo::transformedId) { transformedId: Int ->
                     transformedId.toString()
                 }
             }

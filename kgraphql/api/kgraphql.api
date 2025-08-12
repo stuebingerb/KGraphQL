@@ -814,6 +814,7 @@ public class com/apurebase/kgraphql/schema/dsl/types/TypeDSL : com/apurebase/kgr
 	public final fun property (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function1;)V
 	public final fun setName (Ljava/lang/String;)V
 	public final fun transformation (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function10;)V
+	public final fun transformation (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function2;)V
 	public final fun transformation (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function3;)V
 	public final fun transformation (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function4;)V
 	public final fun transformation (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function5;)V

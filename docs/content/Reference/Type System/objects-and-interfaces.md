@@ -154,7 +154,7 @@ properties non-nullable:
             resolver { -> Person(null, 42) }
         }
         type<Person> {
-            transformation(Person::name) { name: String?, ctx: Context ->
+            transformation(Person::name) { name: String? ->
                 name ?: "(no name)"
             }
         }
@@ -201,7 +201,7 @@ Transformations can even change the type to a completely different class:
             resolver { -> Person("John Smith", 42) }
         }
         type<Person> {
-            transformation(Person::age) { age: Int, ctx: Context ->
+            transformation(Person::age) { age: Int ->
                 if (age == 42) {
                     "fourty-two"
                 } else {
