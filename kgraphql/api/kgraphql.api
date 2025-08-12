@@ -332,6 +332,7 @@ public final class com/apurebase/kgraphql/schema/builtin/BuiltInScalars : java/l
 	public static final field BOOLEAN Lcom/apurebase/kgraphql/schema/builtin/BuiltInScalars;
 	public static final field DOUBLE Lcom/apurebase/kgraphql/schema/builtin/BuiltInScalars;
 	public static final field FLOAT Lcom/apurebase/kgraphql/schema/builtin/BuiltInScalars;
+	public static final field ID Lcom/apurebase/kgraphql/schema/builtin/BuiltInScalars;
 	public static final field INT Lcom/apurebase/kgraphql/schema/builtin/BuiltInScalars;
 	public static final field STRING Lcom/apurebase/kgraphql/schema/builtin/BuiltInScalars;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
@@ -363,6 +364,14 @@ public final class com/apurebase/kgraphql/schema/builtin/FLOAT_COERCION : com/ap
 	public fun deserialize (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;)Ljava/lang/Float;
 	public fun serialize (F)Ljava/lang/String;
 	public synthetic fun serialize (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/apurebase/kgraphql/schema/builtin/ID_COERCION : com/apurebase/kgraphql/schema/scalar/StringScalarCoercion {
+	public static final field INSTANCE Lcom/apurebase/kgraphql/schema/builtin/ID_COERCION;
+	public synthetic fun deserialize (Ljava/lang/Object;Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;)Ljava/lang/Object;
+	public fun deserialize-bBoQZes (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;)Ljava/lang/String;
+	public synthetic fun serialize (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun serialize-jBYQb3E (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public final class com/apurebase/kgraphql/schema/builtin/INT_COERCION : com/apurebase/kgraphql/schema/scalar/StringScalarCoercion {
@@ -2101,6 +2110,20 @@ public final class com/apurebase/kgraphql/schema/scalar/CoercionKt {
 }
 
 public abstract interface class com/apurebase/kgraphql/schema/scalar/DoubleScalarCoercion : com/apurebase/kgraphql/schema/scalar/ScalarCoercion {
+}
+
+public final class com/apurebase/kgraphql/schema/scalar/ID {
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/scalar/ID;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
 }
 
 public abstract interface class com/apurebase/kgraphql/schema/scalar/IntScalarCoercion : com/apurebase/kgraphql/schema/scalar/ScalarCoercion {

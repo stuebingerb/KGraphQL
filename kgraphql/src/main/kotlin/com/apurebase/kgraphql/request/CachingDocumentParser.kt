@@ -25,10 +25,6 @@ class CachingDocumentParser(cacheMaximumSize: Long = 1000L) {
         when (result) {
             is Result.Success -> return result.document
             is Result.Exception -> throw result.exception
-            else -> {
-                cache.invalidateAll()
-                error("Internal error of CachingDocumentParser")
-            }
         }
     }
 }

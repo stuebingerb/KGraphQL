@@ -19,7 +19,7 @@ either Object or Interface. Rules are following:
 * if Interface in schema is implemented by any Class in schema, it is interpreted as GraphQL Interface type.
 * if Interface in schema is NOT implemented by any Class in schema, it is interpreted as GraphQL Object type.
 
-## Built-in Types
+## Built-in Scalars
 
 By default, every schema has following built-in [scalars](scalars.md):
 
@@ -28,6 +28,8 @@ By default, every schema has following built-in [scalars](scalars.md):
 * **Float** - represents signed double‐precision fractional values as specified by IEEE 754. KGraphQL represents Kotlin
   primitive Double and Float values as GraphQL Float.
 * **Boolean** - represents true or false
+* **ID** - represents a unique identifier, often used to refetch an object or as the key for a cache. It is serialized
+  in the same way as a String but is not intended to be human-readable
 
 ## Introspection Types
 
