@@ -36,7 +36,7 @@ correct subtype of `com.apurebase.kgraphql.schema.scalar.ScalarCoercion`:
     }
     ```
 
-In addition to the built-in types, KGraphQL provides support for `Long` and `Short` which can be added to a schema
+In addition to the built-in scalars, KGraphQL provides support for `Long` and `Short` which can be added to a schema
 using `extendedScalars()`.
 
 === "Example"

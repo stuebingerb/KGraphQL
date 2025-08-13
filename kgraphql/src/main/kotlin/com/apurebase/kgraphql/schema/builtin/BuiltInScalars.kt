@@ -10,25 +10,25 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode.BooleanValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.DoubleValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.NumberValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.StringValueNode
+import com.apurebase.kgraphql.schema.scalar.ID
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 
 private const val STRING_DESCRIPTION =
     "The String scalar type represents textual data, represented as UTF-8 character sequences"
 
-private const val SHORT_DESCRIPTION =
-    "The Short scalar type represents a signed 16-bit numeric non-fractional value"
+private const val SHORT_DESCRIPTION = "The Short scalar type represents a signed 16-bit numeric non-fractional value"
 
-private const val INT_DESCRIPTION =
-    "The Int scalar type represents a signed 32-bit numeric non-fractional value"
+private const val INT_DESCRIPTION = "The Int scalar type represents a signed 32-bit numeric non-fractional value"
 
-private const val LONG_DESCRIPTION =
-    "The Long scalar type represents a signed 64-bit numeric non-fractional value"
+private const val LONG_DESCRIPTION = "The Long scalar type represents a signed 64-bit numeric non-fractional value"
 
 private const val FLOAT_DESCRIPTION =
     "The Float scalar type represents signed double-precision fractional values as specified by IEEE 754"
 
-private const val BOOLEAN_DESCRIPTION =
-    "The Boolean scalar type represents true or false"
+private const val BOOLEAN_DESCRIPTION = "The Boolean scalar type represents true or false"
+
+private const val ID_DESCRIPTION =
+    "The ID scalar type represents a unique identifier, often used to refetch an object or as the key for a cache"
 
 /**
  * https://spec.graphql.org/October2021/#sec-Scalars.Built-in-Scalars
@@ -41,6 +41,15 @@ enum class BuiltInScalars(val typeDef: TypeDef.Scalar<*>) {
     DOUBLE(TypeDef.Scalar(Float::class.defaultKQLTypeName(), Double::class, DOUBLE_COERCION, FLOAT_DESCRIPTION)),
     FLOAT(TypeDef.Scalar(Float::class.defaultKQLTypeName(), Float::class, FLOAT_COERCION, FLOAT_DESCRIPTION)),
     BOOLEAN(TypeDef.Scalar(Boolean::class.defaultKQLTypeName(), Boolean::class, BOOLEAN_COERCION, BOOLEAN_DESCRIPTION)),
+
+    ID(
+        TypeDef.Scalar(
+            com.apurebase.kgraphql.schema.scalar.ID::class.defaultKQLTypeName(),
+            com.apurebase.kgraphql.schema.scalar.ID::class,
+            ID_COERCION,
+            ID_DESCRIPTION
+        )
+    )
 }
 
 enum class ExtendedBuiltInScalars(val typeDef: TypeDef.Scalar<*>) {
@@ -167,6 +176,20 @@ object BOOLEAN_COERCION : StringScalarCoercion<Boolean> {
 
         else -> throw InvalidInputValueException(
             "Cannot coerce ${valueNode.valueNodeName} to boolean constant",
+            valueNode
+        )
+    }
+}
+
+object ID_COERCION : StringScalarCoercion<ID> {
+    override fun serialize(instance: ID): String = instance.value
+
+    override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
+        is StringValueNode -> ID(valueNode.value)
+        is NumberValueNode -> ID(valueNode.value.toString())
+
+        else -> throw InvalidInputValueException(
+            "Cannot coerce ${valueNode.valueNodeName} to ID",
             valueNode
         )
     }

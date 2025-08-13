@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
+import com.apurebase.kgraphql.schema.scalar.ID
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -148,10 +149,10 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    fun `server can declare custom ID type`() {
+    fun `server can declare custom UUID type`() {
         val testedSchema = KGraphQL.schema {
             stringScalar<UUID> {
-                name = "ID"
+                name = "UUID"
                 description = "the unique identifier of object"
                 deserialize = UUID::fromString
                 serialize = UUID::toString
@@ -163,13 +164,102 @@ class ScalarsSpecificationTest {
 
         val randomUUID = UUID.randomUUID()
         val map =
-            deserialize(testedSchema.executeBlocking("query(\$id: ID = \"$randomUUID\"){ personById(id: \$id) { uuid, name } }"))
+            deserialize(testedSchema.executeBlocking("query(\$id: UUID! = \"$randomUUID\"){ personById(id: \$id) { uuid, name } }"))
         map.extract<String>("data/personById/uuid") shouldBe randomUUID.toString()
     }
 
+    @Test
+    fun `server can use built-in ID type`() {
+        data class IdPerson(val id: ID, val name: String)
+
+        val testedSchema = KGraphQL.schema {
+            query("personById") {
+                resolver { id: ID -> IdPerson(id, "John Smith") }
+            }
+            mutation("createPerson") {
+                resolver { person: IdPerson -> person }
+            }
+        }
+
+        testedSchema.printSchema() shouldBe """
+            type IdPerson {
+              id: ID!
+              name: String!
+            }
+            
+            type Mutation {
+              createPerson(person: IdPersonInput!): IdPerson!
+            }
+
+            type Query {
+              personById(id: ID!): IdPerson!
+            }
+            
+            input IdPersonInput {
+              id: ID!
+              name: String!
+            }
+
+        """.trimIndent()
+
+        // UUID
+        testedSchema.executeBlocking("query(\$id: ID! = \"482629b4-1fac-4f0b-b73c-a3f3ad1a8bf3\") { personById(id: \$id) { id, name } }") shouldBe """
+            {"data":{"personById":{"id":"482629b4-1fac-4f0b-b73c-a3f3ad1a8bf3","name":"John Smith"}}}
+        """.trimIndent()
+
+        // String
+        testedSchema.executeBlocking("query(\$id: ID! = \"4\") { personById(id: \$id) { id, name } }") shouldBe """
+            {"data":{"personById":{"id":"4","name":"John Smith"}}}
+        """.trimIndent()
+
+        // Int
+        testedSchema.executeBlocking("query(\$id: ID! = 4) { personById(id: \$id) { id, name } }") shouldBe """
+            {"data":{"personById":{"id":"4","name":"John Smith"}}}
+        """.trimIndent()
+
+        // Negative Int
+        testedSchema.executeBlocking("query(\$id: ID! = -4) { personById(id: \$id) { id, name } }") shouldBe """
+            {"data":{"personById":{"id":"-4","name":"John Smith"}}}
+        """.trimIndent()
+
+        // Long
+        testedSchema.executeBlocking("query(\$id: ID! = 20147483648) { personById(id: \$id) { id, name } }") shouldBe """
+            {"data":{"personById":{"id":"20147483648","name":"John Smith"}}}
+        """.trimIndent()
+
+        // Double (should fail)
+        expect<InvalidInputValueException>("Cannot coerce 4.0 to ID") {
+            testedSchema.executeBlocking("query(\$id: ID! = 4.0) { personById(id: \$id) { id, name } }")
+        }
+
+        // Boolean (should fail)
+        expect<InvalidInputValueException>("Cannot coerce true to ID") {
+            testedSchema.executeBlocking("query(\$id: ID! = true) { personById(id: \$id) { id, name } }")
+        }
+
+        // List of strings (should fail)
+        expect<InvalidInputValueException>("argument '[\"4\", \"5\"]' is not valid value of type ID") {
+            testedSchema.executeBlocking("query(\$id: ID! = [\"4\", \"5\"]) { personById(id: \$id) { id, name } }")
+        }
+
+        // Object (should fail)
+        expect<InvalidInputValueException>("Property 'value' on 'ID' does not exist") {
+            testedSchema.executeBlocking("query(\$id: ID! = {value: \"4\"}) { personById(id: \$id) { id, name } }")
+        }
+
+        // Null (should fail)
+        expect<InvalidInputValueException>("argument 'null' is not valid value of type ID") {
+            testedSchema.executeBlocking("query(\$id: ID! = null) { personById(id: \$id) { id, name } }")
+        }
+
+        // Mutation
+        testedSchema.executeBlocking("mutation(\$person: IdPersonInput! = { id:\"4\",name:\"John Smith\" }){ createPerson(person: \$person) { id, name } }") shouldBe """
+            {"data":{"createPerson":{"id":"4","name":"John Smith"}}}
+        """.trimIndent()
+    }
 
     @Test
-    fun `For numeric scalars, input string with numeric content must raise a query error indicating an incorrect type`() {
+    fun `for numeric scalars, input string with numeric content must raise a query error indicating an incorrect type`() {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
