@@ -27,7 +27,7 @@ import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.SPREAD
 import com.apurebase.kgraphql.schema.model.ast.TokenKindEnum.STRING
 import com.apurebase.kgraphql.schema.structure.dedentBlockStringValue
 
-class Lexer(val source: Source) {
+internal class Lexer(val source: Source) {
     /** The previously focused non-ignored token. */
     var lastToken: Token = Token(SOF)
 
@@ -230,10 +230,10 @@ class Lexer(val source: Source) {
         var code = body.getOrNull(position + 1)?.code
 
         while (code != null && (code == 95 || // -
-                    (code in 48..57) || // 0-9
-                    (code in 65..90) || // A-Z
-                    (code in 97..122)   // a-z
-                    )
+                (code in 48..57) || // 0-9
+                (code in 65..90) || // A-Z
+                (code in 97..122)   // a-z
+                )
         ) {
             code = body.getOrNull(++position + 1)?.code
         }

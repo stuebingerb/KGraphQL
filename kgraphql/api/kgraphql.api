@@ -142,72 +142,6 @@ public final class com/apurebase/kgraphql/request/Introspection$SpecLevel : java
 	public static fun values ()[Lcom/apurebase/kgraphql/request/Introspection$SpecLevel;
 }
 
-public final class com/apurebase/kgraphql/request/IntrospectionKt {
-	public static final fun isIntrospectionType (Lcom/apurebase/kgraphql/schema/introspection/__Type;)Z
-	public static final fun isIntrospectionType (Lcom/apurebase/kgraphql/schema/model/TypeDef;)Z
-}
-
-public final class com/apurebase/kgraphql/request/Lexer {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Source;)V
-	public final fun advance ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public final fun getLastToken ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public final fun getSource ()Lcom/apurebase/kgraphql/schema/model/ast/Source;
-	public final fun getToken ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public final fun lookahead ()Lcom/apurebase/kgraphql/schema/model/ast/Token;
-	public final fun setLastToken (Lcom/apurebase/kgraphql/schema/model/ast/Token;)V
-	public final fun setToken (Lcom/apurebase/kgraphql/schema/model/ast/Token;)V
-}
-
-public class com/apurebase/kgraphql/request/Parser {
-	public static final field Companion Lcom/apurebase/kgraphql/request/Parser$Companion;
-	public fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Source;Lcom/apurebase/kgraphql/request/Parser$Options;)V
-	public synthetic fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Source;Lcom/apurebase/kgraphql/request/Parser$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/request/Parser$Options;)V
-	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/request/Parser$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun parseDocument ()Lcom/apurebase/kgraphql/schema/model/ast/DocumentNode;
-	public final fun parseValueLiteral (Z)Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;
-}
-
-public final class com/apurebase/kgraphql/request/Parser$Companion {
-	public final fun getTokenDesc (Lcom/apurebase/kgraphql/schema/model/ast/Token;)Ljava/lang/String;
-	public final fun getTokenKindDesc (Lcom/apurebase/kgraphql/schema/model/ast/TokenKindEnum;)Ljava/lang/String;
-}
-
-public final class com/apurebase/kgraphql/request/Parser$Options {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/Boolean;ZZ)V
-	public synthetic fun <init> (Ljava/lang/Boolean;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/Boolean;
-	public final fun component2 ()Z
-	public final fun component3 ()Z
-	public final fun copy (Ljava/lang/Boolean;ZZ)Lcom/apurebase/kgraphql/request/Parser$Options;
-	public static synthetic fun copy$default (Lcom/apurebase/kgraphql/request/Parser$Options;Ljava/lang/Boolean;ZZILjava/lang/Object;)Lcom/apurebase/kgraphql/request/Parser$Options;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAllowLegacySDLEmptyFields ()Z
-	public final fun getAllowLegacySDLImplementsInterfaces ()Z
-	public final fun getNoLocation ()Ljava/lang/Boolean;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/apurebase/kgraphql/request/TypeReference {
-	public fun <init> (Ljava/lang/String;ZZZ)V
-	public synthetic fun <init> (Ljava/lang/String;ZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Z
-	public final fun component3 ()Z
-	public final fun component4 ()Z
-	public final fun copy (Ljava/lang/String;ZZZ)Lcom/apurebase/kgraphql/request/TypeReference;
-	public static synthetic fun copy$default (Lcom/apurebase/kgraphql/request/TypeReference;Ljava/lang/String;ZZZILjava/lang/Object;)Lcom/apurebase/kgraphql/request/TypeReference;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public final fun isElementNullable ()Z
-	public final fun isList ()Z
-	public final fun isNullable ()Z
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/apurebase/kgraphql/request/Variables {
 	public fun <init> (Lcom/apurebase/kgraphql/request/VariablesJson;Ljava/util/List;)V
 	public final fun copy (Lcom/apurebase/kgraphql/request/VariablesJson;Ljava/util/List;)Lcom/apurebase/kgraphql/request/Variables;
@@ -252,7 +186,6 @@ public final class com/apurebase/kgraphql/schema/DefaultSchema : com/apurebase/k
 	public fun inputTypeByKClass (Lkotlin/reflect/KClass;)Lcom/apurebase/kgraphql/schema/structure/Type;
 	public fun printSchema ()Ljava/lang/String;
 	public fun typeByKClass (Lkotlin/reflect/KClass;)Lcom/apurebase/kgraphql/schema/structure/Type;
-	public fun typeReference (Lkotlin/reflect/KType;)Lcom/apurebase/kgraphql/request/TypeReference;
 }
 
 public final class com/apurebase/kgraphql/schema/DefaultSchema$Companion {
@@ -2274,12 +2207,10 @@ public abstract interface class com/apurebase/kgraphql/schema/structure/LookupSc
 	public abstract fun findTypeByName (Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/structure/Type;
 	public abstract fun inputTypeByKClass (Lkotlin/reflect/KClass;)Lcom/apurebase/kgraphql/schema/structure/Type;
 	public abstract fun typeByKClass (Lkotlin/reflect/KClass;)Lcom/apurebase/kgraphql/schema/structure/Type;
-	public abstract fun typeReference (Lkotlin/reflect/KType;)Lcom/apurebase/kgraphql/request/TypeReference;
 }
 
 public final class com/apurebase/kgraphql/schema/structure/LookupSchema$DefaultImpls {
 	public static fun executeBlocking (Lcom/apurebase/kgraphql/schema/structure/LookupSchema;Ljava/lang/String;Ljava/lang/String;Lcom/apurebase/kgraphql/Context;Lcom/apurebase/kgraphql/schema/execution/ExecutionOptions;Ljava/lang/String;)Ljava/lang/String;
-	public static fun typeReference (Lcom/apurebase/kgraphql/schema/structure/LookupSchema;Lkotlin/reflect/KType;)Lcom/apurebase/kgraphql/request/TypeReference;
 }
 
 public final class com/apurebase/kgraphql/schema/structure/RequestInterpreter {

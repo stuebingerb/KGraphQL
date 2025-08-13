@@ -5,7 +5,6 @@ import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.FilmType
 import com.apurebase.kgraphql.Id
-import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.ValidationException
@@ -300,7 +299,7 @@ class SchemaBuilderTest {
 
     @Test
     fun `java arrays should be supported`() {
-        KGraphQL.schema {
+        schema {
             query("actors") {
                 resolver { ->
                     arrayOf(
@@ -524,7 +523,7 @@ class SchemaBuilderTest {
 
     @Test
     fun `client code can declare custom context class and use it in query resolver`() {
-        val schema = KGraphQL.schema {
+        val schema = schema {
             query("name") {
                 resolver { ctx: Context -> ctx.get<UserData>()?.username }
             }
@@ -539,7 +538,7 @@ class SchemaBuilderTest {
     @Test
     fun `client code can use context class in property resolver`() {
         val georgeName = "George"
-        val schema = KGraphQL.schema {
+        val schema = schema {
             query("actor") {
                 resolver { -> Actor("George", 23) }
             }
@@ -572,7 +571,7 @@ class SchemaBuilderTest {
     @Test
     fun `context type cannot be part of schema`() {
         expect<SchemaException>("Context type cannot be part of schema") {
-            KGraphQL.schema {
+            schema {
                 query("name") {
                     resolver { ctx: Context -> ctx }
                 }
@@ -583,23 +582,26 @@ class SchemaBuilderTest {
     @Test
     fun `there should be a clear message when query resolver is not present`() {
         expect<IllegalArgumentException>("resolver has to be specified for query [name]") {
-            KGraphQL.schema {
+            schema {
                 query("name") { }
             }
         }
     }
 
     @Suppress("unused")
-    class SixValues(
+    class NineValues(
         val val1: Int = 1,
         val val2: String = "2",
         val val3: Int = 3,
         val val4: String = "4",
         val val5: Int = 5,
-        val val6: String = "6"
+        val val6: String = "6",
+        val val7: Int = 7,
+        val val8: String = "8",
+        val val9: Int = 9
     )
 
-    private fun checkSixValuesSchema(schema: Schema) {
+    private fun checkNineValuesSchema(schema: Schema) {
         val response = deserialize(
             schema.executeBlocking(
                 "{" +
@@ -609,6 +611,9 @@ class SchemaBuilderTest {
                     "queryWith4Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\") { val1, val2, val3, val4 }" +
                     "queryWith5Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6) { val1, val2, val3, val4, val5 }" +
                     "queryWith6Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6, val6: \"7\") { val1, val2, val3, val4, val5, val6 }" +
+                    "queryWith7Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6, val6: \"7\", val7: 8) { val1, val2, val3, val4, val5, val6, val7 }" +
+                    "queryWith8Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6, val6: \"7\", val7: 8, val8: \"9\") { val1, val2, val3, val4, val5, val6, val7, val8 }" +
+                    "queryWith9Params(val1: 2, val2: \"3\", val3: 4, val4: \"5\", val5: 6, val6: \"7\", val7: 8, val8: \"9\", val9: 10) { val1, val2, val3, val4, val5, val6, val7, val8, val9 }" +
                     "}"
             )
         )
@@ -638,102 +643,168 @@ class SchemaBuilderTest {
         response.extract<String>("data/queryWith6Params/val4") shouldBe "5"
         response.extract<Int>("data/queryWith6Params/val5") shouldBe 6
         response.extract<String>("data/queryWith6Params/val6") shouldBe "7"
+
+        response.extract<Int>("data/queryWith7Params/val1") shouldBe 2
+        response.extract<String>("data/queryWith7Params/val2") shouldBe "3"
+        response.extract<Int>("data/queryWith7Params/val3") shouldBe 4
+        response.extract<String>("data/queryWith7Params/val4") shouldBe "5"
+        response.extract<Int>("data/queryWith7Params/val5") shouldBe 6
+        response.extract<String>("data/queryWith7Params/val6") shouldBe "7"
+        response.extract<Int>("data/queryWith7Params/val7") shouldBe 8
+
+        response.extract<Int>("data/queryWith8Params/val1") shouldBe 2
+        response.extract<String>("data/queryWith8Params/val2") shouldBe "3"
+        response.extract<Int>("data/queryWith8Params/val3") shouldBe 4
+        response.extract<String>("data/queryWith8Params/val4") shouldBe "5"
+        response.extract<Int>("data/queryWith8Params/val5") shouldBe 6
+        response.extract<String>("data/queryWith8Params/val6") shouldBe "7"
+        response.extract<Int>("data/queryWith8Params/val7") shouldBe 8
+        response.extract<String>("data/queryWith8Params/val8") shouldBe "9"
+
+        response.extract<Int>("data/queryWith9Params/val1") shouldBe 2
+        response.extract<String>("data/queryWith9Params/val2") shouldBe "3"
+        response.extract<Int>("data/queryWith9Params/val3") shouldBe 4
+        response.extract<String>("data/queryWith9Params/val4") shouldBe "5"
+        response.extract<Int>("data/queryWith9Params/val5") shouldBe 6
+        response.extract<String>("data/queryWith9Params/val6") shouldBe "7"
+        response.extract<Int>("data/queryWith9Params/val7") shouldBe 8
+        response.extract<String>("data/queryWith9Params/val8") shouldBe "9"
+        response.extract<Int>("data/queryWith9Params/val9") shouldBe 10
     }
 
     @Test
-    fun `Schema can contain resolvers with up to 6 parameters`() {
-        val schema = KGraphQL.schema {
+    fun `schema can contain resolvers with up to 9 parameters`() {
+        val schema = schema {
             query("queryWith1Param") {
                 resolver { val1: Int ->
-                    SixValues(val1)
+                    NineValues(val1)
                 }
             }
 
             query("queryWith2Params") {
                 resolver { val1: Int, val2: String ->
-                    SixValues(val1, val2)
+                    NineValues(val1, val2)
                 }
             }
 
             query("queryWith3Params") {
                 resolver { val1: Int, val2: String, val3: Int ->
-                    SixValues(val1, val2, val3)
+                    NineValues(val1, val2, val3)
                 }
             }
 
             query("queryWith4Params") {
                 resolver { val1: Int, val2: String, val3: Int, val4: String ->
-                    SixValues(val1, val2, val3, val4)
+                    NineValues(val1, val2, val3, val4)
                 }
             }
 
             query("queryWith5Params") {
                 resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int ->
-                    SixValues(val1, val2, val3, val4, val5)
+                    NineValues(val1, val2, val3, val4, val5)
                 }
             }
 
             query("queryWith6Params") {
                 resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String ->
-                    SixValues(val1, val2, val3, val4, val5, val6)
+                    NineValues(val1, val2, val3, val4, val5, val6)
+                }
+            }
+
+            query("queryWith7Params") {
+                resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String, val7: Int ->
+                    NineValues(val1, val2, val3, val4, val5, val6, val7)
+                }
+            }
+
+            query("queryWith8Params") {
+                resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String, val7: Int, val8: String ->
+                    NineValues(val1, val2, val3, val4, val5, val6, val7, val8)
+                }
+            }
+
+            query("queryWith9Params") {
+                resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String, val7: Int, val8: String, val9: Int ->
+                    NineValues(val1, val2, val3, val4, val5, val6, val7, val8, val9)
                 }
             }
         }
 
-        checkSixValuesSchema(schema)
+        checkNineValuesSchema(schema)
     }
 
     @Test
-    fun `Schema can contain suspend resolvers`() {
-        val schema = KGraphQL.schema {
+    fun `schema can contain suspend resolvers`() {
+        val schema = schema {
             query("queryWith1Param") {
                 resolver { val1: Int ->
                     delay(1)
-                    SixValues(val1)
+                    NineValues(val1)
                 }
             }
 
             query("queryWith2Params") {
                 resolver { val1: Int, val2: String ->
                     delay(1)
-                    SixValues(val1, val2)
+                    NineValues(val1, val2)
                 }
             }
 
             query("queryWith3Params") {
                 resolver { val1: Int, val2: String, val3: Int ->
                     delay(1)
-                    SixValues(val1, val2, val3)
+                    NineValues(val1, val2, val3)
                 }
             }
 
             query("queryWith4Params") {
                 resolver { val1: Int, val2: String, val3: Int, val4: String ->
                     delay(1)
-                    SixValues(val1, val2, val3, val4)
+                    NineValues(val1, val2, val3, val4)
                 }
             }
 
             query("queryWith5Params") {
                 resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int ->
                     delay(1)
-                    SixValues(val1, val2, val3, val4, val5)
+                    NineValues(val1, val2, val3, val4, val5)
                 }
             }
 
             query("queryWith6Params") {
                 resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String ->
                     delay(1)
-                    SixValues(val1, val2, val3, val4, val5, val6)
+                    NineValues(val1, val2, val3, val4, val5, val6)
+                }
+            }
+
+            query("queryWith7Params") {
+                resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String, val7: Int ->
+                    delay(1)
+                    NineValues(val1, val2, val3, val4, val5, val6, val7)
+                }
+            }
+
+            query("queryWith8Params") {
+                resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String, val7: Int, val8: String ->
+                    delay(1)
+                    NineValues(val1, val2, val3, val4, val5, val6, val7, val8)
+                }
+            }
+
+            query("queryWith9Params") {
+                resolver { val1: Int, val2: String, val3: Int, val4: String, val5: Int, val6: String, val7: Int, val8: String, val9: Int ->
+                    delay(1)
+                    NineValues(val1, val2, val3, val4, val5, val6, val7, val8, val9)
                 }
             }
         }
 
-        checkSixValuesSchema(schema)
+        checkNineValuesSchema(schema)
     }
 
     @Test
-    fun `client code can specify couroutine dispatcher for execution engine`() {
+    fun `client code can specify coroutine dispatcher for execution engine`() {
         defaultSchema {
             configure {
                 coroutineDispatcher = Dispatchers.Main
@@ -746,7 +817,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `Schema can have same type and input type with different names`() {
+    fun `schema can have same type and input type with different names`() {
         val schema = defaultSchema {
             query("createType") {
                 resolver { input: InputOne -> input }
@@ -790,9 +861,9 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `Resolver cannot return an Unit value`() {
+    fun `resolver cannot return Unit`() {
         expect<SchemaException>("Resolver for 'main' has no return value") {
-            KGraphQL.schema {
+            schema {
                 query("main") {
                     resolver { -> }
                 }
@@ -889,7 +960,7 @@ class SchemaBuilderTest {
     @Test
     fun `Java class as inputType should throw an appropriate exception`() {
         expect<SchemaException>("Java class 'LatLng' as inputType is not supported") {
-            KGraphQL.schema {
+            schema {
                 query("test") {
                     resolver { radius: Double, location: LatLng ->
                         "Hello $radius. ${location.lat} ${location.lng}"
@@ -903,7 +974,7 @@ class SchemaBuilderTest {
     @Test
     fun `empty schema should be invalid`() {
         expect<SchemaException>("Schema must define at least one query") {
-            KGraphQL.schema {}
+            schema {}
         }
     }
 
@@ -911,7 +982,7 @@ class SchemaBuilderTest {
     @Test
     fun `schema without query should be invalid`() {
         expect<SchemaException>("Schema must define at least one query") {
-            KGraphQL.schema {
+            schema {
                 mutation("dummy") {
                     resolver { -> "dummy" }
                 }
