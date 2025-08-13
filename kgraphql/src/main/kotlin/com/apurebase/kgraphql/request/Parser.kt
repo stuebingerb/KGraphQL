@@ -45,7 +45,7 @@ import com.apurebase.kgraphql.schema.model.ast.TypeNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.VariableDefinitionNode
 
-open class Parser {
+internal class Parser {
     private val options: Options
     private val lexer: Lexer
 
@@ -217,7 +217,11 @@ open class Parser {
      *   - InlineFragment
      */
     private fun parseSelection(parent: SelectionNode?): SelectionNode {
-        return if (peek(SPREAD)) parseFragment(parent) else parseField(parent)
+        return if (peek(SPREAD)) {
+            parseFragment(parent)
+        } else {
+            parseField(parent)
+        }
     }
 
     /**
@@ -248,7 +252,11 @@ open class Parser {
             directives = parseDirectives(false)
         )
         return newNode.finalize(
-            selectionSet = if (peek(BRACE_L)) parseSelectionSet(newNode) else null,
+            selectionSet = if (peek(BRACE_L)) {
+                parseSelectionSet(newNode)
+            } else {
+                null
+            },
             loc = loc(start)
         )
     }
@@ -257,7 +265,11 @@ open class Parser {
      * Arguments{Const} : ( Argument[?Const]+ )
      */
     private fun parseArguments(isConst: Boolean): MutableList<ArgumentNode> {
-        val item = if (isConst) ::parseConstArgument else ::parseArgument
+        val item = if (isConst) {
+            ::parseConstArgument
+        } else {
+            ::parseArgument
+        }
         return optionalMany(PAREN_L, item, PAREN_R)
     }
 
@@ -307,7 +319,11 @@ open class Parser {
         }
         val newNode = SelectionNode.FragmentNode.InlineFragmentNode(
             parent = parent,
-            typeCondition = if (hasTypeCondition) parseNamedType() else null,
+            typeCondition = if (hasTypeCondition) {
+                parseNamedType()
+            } else {
+                null
+            },
             directives = parseDirectives(false)
         )
 
@@ -386,17 +402,21 @@ open class Parser {
             }
 
             STRING, BLOCK_STRING -> parseStringLiteral()
-            NAME -> {
-                if (token.value == "true" || token.value == "false") {
+            NAME -> when (token.value) {
+                "true", "false" -> {
                     lexer.advance()
                     ValueNode.BooleanValueNode(
                         value = token.value == "true",
                         loc = loc(token)
                     )
-                } else if (token.value == "null") {
+                }
+
+                "null" -> {
                     lexer.advance()
                     ValueNode.NullValueNode(loc(token))
-                } else {
+                }
+
+                else -> {
                     lexer.advance()
                     ValueNode.EnumValueNode(
                         value = token.value!!,
@@ -405,7 +425,12 @@ open class Parser {
                 }
             }
 
-            DOLLAR -> if (!isConst) parseVariable() else throw unexpected()
+            DOLLAR -> if (!isConst) {
+                parseVariable()
+            } else {
+                throw unexpected()
+            }
+
             else -> throw unexpected()
         }
     }
@@ -1154,14 +1179,22 @@ open class Parser {
          */
         fun getTokenDesc(token: Token): String {
             val value = token.value
-            return getTokenKindDesc(token.kind) + (if (value != null) " \"$value\"" else "")
+            return getTokenKindDesc(token.kind) + (if (value != null) {
+                " \"$value\""
+            } else {
+                ""
+            })
         }
 
         /**
          * A helper function to describe a token kind as a string for debugging
          */
         fun getTokenKindDesc(kind: TokenKindEnum): String {
-            return if (kind.isPunctuatorTokenKind) "\"$kind\"" else kind.str
+            return if (kind.isPunctuatorTokenKind) {
+                "\"$kind\""
+            } else {
+                kind.str
+            }
         }
     }
 }

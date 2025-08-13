@@ -248,7 +248,7 @@ object Introspection {
 /**
  * Returns whether the current [__Type] is an introspection type (i.e. has a name starting with "__")
  */
-fun __Type.isIntrospectionType() = name?.startsWith("__") == true
+internal fun __Type.isIntrospectionType() = name?.startsWith("__") == true
 
 private val introspectionTypes = setOf(
     __Schema::class,
@@ -264,5 +264,5 @@ private val introspectionTypes = setOf(
 /**
  * Returns whether the current [TypeDef] is an introspection type from [introspectionTypes]
  */
-fun TypeDef.isIntrospectionType() = (this as? TypeDef.Kotlin<*>)?.kClass in introspectionTypes
+internal fun TypeDef.isIntrospectionType() = (this as? TypeDef.Kotlin<*>)?.kClass in introspectionTypes
 
