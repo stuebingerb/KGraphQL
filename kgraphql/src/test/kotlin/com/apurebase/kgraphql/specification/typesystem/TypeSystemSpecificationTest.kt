@@ -17,8 +17,11 @@ class TypeSystemSpecificationTest {
     class Type(val name: kotlin.String)
     class TypeInput(val name: kotlin.String)
     class InputType(val name: kotlin.String)
+    @Suppress("unused")
     class ParentType(val parentName: kotlin.String, val child: ChildType)
+    @Suppress("unused")
     class ChildType(val childName: kotlin.String)
+    @Suppress("ClassName")
     class __Type(val name: kotlin.String)
 
     @Test
@@ -150,6 +153,25 @@ class TypeSystemSpecificationTest {
                 }
             }
         }
+        expect<SchemaException>("Cannot add Object type with duplicated name Type") {
+            schema {
+                inputType<Type>()
+                type<Type>()
+                query("getString") {
+                    resolver { -> Type("string") }
+                }
+            }
+        }
+        expect<SchemaException>("Cannot add Object type with duplicated name Type") {
+            schema {
+                type<__Type> {
+                    name = "Type"
+                }
+                query("getString") {
+                    resolver { -> Type("string") }
+                }
+            }
+        }
         expect<SchemaException>("Cannot add Input type with duplicated name Type") {
             schema {
                 type<Type>()
@@ -173,6 +195,16 @@ class TypeSystemSpecificationTest {
                     name = "TypeInput"
                 }
                 inputType<TypeInput>()
+            }
+        }
+        expect<SchemaException>("Cannot add Input type with duplicated name TypeInput") {
+            schema {
+                type<Type> {
+                    name = "TypeInput"
+                }
+                query("test") {
+                    resolver { input: TypeInput -> Type(input.name) }
+                }
             }
         }
         expect<SchemaException>("Cannot add Input type with duplicated name TypeInput") {

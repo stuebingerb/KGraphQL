@@ -140,7 +140,7 @@ open class MutableSchemaDefinition {
 
     private fun <T : Definition> addType(type: T, target: ArrayList<T>, typeCategory: String) {
         validateName(type.name)
-        if (type.checkEqualName(objects, scalars, unions, enums)) {
+        if (type.checkEqualName(objects, inputObjects, scalars, unions, enums)) {
             throw SchemaException("Cannot add $typeCategory type with duplicated name ${type.name}")
         }
         target.add(type)
