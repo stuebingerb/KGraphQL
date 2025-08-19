@@ -74,7 +74,7 @@ class FragmentsSpecificationTest {
     }
 
     @Test
-    fun `Inline fragments may also be used to apply a directive to a group of fields`() {
+    fun `inline fragments may also be used to apply a directive to a group of fields`() {
         val response = deserialize(
             schema.executeBlocking(
                 "query (\$expandedInfo : Boolean!){actor{actualActor{name ... @include(if: \$expandedInfo){ age }}}}",
@@ -344,5 +344,26 @@ class FragmentsSpecificationTest {
                     )
                 )
             )
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/189
+    @Test
+    fun `queries with missing fragments should return proper error message`() {
+        expect<ValidationException>("Fragment film_title_misspelled not found") {
+            baseTestSchema.execute(
+                """
+            {
+                film {
+                    id
+                    ...film_title_misspelled
+                }
+            }
+            
+            fragment film_title on Film {
+                title
+            }
+        """
+            )
+        }
     }
 }
