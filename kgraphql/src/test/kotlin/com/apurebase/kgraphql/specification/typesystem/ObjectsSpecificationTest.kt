@@ -419,8 +419,8 @@ class ObjectsSpecificationTest {
     class Empty
 
     @Test
-    fun `an Object type must define one or more fields`() {
-        expect<SchemaException>("An Object type must define one or more fields. Found none on type Empty") {
+    fun `an object type must define one or more fields`() {
+        expect<SchemaException>("An object type must define one or more fields. Found none on type Empty") {
             schema { type<Empty>() }
         }
     }

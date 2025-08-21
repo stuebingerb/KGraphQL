@@ -3,13 +3,16 @@ package com.apurebase.kgraphql.specification.typesystem
 import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.schema.SchemaException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 
+@Suppress("unused")
 class InputObjectsSpecificationTest {
 
     enum class MockEnum { M1, M2 }
@@ -29,7 +32,7 @@ class InputObjectsSpecificationTest {
     }
 
     @Test
-    fun `An Input Object defines a set of input fields - scalars, enums, or other input objects`() {
+    fun `an input object defines a set of input fields - scalars, enums, or other input objects`() {
         val two = object {
             val two = InputTwo(InputOne(MockEnum.M1, "M1"), 3434, listOf("23", "34", "21", "434"))
         }
@@ -39,7 +42,7 @@ class InputObjectsSpecificationTest {
     }
 
     @Test
-    fun `Input objects may contain nullable circular references`() {
+    fun `input objects may contain nullable circular references`() {
         val schema = KGraphQL.schema {
             inputType<Circular>()
             query("circular") {
@@ -141,5 +144,21 @@ class InputObjectsSpecificationTest {
         response2 shouldBe """
             {"data":{"test":{"param2":5,"param3":true}}}
         """.trimIndent()
+    }
+
+    @Test
+    fun `input objects must have at least one field`() {
+        // Non-data class with a constructor parameter that is not a property
+        class ClassWithEmptyConstructor {
+            val hello: String = "world"
+        }
+
+        expect<SchemaException>("An input type must define one or more fields. Found none on type ClassWithEmptyConstructorInput") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: ClassWithEmptyConstructor -> input }
+                }
+            }
+        }
     }
 }

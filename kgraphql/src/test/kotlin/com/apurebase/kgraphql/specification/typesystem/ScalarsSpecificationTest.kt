@@ -49,7 +49,7 @@ class ScalarsSpecificationTest {
 
     @Test
     fun `extended scalars should not be available by default`() {
-        expect<SchemaException>("An Object type must define one or more fields. Found none on type Long") {
+        expect<SchemaException>("An object type must define one or more fields. Found none on type Long") {
             KGraphQL.schema {
                 query("long") {
                     resolver<Long> { 1L }
@@ -57,7 +57,7 @@ class ScalarsSpecificationTest {
             }
         }
 
-        expect<SchemaException>("An Object type must define one or more fields. Found none on type Short") {
+        expect<SchemaException>("An object type must define one or more fields. Found none on type Short") {
             KGraphQL.schema {
                 query("short") {
                     resolver<Short> { 2.toShort() }

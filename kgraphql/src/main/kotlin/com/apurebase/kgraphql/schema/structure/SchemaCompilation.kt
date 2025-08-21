@@ -360,7 +360,7 @@ open class SchemaCompilation(
         }
 
         if (declaredFields.isEmpty()) {
-            throw SchemaException("An Object type must define one or more fields. Found none on type ${objectDef.name}")
+            throw SchemaException("An object type must define one or more fields. Found none on type ${objectDef.name}")
         }
 
         declaredFields.forEach { validateName(it.name) }
@@ -429,6 +429,10 @@ open class SchemaCompilation(
             }
         } else {
             listOf()
+        }
+
+        if (fields.isEmpty()) {
+            throw SchemaException("An input type must define one or more fields. Found none on type ${inputObjectDef.name}")
         }
 
         fields.forEach { validateName(it.name) }
