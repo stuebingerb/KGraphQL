@@ -20,6 +20,8 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlin.reflect.KClass
+import kotlin.reflect.full.primaryConstructor
 
 /**
  * This returns a list of all scalar fields requested on this type.
@@ -129,3 +131,11 @@ fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
 }
 
 internal fun Double.isWholeNumber() = this % 1.0 == 0.0
+
+/**
+ * Returns the (single) constructor to use during input value generation. This is either the
+ * [primaryConstructor] for Kotlin classes, or the single constructor for Java classes.
+ *
+ * Adapted from Jackson Kotlin's `primarilyConstructor()`
+ */
+internal fun KClass<*>.singleConstructor() = primaryConstructor ?: constructors.singleOrNull()

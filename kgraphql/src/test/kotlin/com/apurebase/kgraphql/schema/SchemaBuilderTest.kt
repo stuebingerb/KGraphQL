@@ -958,13 +958,49 @@ class SchemaBuilderTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/106
     @Test
-    fun `Java class as inputType should throw an appropriate exception`() {
-        expect<SchemaException>("Java class 'LatLng' as inputType is not supported") {
+    fun `Java class with single constructor should work as input type`() {
+        val schema = schema {
+            query("test") {
+                resolver { radius: Double, location: LatLng ->
+                    "Hello $radius. ${location.lat} ${location.lng}"
+                }
+            }
+        }
+
+        // Java by default does not preserve argument names, so we have to use arg0, arg1, ...
+        schema.executeBlocking(
+            """
+            {
+                test(radius: 13.37, location: { arg0: 1.11, arg1: 2.22 })
+            }
+        """.trimIndent()
+        ) shouldBe """
+            {"data":{"test":"Hello 13.37. 1.11 2.22"}}
+        """.trimIndent()
+
+        schema.printSchema() shouldBe """
+            type Query {
+              test(location: LatLngInput!, radius: Float!): String!
+            }
+
+            input LatLngInput {
+              arg0: Float!
+              arg1: Float!
+            }
+
+        """.trimIndent()
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/106
+    @Test
+    fun `Java class with multiple constructors should throw an appropriate exception`() {
+        expect<SchemaException>("Java class 'InvalidLatLng' as inputType is not supported") {
             schema {
                 query("test") {
-                    resolver { radius: Double, location: LatLng ->
+                    resolver { radius: Double, location: InvalidLatLng ->
                         "Hello $radius. ${location.lat} ${location.lng}"
                     }
+
                 }
             }
         }

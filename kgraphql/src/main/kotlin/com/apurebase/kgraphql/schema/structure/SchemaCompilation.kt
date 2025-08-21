@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.getIterableElementType
+import com.apurebase.kgraphql.helpers.singleConstructor
 import com.apurebase.kgraphql.isIterable
 import com.apurebase.kgraphql.request.isIntrospectionType
 import com.apurebase.kgraphql.schema.DefaultSchema
@@ -34,7 +35,6 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNCHECKED_CAST")
@@ -377,7 +377,7 @@ open class SchemaCompilation(
     protected suspend fun handleInputType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
 
-        val primaryConstructor = kClass.primaryConstructor
+        val primaryConstructor = kClass.singleConstructor()
             ?: throw SchemaException("Java class '${kClass.simpleName}' as inputType is not supported")
 
         val inputObjectDef =

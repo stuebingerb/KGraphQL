@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.InvalidInputValueException
+import com.apurebase.kgraphql.helpers.singleConstructor
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
@@ -12,7 +13,6 @@ import com.apurebase.kgraphql.schema.scalar.deserializeScalar
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.primaryConstructor
 
 open class ArgumentTransformer {
 
@@ -96,8 +96,8 @@ open class ArgumentTransformer {
             }
 
             value is ObjectValueNode -> {
-                // SchemaCompilation ensures that input types have a primaryConstructor
-                val constructor = checkNotNull(type.unwrapped().kClass?.primaryConstructor)
+                // SchemaCompilation ensures that input types have a singleConstructor()
+                val constructor = checkNotNull(type.unwrapped().kClass?.singleConstructor())
                 val constructorParametersByName = constructor.parameters.associateBy { it.name }
                 val inputFieldsByName = type.unwrapped().inputFields.orEmpty().associateBy { it.name }
 
