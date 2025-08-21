@@ -55,6 +55,23 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `mutation with @include and @skip directive on field object`() {
+        val mapWithSkip = execute("mutation { createActor(name: \"actor\", age: 42) @skip(if: true) { name age } }")
+        assertThrows<IllegalArgumentException> { mapWithSkip.extract("data/createActor") }
+
+        val mapWithoutSkip = execute("mutation { createActor(name: \"actor\", age: 42) @skip(if: false) { name age } }")
+        mapWithoutSkip.extract<String>("data/createActor/name") shouldBe "actor"
+        mapWithoutSkip.extract<Int>("data/createActor/age") shouldBe 42
+
+        val mapWithInclude = execute("mutation { createActor(name: \"actor\", age: 42) @include(if: true) { name age } }")
+        mapWithInclude.extract<String>("data/createActor/name") shouldBe "actor"
+        mapWithInclude.extract<Int>("data/createActor/age") shouldBe 42
+
+        val mapWithoutInclude = execute("mutation { createActor(name: \"actor\", age: 42) @include(if: false) { name age } }")
+        assertThrows<IllegalArgumentException> { mapWithoutInclude.extract("data/createActor") }
+    }
+
+    @Test
     fun `query with @include directive on field with variable`() {
         val map = execute(
             "query film (\$include: Boolean!) {film{title, year @include(if: \$include)}}",

@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.specification.language
 
 import com.apurebase.kgraphql.InvalidInputValueException
+import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
@@ -309,5 +310,47 @@ class InputValuesSpecificationTest {
         exception.extensions shouldBe mapOf(
             "type" to "BAD_USER_INPUT"
         )
+    }
+
+    data class Dessert(
+        override val id: String,
+        var name: String
+    ) : Model
+
+    interface Model {
+        val id: String
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/199
+    @Test
+    fun `input object value with interface`() {
+        val schema = KGraphQL.schema {
+            inputType<Dessert> {
+                name = "DessertInput"
+                description = "Dessert object to be updated"
+            }
+            query("dessert") {
+                resolver { -> Dessert("id-1", "name-1") }
+            }
+            mutation("updateDessert") {
+                resolver { dessert: Dessert -> dessert }
+            }
+        }
+
+        schema.executeBlocking("""
+            query {
+                dessert { id name }
+            }
+        """.trimIndent()) shouldBe """
+            {"data":{"dessert":{"id":"id-1","name":"name-1"}}}
+        """.trimIndent()
+
+        schema.executeBlocking("""
+            mutation {
+                updateDessert(dessert: {id: "id-2", name: "name-2"}) { id name }
+            }
+        """.trimIndent()) shouldBe """
+            {"data":{"updateDessert":{"id":"id-2","name":"name-2"}}}
+        """.trimIndent()
     }
 }
