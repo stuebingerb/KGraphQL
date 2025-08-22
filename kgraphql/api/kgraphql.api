@@ -106,27 +106,6 @@ public final class com/apurebase/kgraphql/helpers/KGraphQLExtensionsKt {
 	public static final fun toValueNode (Lcom/fasterxml/jackson/databind/JsonNode;Lcom/apurebase/kgraphql/schema/introspection/__Type;)Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;
 }
 
-public final class com/apurebase/kgraphql/request/CachingDocumentParser {
-	public fun <init> ()V
-	public fun <init> (J)V
-	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getCache ()Lcom/github/benmanes/caffeine/cache/Cache;
-	public final fun parseDocument (Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/model/ast/DocumentNode;
-}
-
-public abstract class com/apurebase/kgraphql/request/CachingDocumentParser$Result {
-}
-
-public final class com/apurebase/kgraphql/request/CachingDocumentParser$Result$Exception : com/apurebase/kgraphql/request/CachingDocumentParser$Result {
-	public fun <init> (Ljava/lang/Exception;)V
-	public final fun getException ()Ljava/lang/Exception;
-}
-
-public final class com/apurebase/kgraphql/request/CachingDocumentParser$Result$Success : com/apurebase/kgraphql/request/CachingDocumentParser$Result {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/DocumentNode;)V
-	public final fun getDocument ()Lcom/apurebase/kgraphql/schema/model/ast/DocumentNode;
-}
-
 public final class com/apurebase/kgraphql/request/Introspection {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/request/Introspection;
 	public final fun isIntrospection (Ljava/lang/String;)Z

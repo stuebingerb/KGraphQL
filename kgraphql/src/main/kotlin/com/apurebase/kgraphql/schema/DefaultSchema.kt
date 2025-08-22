@@ -4,8 +4,10 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
+import com.apurebase.kgraphql.request.CachingDocumentParser
+import com.apurebase.kgraphql.request.DocumentParser
 import com.apurebase.kgraphql.request.Introspection
-import com.apurebase.kgraphql.request.Parser
+import com.apurebase.kgraphql.request.RequestParser
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.execution.DataLoaderPreparedRequestExecutor
 import com.apurebase.kgraphql.schema.execution.ExecutionOptions
@@ -41,6 +43,11 @@ class DefaultSchema(
     }
 
     private val requestInterpreter: RequestInterpreter = RequestInterpreter(model)
+    private val requestParser: RequestParser = if (configuration.useCachingDocumentParser) {
+        CachingDocumentParser(configuration.documentParserCacheMaximumSize)
+    } else {
+        DocumentParser()
+    }
 
     override suspend fun execute(
         request: String,
@@ -57,7 +64,7 @@ class DefaultSchema(
             ?.let { VariablesJson.Defined(configuration.objectMapper.readTree(variables)) }
             ?: VariablesJson.Empty()
 
-        val document = Parser(request).parseDocument()
+        val document = requestParser.parseDocument(request)
 
         val executor = options.executor?.let(this@DefaultSchema::getExecutor) ?: defaultRequestExecutor
 

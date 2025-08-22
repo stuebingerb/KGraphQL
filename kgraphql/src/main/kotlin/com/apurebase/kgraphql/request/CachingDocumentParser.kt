@@ -3,20 +3,19 @@ package com.apurebase.kgraphql.request
 import com.apurebase.kgraphql.schema.model.ast.DocumentNode
 import com.github.benmanes.caffeine.cache.Caffeine
 
-class CachingDocumentParser(cacheMaximumSize: Long = 1000L) {
+internal class CachingDocumentParser(cacheMaximumSize: Long) : RequestParser {
 
-    sealed class Result {
+    private sealed class Result {
         class Success(val document: DocumentNode) : Result()
         class Exception(val exception: kotlin.Exception) : Result()
     }
 
-    val cache = Caffeine.newBuilder().maximumSize(cacheMaximumSize).build<String, Result>()
+    private val cache = Caffeine.newBuilder().maximumSize(cacheMaximumSize).build<String, Result>()
 
-    fun parseDocument(input: String): DocumentNode {
+    override fun parseDocument(input: String): DocumentNode {
         val result = cache.get(input) {
-            val parser = Parser(input)
             try {
-                Result.Success(parser.parseDocument())
+                Result.Success(Parser(input).parseDocument())
             } catch (e: Exception) {
                 Result.Exception(e)
             }
