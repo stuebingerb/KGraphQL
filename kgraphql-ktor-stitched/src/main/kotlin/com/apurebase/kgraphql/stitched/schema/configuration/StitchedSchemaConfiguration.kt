@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import com.apurebase.kgraphql.stitched.schema.execution.RemoteRequestExecutor
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlin.reflect.KClass
 
 @ExperimentalAPI
 class StitchedSchemaConfiguration(
@@ -25,7 +24,6 @@ class StitchedSchemaConfiguration(
     timeout: Long?,
     // allow schema introspection
     introspection: Boolean = true,
-    plugins: MutableMap<KClass<*>, Any>,
     genericTypeResolver: GenericTypeResolver,
     argumentTransformer: ArgumentTransformer,
     val remoteExecutor: RemoteRequestExecutor,
@@ -40,7 +38,6 @@ class StitchedSchemaConfiguration(
     executor,
     timeout,
     introspection,
-    plugins,
     genericTypeResolver,
     argumentTransformer
 )
