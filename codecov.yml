@@ -1,0 +1,3 @@
+ignore:
+  - kgraphql/src/jvm
+  - kgraphql/src/testFixtures
