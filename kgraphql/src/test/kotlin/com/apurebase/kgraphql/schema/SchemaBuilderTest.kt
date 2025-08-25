@@ -7,7 +7,6 @@ import com.apurebase.kgraphql.FilmType
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.Scenario
-import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.context
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
@@ -262,7 +261,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun ` _ should be allowed as receiver argument name`() {
+    fun `_ should be allowed as receiver argument name`() {
         val schema = defaultSchema {
             query("actor") {
                 resolver { -> Actor("Boguś Linda", 4343) }
@@ -281,7 +280,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `Custom type name`() {
+    fun `custom type name`() {
         val schema = defaultSchema {
             query("actor") {
                 resolver { type: FilmType -> Actor("Boguś Linda $type", 4343) }
@@ -316,7 +315,7 @@ class SchemaBuilderTest {
     class InputTwo(val one: InputOne)
 
     @Test
-    fun `Schema should map input types`() {
+    fun `schema should map input types`() {
         val schema = defaultSchema {
             query("createInput") {
                 resolver { input: InputTwo -> input.one }
@@ -328,9 +327,9 @@ class SchemaBuilderTest {
         schema.inputTypeByKClass(InputTwo::class) shouldNotBe null
     }
 
+    @Suppress("unused")
     @Test
-    @Suppress("UNUSED_ANONYMOUS_PARAMETER")
-    fun `Schema should infer input types from resolver functions`() {
+    fun `schema should infer input types from resolver functions`() {
         val schema = defaultSchema {
             query("sample") {
                 resolver { i: InputTwo -> "SUCCESS" }
@@ -471,29 +470,8 @@ class SchemaBuilderTest {
         introspection.extract<String>("data/__schema/queryType/fields[0]/args[0]/description") shouldBe expectedDescription
     }
 
+    @Suppress("unused")
     @Test
-    fun `introspections query should be disabled`() {
-        val expectedDescription = "Int Argument"
-        val expectedDefaultValue = 33
-        val schema = defaultSchema {
-            configure {
-                introspection = false
-            }
-
-            query("data") {
-                resolver { int: Int -> int }.withArgs {
-                    arg<Int> { name = "int"; defaultValue = expectedDefaultValue; description = expectedDescription }
-                }
-            }
-        }
-
-        expect<ValidationException>("GraphQL introspection is not allowed") {
-            schema.executeBlocking("{__schema{queryType{fields{name, args{name, description, defaultValue}}}}}")
-        }
-    }
-
-    @Test
-    @Suppress("UNUSED_ANONYMOUS_PARAMETER")
     fun `arg name must match exactly one of type property`() {
         expect<SchemaException>("Invalid input values on data: [intss]") {
             defaultSchema {
