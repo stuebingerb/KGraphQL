@@ -27,7 +27,6 @@ open class StitchedSchemaConfigurationDSL : SchemaConfigurationDSL() {
             executor = executor,
             timeout = timeout,
             introspection = introspection,
-            plugins = plugins,
             genericTypeResolver = genericTypeResolver,
             argumentTransformer = RemoteArgumentTransformer(),
             remoteExecutor = requireNotNull(remoteExecutor) { "Remote executor not defined" },

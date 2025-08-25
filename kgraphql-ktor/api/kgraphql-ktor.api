@@ -66,18 +66,6 @@ public final class com/apurebase/kgraphql/GraphqlRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/apurebase/kgraphql/KtorConfigurationDSL {
-	public fun <init> ()V
-	public final fun getEndpoint ()Ljava/lang/String;
-	public final fun getPlayground ()Z
-	public final fun setEndpoint (Ljava/lang/String;)V
-	public final fun setPlayground (Z)V
-}
-
-public final class com/apurebase/kgraphql/KtorConfigurationDSLKt {
-	public static final fun ktor (Lcom/apurebase/kgraphql/schema/dsl/SchemaConfigurationDSL;Lkotlin/jvm/functions/Function1;)V
-}
-
 public final class com/apurebase/kgraphql/KtorGraphQLConfiguration : com/apurebase/kgraphql/configuration/PluginConfiguration {
 	public fun <init> (ZLjava/lang/String;)V
 	public final fun getEndpoint ()Ljava/lang/String;

@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.schema.dsl
 
-import com.apurebase.kgraphql.configuration.PluginConfiguration
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
 import com.apurebase.kgraphql.schema.execution.Executor
@@ -10,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlin.reflect.KClass
 
 open class SchemaConfigurationDSL {
     var useDefaultPrettyPrinter: Boolean = false
@@ -25,14 +23,6 @@ open class SchemaConfigurationDSL {
     var introspection: Boolean = true
     var genericTypeResolver: GenericTypeResolver = GenericTypeResolver.DEFAULT
 
-    protected val plugins: MutableMap<KClass<*>, Any> = mutableMapOf()
-
-    fun install(plugin: PluginConfiguration) {
-        val kClass = plugin::class
-        require(plugins[kClass] == null)
-        plugins[kClass] = plugin
-    }
-
     fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
     open fun build(): SchemaConfiguration {
         objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, acceptSingleValueAsArray)
@@ -46,7 +36,6 @@ open class SchemaConfigurationDSL {
             executor = executor,
             timeout = timeout,
             introspection = introspection,
-            plugins = plugins,
             genericTypeResolver = genericTypeResolver,
             argumentTransformer = ArgumentTransformer()
         )

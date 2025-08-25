@@ -13,7 +13,6 @@ KGraphQL schema allows configuration of the following properties:
 | wrapErrors                     |                                                                                                                       | `true`                                                                                                                                                                   |
 | timeout                        |                                                                                                                       | `null`                                                                                                                                                                   |
 | introspection                  | Schema allows introspection (also affects SDL). Introspection can be disabled in production to reduce attack surface. | `true`                                                                                                                                                                   |
-| plugins                        | (unused?)                                                                                                             |                                                                                                                                                                          |
 
 === "Example"
     ```kotlin

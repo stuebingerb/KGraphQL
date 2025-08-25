@@ -82,9 +82,8 @@ public abstract interface class com/apurebase/kgraphql/configuration/PluginConfi
 }
 
 public class com/apurebase/kgraphql/configuration/SchemaConfiguration {
-	public fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ZLjava/util/Map;Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;)V
-	public synthetic fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ZLjava/util/Map;Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun get (Lkotlin/reflect/KClass;)Ljava/lang/Object;
+	public fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ZLcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;)V
+	public synthetic fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ZLcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getArgumentTransformer ()Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;
 	public final fun getCoroutineDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public final fun getDocumentParserCacheMaximumSize ()J
@@ -92,7 +91,6 @@ public class com/apurebase/kgraphql/configuration/SchemaConfiguration {
 	public final fun getGenericTypeResolver ()Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;
 	public final fun getIntrospection ()Z
 	public final fun getObjectMapper ()Lcom/fasterxml/jackson/databind/ObjectMapper;
-	public final fun getPlugins ()Ljava/util/Map;
 	public final fun getTimeout ()Ljava/lang/Long;
 	public final fun getUseCachingDocumentParser ()Z
 	public final fun getUseDefaultPrettyPrinter ()Z
@@ -538,12 +536,10 @@ public class com/apurebase/kgraphql/schema/dsl/SchemaConfigurationDSL {
 	public final fun getGenericTypeResolver ()Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;
 	public final fun getIntrospection ()Z
 	public final fun getObjectMapper ()Lcom/fasterxml/jackson/databind/ObjectMapper;
-	protected final fun getPlugins ()Ljava/util/Map;
 	public final fun getTimeout ()Ljava/lang/Long;
 	public final fun getUseCachingDocumentParser ()Z
 	public final fun getUseDefaultPrettyPrinter ()Z
 	public final fun getWrapErrors ()Z
-	public final fun install (Lcom/apurebase/kgraphql/configuration/PluginConfiguration;)V
 	public final fun setAcceptSingleValueAsArray (Z)V
 	public final fun setCoroutineDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public final fun setDocumentParserCacheMaximumSize (J)V
