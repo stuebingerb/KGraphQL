@@ -16,6 +16,42 @@ import java.util.concurrent.TimeUnit
 @Measurement(iterations = 5)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class RequestCachingBenchmark {
+    private val smallRequest = """
+        { one { name quantity active } }
+    """.trimIndent()
+    private val largeRequest = """
+        {
+            one {
+                name
+                quantity
+                active
+            }
+            secondOne: one {
+                name
+                quantity
+                secondQuantity: quantity
+                active
+            }
+            two(name: "FELLA") {
+                range {
+                    start
+                    endInclusive
+                }
+            }
+            three {
+                id
+            }
+        }
+    """.trimIndent()
+    private val invalidRequest = """
+        {
+            one {
+                name
+                quantity
+                active
+            
+        }
+    """.trimIndent()
 
     @Param("true", "false")
     var caching = true
@@ -32,7 +68,17 @@ open class RequestCachingBenchmark {
     }
 
     @Benchmark
-    fun benchmark(): String {
-        return schema.executeBlocking("{one{name, quantity, active}, two(name : \"FELLA\"){range{start, endInclusive}}, three{id}}")
+    fun smallRequest(): String {
+        return schema.executeBlocking(smallRequest)
+    }
+
+    @Benchmark
+    fun largeRequest(): String {
+        return schema.executeBlocking(largeRequest)
+    }
+
+    @Benchmark
+    fun invalidRequest(): String {
+        return runCatching { schema.executeBlocking(invalidRequest) }.getOrDefault("")
     }
 }
