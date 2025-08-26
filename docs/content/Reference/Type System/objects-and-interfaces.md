@@ -324,22 +324,11 @@ people in the second query. That's what the `dataProperty` will solve for you.
 
 ### Setting up
 
-Using DataLoaders requires the `DataLoaderPrepared` executor:
-
-```kotlin
-configure {
-    executor = Executor.DataLoaderPrepared
-}
-```
-
 === "Example"
     ```kotlin
     data class Person(val id: Int, val name: String)
     val people = (1..5).map { Person(it, "Name-$it") }
     ...
-    configure {
-        executor = Executor.DataLoaderPrepared
-    }
     query("people") {
         resolver { -> people }
     }
@@ -403,13 +392,3 @@ configure {
       }
     }
     ```
-
-### Current known issues
-
-This feature can be used in production but does currently have some issues:
-
-1. The `useDefaultPrettyPrint` doesn't work
-1. Order of fields are not guaranteed to match the order that was requested
-1. Custom generic type resolvers are not supported
-1. Schema stitching is not supported
-1. Other than that it should work as expected
