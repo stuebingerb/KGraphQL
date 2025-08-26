@@ -34,7 +34,7 @@ open class ParallelExecutionBenchmark {
     @Setup
     fun setup() {
         schema = KGraphQL.schema {
-            if (!withSuspendResolvers)
+            if (!withSuspendResolvers) {
                 repeat(1000) {
                     query("automated$it") {
                         resolver { ->
@@ -42,7 +42,8 @@ open class ParallelExecutionBenchmark {
                             "$it"
                         }
                     }
-                } else {
+                }
+            } else {
                 repeat(1000) {
                     query("automated$it") {
                         resolver { ->

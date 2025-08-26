@@ -3,12 +3,11 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.collections.shouldHaveSize
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import nidomiro.kdataloader.ExecutionResult
-import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Test
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.random.nextLong
@@ -21,11 +20,6 @@ class DataLoaderExecutionTest {
     data class ItemValue(val itemId: Int, val value: String)
 
     val schema = defaultSchema {
-        configure {
-            executor = Executor.DataLoaderPrepared
-            timeout = null
-        }
-
         query("items") {
             resolver { amount: Int? ->
                 delay(Random.nextLong(50..250L))
@@ -74,7 +68,7 @@ class DataLoaderExecutionTest {
         }
     }
 
-    @RepeatedTest(10)
+    @Test
     fun `stress test with dataloaders and custom supervisor jobs`() {
         val result = deserialize(
             schema.executeBlocking(

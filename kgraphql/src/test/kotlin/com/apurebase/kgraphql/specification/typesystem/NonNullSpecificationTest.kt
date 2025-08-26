@@ -8,7 +8,6 @@ import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.schema.execution.Executor
 import com.apurebase.kgraphql.shouldBeInstanceOf
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
@@ -76,9 +75,6 @@ class NonNullSpecificationTest {
     @Test
     fun `null within arrays should work`() {
         val schema = KGraphQL.schema {
-            configure {
-                executor = Executor.DataLoaderPrepared
-            }
             query("data") {
                 resolver { ->
                     Type2(
@@ -180,8 +176,6 @@ class NonNullSpecificationTest {
                 resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
             }
         }
-
-        println(schema.printSchema())
 
         schema.executeBlocking(
             """

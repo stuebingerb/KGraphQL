@@ -3,10 +3,12 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
+import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
+import kotlin.system.measureTimeMillis
 
 class ParallelExecutionTest {
 
@@ -50,8 +52,10 @@ class ParallelExecutionTest {
         }
     }
 
+    private val query = "{\n" + (0..999).joinToString("") { "automated_${it}\n" } + " }"
+
     @Test
-    fun `Suspendable property resolvers`() {
+    fun `suspendable property resolvers`() {
         val query = "{getAll{id,children{id}}}"
         val map = deserialize(suspendPropertySchema.executeBlocking(query))
 
@@ -63,8 +67,6 @@ class ParallelExecutionTest {
         map.extract<Int>("data/getAll[75]/children[9]/id") shouldBe 759
         map.extract<Int>("data/getAll[888]/children[50]/id") shouldBe 8930
     }
-
-    val query = "{\n" + (0..999).joinToString("") { "automated_${it}\n" } + " }"
 
     @Test
     fun `1000 synchronous resolvers sleeping with Thread sleep`() {
@@ -84,5 +86,15 @@ class ParallelExecutionTest {
         map.extract<String>("data/automated_314") shouldBe "314"
         map.extract<String>("data/automated_500") shouldBe "500"
         map.extract<String>("data/automated_999") shouldBe "999"
+    }
+
+    @Test
+    fun `execution should run in parallel`() {
+        val duration = measureTimeMillis {
+            deserialize(syncResolversSchema.executeBlocking(query))
+        }
+        // syncResolversSchema has 1000 resolvers, each waiting for 3ms. Usually, execution
+        // takes about 300ms so if it takes 3s, we apparently ran sequentially.
+        duration shouldBeLessThan 3000
     }
 }

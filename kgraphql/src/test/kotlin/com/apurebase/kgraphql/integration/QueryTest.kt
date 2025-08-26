@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.integration
 
+import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
@@ -338,6 +339,78 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `query with typename and other property`() {
+        data class FooChild(val barChild: String)
+        data class Foo(val bar: String, val child: FooChild?)
+
+        val schema = KGraphQL.schema {
+            query("foo") {
+                resolver { -> Foo("bar", FooChild("barChild")) }
+            }
+        }
+
+        schema.executeBlocking(
+            """
+            {
+                foo { bar __typename }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"foo":{"bar":"bar","__typename":"Foo"}}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                foo { __typename bar }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"foo":{"__typename":"Foo","bar":"bar"}}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                foo { child { __typename barChild } }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"foo":{"child":{"__typename":"FooChild","barChild":"barChild"}}}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                foo { child { barChild __typename } }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"foo":{"child":{"barChild":"barChild","__typename":"FooChild"}}}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                foo { __typename child { barChild __typename } }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"foo":{"__typename":"Foo","child":{"barChild":"barChild","__typename":"FooChild"}}}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                foo { child { barChild } __typename }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"foo":{"child":{"barChild":"barChild"},"__typename":"Foo"}}}
+        """.trimIndent()
+    }
+
+    @Test
     fun `query with mixed selections`() {
         val map = execute(
             """
@@ -418,7 +491,6 @@ class QueryTest : BaseSchemaTest() {
     @Test
     fun `access to execution node`() {
         val result = defaultSchema {
-            configure { useDefaultPrettyPrinter = true }
             query("root") {
                 resolver { node: Execution.Node ->
                     SampleNode(0, "Root", fields = node.getFields())

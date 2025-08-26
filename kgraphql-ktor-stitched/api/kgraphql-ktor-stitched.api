@@ -60,8 +60,8 @@ public final class com/apurebase/kgraphql/stitched/StitchedKGraphQL {
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/configuration/StitchedSchemaConfiguration : com/apurebase/kgraphql/configuration/SchemaConfiguration {
-	public fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ZLcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;Lcom/apurebase/kgraphql/stitched/schema/execution/RemoteRequestExecutor;Ljava/lang/String;)V
-	public synthetic fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZLcom/apurebase/kgraphql/schema/execution/Executor;Ljava/lang/Long;ZLcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;Lcom/apurebase/kgraphql/stitched/schema/execution/RemoteRequestExecutor;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZZLcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;Lcom/apurebase/kgraphql/stitched/schema/execution/RemoteRequestExecutor;Ljava/lang/String;)V
+	public synthetic fun <init> (ZJLcom/fasterxml/jackson/databind/ObjectMapper;ZLkotlinx/coroutines/CoroutineDispatcher;ZZLcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Lcom/apurebase/kgraphql/schema/execution/ArgumentTransformer;Lcom/apurebase/kgraphql/stitched/schema/execution/RemoteRequestExecutor;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getLocalUrl ()Ljava/lang/String;
 	public final fun getRemoteExecutor ()Lcom/apurebase/kgraphql/stitched/schema/execution/RemoteRequestExecutor;
 }
