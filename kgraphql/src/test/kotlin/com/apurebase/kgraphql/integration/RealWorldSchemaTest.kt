@@ -41,7 +41,7 @@ class RealWorldSchemaTest {
         }
     }
 
-    // https://github.com/stuebingerb/KGraphQL/issues/75
+    // https://github.com/apureBase/KGraphQL/issues/75
     @Test
     fun `issue-75 object is not of declaring class - full sample`() {
         val schema = KGraphQL.schema {
