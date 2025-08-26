@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.stitched.schema.configuration
 import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
-import com.apurebase.kgraphql.schema.execution.Executor
 import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import com.apurebase.kgraphql.stitched.schema.execution.RemoteRequestExecutor
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -20,8 +19,6 @@ class StitchedSchemaConfiguration(
     // execution
     coroutineDispatcher: CoroutineDispatcher,
     wrapErrors: Boolean,
-    executor: Executor,
-    timeout: Long?,
     // allow schema introspection
     introspection: Boolean = true,
     genericTypeResolver: GenericTypeResolver,
@@ -35,8 +32,6 @@ class StitchedSchemaConfiguration(
     useDefaultPrettyPrinter,
     coroutineDispatcher,
     wrapErrors,
-    executor,
-    timeout,
     introspection,
     genericTypeResolver,
     argumentTransformer

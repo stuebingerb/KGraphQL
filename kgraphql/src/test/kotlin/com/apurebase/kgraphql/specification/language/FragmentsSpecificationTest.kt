@@ -307,7 +307,7 @@ class FragmentsSpecificationTest {
     // https://github.com/aPureBase/KGraphQL/issues/197
     @Test
     fun `executor should merge several fragment declarations and field declaration`() {
-        val response = testedSchema.executeBlocking(//language=graphql
+        val response = testedSchema.executeBlocking(
             """
             { 
                 outer { 
