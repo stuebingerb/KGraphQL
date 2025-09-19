@@ -7,7 +7,7 @@ kotlinx-benchmark = "0.4.14"
 jackson = "2.20.0"
 ktor = "3.2.3"
 junit-jupiter = "5.13.4"
-kotest = "6.0.2"
+kotest = "6.0.3"
 
 [plugins]
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
