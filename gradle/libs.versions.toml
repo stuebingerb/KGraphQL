@@ -5,7 +5,7 @@ kotlinx-serialization = "1.9.0"
 kotlinx-kover = "0.9.2"
 kotlinx-benchmark = "0.4.14"
 jackson = "2.20.0"
-ktor = "3.2.3"
+ktor = "3.3.0"
 junit-jupiter = "5.13.4"
 kotest = "6.0.3"
 
