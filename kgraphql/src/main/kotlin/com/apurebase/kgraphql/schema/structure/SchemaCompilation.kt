@@ -188,30 +188,23 @@ open class SchemaCompilation(
         return Field.Union(unionProperty, type, inputValues)
     }
 
-    private suspend fun handlePossiblyWrappedType(kType: KType, typeCategory: TypeCategory): Type = try {
-        when {
-            kType.isIterable() -> handleCollectionType(kType, typeCategory)
-            kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
-            kType.jvmErasure == Execution.Node::class && typeCategory == TypeCategory.INPUT -> executionType
-            kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
-            kType.arguments.isNotEmpty() -> configuration.genericTypeResolver.resolveMonad(kType)
-                .let { handlePossiblyWrappedType(it, typeCategory) }
+    private suspend fun handlePossiblyWrappedType(kType: KType, typeCategory: TypeCategory): Type = when {
+        kType.isIterable() -> handleCollectionType(kType, typeCategory)
+        kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
+        kType.jvmErasure == Execution.Node::class && typeCategory == TypeCategory.INPUT -> executionType
+        kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
+        kType.arguments.isNotEmpty() -> configuration.genericTypeResolver.resolveMonad(kType)
+            .let { handlePossiblyWrappedType(it, typeCategory) }
 
-            kType.jvmErasure.isSealed -> TypeDef.Union(
-                name = kType.jvmErasure.simpleName!!,
-                members = kType.jvmErasure.sealedSubclasses.toSet(),
-                description = null
-            ).let { applyNullability(kType.isMarkedNullable, handleUnionType(it)) }
+        kType.jvmErasure.isSealed -> TypeDef.Union(
+            name = kType.jvmErasure.simpleName!!,
+            members = kType.jvmErasure.sealedSubclasses.toSet(),
+            description = null
+        ).let { applyNullability(kType.isMarkedNullable, handleUnionType(it)) }
 
-            else -> handleSimpleType(kType, typeCategory)
-        }
-    } catch (e: Throwable) {
-        // The `KotlinReflectionInternalError` happens during `kType.jvmErasure` and cannot be caught directly
-        if ("KotlinReflectionInternalError" in e.toString()) {
-            throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()")
-        } else {
-            throw e
-        }
+        kType.jvmErasure == Any::class -> throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()")
+
+        else -> handleSimpleType(kType, typeCategory)
     }
 
     private suspend fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {
