@@ -1,11 +1,11 @@
 # Contributing
 
-Thank you for contributing to KGraphQL!
-All contributions are welcome, feel free to open issues and PRs.
+Thank you for considering contributing to KGraphQL!
+All contributions are welcome, feel free to open issues and PRs or reach out via Slack.
 
 ## Getting Started
 
-To perform a local build you only need to have JDK 11 installed and invoke
+To perform a local build you only need to have a recent JDK installed and invoke
 
 ```bash
 ./gradlew build
