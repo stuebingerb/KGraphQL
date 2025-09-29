@@ -5,7 +5,6 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaBuilderTest
-import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import nidomiro.kdataloader.ExecutionResult
@@ -18,9 +17,6 @@ class DataLoaderPropertyDSLTest {
     @Test
     fun `prepare() should support multiple arguments`() {
         val schema = defaultSchema {
-            configure {
-                executor = Executor.DataLoaderPrepared
-            }
             query("parent") {
                 resolver { -> Parent() }
             }
@@ -54,9 +50,6 @@ class DataLoaderPropertyDSLTest {
     @Test
     fun `specifying return type explicitly allows generic data property creation`() {
         val schema = defaultSchema {
-            configure {
-                executor = Executor.DataLoaderPrepared
-            }
             query("scenario") {
                 resolver { -> "dummy" }
             }
@@ -76,13 +69,9 @@ class DataLoaderPropertyDSLTest {
 
     @Test
     fun `creation of data properties from a list`() {
-
         val props = listOf(Prop(typeOf<Int>()) { 0 }, Prop(typeOf<String>()) { "test" })
 
         val schema = defaultSchema {
-            configure {
-                executor = Executor.DataLoaderPrepared
-            }
             query("scenario") {
                 resolver { -> "dummy" }
             }

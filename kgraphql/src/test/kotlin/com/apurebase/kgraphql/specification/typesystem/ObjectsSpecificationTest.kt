@@ -1,12 +1,10 @@
 package com.apurebase.kgraphql.specification.typesystem
 
 import com.apurebase.kgraphql.Actor
-import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
-import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
-import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -19,14 +17,6 @@ import org.junit.jupiter.params.provider.ValueSource
 class ObjectsSpecificationTest {
     data class Underscore(val __field: Int, val field__: String = "")
     data class Type(val field: String)
-
-    // TODO: We want to have [Executor.DataLoaderPrepared] working with these tests before reaching stable release of that executor!
-    fun schema(executor: Executor = Executor.Parallel, block: SchemaBuilder.() -> Unit) = KGraphQL.schema {
-        configure {
-            this@configure.executor = executor
-        }
-        block()
-    }
 
     @Test
     fun `all fields defined within an Object type must not have a name which begins with __`() {
@@ -313,7 +303,7 @@ class ObjectsSpecificationTest {
 
     @Test
     fun `fields are conceptually ordered in the same order in which they were encountered during query execution`() {
-        val schema = schema { // TODO: Update this test to use the new [DataLoaderPrepared] executor!
+        val schema = schema {
             query("many") { resolver { -> ManyFields() } }
             type<ManyFields> {
                 property("name") {

@@ -14,7 +14,6 @@ import com.apurebase.kgraphql.Rank
 import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import org.junit.jupiter.api.AfterEach
 
 abstract class BaseSchemaTest {
@@ -298,9 +297,8 @@ abstract class BaseSchemaTest {
         query: String,
         variables: String? = null,
         context: Context = Context(emptyMap()),
-        options: ExecutionOptions = ExecutionOptions(),
         operationName: String? = null,
     ) = testedSchema
-        .executeBlocking(query, variables, context, options, operationName)
+        .executeBlocking(query, variables, context, operationName)
         .deserialize()
 }

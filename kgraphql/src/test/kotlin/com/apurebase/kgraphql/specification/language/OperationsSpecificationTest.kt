@@ -7,7 +7,6 @@ import com.apurebase.kgraphql.executeEqualQueries
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
-import com.apurebase.kgraphql.schema.execution.Executor
 import com.apurebase.kgraphql.shouldBeInstanceOf
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
@@ -22,10 +21,7 @@ class OperationsSpecificationTest {
 
     private var subscriptionResult = ""
 
-    private fun newSchema(executor: Executor = Executor.DataLoaderPrepared) = defaultSchema {
-        configure {
-            this@configure.executor = executor
-        }
+    private fun newSchema() = defaultSchema {
 
         query("fizz") {
             resolver { -> "buzz" }.withArgs { }
@@ -39,7 +35,6 @@ class OperationsSpecificationTest {
             resolver { subscription: String ->
                 subscribe(subscription, publisher, Actor()) {
                     subscriptionResult = it
-                    println(it)
                 }
             }
         }
@@ -82,7 +77,7 @@ class OperationsSpecificationTest {
 
     @Test
     fun `handle subscription`() {
-        val schema = newSchema(Executor.Parallel)
+        val schema = newSchema()
         schema.executeBlocking("subscription {subscriptionActor(subscription : \"mySubscription\"){name}}")
 
         subscriptionResult = ""
@@ -108,7 +103,7 @@ class OperationsSpecificationTest {
     @Test
     fun `Subscription return type must be the same as the publisher's`() {
         val exception = shouldThrowExactly<ExecutionException> {
-            newSchema(Executor.Parallel).executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
+            newSchema().executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
         }
         exception.originalError shouldBeInstanceOf SchemaException::class
         exception shouldHaveMessage "Subscription return type must be the same as the publisher's"

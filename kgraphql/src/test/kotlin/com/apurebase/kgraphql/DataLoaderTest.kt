@@ -2,7 +2,6 @@ package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
-import com.apurebase.kgraphql.schema.execution.Executor
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -12,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 import nidomiro.kdataloader.ExecutionResult
 import org.junit.jupiter.api.Assertions.assertTimeoutPreemptively
 import org.junit.jupiter.api.DynamicTest
-import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import java.time.Duration
 import java.time.Duration.ofSeconds
@@ -21,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger
 // This is just for safety, so when the tests fail and
 // end up in an endless waiting state, they'll fail after this amount
 val timeout: Duration = ofSeconds(60)
-const val repeatTimes = 2
 
 class DataLoaderTest {
 
@@ -58,8 +56,16 @@ class DataLoaderTest {
     data class AtomicCounters(
         val abcB: AtomicProperty = AtomicProperty(),
         val abcChildren: AtomicProperty = AtomicProperty(),
-        val treeChild: AtomicProperty = AtomicProperty()
+        val treeChild: AtomicProperty = AtomicProperty(),
+        val payments: AtomicProperty = AtomicProperty()
     )
+
+    sealed class Payment {
+        data class CreditCard(val number: String, val expiryDate: String) : Payment()
+        data class PayPal(val email: String) : Payment()
+    }
+
+    data class Wallet(val id: String)
 
     fun schema(block: SchemaBuilder.() -> Unit = {}): Pair<DefaultSchema, AtomicCounters> {
         val counters = AtomicCounters()
@@ -67,7 +73,6 @@ class DataLoaderTest {
         val schema = defaultSchema {
             configure {
                 useDefaultPrettyPrinter = true
-                executor = Executor.DataLoaderPrepared
             }
 
             query("people") {
@@ -103,6 +108,10 @@ class DataLoaderTest {
                         Tree(2, "Fisk!")
                     )
                 }
+            }
+
+            query("singleTree") {
+                resolver { -> Tree(1, "Fisk") }
             }
 
             query("abc") {
@@ -209,7 +218,6 @@ class DataLoaderTest {
                         }
                     }
                 }
-
             }
 
             type<Tree> {
@@ -224,6 +232,38 @@ class DataLoaderTest {
                         counters.treeChild.prepare.incrementAndGet()
                         parent.id + buzz
                     }
+                }
+            }
+
+            type<Wallet> {
+                dataProperty<String, Payment?>("payment") {
+                    loader { keys ->
+                        println("== Running [payment] loader with keys: $keys ==")
+                        counters.payments.loader.incrementAndGet()
+                        keys.map { id ->
+                            ExecutionResult.Success(
+                                when (id) {
+                                    "1" -> Payment.CreditCard("12345", "2025-12-31")
+                                    "2" -> Payment.PayPal("paypal@example.com")
+                                    else -> null
+                                }
+                            )
+                        }
+                    }
+
+                    prepare { parent ->
+                        counters.payments.prepare.incrementAndGet()
+                        parent.id
+                    }
+                }
+            }
+            query("wallets") {
+                resolver { ->
+                    listOf(
+                        Wallet("1"),
+                        Wallet("2"),
+                        Wallet("3")
+                    )
                 }
             }
 
@@ -270,7 +310,7 @@ class DataLoaderTest {
 
             val test: (Int) -> DynamicTest = {
                 DynamicTest.dynamicTest("test-$it") {
-                    val result = schema.executeBlocking(query).also(::println).deserialize()
+                    val result = schema.executeBlocking(query).deserialize()
 
                     result.extract<String>("data/abc[0]/value") shouldBe "Testing 1"
                     result.extract<String>("data/abc[0]/person/fullName") shouldBe "Jógvan Olsen"
@@ -316,7 +356,7 @@ class DataLoaderTest {
         return fn(true) + fn(false)
     }
 
-    @RepeatedTest(repeatTimes)
+    @Test
     fun `nested array loaders`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -361,7 +401,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @Test
     fun `old basic resolvers in new executor`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -381,7 +421,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @Test
     fun `very basic new level executor`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -423,7 +463,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @Test
     fun `data loader with nullable prepare keys`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -448,7 +488,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @Test
     fun `basic data loader test`() {
         assertTimeoutPreemptively(timeout) {
             val (schema) = schema()
@@ -473,8 +513,36 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @Test
     fun `basic data loader`() {
+        assertTimeoutPreemptively(timeout) {
+            val (schema, counters) = schema()
+
+            val query = """
+                {
+                    singleTree { # <-- 2
+                        id
+                        firstChild: child(buzz: 3) {
+                            id
+                            value
+                        }
+                        otherChild: child(buzz: 6) {
+                            id
+                            value
+                        }
+                    }
+                }
+            """.trimIndent()
+
+            val result = schema.executeBlocking(query).deserialize()
+            result.extract<Int>("data/singleTree/id") shouldBe 1
+            result.extract<Int>("data/singleTree/firstChild/id") shouldBe 14
+            result.extract<Int>("data/singleTree/otherChild/id") shouldBe 17
+
+            counters.treeChild.prepare.get() shouldBe 2
+            counters.treeChild.loader.get() shouldBe 1
+        }
+
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
 
@@ -507,7 +575,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @Test
     fun `data loader cache per request only`() {
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
@@ -548,7 +616,7 @@ class DataLoaderTest {
         }
     }
 
-    @RepeatedTest(repeatTimes)
+    @Test
     fun `multiple layers of data loaders`() {
         assertTimeoutPreemptively(timeout) {
             val (schema, counters) = schema()
@@ -589,6 +657,56 @@ class DataLoaderTest {
 
             counters.abcChildren.prepare.get() shouldBe 8403
             counters.abcChildren.loader.get() shouldBe 5
+        }
+    }
+
+    @Test
+    fun `data loaders should support unions and fragments`() {
+        assertTimeoutPreemptively(timeout) {
+            val (schema, counters) = schema()
+            val query = """
+                {
+                    wallets {
+                        id
+                        payment {
+                            __typename
+                            ...paymentDetails
+                        }
+                    }
+                }
+                
+                fragment paymentDetails on Payment {
+                    ... on CreditCard { number expiryDate }
+                    ... on PayPal { email }
+                }
+            """.trimIndent()
+
+            schema.executeBlocking(query) shouldBe """
+                {
+                  "data" : {
+                    "wallets" : [ {
+                      "id" : "1",
+                      "payment" : {
+                        "__typename" : "CreditCard",
+                        "number" : "12345",
+                        "expiryDate" : "2025-12-31"
+                      }
+                    }, {
+                      "id" : "2",
+                      "payment" : {
+                        "__typename" : "PayPal",
+                        "email" : "paypal@example.com"
+                      }
+                    }, {
+                      "id" : "3",
+                      "payment" : null
+                    } ]
+                  }
+                }
+            """.trimIndent()
+
+            counters.payments.prepare.get() shouldBe 3
+            counters.payments.loader.get() shouldBe 1
         }
     }
 }

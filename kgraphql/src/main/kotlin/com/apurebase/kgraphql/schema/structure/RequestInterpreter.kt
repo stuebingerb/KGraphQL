@@ -6,7 +6,6 @@ import com.apurebase.kgraphql.schema.DefaultSchema.Companion.OPERATION_NAME_PARA
 import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.execution.Execution
-import com.apurebase.kgraphql.schema.execution.ExecutionOptions
 import com.apurebase.kgraphql.schema.execution.ExecutionPlan
 import com.apurebase.kgraphql.schema.execution.TypeCondition
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode
@@ -58,8 +57,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     fun createExecutionPlan(
         document: DocumentNode,
         requestedOperationName: String?,
-        variables: VariablesJson,
-        options: ExecutionOptions
+        variables: VariablesJson
     ): ExecutionPlan {
         val executables = document.definitions.filterIsInstance<ExecutableDefinitionNode>()
 
@@ -89,7 +87,6 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         val ctx = InterpreterContext(fragmentDefinitions, operation.variableDefinitions)
 
         return ExecutionPlan(
-            options,
             operation.selectionSet.selections.map {
                 root.handleSelection(it as FieldNode, ctx, operation.variableDefinitions)
             }
