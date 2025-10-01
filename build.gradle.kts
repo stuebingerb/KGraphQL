@@ -8,6 +8,11 @@ tasks {
     wrapper {
         distributionType = Wrapper.DistributionType.BIN
     }
+
+    updateDaemonJvm {
+        @Suppress("UnstableApiUsage")
+        languageVersion.set(JavaLanguageVersion.of(24))
+    }
 }
 
 dependencies {
