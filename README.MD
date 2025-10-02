@@ -3,6 +3,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/de.stuebingerb/kgraphql.svg?label=Maven%20Central&logo=apachemaven)](https://search.maven.org/search?q=g:%22de.stuebingerb%22%20AND%20a:%22kgraphql%22)
 [![codecov](https://codecov.io/gh/stuebingerb/KGraphQL/graph/badge.svg)](https://codecov.io/gh/stuebingerb/KGraphQL)
 [![Slack](https://img.shields.io/badge/%23KGraphQL%20-%20%23KGraphQL?logo=slack&label=Slack)](https://kotlinlang.slack.com/messages/kgraphql)
+[![Awesome Kotlin](https://img.shields.io/badge/Kotlin%20-%20Kotlin?logo=kotlin&label=Awesome)](https://github.com/KotlinBy/awesome-kotlin)
 
 KGraphQL is a [Kotlin](https://kotlinlang.org/) implementation of [GraphQL](http://graphql.org/) based
 on [aPureBase/KGraphQL](https://github.com/aPureBase/KGraphQL). It provides a rich DSL to set up the GraphQL schema.
