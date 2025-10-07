@@ -280,7 +280,20 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `custom type name`() {
+    fun `enums should be recognized automatically`() {
+        val schema = defaultSchema {
+            query("actor") {
+                resolver { type: FilmType -> Actor("Boguś Linda $type", 4343) }
+            }
+        }
+
+        val result =
+            deserialize(schema.executeBlocking("query(\$type: FilmType = FULL_LENGTH){actor(type: \$type){name}}"))
+        result.extract<String>("data/actor/name") shouldBe "Boguś Linda FULL_LENGTH"
+    }
+
+    @Test
+    fun `enums should support a custom type name`() {
         val schema = defaultSchema {
             query("actor") {
                 resolver { type: FilmType -> Actor("Boguś Linda $type", 4343) }
@@ -292,7 +305,7 @@ class SchemaBuilderTest {
         }
 
         val result =
-            deserialize(schema.executeBlocking("query(\$type : TYPE = FULL_LENGTH){actor(type: \$type){name}}"))
+            deserialize(schema.executeBlocking("query(\$type: TYPE = FULL_LENGTH){actor(type: \$type){name}}"))
         result.extract<String>("data/actor/name") shouldBe "Boguś Linda FULL_LENGTH"
     }
 

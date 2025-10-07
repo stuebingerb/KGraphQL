@@ -115,7 +115,6 @@ class KtorFeatureTest : KtorTest() {
     @Test
     fun `Simple variables test`() {
         val server = withServer {
-            enum<MockEnum>()
             inputType<InputTwo>()
             query("test") { resolver { input: InputTwo -> "success: $input" } }
         }

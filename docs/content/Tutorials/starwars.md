@@ -72,13 +72,12 @@ Then, we can create the schema:
         resolver{ -> listOf(luke, r2d2) }
       }
     
-      // 1kotlin classes need to be registered with "type" method 
+      // kotlin classes need to be registered with "type" method 
       // to be included in created schema type system
       // class Character is automatically included, 
       // as it is return type of both created queries  
       type<Droid>()
       type<Human>()
-      enum<Episode>()
     }
     ```
 
