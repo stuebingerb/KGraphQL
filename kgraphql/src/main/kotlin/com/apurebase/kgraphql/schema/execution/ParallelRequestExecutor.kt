@@ -99,7 +99,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             for (operation in plan) {
                 // Remove all by skip/include directives
                 if (resultMap[operation] != null) {
-                    data.set<JsonNode>(operation.aliasOrKey, resultMap[operation]!!.await())
+                    data.merge(operation.aliasOrKey, resultMap[operation]!!.await())
                 }
             }
 
