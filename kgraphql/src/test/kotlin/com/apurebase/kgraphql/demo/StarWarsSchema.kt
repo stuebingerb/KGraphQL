@@ -58,8 +58,6 @@ suspend fun main() {
 
         type<Droid>()
         type<Human>()
-
-        enum<Episode>()
     }
 
     println(schema.execute("{hero(episode: JEDI){id, name, ... on Droid{primaryFunction} ... on Human{height}}}"))

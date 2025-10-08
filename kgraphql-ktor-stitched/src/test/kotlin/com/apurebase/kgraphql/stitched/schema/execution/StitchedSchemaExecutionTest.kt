@@ -55,7 +55,6 @@ class StitchedSchemaExecutionTest {
     }
 
     private fun SchemaBuilder.remoteSchema1WithEnum() = run {
-        enum<RemoteEnum>()
         query("remote1") {
             resolver { -> RemoteEnum.REMOTE1 }
         }
@@ -998,7 +997,6 @@ class StitchedSchemaExecutionTest {
             query("remote1") {
                 resolver { -> "dummy" }
             }
-            enum<RemoteEnum>()
             mutation("objectMutation") {
                 resolver { input: Remote1 -> input.copy(foo1 = "${input.foo1}-processed") }
             }
@@ -1189,7 +1187,6 @@ class StitchedSchemaExecutionTest {
         )
 
         fun SchemaBuilder.remoteSchema1WithVariables() = run {
-            enum<RemoteEnum>()
             query("getBoolean") {
                 resolver { toGet: Boolean -> toGet }
             }
@@ -1927,7 +1924,6 @@ class StitchedSchemaExecutionTest {
     @Test
     fun `schema with stitched enum extension properties from parent should work as expected`() = testApplication {
         fun SchemaBuilder.remote1Schema() = run {
-            enum<RemoteEnum>()
             query("remote1") {
                 resolver { enum: RemoteEnum -> enum }
             }
@@ -1936,7 +1932,6 @@ class StitchedSchemaExecutionTest {
         data class Remote2TypeWithEnum(val localEnum: RemoteEnum)
 
         fun SchemaBuilder.remote2Schema() = run {
-            enum<RemoteEnum>()
             query("remote2") {
                 resolver { enum: RemoteEnum -> Remote2TypeWithEnum(enum) }
             }

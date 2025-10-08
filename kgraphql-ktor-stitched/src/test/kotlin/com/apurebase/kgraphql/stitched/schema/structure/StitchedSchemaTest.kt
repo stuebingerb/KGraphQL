@@ -136,7 +136,6 @@ class StitchedSchemaTest {
                     type<RemoteType2> {
                         description = "Second Remote Type"
                     }
-                    enum<RemoteEnum> {}
                 }
             }
         }

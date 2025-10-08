@@ -25,7 +25,6 @@ class InputValuesSpecificationTest {
     data class FakeData(val number: Int = 0, val description: String = "", val list: List<String> = emptyList())
 
     val schema = defaultSchema {
-        enum<FakeEnum>()
         inputType<FakeData>()
 
         query("Int") { resolver { value: Int -> value } }

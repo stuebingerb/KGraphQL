@@ -428,8 +428,6 @@ class SchemaPrinterTest {
     @Test
     fun `schema with default values should be printed as expected`() {
         val schema = KGraphQL.schema {
-            enum<TestEnum>()
-
             query("getStringWithDefault") {
                 resolver { type: TestEnum, string: String -> type.name + string }.withArgs {
                     arg<TestEnum> { name = "type"; defaultValue = TestEnum.TYPE1 }

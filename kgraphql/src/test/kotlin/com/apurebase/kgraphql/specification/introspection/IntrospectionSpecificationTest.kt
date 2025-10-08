@@ -94,8 +94,6 @@ class IntrospectionSpecificationTest {
     @Test
     fun `__typename field cannot be used on enums`() {
         val schema = defaultSchema {
-            enum<SampleEnum>()
-
             query("sample") {
                 resolver { -> EnumData(SampleEnum.VALUE) }
             }

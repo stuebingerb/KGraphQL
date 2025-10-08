@@ -26,7 +26,6 @@ class InputObjectsSpecificationTest {
     private val objectMapper = jacksonObjectMapper()
 
     val schema = KGraphQL.schema {
-        enum<MockEnum>()
         inputType<InputTwo>()
         query("test") { resolver { input: InputTwo -> "success: $input" } }
     }

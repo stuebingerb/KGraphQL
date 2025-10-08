@@ -18,6 +18,7 @@ import com.apurebase.kgraphql.schema.introspection.SchemaProxy
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.model.BaseOperationDef
+import com.apurebase.kgraphql.schema.model.EnumValueDef
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
 import com.apurebase.kgraphql.schema.model.InputValueDef
 import com.apurebase.kgraphql.schema.model.PropertyDef
@@ -48,7 +49,9 @@ open class SchemaCompilation(
 
     protected val unions = mutableListOf<Type.Union>()
 
-    protected val enums by lazy { definition.enums.associate { enum -> enum.kClass to enum.toEnumType() } }
+    protected val enums by lazy {
+        definition.enums.associateTo(mutableMapOf()) { enum -> enum.kClass to enum.toEnumType() }
+    }
 
     protected val scalars by lazy { definition.scalars.associate { scalar -> scalar.kClass to scalar.toScalarType() } }
 
@@ -204,7 +207,23 @@ open class SchemaCompilation(
 
         kType.jvmErasure == Any::class -> throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()")
 
+        kType.jvmErasure.isSubclassOf(Enum::class) -> handleEnumType(kType, kType.jvmErasure.java as Class<Enum<*>>)
+
         else -> handleSimpleType(kType, typeCategory)
+    }
+
+    private fun <T : Enum<T>> handleEnumType(kType: KType, enumClass: Class<Enum<T>>): Type {
+        val simpleType = enums[kType.jvmErasure] ?: TypeDef.Enumeration(
+            name = enumClass.simpleName,
+            kClass = kType.jvmErasure as KClass<T>,
+            values = enumClass.enumConstants.map { value ->
+                EnumValueDef(value as T)
+            },
+            description = null
+        ).toEnumType().also {
+            enums[kType.jvmErasure as KClass<T>] = it
+        }
+        return applyNullability(kType.isMarkedNullable, simpleType)
     }
 
     private suspend fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {

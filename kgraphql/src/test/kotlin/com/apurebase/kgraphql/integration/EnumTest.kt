@@ -31,7 +31,6 @@ class EnumTest : BaseSchemaTest() {
             configure {
                 wrapErrors = false
             }
-            enum<FilmType>()
             query("search") {
                 description = "film categorized by type"
                 resolver { types: List<FilmType> ->

@@ -6,8 +6,8 @@ provided via DSL.
 ## Type System Creation
 
 KGraphQL is able to inspect operations and partially infer schema type system, so schema creator does not have to
-explicitly declare every type (but it may if needed). Unions, Enums and Scalars require explicit definition in Schema
-DSL. Inferred classes are interpreted as GraphQL Object or Interface type.
+explicitly declare every type (but it may if needed). Union and Scalars require explicit definition in Schema DSL.
+Inferred classes are interpreted as GraphQL Object or Interface type.
 
 ## Object or Interface?
 
