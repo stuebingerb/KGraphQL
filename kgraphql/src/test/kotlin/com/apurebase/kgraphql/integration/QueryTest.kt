@@ -529,4 +529,101 @@ class QueryTest : BaseSchemaTest() {
         result.extract<String>("data/root/kids[0]/name") shouldBe "kids-Testing"
         result.extract<List<String>>("data/root/kids[0]/fields") shouldBe listOf("id", "fields", "name")
     }
+
+    // cf. https://spec.graphql.org/October2021/#example-77852
+    @Test
+    fun `multiple selection sets for the same object should be merged on top level`() {
+        data class Person(val firstName: String, val lastName: String)
+
+        val response = defaultSchema {
+            query("me") {
+                resolver { -> Person("John", "Doe") }
+            }
+        }.executeBlocking(
+            """
+            {
+                me {
+                    firstName
+                }
+                me {
+                    lastName
+                }
+            }
+        """
+        )
+        response shouldBe """
+            {"data":{"me":{"firstName":"John","lastName":"Doe"}}}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `multiple selection sets for the same object should be merged on object level`() {
+        data class Person(val firstName: String, val lastName: String)
+        data class PersonWrapper(val person: Person)
+
+        val response = defaultSchema {
+            query("me") {
+                resolver { -> PersonWrapper(Person("John", "Doe")) }
+            }
+        }.executeBlocking(
+            """
+            {
+                me {
+                    person {
+                        firstName
+                    }
+                    person {
+                        lastName
+                    }
+                }
+            }
+        """
+        )
+        response shouldBe """
+            {"data":{"me":{"person":{"firstName":"John","lastName":"Doe"}}}}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `multiple complex selection sets for the same object should be merged on top level`() {
+        data class Address(val zipCode: String, val street: String, val city: String, val country: String)
+        data class Person(val firstName: String, val lastName: String, val birthDate: String, val address: Address)
+
+        val response = defaultSchema {
+            query("me") {
+                resolver { -> Person("John", "Doe", "1.1.1970", Address("12345", "Main Street", "SomeCity", "SomeCountry")) }
+            }
+        }.executeBlocking(
+            """
+            {
+                me {
+                    firstName
+                    birthDate
+                    address {
+                        city
+                    }
+                }
+                me {
+                    lastName
+                    address {
+                        ...CityFragment
+                        street
+                    }
+                }
+                anotherMe: me {
+                    firstName
+                    lastName
+                }
+            }
+            
+            fragment CityFragment on Address {
+                zipCode
+                city
+            }
+        """
+        )
+        response shouldBe """
+            {"data":{"me":{"firstName":"John","birthDate":"1.1.1970","address":{"city":"SomeCity","zipCode":"12345","street":"Main Street"},"lastName":"Doe"},"anotherMe":{"firstName":"John","lastName":"Doe"}}}
+        """.trimIndent()
+    }
 }
