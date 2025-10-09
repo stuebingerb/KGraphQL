@@ -1,6 +1,8 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.request.Parser
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -295,7 +297,9 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBe """
+        val sdl = SchemaPrinter().print(schema)
+
+        sdl shouldBe """
             scalar LocalDate
             
             scalar UUID
@@ -305,6 +309,11 @@ class SchemaPrinterTest {
             }
             
         """.trimIndent()
+
+        // SDL should also be valid according to our own parser (i.e. not throw an exception)
+        shouldNotThrowAny {
+            Parser(sdl).parseDocument()
+        }
     }
 
     @Test
@@ -448,7 +457,9 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBe """
+        val sdl = SchemaPrinter().print(schema)
+
+        sdl shouldBe """
             type Mutation {
               addStringWithDefault(prefix: String! = "_", string: String!, suffix: String): String!
             }
@@ -464,6 +475,11 @@ class SchemaPrinterTest {
             }
             
         """.trimIndent()
+
+        // SDL should also be valid according to our own parser (i.e. not throw an exception)
+        shouldNotThrowAny {
+            Parser(sdl).parseDocument()
+        }
     }
 
     @Test
@@ -488,7 +504,7 @@ class SchemaPrinterTest {
                 }
             }
             query("data") {
-                @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+                @Suppress("unused")
                 resolver { oldOptional: String?, new: String -> "" }.withArgs {
                     arg(String::class, typeOf<String?>()) {
                         name = "oldOptional"; defaultValue = "\"\""; deprecate("deprecated arg")
@@ -498,7 +514,9 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter().print(schema) shouldBe """
+        val sdl = SchemaPrinter().print(schema)
+
+        sdl shouldBe """
             type DeprecatedObject {
               new: String!
               old: String! @deprecated(reason: "deprecated old value")
@@ -528,6 +546,11 @@ class SchemaPrinterTest {
             }
             
         """.trimIndent()
+
+        // SDL should also be valid according to our own parser (i.e. not throw an exception)
+        shouldNotThrowAny {
+            Parser(sdl).parseDocument()
+        }
     }
 
     @Test
@@ -539,10 +562,14 @@ class SchemaPrinterTest {
                 property(TestObject::name) {
                     description = "This is the name"
                 }
+                property("NAME") {
+                    description = "This is the original \"name\" but in uppercase; backslash \\ for funzies"
+                    resolver { testObject: TestObject -> testObject.name.uppercase() }
+                }
             }
             inputType<TestObject> {
                 name = "TestObjectInput"
-                description = "Description for input object"
+                description = "Description for input object\nMulti-line works as well"
             }
             enum<TestEnum> {
                 value(TestEnum.TYPE1) {
@@ -569,18 +596,17 @@ class SchemaPrinterTest {
             }
         }
 
-        SchemaPrinter(
-            SchemaPrinterConfig(
-                includeSchemaDefinition = true,
-                includeDescriptions = true
-            )
-        ).print(schema) shouldBe """
+        // Triple quotes to be used inside a multi-line string
+        val tq = "\"\"\""
+
+        val sdl = SchemaPrinter(
+            SchemaPrinterConfig(includeSchemaDefinition = true, includeDescriptions = true)
+        ).print(schema)
+
+        sdl shouldBe """
             schema {
-              "Query object"
               query: Query
-              "Mutation object"
               mutation: Mutation
-              "Subscription object"
               subscription: Subscription
             }
             
@@ -592,9 +618,11 @@ class SchemaPrinterTest {
             
             "Mutation object"
             type Mutation {
-              "Add a test object"
-              "With some multi-line description"
-              "(& special characters like " and \n)"
+              $tq
+              Add a test object
+              With some multi-line description
+              (& special characters like " and \n)
+              $tq
               addObject(toAdd: TestObjectInput!): TestObject!
             }
             
@@ -617,6 +645,10 @@ class SchemaPrinterTest {
             type TestObject {
               "This is the name"
               name: String!
+              $tq
+              This is the original "name" but in uppercase; backslash \ for funzies
+              $tq
+              NAME: String!
             }
             
             enum TestEnum {
@@ -625,12 +657,20 @@ class SchemaPrinterTest {
               TYPE2
             }
             
-            "Description for input object"
+            $tq
+            Description for input object
+            Multi-line works as well
+            $tq
             input TestObjectInput {
               name: String!
             }
             
         """.trimIndent()
+
+        // SDL should also be valid according to our own parser (i.e. not throw an exception)
+        shouldNotThrowAny {
+            Parser(sdl).parseDocument()
+        }
     }
 
     @Test
@@ -694,6 +734,73 @@ class SchemaPrinterTest {
     }
 
     @Test
+    fun `empty and blank descriptions should be ignored`() {
+        val schema = KGraphQL.schema {
+            type<TestObject> {
+                description = ""
+                property(TestObject::name) {
+                    description = ""
+                }
+            }
+            query("getObject") {
+                description = ""
+                resolver { name: String -> TestObject(name) }.withArgs {
+                    arg<String> { name = "name"; description = "" }
+                }
+            }
+            mutation("addObject") {
+                description = """""".trimIndent()
+                resolver { toAdd: TestObject -> toAdd }
+            }
+            subscription("subscribeObject") {
+                description = "    "
+                resolver { -> TestObject("name") }
+            }
+        }
+
+        val sdl = SchemaPrinter(
+            SchemaPrinterConfig(includeSchemaDefinition = true, includeDescriptions = true)
+        ).print(schema)
+
+        sdl shouldBe """
+            schema {
+              query: Query
+              mutation: Mutation
+              subscription: Subscription
+            }
+            
+            "Mutation object"
+            type Mutation {
+              addObject(toAdd: TestObjectInput!): TestObject!
+            }
+            
+            "Query object"
+            type Query {
+              getObject(name: String!): TestObject!
+            }
+            
+            "Subscription object"
+            type Subscription {
+              subscribeObject: TestObject!
+            }
+            
+            type TestObject {
+              name: String!
+            }
+            
+            input TestObjectInput {
+              name: String!
+            }
+            
+        """.trimIndent()
+
+        // SDL should also be valid according to our own parser (i.e. not throw an exception)
+        shouldNotThrowAny {
+            Parser(sdl).parseDocument()
+        }
+    }
+
+    @Test
     fun `schema built-in directives should be printed as expected if built-in directives are included`() {
         val schema = KGraphQL.schema {
             query("dummy") {
@@ -702,7 +809,9 @@ class SchemaPrinterTest {
             type<TestObject>()
         }
 
-        SchemaPrinter(SchemaPrinterConfig(includeBuiltInDirectives = true)).print(schema) shouldBe """
+        val sdl = SchemaPrinter(SchemaPrinterConfig(includeBuiltInDirectives = true)).print(schema)
+
+        sdl shouldBe """
             type Query {
               dummy: String!
             }
@@ -718,6 +827,11 @@ class SchemaPrinterTest {
             directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
             
         """.trimIndent()
+
+        // SDL should also be valid according to our own parser (i.e. not throw an exception)
+        shouldNotThrowAny {
+            Parser(sdl).parseDocument()
+        }
     }
 
     @Test
