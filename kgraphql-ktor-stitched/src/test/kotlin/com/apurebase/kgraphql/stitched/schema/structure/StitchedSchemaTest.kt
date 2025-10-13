@@ -47,7 +47,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    suspend fun `stitched schema should allow to configure remote executor`() {
+    fun `stitched schema should allow to configure remote executor`() {
         val customRemoteRequestExecutor = object : RemoteRequestExecutor {
             override suspend fun execute(node: Execution.Remote, ctx: Context): JsonNode? {
                 return null

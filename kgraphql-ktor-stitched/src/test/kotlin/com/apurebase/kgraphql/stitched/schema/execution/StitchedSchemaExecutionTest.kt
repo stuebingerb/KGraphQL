@@ -2851,7 +2851,7 @@ class StitchedSchemaExecutionTest {
     }
 
     @Test
-    suspend fun `errors from remote execution should be propagated correctly`() = testApplication {
+    fun `errors from remote execution should be propagated correctly`() = testApplication {
         fun SchemaBuilder.remoteSchema() = run {
             query("failRemote") {
                 resolver<String> {
