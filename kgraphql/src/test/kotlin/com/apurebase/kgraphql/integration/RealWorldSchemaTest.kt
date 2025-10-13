@@ -43,7 +43,7 @@ class RealWorldSchemaTest {
 
     // https://github.com/apureBase/KGraphQL/issues/75
     @Test
-    fun `issue-75 object is not of declaring class - full sample`() {
+    suspend fun `issue-75 object is not of declaring class - full sample`() {
         val schema = KGraphQL.schema {
             configure {
                 useDefaultPrettyPrinter = true
@@ -118,7 +118,7 @@ class RealWorldSchemaTest {
             }
         }
 
-        val result = schema.executeBlocking(
+        val result = schema.execute(
             """
             query findTrace(${'$'}traceID: String!) {
               findTrace(traceID: ${'$'}traceID) {

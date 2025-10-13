@@ -55,9 +55,9 @@ class ParallelExecutionTest {
     private val query = "{\n" + (0..999).joinToString("") { "automated_${it}\n" } + " }"
 
     @Test
-    fun `suspendable property resolvers`() {
+    suspend fun `suspendable property resolvers`() {
         val query = "{getAll{id,children{id}}}"
-        val map = deserialize(suspendPropertySchema.executeBlocking(query))
+        val map = deserialize(suspendPropertySchema.execute(query))
 
         map.extract<Int>("data/getAll[0]/id") shouldBe 0
         map.extract<Int>("data/getAll[500]/id") shouldBe 500
@@ -69,8 +69,8 @@ class ParallelExecutionTest {
     }
 
     @Test
-    fun `1000 synchronous resolvers sleeping with Thread sleep`() {
-        val map = deserialize(syncResolversSchema.executeBlocking(query))
+    suspend fun `1000 synchronous resolvers sleeping with Thread sleep`() {
+        val map = deserialize(syncResolversSchema.execute(query))
         map.extract<String>("data/automated_0") shouldBe "0"
         map.extract<String>("data/automated_271") shouldBe "271"
         map.extract<String>("data/automated_314") shouldBe "314"
@@ -79,8 +79,8 @@ class ParallelExecutionTest {
     }
 
     @Test
-    fun `1000 suspending resolvers sleeping with suspending delay`() {
-        val map = deserialize(suspendResolverSchema.executeBlocking(query))
+    suspend fun `1000 suspending resolvers sleeping with suspending delay`() {
+        val map = deserialize(suspendResolverSchema.execute(query))
         map.extract<String>("data/automated_0") shouldBe "0"
         map.extract<String>("data/automated_271") shouldBe "271"
         map.extract<String>("data/automated_314") shouldBe "314"
@@ -89,9 +89,9 @@ class ParallelExecutionTest {
     }
 
     @Test
-    fun `execution should run in parallel`() {
+    suspend fun `execution should run in parallel`() {
         val duration = measureTimeMillis {
-            deserialize(syncResolversSchema.executeBlocking(query))
+            deserialize(syncResolversSchema.execute(query))
         }
         // syncResolversSchema has 1000 resolvers, each waiting for 3ms. Usually, execution
         // takes about 300ms so if it takes 3s, we apparently ran sequentially.

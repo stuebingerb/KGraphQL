@@ -59,7 +59,7 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    fun `arguments are unordered`() {
+    suspend fun `arguments are unordered`() {
         executeEqualQueries(
             schema,
             mapOf("data" to mapOf("actor" to mapOf("favDishes" to listOf("burger", "bread")))),
@@ -69,8 +69,8 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    fun `many arguments can exist on given field`() {
-        val response = deserialize(schema.executeBlocking("{actor{favDishes(size: 2, prefix: \"b\")}}"))
+    suspend fun `many arguments can exist on given field`() {
+        val response = deserialize(schema.execute("{actor{favDishes(size: 2, prefix: \"b\")}}"))
         response shouldBe mapOf<String, Any>(
             "data" to mapOf(
                 "actor" to mapOf(
@@ -84,7 +84,7 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    fun `all arguments to suspendResolvers`() {
+    suspend fun `all arguments to suspendResolvers`() {
         val request = """
             {
                 actor {
@@ -97,7 +97,7 @@ class ArgumentsSpecificationTest {
                 }
             }
         """.trimIndent()
-        val response = deserialize(schema.executeBlocking(request))
+        val response = deserialize(schema.execute(request))
         response shouldBe
             mapOf<String, Any>(
                 "data" to mapOf(
@@ -114,7 +114,7 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    fun `property arguments should accept default values`() {
+    suspend fun `property arguments should accept default values`() {
         val schema = defaultSchema {
             query("actor") {
                 resolver {
@@ -142,7 +142,7 @@ class ArgumentsSpecificationTest {
             }
         """.trimIndent()
 
-        val response = deserialize(schema.executeBlocking(request))
+        val response = deserialize(schema.execute(request))
         response shouldBe
             mapOf<String, Any>(
                 "data" to mapOf<String, Any>(
@@ -165,7 +165,7 @@ class ArgumentsSpecificationTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/144
     @Test
-    fun `arguments with lists should preserve generic type`() {
+    suspend fun `arguments with lists should preserve generic type`() {
         val schema = schema {
             stringScalar<LocalDate> {
                 serialize = { date -> date.toString() }
@@ -182,7 +182,7 @@ class ArgumentsSpecificationTest {
             }
         }
 
-        val result = schema.executeBlocking(
+        val result = schema.execute(
             """
             {
                 slots {

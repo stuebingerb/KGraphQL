@@ -15,7 +15,7 @@ class IntrospectedSchemaTest {
     }
 
     @Test
-    fun `introspected schema should result in the same SDL as the schema itself`() {
+    suspend fun `introspected schema should result in the same SDL as the schema itself`() {
         val schema = KGraphQL.schema {
             extendedScalars()
 
@@ -32,7 +32,7 @@ class IntrospectedSchemaTest {
         }
 
         val schemaFromIntrospection = IntrospectedSchema.fromIntrospectionResponse(
-            schema.executeBlocking(Introspection.query())
+            schema.execute(Introspection.query())
         )
 
         SchemaPrinter().print(schemaFromIntrospection) shouldBe SchemaPrinter().print(schema)

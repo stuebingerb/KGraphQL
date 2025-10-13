@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 
 class QueryTest : BaseSchemaTest() {
     @Test
-    fun `query nested selection set`() {
+    suspend fun `query nested selection set`() {
         val map = execute("{film{title, director{name, age}}}")
         assertNoErrors(map)
         map.extract<String>("data/film/title") shouldBe prestige.title
@@ -24,7 +24,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query collection field`() {
+    suspend fun `query collection field`() {
         val map = execute("{film{title, director{favActors{name, age}}}}")
         assertNoErrors(map)
         map.extract<Map<String, String>>("data/film/director/favActors[0]") shouldBe
@@ -35,28 +35,28 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query scalar field`() {
+    suspend fun `query scalar field`() {
         val map = execute("{film{id}}")
         assertNoErrors(map)
         map.extract<String>("data/film/id") shouldBe "${prestige.id.literal}:${prestige.id.numeric}"
     }
 
     @Test
-    fun `query with selection set on collection`() {
+    suspend fun `query with selection set on collection`() {
         val map = execute("{film{title, director{favActors{name}}}}")
         assertNoErrors(map)
         map.extract<Map<String, String>>("data/film/director/favActors[0]") shouldBe mapOf("name" to prestige.director.favActors[0].name)
     }
 
     @Test
-    fun `query with selection set on collection 2`() {
+    suspend fun `query with selection set on collection 2`() {
         val map = execute("{film{title, director{favActors{age}}}}")
         assertNoErrors(map)
         map.extract<Map<String, Int>>("data/film/director/favActors[0]") shouldBe mapOf("age" to prestige.director.favActors[0].age)
     }
 
     @Test
-    fun `query with invalid field name`() {
+    suspend fun `query with invalid field name`() {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{film{title, director{name, favDish}}}")
         }
@@ -67,35 +67,35 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with argument`() {
+    suspend fun `query with argument`() {
         val map = execute("{filmByRank(rank: 1){title}}")
         assertNoErrors(map)
         map.extract<String>("data/filmByRank/title") shouldBe "Prestige"
     }
 
     @Test
-    fun `query with argument 2`() {
+    suspend fun `query with argument 2`() {
         val map = execute("{filmByRank(rank: 2){title}}")
         assertNoErrors(map)
         map.extract<String>("data/filmByRank/title") shouldBe "Se7en"
     }
 
     @Test
-    fun `query with alias`() {
+    suspend fun `query with alias`() {
         val map = execute("{bestFilm: filmByRank(rank: 1){title}}")
         assertNoErrors(map)
         map.extract<String>("data/bestFilm/title") shouldBe "Prestige"
     }
 
     @Test
-    fun `query with field alias`() {
+    suspend fun `query with field alias`() {
         val map = execute("{filmByRank(rank: 2){fullTitle: title}}")
         assertNoErrors(map)
         map.extract<String>("data/filmByRank/fullTitle") shouldBe "Se7en"
     }
 
     @Test
-    fun `query with multiple aliases`() {
+    suspend fun `query with multiple aliases`() {
         val map = execute("{bestFilm: filmByRank(rank: 1){title}, secondBestFilm: filmByRank(rank: 2){title}}")
         assertNoErrors(map)
         map.extract<String>("data/bestFilm/title") shouldBe "Prestige"
@@ -103,7 +103,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with ignored property`() {
+    suspend fun `query with ignored property`() {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{scenario{author, content}}")
         }
@@ -114,7 +114,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with interface`() {
+    suspend fun `query with interface`() {
         val map = execute("{randomPerson{name \n age}}")
         map.extract<Map<String, String>>("data/randomPerson") shouldBe
             mapOf(
@@ -124,7 +124,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with collection elements interface`() {
+    suspend fun `query with collection elements interface`() {
         val map = execute("{people{name, age}}")
         map.extract<Map<String, String>>("data/people[0]") shouldBe
             mapOf(
@@ -134,7 +134,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query extension property`() {
+    suspend fun `query extension property`() {
         val map = execute("{actors{name, age, isOld}}")
         for (i in 0..4) {
             val isOld = map.extract<Boolean>("data/actors[$i]/isOld")
@@ -144,7 +144,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query extension property with arguments`() {
+    suspend fun `query extension property with arguments`() {
         val map = execute("{actors{name, picture(big: true)}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
@@ -153,7 +153,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query extension property with optional argument`() {
+    suspend fun `query extension property with optional argument`() {
         val map = execute("{actors{name, picture}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
@@ -162,7 +162,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query extension property with optional annotated argument`() {
+    suspend fun `query extension property with optional annotated argument`() {
         val map = execute("{actors{name, pictureWithArgs}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
@@ -171,25 +171,25 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with mandatory generic input type`() {
+    suspend fun `query with mandatory generic input type`() {
         val map = execute("""{actorsByTags(tags: ["1", "2", "3"]){name}}""")
         assertNoErrors(map)
     }
 
     @Test
-    fun `query with optional generic input type`() {
+    suspend fun `query with optional generic input type`() {
         val map = execute("{actorsByTagsOptional{name}}")
         assertNoErrors(map)
     }
 
     @Test
-    fun `query with nullable generic input type`() {
+    suspend fun `query with nullable generic input type`() {
         val map = execute("{actorsByTagsNullable{name}}")
         assertNoErrors(map)
     }
 
     @Test
-    fun `query with transformed property`() {
+    suspend fun `query with transformed property`() {
         val map = execute("{scenario{id, content(uppercase: false)}}")
         map.extract<String>("data/scenario/content") shouldBe "Very long scenario"
 
@@ -198,7 +198,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with invalid field arguments`() {
+    suspend fun `query with invalid field arguments`() {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{scenario{id(uppercase: true), content}}")
         }
@@ -209,7 +209,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with external fragment`() {
+    suspend fun `query with external fragment`() {
         val map = execute("{film{title, ...dir }} fragment dir on Film {director{name, age}}")
         assertNoErrors(map)
         map.extract<String>("data/film/title") shouldBe prestige.title
@@ -218,7 +218,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with nested external fragment`() {
+    suspend fun `query with nested external fragment`() {
         val map = execute(
             """
             {
@@ -253,7 +253,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with two nested external fragments`() {
+    suspend fun `query with two nested external fragments`() {
         val map = execute(
             """
             {
@@ -292,7 +292,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with two fragments`() {
+    suspend fun `query with two fragments`() {
         val map = execute(
             """
             {
@@ -321,7 +321,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with two inline fragments`() {
+    suspend fun `query with two inline fragments`() {
         val map = execute(
             """
             {
@@ -339,7 +339,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with typename and other property`() {
+    suspend fun `query with typename and other property`() {
         data class FooChild(val barChild: String)
         data class Foo(val bar: String, val child: FooChild?)
 
@@ -349,7 +349,7 @@ class QueryTest : BaseSchemaTest() {
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 foo { bar __typename }
@@ -359,7 +359,7 @@ class QueryTest : BaseSchemaTest() {
             {"data":{"foo":{"bar":"bar","__typename":"Foo"}}}
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 foo { __typename bar }
@@ -369,7 +369,7 @@ class QueryTest : BaseSchemaTest() {
             {"data":{"foo":{"__typename":"Foo","bar":"bar"}}}
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 foo { child { __typename barChild } }
@@ -379,7 +379,7 @@ class QueryTest : BaseSchemaTest() {
             {"data":{"foo":{"child":{"__typename":"FooChild","barChild":"barChild"}}}}
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 foo { child { barChild __typename } }
@@ -389,7 +389,7 @@ class QueryTest : BaseSchemaTest() {
             {"data":{"foo":{"child":{"barChild":"barChild","__typename":"FooChild"}}}}
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 foo { __typename child { barChild __typename } }
@@ -399,7 +399,7 @@ class QueryTest : BaseSchemaTest() {
             {"data":{"foo":{"__typename":"Foo","child":{"barChild":"barChild","__typename":"FooChild"}}}}
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 foo { child { barChild } __typename }
@@ -411,7 +411,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with mixed selections`() {
+    suspend fun `query with mixed selections`() {
         val map = execute(
             """
             {
@@ -436,7 +436,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with missing fragment type`() {
+    suspend fun `query with missing fragment type`() {
         val exception = shouldThrowExactly<ValidationException> {
             execute(
                 """
@@ -457,7 +457,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with missing named fragment type`() {
+    suspend fun `query with missing named fragment type`() {
         val exception = shouldThrowExactly<ValidationException> {
             execute(
                 """
@@ -476,7 +476,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with missing selection set`() {
+    suspend fun `query with missing selection set`() {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{film}")
         }
@@ -489,7 +489,7 @@ class QueryTest : BaseSchemaTest() {
     data class SampleNode(val id: Int, val name: String, val fields: List<String>? = null)
 
     @Test
-    fun `access to execution node`() {
+    suspend fun `access to execution node`() {
         val result = defaultSchema {
             query("root") {
                 resolver { node: Execution.Node ->
@@ -505,7 +505,7 @@ class QueryTest : BaseSchemaTest() {
                     }
                 }
             }
-        }.executeBlocking(
+        }.execute(
             """
             {
                 root {
@@ -532,14 +532,14 @@ class QueryTest : BaseSchemaTest() {
 
     // cf. https://spec.graphql.org/October2021/#example-77852
     @Test
-    fun `multiple selection sets for the same object should be merged on top level`() {
+    suspend fun `multiple selection sets for the same object should be merged on top level`() {
         data class Person(val firstName: String, val lastName: String)
 
         val response = defaultSchema {
             query("me") {
                 resolver { -> Person("John", "Doe") }
             }
-        }.executeBlocking(
+        }.execute(
             """
             {
                 me {
@@ -557,7 +557,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `multiple selection sets for the same object should be merged on object level`() {
+    suspend fun `multiple selection sets for the same object should be merged on object level`() {
         data class Person(val firstName: String, val lastName: String)
         data class PersonWrapper(val person: Person)
 
@@ -565,7 +565,7 @@ class QueryTest : BaseSchemaTest() {
             query("me") {
                 resolver { -> PersonWrapper(Person("John", "Doe")) }
             }
-        }.executeBlocking(
+        }.execute(
             """
             {
                 me {
@@ -585,7 +585,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `multiple complex selection sets for the same object should be merged on top level`() {
+    suspend fun `multiple complex selection sets for the same object should be merged on top level`() {
         data class Address(val zipCode: String, val street: String, val city: String, val country: String)
         data class Person(val firstName: String, val lastName: String, val birthDate: String, val address: Address)
 
@@ -593,7 +593,7 @@ class QueryTest : BaseSchemaTest() {
             query("me") {
                 resolver { -> Person("John", "Doe", "1.1.1970", Address("12345", "Main Street", "SomeCity", "SomeCountry")) }
             }
-        }.executeBlocking(
+        }.execute(
             """
             {
                 me {

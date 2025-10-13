@@ -22,7 +22,7 @@ import java.time.Instant
 class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
-    fun `query union property`() {
+    suspend fun `query union property`() {
         val map = execute(
             "{actors{name, favourite{ ... on Actor {name}, ... on Director {name age}, ... on Scenario{content(uppercase: false)}}}}",
             null
@@ -39,7 +39,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query union property with external fragment`() {
+    suspend fun `query union property with external fragment`() {
         val map = execute(
             "{actors{name, favourite{ ...actor, ...director, ...scenario }}}" +
                 "fragment actor on Actor {name}" +
@@ -58,14 +58,14 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query union property with invalid selection set`() {
+    suspend fun `query union property with invalid selection set`() {
         expect<ValidationException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]") {
             execute("{actors{name, favourite{ name }}}")
         }
     }
 
     @Test
-    fun `a union type should allow requesting __typename`() {
+    suspend fun `a union type should allow requesting __typename`() {
         val result = execute(
             """{
                 actors {
@@ -92,7 +92,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `a union type should allow requesting __typename only`() {
+    suspend fun `a union type should allow requesting __typename only`() {
         val result = execute(
             """{
                 actors {
@@ -111,7 +111,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `a union type should require a selection for all potential types`() {
+    suspend fun `a union type should require a selection for all potential types`() {
         expect<ValidationException>("Missing selection set for type Scenario") {
             execute(
                 """{
@@ -128,7 +128,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `Nullable union types should be valid`() {
+    suspend fun `Nullable union types should be valid`() {
         val result = execute(
             """{
               actors(all: true) {
@@ -149,7 +149,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `Non nullable union types should fail`() {
+    suspend fun `Non nullable union types should fail`() {
         expect<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was null") {
             execute(
                 """{
@@ -227,7 +227,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Suppress("UNUSED_ANONYMOUS_PARAMETER") // "ctx" must stay as-is because resolver cannot handle unnamed parameter
     @Test
-    fun `automatic unions out of sealed classes`() {
+    suspend fun `automatic unions out of sealed classes`() {
         defaultSchema {
             unionType<AAA>()
 
@@ -241,7 +241,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 }
             }
         }
-            .executeBlocking(
+            .execute(
                 """
                 {
                     f: returnUnion(isB: false) {
@@ -267,7 +267,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `union types in lists`() {
+    suspend fun `union types in lists`() {
         defaultSchema {
             unionType<WithFields>()
 
@@ -276,7 +276,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                     WithFields.Value1(1, node.getFields())
                 }
             }
-        }.executeBlocking(
+        }.execute(
             """
             {
                 returnUnion {
@@ -293,7 +293,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `union types with custom name def resolver`() {
+    suspend fun `union types with custom name def resolver`() {
         defaultSchema {
             unionType<WithFields> {
                 subTypeBlock = {
@@ -309,7 +309,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                     )
                 }
             }
-        }.executeBlocking(
+        }.execute(
             """
             {
                 returnUnion {
@@ -346,7 +346,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     // https://github.com/aPureBase/KGraphQL/issues/105
     @Test
-    fun `sealed classes unions should allow requesting __typename`() {
+    suspend fun `sealed classes unions should allow requesting __typename`() {
         val schema = KGraphQL.schema {
             longScalar<Instant> {
                 serialize = { it.toEpochMilli() }
@@ -357,7 +357,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                 resolver { -> ContactStatus.Onboarded(userId = "someUserId") }
             }
         }
-        val results = schema.executeBlocking(
+        val results = schema.execute(
             """
             {
                 contactStatus {
@@ -384,7 +384,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     // https://github.com/aPureBase/KGraphQL/issues/105
     @Test
-    fun `inner sealed classes unions should allow requesting __typename`() {
+    suspend fun `inner sealed classes unions should allow requesting __typename`() {
         val schema = KGraphQL.schema {
             longScalar<Instant> {
                 serialize = { it.toEpochMilli() }
@@ -396,7 +396,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
         }
 
-        val results = schema.executeBlocking(
+        val results = schema.execute(
             """
             {
                 carrier {
@@ -433,7 +433,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     // https://github.com/aPureBase/KGraphQL/issues/109
     @Test
-    fun `list of union type should work as expected`() {
+    suspend fun `list of union type should work as expected`() {
         val schema = KGraphQL.schema {
             unionType<QualificationItem>()
 
@@ -444,7 +444,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
         }
 
-        val result = schema.executeBlocking(
+        val result = schema.execute(
             """
                 query IntrospectionQuery {
                     __schema {

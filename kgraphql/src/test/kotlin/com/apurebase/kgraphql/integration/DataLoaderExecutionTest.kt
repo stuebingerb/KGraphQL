@@ -69,9 +69,9 @@ class DataLoaderExecutionTest {
     }
 
     @Test
-    fun `stress test with dataloaders and custom supervisor jobs`() {
+    suspend fun `stress test with dataloaders and custom supervisor jobs`() {
         val result = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 """
                  {
                      data1: items(amount: 250) { ...Fields }

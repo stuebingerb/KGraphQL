@@ -11,19 +11,19 @@ import org.junit.jupiter.api.assertThrows
 class DirectivesSpecificationTest : BaseSchemaTest() {
 
     @Test
-    fun `query with @include directive on field`() {
+    suspend fun `query with @include directive on field`() {
         val map = execute("{film{title, year @include(if: false)}}")
         assertThrows<IllegalArgumentException> { map.extract("data/film/year") }
     }
 
     @Test
-    fun `query with @skip directive on field`() {
+    suspend fun `query with @skip directive on field`() {
         val map = execute("{film{title, year @skip(if: true)}}")
         assertThrows<IllegalArgumentException> { map.extract("data/film/year") }
     }
 
     @Test
-    fun `query with @include and @skip directive on field`() {
+    suspend fun `query with @include and @skip directive on field`() {
         val mapBothSkip = execute("{film{title, year @include(if: false) @skip(if: true)}}")
         assertThrows<IllegalArgumentException> { mapBothSkip.extract("data/film/year") }
 
@@ -38,7 +38,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with @include and @skip directive on field object`() {
+    suspend fun `query with @include and @skip directive on field object`() {
         val mapWithSkip = execute("{ number(big: true), film @skip(if: true) { title } }")
         assertThrows<IllegalArgumentException> { mapWithSkip.extract("data/film") }
 
@@ -53,7 +53,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `mutation with @include and @skip directive on field object`() {
+    suspend fun `mutation with @include and @skip directive on field object`() {
         val mapWithSkip = execute("mutation { createActor(name: \"actor\", age: 42) @skip(if: true) { name age } }")
         assertThrows<IllegalArgumentException> { mapWithSkip.extract("data/createActor") }
 
@@ -70,7 +70,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with @include directive on field with variable`() {
+    suspend fun `query with @include directive on field with variable`() {
         val map = execute(
             "query film (\$include: Boolean!) {film{title, year @include(if: \$include)}}",
             "{\"include\":\"false\"}"

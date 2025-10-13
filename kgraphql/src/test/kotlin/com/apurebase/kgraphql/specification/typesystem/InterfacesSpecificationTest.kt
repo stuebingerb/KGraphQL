@@ -23,21 +23,21 @@ class InterfacesSpecificationTest {
     }
 
     @Test
-    fun `Interfaces represent a list of named fields and their arguments`() {
-        val map = deserialize(schema.executeBlocking("{simple{exe}}"))
+    suspend fun `Interfaces represent a list of named fields and their arguments`() {
+        val map = deserialize(schema.execute("{simple{exe}}"))
         map.extract<String>("data/simple/exe") shouldBe "EXE"
     }
 
     @Test
-    fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`() {
+    suspend fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`() {
         expect<ValidationException>("Property stuff on SimpleInterface does not exist") {
-            schema.executeBlocking("{simple{exe, stuff}}")
+            schema.execute("{simple{exe, stuff}}")
         }
     }
 
     @Test
-    fun `Query for fields of interface implementation can be done only by fragments`() {
-        val map = deserialize(schema.executeBlocking("{simple{exe ... on Simple { stuff }}}"))
+    suspend fun `Query for fields of interface implementation can be done only by fragments`() {
+        val map = deserialize(schema.execute("{simple{exe ... on Simple { stuff }}}"))
         map.extract<String>("data/simple/stuff") shouldBe "CMD"
     }
 }

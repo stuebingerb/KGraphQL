@@ -10,7 +10,7 @@ class ObjectTest {
     data class Person(val name: String, val age: Int)
 
     @Test
-    fun `property name should default to Kotlin name`() {
+    suspend fun `property name should default to Kotlin name`() {
         val schema = KGraphQL.schema {
             query("getPerson") {
                 resolver { name: String -> Person(name = name, age = 42) }
@@ -30,7 +30,7 @@ class ObjectTest {
             
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             query {
               getPerson(name: "foo") { name age }
@@ -42,7 +42,7 @@ class ObjectTest {
     }
 
     @Test
-    fun `property name should be configurable`() {
+    suspend fun `property name should be configurable`() {
         val schema = KGraphQL.schema {
             type<Person> {
                 property(Person::age) {
@@ -71,7 +71,7 @@ class ObjectTest {
             
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             query {
               getPerson(name: "foo") { newName newAge }

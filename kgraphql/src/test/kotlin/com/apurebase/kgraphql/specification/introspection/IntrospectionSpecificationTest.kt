@@ -34,31 +34,31 @@ class IntrospectionSpecificationTest {
     data class Data(val string: String)
 
     @Test
-    fun `__typename field can be used to obtain type of object`() {
+    suspend fun `__typename field can be used to obtain type of object`() {
         val schema = defaultSchema {
             query("sample") {
                 resolver { -> Data("Ronaldingo") }
             }
         }
 
-        val response = deserialize(schema.executeBlocking("{sample{string, __typename}}"))
+        val response = deserialize(schema.execute("{sample{string, __typename}}"))
         response.extract<String>("data/sample/__typename") shouldBe "Data"
     }
 
     @Test
-    fun `__typename field can be used to obtain type of query`() {
+    suspend fun `__typename field can be used to obtain type of query`() {
         val schema = defaultSchema {
             query("dummy") {
                 resolver { -> "dummy" }
             }
         }
 
-        val response = deserialize(schema.executeBlocking("{__typename}"))
+        val response = deserialize(schema.execute("{__typename}"))
         response.extract<String>("data/__typename") shouldBe "Query"
     }
 
     @Test
-    fun `__typename field can be used to obtain type of mutation`() {
+    suspend fun `__typename field can be used to obtain type of mutation`() {
         val schema = defaultSchema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -68,12 +68,12 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.executeBlocking("mutation {__typename}"))
+        val response = deserialize(schema.execute("mutation {__typename}"))
         response.extract<String>("data/__typename") shouldBe "Mutation"
     }
 
     @Test
-    fun `__typename field cannot be used on scalars`() {
+    suspend fun `__typename field cannot be used on scalars`() {
         val schema = defaultSchema {
             query("sample") {
                 resolver { -> Data("Ronaldingo") }
@@ -81,7 +81,7 @@ class IntrospectionSpecificationTest {
         }
 
         expect<ValidationException>("Property __typename on String does not exist") {
-            schema.executeBlocking("{sample{string{__typename}}}")
+            schema.execute("{sample{string{__typename}}}")
         }
     }
 
@@ -92,7 +92,7 @@ class IntrospectionSpecificationTest {
     data class EnumData(val enum: SampleEnum)
 
     @Test
-    fun `__typename field cannot be used on enums`() {
+    suspend fun `__typename field cannot be used on enums`() {
         val schema = defaultSchema {
             query("sample") {
                 resolver { -> EnumData(SampleEnum.VALUE) }
@@ -100,7 +100,7 @@ class IntrospectionSpecificationTest {
         }
 
         expect<ValidationException>("Property __typename on SampleEnum does not exist") {
-            schema.executeBlocking("{sample{enum{__typename}}}")
+            schema.execute("{sample{enum{__typename}}}")
         }
     }
 
@@ -109,7 +109,7 @@ class IntrospectionSpecificationTest {
     data class Union2(val two: String)
 
     @Test
-    fun `__typename field can be used to obtain type of union member in runtime`() {
+    suspend fun `__typename field can be used to obtain type of union member in runtime`() {
         val schema = defaultSchema {
             type<Data> {
                 unionProperty("union") {
@@ -134,7 +134,7 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 """
                 {
                   data(input: "") {
@@ -167,26 +167,26 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    fun `field __schema is accessible from the type of the root of a query operation`() {
+    suspend fun `field __schema is accessible from the type of the root of a query operation`() {
         val schema = defaultSchema {
             query("data") {
                 resolver<String> { "DADA" }
             }
         }
 
-        val response = deserialize(schema.executeBlocking("{__schema{queryType{fields{name}}}}"))
+        val response = deserialize(schema.execute("{__schema{queryType{fields{name}}}}"))
         response.extract<String>("data/__schema/queryType/fields[0]/name") shouldBe "data"
     }
 
     @Test
-    fun `field __types is accessible from the type of the root of a query operation`() {
+    suspend fun `field __types is accessible from the type of the root of a query operation`() {
         val schema = defaultSchema {
             query("data") {
                 resolver<String> { "DADA" }
             }
         }
 
-        val response = deserialize(schema.executeBlocking("{__type(name: \"String\"){kind, name, description}}"))
+        val response = deserialize(schema.execute("{__type(name: \"String\"){kind, name, description}}"))
         response.extract<String>("data/__type/name") shouldBe "String"
         response.extract<String>("data/__type/kind") shouldBe "SCALAR"
     }
@@ -238,7 +238,7 @@ class IntrospectionSpecificationTest {
     class Face(override val value: String, override val value2: Boolean = false) : InterInter
 
     @Test
-    fun `__typename returns actual type of object`() {
+    suspend fun `__typename returns actual type of object`() {
         val schema = defaultSchema {
             query("interface") {
                 resolver { ->
@@ -251,7 +251,7 @@ class IntrospectionSpecificationTest {
             type<Face>()
         }
 
-        val response = deserialize(schema.executeBlocking("{interface{value, __typename ... on Face{value2}}}"))
+        val response = deserialize(schema.execute("{interface{value, __typename ... on Face{value2}}}"))
         response.extract<String>("data/interface/__typename") shouldBe "Face"
         response.extract<Boolean>("data/interface/value2") shouldBe false
     }
@@ -320,14 +320,14 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    fun `introspection field __typename must not leak into schema introspection`() {
+    suspend fun `introspection field __typename must not leak into schema introspection`() {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
             }
         }
 
-        val map = deserialize(schema.executeBlocking(Introspection.query()))
+        val map = deserialize(schema.execute(Introspection.query()))
         val fields = map.extract<List<Map<String, *>>>("data/__schema/types[0]/fields")
 
         fields.forAll { field ->
@@ -336,14 +336,14 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    fun `introspection types should not contain duplicated float type for kotlin Double and Float`() {
+    suspend fun `introspection types should not contain duplicated float type for kotlin Double and Float`() {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
             }
         }
 
-        val map = deserialize(schema.executeBlocking(Introspection.query()))
+        val map = deserialize(schema.execute(Introspection.query()))
         val types = map.extract<List<Map<Any, *>>>("data/__schema/types")
 
         val typenames = types.map { type -> type["name"] as String }
@@ -351,15 +351,15 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    fun `introspection shouldn't contain LookupSchema nor SchemaProxy`() {
-        unionSchema.executeBlocking(Introspection.query()).run {
+    suspend fun `introspection shouldn't contain LookupSchema nor SchemaProxy`() {
+        unionSchema.execute(Introspection.query()).run {
             this shouldNotContain "LookupSchema"
             this shouldNotContain "SchemaProxy"
         }
     }
 
     @Test
-    fun `__Directive introspection should return all built-in directives as expected`() {
+    suspend fun `__Directive introspection should return all built-in directives as expected`() {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
@@ -367,7 +367,7 @@ class IntrospectionSpecificationTest {
         }
 
         val response = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 "{__schema{directives{name isRepeatable args{name type{name kind ofType{name kind}}}}}}"
             )
         )
@@ -402,14 +402,14 @@ class IntrospectionSpecificationTest {
      * Not part of spec, but assumption of many graphql tools
      */
     @Test
-    fun `query type should have non null, empty interface list`() {
+    suspend fun `query type should have non null, empty interface list`() {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
             }
         }
 
-        val response = deserialize(schema.executeBlocking("{__schema{queryType{interfaces{name}}}}"))
+        val response = deserialize(schema.execute("{__schema{queryType{interfaces{name}}}}"))
         response.extract<List<*>>("data/__schema/queryType/interfaces").shouldBeEmpty()
     }
 
@@ -417,7 +417,7 @@ class IntrospectionSpecificationTest {
      * Not part of spec, but assumption of many graphql tools
      */
     @Test
-    fun `__Directive introspection type should have onField, onFragment, onOperation fields`() {
+    suspend fun `__Directive introspection type should have onField, onFragment, onOperation fields`() {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
@@ -425,7 +425,7 @@ class IntrospectionSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__schema{directives{name, onField, onFragment, onOperation}}}"))
+            deserialize(schema.execute("{__schema{directives{name, onField, onFragment, onOperation}}}"))
         val directives = response.extract<List<Map<String, *>>>("data/__schema/directives")
         directives.forAll { directive ->
             directive["onField"] shouldNotBe null
@@ -435,7 +435,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    fun `all available SpecLevels of the introspection query should return without errors`() {
+    suspend fun `all available SpecLevels of the introspection query should return without errors`() {
         Introspection.SpecLevel.entries.forEach { _ ->
             val schema = defaultSchema {
                 query("sample") {
@@ -443,7 +443,7 @@ class IntrospectionSpecificationTest {
                 }
             }
 
-            val response = deserialize(schema.executeBlocking(Introspection.query()))
+            val response = deserialize(schema.execute(Introspection.query()))
             assertNoErrors(response)
         }
     }

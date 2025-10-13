@@ -38,7 +38,7 @@ class FragmentsSpecificationTest {
     private val baseTestSchema = object : BaseSchemaTest() {}
 
     @Test
-    fun `fragment's fields are added to the query at the same level as the fragment invocation`() {
+    suspend fun `fragment's fields are added to the query at the same level as the fragment invocation`() {
         val expected = mapOf(
             "data" to mapOf(
                 "actor" to mapOf(
@@ -56,7 +56,7 @@ class FragmentsSpecificationTest {
     }
 
     @Test
-    fun `fragments can be nested`() {
+    suspend fun `fragments can be nested`() {
         val expected = mapOf(
             "data" to mapOf(
                 "actor" to mapOf(
@@ -74,9 +74,9 @@ class FragmentsSpecificationTest {
     }
 
     @Test
-    fun `inline fragments may also be used to apply a directive to a group of fields`() {
+    suspend fun `inline fragments may also be used to apply a directive to a group of fields`() {
         val response = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 "query (\$expandedInfo : Boolean!){actor{actualActor{name ... @include(if: \$expandedInfo){ age }}}}",
                 "{\"expandedInfo\":false}"
             )
@@ -87,7 +87,7 @@ class FragmentsSpecificationTest {
     }
 
     @Test
-    fun `query with inline fragment with type condition`() {
+    suspend fun `query with inline fragment with type condition`() {
         val map = baseTestSchema.execute("{people{name, age, ... on Actor {isOld} ... on Director {favActors{name}}}}")
         assertNoErrors(map)
         for (i in map.extract<List<*>>("data/people").indices) {
@@ -107,7 +107,7 @@ class FragmentsSpecificationTest {
     }
 
     @Test
-    fun `query with external fragment with type condition`() {
+    suspend fun `query with external fragment with type condition`() {
         val map =
             baseTestSchema.execute("{people{name, age ...act ...dir}} fragment act on Actor {isOld} fragment dir on Director {favActors{name}}")
         assertNoErrors(map)
@@ -128,7 +128,7 @@ class FragmentsSpecificationTest {
     }
 
     @Test
-    fun `multiple nested fragments are handled`() {
+    suspend fun `multiple nested fragments are handled`() {
         val map = baseTestSchema.execute(Introspection.query())
         val fields = map.extract<List<Map<String, *>>>("data/__schema/types[0]/fields")
 
@@ -138,7 +138,7 @@ class FragmentsSpecificationTest {
     }
 
     @Test
-    fun `queries with recursive fragments are denied`() {
+    suspend fun `queries with recursive fragments are denied`() {
         expect<ValidationException>("Fragment spread circular references are not allowed") {
             baseTestSchema.execute(
                 """
@@ -164,7 +164,7 @@ class FragmentsSpecificationTest {
     }
 
     @Test
-    fun `queries with duplicated fragments are denied`() {
+    suspend fun `queries with duplicated fragments are denied`() {
         expect<ValidationException>("There can be only one fragment named film_title.") {
             baseTestSchema.execute(
                 """
@@ -197,7 +197,7 @@ class FragmentsSpecificationTest {
     // https://github.com/aPureBase/KGraphQL/issues/141
     // https://github.com/stuebingerb/KGraphQL/issues/130
     @Test
-    fun `fragments on union types should work`() {
+    suspend fun `fragments on union types should work`() {
         val schema = KGraphQL.schema {
             unionType<TopUnion>()
 
@@ -212,7 +212,7 @@ class FragmentsSpecificationTest {
             }
         }
 
-        val nameResult = schema.executeBlocking(
+        val nameResult = schema.execute(
             """
             {
                 unions(isOne: true) {
@@ -228,7 +228,7 @@ class FragmentsSpecificationTest {
         ).deserialize()
         nameResult.extract<List<String>>("data/unions/names") shouldBe listOf("name1", "name2")
 
-        val numberResult = schema.executeBlocking(
+        val numberResult = schema.execute(
             """
             {
                 unions(isOne: false) {
@@ -267,8 +267,8 @@ class FragmentsSpecificationTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/197
     @Test
-    fun `executor should merge fragment declaration and field declaration`() {
-        val response = testedSchema.executeBlocking(
+    suspend fun `executor should merge fragment declaration and field declaration`() {
+        val response = testedSchema.execute(
             """
             { 
                 outer { 
@@ -306,8 +306,8 @@ class FragmentsSpecificationTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/197
     @Test
-    fun `executor should merge several fragment declarations and field declaration`() {
-        val response = testedSchema.executeBlocking(
+    suspend fun `executor should merge several fragment declarations and field declaration`() {
+        val response = testedSchema.execute(
             """
             { 
                 outer { 
@@ -348,7 +348,7 @@ class FragmentsSpecificationTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/189
     @Test
-    fun `queries with missing fragments should return proper error message`() {
+    suspend fun `queries with missing fragments should return proper error message`() {
         expect<ValidationException>("Fragment film_title_misspelled not found") {
             baseTestSchema.execute(
                 """

@@ -11,14 +11,14 @@ import org.junit.jupiter.api.Test
 class EnumTest : BaseSchemaTest() {
 
     @Test
-    fun `query with enum field`() {
+    suspend fun `query with enum field`() {
         val map = execute("{film{type}}")
         assertNoErrors(map)
         map.extract<String>("data/film/type") shouldBe "FULL_LENGTH"
     }
 
     @Test
-    fun `query with enum argument`() {
+    suspend fun `query with enum argument`() {
         val map = execute("{ films: filmsByType(type: FULL_LENGTH){title, type}}")
         assertNoErrors(map)
         map.extract<String>("data/films[0]/type") shouldBe "FULL_LENGTH"
@@ -26,7 +26,7 @@ class EnumTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with enum array variables`() {
+    suspend fun `query with enum array variables`() {
         val schema = defaultSchema {
             configure {
                 wrapErrors = false
@@ -39,7 +39,7 @@ class EnumTest : BaseSchemaTest() {
             }
         }
 
-        val map = schema.executeBlocking(
+        val map = schema.execute(
             request = "query Search(${'$'}types: [FilmType!]!) { search(types: ${'$'}types)}",
             variables = "{\"types\":[\"FULL_LENGTH\"]}"
         ).deserialize()

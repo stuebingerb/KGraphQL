@@ -14,7 +14,7 @@ class MutationTest : BaseSchemaTest() {
     private val testActor = Actor("Michael Caine", 72)
 
     @Test
-    fun `simple mutation multiple fields`() {
+    suspend fun `simple mutation multiple fields`() {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){name, age}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf(
@@ -24,63 +24,63 @@ class MutationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `simple mutation single field`() {
+    suspend fun `simple mutation single field`() {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){name}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("name" to testActor.name)
     }
 
     @Test
-    fun `simple mutation single field 2`() {
+    suspend fun `simple mutation single field 2`() {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("age" to testActor.age)
     }
 
     @Test
-    fun `invalid mutation name`() {
+    suspend fun `invalid mutation name`() {
         expect<ValidationException>("Property createBanana on Mutation does not exist") {
             execute("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         }
     }
 
     @Test
-    fun `invalid argument type`() {
+    suspend fun `invalid argument type`() {
         expect<InvalidInputValueException>("Cannot coerce \"fwfwf\" to numeric constant") {
             execute("mutation {createActor(name: \"${testActor.name}\", age: \"fwfwf\"){age}}")
         }
     }
 
     @Test
-    fun `invalid arguments number`() {
+    suspend fun `invalid arguments number`() {
         expect<ValidationException>("createActor does support arguments [name, age]. Found arguments [name, age, bananan]") {
             execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 
     @Test
-    fun `invalid arguments number with NotIntrospected class`() {
+    suspend fun `invalid arguments number with NotIntrospected class`() {
         expect<ValidationException>("createActorWithContext does support arguments [name, age]. Found arguments [name, age, bananan]") {
             execute("mutation {createActorWithContext(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 
     @Test
-    fun `mutation with alias`() {
+    suspend fun `mutation with alias`() {
         val map = execute("mutation {caine : createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/caine") shouldBe mapOf<String, Any>("age" to testActor.age)
     }
 
     @Test
-    fun `mutation with field alias`() {
+    suspend fun `mutation with field alias`() {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){howOld: age}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("howOld" to testActor.age)
     }
 
     @Test
-    fun `simple mutation with aliased input type`() {
+    suspend fun `simple mutation with aliased input type`() {
         val map = execute(
             "mutation(\$newActor: ActorInput!) { createActorWithAliasedInputType(newActor: \$newActor) {name}}",
             variables = "{\"newActor\": {\"name\": \"${testActor.name}\", \"age\": ${testActor.age}}}"

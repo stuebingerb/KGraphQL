@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource
 class SchemaConfigurationTest {
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    fun `execution result should be the same with and without caching`(withCaching: Boolean) {
+    suspend fun `execution result should be the same with and without caching`(withCaching: Boolean) {
         val schema = schema {
             configure {
                 useCachingDocumentParser = withCaching
@@ -21,14 +21,14 @@ class SchemaConfigurationTest {
             }
         }
 
-        schema.executeBlocking("{ hello }") shouldBe """
+        schema.execute("{ hello }") shouldBe """
             {"data":{"hello":"world"}}
         """.trimIndent()
     }
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    fun `execution result should use pretty printing if configured`(withPrettyPrinter: Boolean) {
+    suspend fun `execution result should use pretty printing if configured`(withPrettyPrinter: Boolean) {
         val schema = schema {
             configure {
                 useDefaultPrettyPrinter = withPrettyPrinter
@@ -52,12 +52,12 @@ class SchemaConfigurationTest {
             """.trimIndent()
         }
 
-        schema.executeBlocking("{ hello }") shouldBe expected
+        schema.execute("{ hello }") shouldBe expected
     }
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    fun `introspections should be allowed depending on configuration`(introspectionAllowed: Boolean) {
+    suspend fun `introspections should be allowed depending on configuration`(introspectionAllowed: Boolean) {
         val schema = defaultSchema {
             configure {
                 introspection = introspectionAllowed
@@ -68,12 +68,12 @@ class SchemaConfigurationTest {
         }
 
         if (introspectionAllowed) {
-            schema.executeBlocking("{ __schema { queryType { name } } }") shouldBe """
+            schema.execute("{ __schema { queryType { name } } }") shouldBe """
                 {"data":{"__schema":{"queryType":{"name":"Query"}}}}
             """.trimIndent()
         } else {
             expect<ValidationException>("GraphQL introspection is not allowed") {
-                schema.executeBlocking("{ __schema { queryType { name } } }")
+                schema.execute("{ __schema { queryType { name } } }")
             }
         }
     }

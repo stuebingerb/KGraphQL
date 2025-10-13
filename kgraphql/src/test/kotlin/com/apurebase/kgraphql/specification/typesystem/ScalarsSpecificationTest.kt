@@ -19,7 +19,7 @@ import java.util.UUID
 class ScalarsSpecificationTest {
 
     @Test
-    fun `built-in scalars should be available by default`() {
+    suspend fun `built-in scalars should be available by default`() {
         val schema = KGraphQL.schema {
             query("int") {
                 resolver<Int> { 1 }
@@ -39,7 +39,7 @@ class ScalarsSpecificationTest {
             // TODO: ID, cf. https://github.com/stuebingerb/KGraphQL/issues/83
         }
 
-        val response = deserialize(schema.executeBlocking("{ int float double string boolean }"))
+        val response = deserialize(schema.execute("{ int float double string boolean }"))
         response.extract<Int>("data/int") shouldBe 1
         response.extract<Float>("data/float") shouldBe 2.0
         response.extract<Double>("data/double") shouldBe 3.0
@@ -67,7 +67,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    fun `extended scalars should be available if included`() {
+    suspend fun `extended scalars should be available if included`() {
         val schema = KGraphQL.schema {
             extendedScalars()
             query("long") {
@@ -78,7 +78,7 @@ class ScalarsSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.executeBlocking("{ long short }"))
+        val response = deserialize(schema.execute("{ long short }"))
         response.extract<Long>("data/long") shouldBe 9223372036854775807L
         response.extract<Int>("data/short") shouldBe 2
     }
@@ -86,7 +86,7 @@ class ScalarsSpecificationTest {
     data class Person(val uuid: UUID, val name: String)
 
     @Test
-    fun `type systems can add additional scalars with semantic meaning`() {
+    suspend fun `type systems can add additional scalars with semantic meaning`() {
         val uuid = UUID.randomUUID()
         val testedSchema = KGraphQL.schema {
             stringScalar<UUID> {
@@ -106,11 +106,11 @@ class ScalarsSpecificationTest {
             }
         }
 
-        val queryResponse = deserialize(testedSchema.executeBlocking("{ person{ uuid } }"))
+        val queryResponse = deserialize(testedSchema.execute("{ person{ uuid } }"))
         queryResponse.extract<String>("data/person/uuid") shouldBe uuid.toString()
 
         val mutationResponse = deserialize(
-            testedSchema.executeBlocking(
+            testedSchema.execute(
                 "mutation { createPerson(uuid: \"$uuid\", name: \"John\"){ uuid name } }"
             )
         )
@@ -119,7 +119,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    fun `integer value represents a value grater than 2^-31 and less or equal to 2^31`() {
+    suspend fun `integer value represents a value grater than 2^-31 and less or equal to 2^31`() {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -130,12 +130,12 @@ class ScalarsSpecificationTest {
         }
 
         expect<InvalidInputValueException>("Cannot coerce to type of Int as '${Integer.MAX_VALUE.toLong() + 2L}' is greater than (2^-31)-1") {
-            schema.executeBlocking("mutation { Int(int: ${Integer.MAX_VALUE.toLong() + 2L}) }")
+            schema.execute("mutation { Int(int: ${Integer.MAX_VALUE.toLong() + 2L}) }")
         }
     }
 
     @Test
-    fun `when float is expected as an input type, both integer and float input values are accepted`() {
+    suspend fun `when float is expected as an input type, both integer and float input values are accepted`() {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -144,12 +144,12 @@ class ScalarsSpecificationTest {
                 resolver { float: Float -> float }
             }
         }
-        val map = deserialize(schema.executeBlocking("mutation { float(float: 1) }"))
+        val map = deserialize(schema.execute("mutation { float(float: 1) }"))
         map.extract<Double>("data/float") shouldBe 1.0
     }
 
     @Test
-    fun `server can declare custom UUID type`() {
+    suspend fun `server can declare custom UUID type`() {
         val testedSchema = KGraphQL.schema {
             stringScalar<UUID> {
                 name = "UUID"
@@ -164,12 +164,12 @@ class ScalarsSpecificationTest {
 
         val randomUUID = UUID.randomUUID()
         val map =
-            deserialize(testedSchema.executeBlocking("query(\$id: UUID! = \"$randomUUID\"){ personById(id: \$id) { uuid, name } }"))
+            deserialize(testedSchema.execute("query(\$id: UUID! = \"$randomUUID\"){ personById(id: \$id) { uuid, name } }"))
         map.extract<String>("data/personById/uuid") shouldBe randomUUID.toString()
     }
 
     @Test
-    fun `server can use built-in ID type`() {
+    suspend fun `server can use built-in ID type`() {
         data class IdPerson(val id: ID, val name: String)
 
         val testedSchema = KGraphQL.schema {
@@ -203,63 +203,63 @@ class ScalarsSpecificationTest {
         """.trimIndent()
 
         // UUID
-        testedSchema.executeBlocking("query(\$id: ID! = \"482629b4-1fac-4f0b-b73c-a3f3ad1a8bf3\") { personById(id: \$id) { id, name } }") shouldBe """
+        testedSchema.execute("query(\$id: ID! = \"482629b4-1fac-4f0b-b73c-a3f3ad1a8bf3\") { personById(id: \$id) { id, name } }") shouldBe """
             {"data":{"personById":{"id":"482629b4-1fac-4f0b-b73c-a3f3ad1a8bf3","name":"John Smith"}}}
         """.trimIndent()
 
         // String
-        testedSchema.executeBlocking("query(\$id: ID! = \"4\") { personById(id: \$id) { id, name } }") shouldBe """
+        testedSchema.execute("query(\$id: ID! = \"4\") { personById(id: \$id) { id, name } }") shouldBe """
             {"data":{"personById":{"id":"4","name":"John Smith"}}}
         """.trimIndent()
 
         // Int
-        testedSchema.executeBlocking("query(\$id: ID! = 4) { personById(id: \$id) { id, name } }") shouldBe """
+        testedSchema.execute("query(\$id: ID! = 4) { personById(id: \$id) { id, name } }") shouldBe """
             {"data":{"personById":{"id":"4","name":"John Smith"}}}
         """.trimIndent()
 
         // Negative Int
-        testedSchema.executeBlocking("query(\$id: ID! = -4) { personById(id: \$id) { id, name } }") shouldBe """
+        testedSchema.execute("query(\$id: ID! = -4) { personById(id: \$id) { id, name } }") shouldBe """
             {"data":{"personById":{"id":"-4","name":"John Smith"}}}
         """.trimIndent()
 
         // Long
-        testedSchema.executeBlocking("query(\$id: ID! = 20147483648) { personById(id: \$id) { id, name } }") shouldBe """
+        testedSchema.execute("query(\$id: ID! = 20147483648) { personById(id: \$id) { id, name } }") shouldBe """
             {"data":{"personById":{"id":"20147483648","name":"John Smith"}}}
         """.trimIndent()
 
         // Double (should fail)
         expect<InvalidInputValueException>("Cannot coerce 4.0 to ID") {
-            testedSchema.executeBlocking("query(\$id: ID! = 4.0) { personById(id: \$id) { id, name } }")
+            testedSchema.execute("query(\$id: ID! = 4.0) { personById(id: \$id) { id, name } }")
         }
 
         // Boolean (should fail)
         expect<InvalidInputValueException>("Cannot coerce true to ID") {
-            testedSchema.executeBlocking("query(\$id: ID! = true) { personById(id: \$id) { id, name } }")
+            testedSchema.execute("query(\$id: ID! = true) { personById(id: \$id) { id, name } }")
         }
 
         // List of strings (should fail)
         expect<InvalidInputValueException>("argument '[\"4\", \"5\"]' is not valid value of type ID") {
-            testedSchema.executeBlocking("query(\$id: ID! = [\"4\", \"5\"]) { personById(id: \$id) { id, name } }")
+            testedSchema.execute("query(\$id: ID! = [\"4\", \"5\"]) { personById(id: \$id) { id, name } }")
         }
 
         // Object (should fail)
         expect<InvalidInputValueException>("Property 'value' on 'ID' does not exist") {
-            testedSchema.executeBlocking("query(\$id: ID! = {value: \"4\"}) { personById(id: \$id) { id, name } }")
+            testedSchema.execute("query(\$id: ID! = {value: \"4\"}) { personById(id: \$id) { id, name } }")
         }
 
         // Null (should fail)
         expect<InvalidInputValueException>("argument 'null' is not valid value of type ID") {
-            testedSchema.executeBlocking("query(\$id: ID! = null) { personById(id: \$id) { id, name } }")
+            testedSchema.execute("query(\$id: ID! = null) { personById(id: \$id) { id, name } }")
         }
 
         // Mutation
-        testedSchema.executeBlocking("mutation(\$person: IdPersonInput! = { id:\"4\",name:\"John Smith\" }){ createPerson(person: \$person) { id, name } }") shouldBe """
+        testedSchema.execute("mutation(\$person: IdPersonInput! = { id:\"4\",name:\"John Smith\" }){ createPerson(person: \$person) { id, name } }") shouldBe """
             {"data":{"createPerson":{"id":"4","name":"John Smith"}}}
         """.trimIndent()
     }
 
     @Test
-    fun `for numeric scalars, input string with numeric content must raise a query error indicating an incorrect type`() {
+    suspend fun `for numeric scalars, input string with numeric content must raise a query error indicating an incorrect type`() {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -270,14 +270,14 @@ class ScalarsSpecificationTest {
         }
 
         expect<InvalidInputValueException>("Cannot coerce \"223\" to numeric constant") {
-            schema.executeBlocking("mutation { Int(int: \"223\") }")
+            schema.execute("mutation { Int(int: \"223\") }")
         }
     }
 
     data class Number(val int: Int)
 
     @Test
-    fun `Schema may declare custom int scalar type`() {
+    suspend fun `Schema may declare custom int scalar type`() {
         val schema = KGraphQL.schema {
             intScalar<Number> {
                 deserialize = ::Number
@@ -290,14 +290,14 @@ class ScalarsSpecificationTest {
         }
 
         val value = 3434
-        val response = deserialize(schema.executeBlocking("{ number(number: $value) }"))
+        val response = deserialize(schema.execute("{ number(number: $value) }"))
         response.extract<Int>("data/number") shouldBe value
     }
 
     data class Bool(val boolean: Boolean)
 
     @Test
-    fun `Schema may declare custom boolean scalar type`() {
+    suspend fun `Schema may declare custom boolean scalar type`() {
         val schema = KGraphQL.schema {
             booleanScalar<Bool> {
                 deserialize = ::Bool
@@ -310,7 +310,7 @@ class ScalarsSpecificationTest {
         }
 
         val value = true
-        val response = deserialize(schema.executeBlocking("{ boolean(boolean: $value) }"))
+        val response = deserialize(schema.execute("{ boolean(boolean: $value) }"))
         response.extract<Boolean>("data/boolean") shouldBe value
     }
 
@@ -323,7 +323,7 @@ class ScalarsSpecificationTest {
     data class Multi(val boo: Boo, val str: String, val num: Num)
 
     @Test
-    fun `schema may declare custom double scalar type`() {
+    suspend fun `schema may declare custom double scalar type`() {
         val schema = KGraphQL.schema {
             floatScalar<Dob> {
                 deserialize = ::Dob
@@ -336,12 +336,12 @@ class ScalarsSpecificationTest {
         }
 
         val value = 232.33
-        val response = deserialize(schema.executeBlocking("{ double(double: $value) }"))
+        val response = deserialize(schema.execute("{ double(double: $value) }"))
         response.extract<Double>("data/double") shouldBe value
     }
 
     @Test
-    fun `scalars within input variables`() {
+    suspend fun `scalars within input variables`() {
         val schema = KGraphQL.schema {
             booleanScalar<Boo> {
                 deserialize = ::Boo
@@ -408,7 +408,7 @@ class ScalarsSpecificationTest {
             }
         """.trimIndent()
 
-        deserialize(schema.executeBlocking(req, variables)).run {
+        deserialize(schema.execute(req, variables)).run {
             extract<Boolean>("data/boo") shouldBe booValue
             extract<Int>("data/sho") shouldBe shoValue.toInt()
             extract<Int>("data/lon") shouldBe lonValue.toInt()
@@ -432,7 +432,7 @@ class ScalarsSpecificationTest {
             }
         """.trimIndent()
 
-        deserialize(schema.executeBlocking(req, variables)).run {
+        deserialize(schema.execute(req, variables)).run {
             extract<Boolean>("data/boo") shouldBe booValue
             extract<Int>("data/sho") shouldBe shoValue.toInt()
             extract<Int>("data/lon") shouldBe lonValue.toInt()
@@ -448,7 +448,7 @@ class ScalarsSpecificationTest {
     data class NewPart(val manufacturer: String, val name: String, val oem: Boolean, val addedDate: LocalDate)
 
     @Test
-    fun `schema may declare LocalDate custom scalar`() {
+    suspend fun `schema may declare LocalDate custom scalar`() {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -471,7 +471,7 @@ class ScalarsSpecificationTest {
         val addedDate = "2001-09-01"
 
         val response = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 "mutation Mutation(\$newPart: NewPartInput!) { addPart(newPart: \$newPart) { addedDate manufacturer } }",
                 """
                 {

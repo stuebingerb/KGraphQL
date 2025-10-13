@@ -17,47 +17,47 @@ import org.junit.jupiter.api.Test
 class NonNullSpecificationTest {
 
     @Test
-    fun `if the result of non-null type is null, error should be raised`() {
+    suspend fun `if the result of non-null type is null, error should be raised`() {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { string: String? -> string!! }
             }
         }
         val exception = shouldThrowExactly<ExecutionException> {
-            schema.executeBlocking("{nonNull}")
+            schema.execute("{nonNull}")
         }
         exception.originalError shouldBeInstanceOf java.lang.NullPointerException::class
     }
 
     @Test
-    fun `nullable input types are always optional`() {
+    suspend fun `nullable input types are always optional`() {
         val schema = KGraphQL.schema {
             query("nullable") {
                 resolver { input: String? -> input }
             }
         }
 
-        val responseOmittedInput = deserialize(schema.executeBlocking("{nullable}"))
+        val responseOmittedInput = deserialize(schema.execute("{nullable}"))
         responseOmittedInput.extract<Any?>("data/nullable") shouldBe null
 
-        val responseNullInput = deserialize(schema.executeBlocking("{nullable(input: null)}"))
+        val responseNullInput = deserialize(schema.execute("{nullable(input: null)}"))
         responseNullInput.extract<Any?>("data/nullable") shouldBe null
     }
 
     @Test
-    fun `non-null types are always required`() {
+    suspend fun `non-null types are always required`() {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { input: String -> input }
             }
         }
         expect<ValidationException>("Missing value for non-nullable argument input on the field 'nonNull'") {
-            schema.executeBlocking("{nonNull}")
+            schema.execute("{nonNull}")
         }
     }
 
     @Test
-    fun `variable of a nullable type cannot be provided to a non-null argument`() {
+    suspend fun `variable of a nullable type cannot be provided to a non-null argument`() {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { input: String -> input }
@@ -65,7 +65,7 @@ class NonNullSpecificationTest {
         }
 
         expect<InvalidInputValueException>("Invalid variable ${'$'}arg argument type String, expected String!\n") {
-            schema.executeBlocking("query(\$arg: String){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
+            schema.execute("query(\$arg: String){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
         }
     }
 
@@ -73,7 +73,7 @@ class NonNullSpecificationTest {
     data class Type2(val items: List<Type1?>)
 
     @Test
-    fun `null within arrays should work`() {
+    suspend fun `null within arrays should work`() {
         val schema = KGraphQL.schema {
             query("data") {
                 resolver { ->
@@ -87,7 +87,7 @@ class NonNullSpecificationTest {
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 data {
@@ -106,14 +106,14 @@ class NonNullSpecificationTest {
     data class MyInput(val value1: String, val value2: String?, val value3: Int)
 
     @Test
-    fun `missing nullable values without Kotlin default values should execute successfully and use null`() {
+    suspend fun `missing nullable values without Kotlin default values should execute successfully and use null`() {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyInput -> "${input.value1} - ${input.value2 ?: "Nada"} - ${input.value3}" }
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 main(input: { value1: "Hello", value3: 42 })
@@ -125,7 +125,7 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    fun `missing non-nullable values without Kotlin default values should raise an error`() {
+    suspend fun `missing non-nullable values without Kotlin default values should raise an error`() {
         val schema = KGraphQL.schema {
             inputType<MyInput> {
                 property(MyInput::value1) {
@@ -138,7 +138,7 @@ class NonNullSpecificationTest {
         }
 
         expect<InvalidInputValueException>("Missing non-optional input fields: valueOne, value3") {
-            schema.executeBlocking(
+            schema.execute(
                 """
                 {
                     main(input: { value2: "World" })
@@ -151,14 +151,14 @@ class NonNullSpecificationTest {
     data class MyOptionalInput(val value1: String = "Hello", val value2: String? = "World")
 
     @Test
-    fun `missing nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
+    suspend fun `missing nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 main(input: { value1: "Hello" })
@@ -170,14 +170,14 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    fun `missing non-nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
+    suspend fun `missing non-nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 main(input: { value2: "World, again" })

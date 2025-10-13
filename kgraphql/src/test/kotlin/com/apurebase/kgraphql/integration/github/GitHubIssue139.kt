@@ -63,12 +63,12 @@ class GitHubIssue139 {
     }
 
     @Test
-    fun `custom factory definitions`() {
+    suspend fun `custom factory definitions`() {
         KGraphQL.schema {
             connection("item", Repo1)
             connection("element", Repo2)
             connection("thing", Repo3)
-        }.executeBlocking(
+        }.execute(
             """
             {
                 itemsCount

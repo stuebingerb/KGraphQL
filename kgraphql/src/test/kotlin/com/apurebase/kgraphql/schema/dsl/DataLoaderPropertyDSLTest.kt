@@ -15,7 +15,7 @@ import kotlin.reflect.typeOf
 class DataLoaderPropertyDSLTest {
 
     @Test
-    fun `prepare() should support multiple arguments`() {
+    suspend fun `prepare() should support multiple arguments`() {
         val schema = defaultSchema {
             query("parent") {
                 resolver { -> Parent() }
@@ -31,7 +31,7 @@ class DataLoaderPropertyDSLTest {
                 }
             }
         }
-        val results = schema.executeBlocking(
+        val results = schema.execute(
             """
             {
                 parent {

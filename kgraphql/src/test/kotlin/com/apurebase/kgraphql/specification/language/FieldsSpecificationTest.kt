@@ -22,8 +22,8 @@ class FieldsSpecificationTest {
     }
 
     @Test
-    fun `field may itself contain a selection set`() {
-        val response = deserialize(schema.executeBlocking("{actor{id, actualActor{name, age}}}"))
+    suspend fun `field may itself contain a selection set`() {
+        val response = deserialize(schema.execute("{actor{id, actualActor{name, age}}}"))
         val map = response.extract<Map<String, Any>>("data/actor/actualActor")
         map shouldBe mapOf("name" to "Boguś Linda", "age" to age)
     }

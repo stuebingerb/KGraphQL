@@ -10,7 +10,7 @@ class InputObjectTest {
     data class Person(val name: String, val age: Int)
 
     @Test
-    fun `property name should default to Kotlin name`() {
+    suspend fun `property name should default to Kotlin name`() {
         val schema = KGraphQL.schema {
             query("getPerson") {
                 resolver { name: String -> Person(name = name, age = 42) }
@@ -43,7 +43,7 @@ class InputObjectTest {
             
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             query {
               getPerson(name: "foo") { name age }
@@ -53,7 +53,7 @@ class InputObjectTest {
             {"data":{"getPerson":{"name":"foo","age":42}}}
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             mutation {
               addPerson(person: { name: "bar", age: 20 }) { name age }
@@ -66,7 +66,7 @@ class InputObjectTest {
         val variables = """
             { "person": { "name": "foobar", "age": 60 } }
         """.trimIndent()
-        schema.executeBlocking(
+        schema.execute(
             """
             mutation(${'$'}person: PersonInput!) {
               addPerson(person: ${'$'}person) { name age }
@@ -79,7 +79,7 @@ class InputObjectTest {
     }
 
     @Test
-    fun `property name should be configurable`() {
+    suspend fun `property name should be configurable`() {
         val schema = KGraphQL.schema {
             inputType<Person> {
                 name = "PersonInput"
@@ -122,7 +122,7 @@ class InputObjectTest {
             
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             query {
               getPerson(name: "foo") { name age }
@@ -132,7 +132,7 @@ class InputObjectTest {
             {"data":{"getPerson":{"name":"foo","age":42}}}
         """.trimIndent()
 
-        schema.executeBlocking(
+        schema.execute(
             """
             mutation {
               addPerson(person: { inputName: "bar", inputAge: 20 }) { name age }
@@ -145,7 +145,7 @@ class InputObjectTest {
         val variables = """
             { "person": { "inputName": "foobar", "inputAge": 60 } }
         """.trimIndent()
-        schema.executeBlocking(
+        schema.execute(
             """
             mutation(${'$'}person: PersonInput!) {
               addPerson(person: ${'$'}person) { name age }

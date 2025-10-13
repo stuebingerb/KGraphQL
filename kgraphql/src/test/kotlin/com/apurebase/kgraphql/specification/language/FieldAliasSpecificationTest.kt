@@ -28,16 +28,16 @@ class FieldAliasSpecificationTest {
     }
 
     @Test
-    fun `can define response object field name`() {
+    suspend fun `can define response object field name`() {
         val map =
-            deserialize(schema.executeBlocking("{actor{ageMonths: age(inMonths : true) ageYears: age(inMonths : false)}}"))
+            deserialize(schema.execute("{actor{ageMonths: age(inMonths : true) ageYears: age(inMonths : false)}}"))
         map.extract<Int>("data/actor/ageMonths") shouldBe age * 12
         map.extract<Int>("data/actor/ageYears") shouldBe age
     }
 
     @Test
-    fun `top level of a query can be given alias`() {
-        val map = deserialize(schema.executeBlocking("{ bogus : actor{name}}"))
+    suspend fun `top level of a query can be given alias`() {
+        val map = deserialize(schema.execute("{ bogus : actor{name}}"))
         map.extract<String>("data/bogus/name") shouldBe actorName
     }
 }

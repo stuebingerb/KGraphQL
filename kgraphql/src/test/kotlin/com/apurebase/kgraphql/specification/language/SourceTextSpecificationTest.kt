@@ -27,16 +27,16 @@ class SourceTextSpecificationTest {
     }
 
     @Test
-    fun `invalid unicode character`() {
+    suspend fun `invalid unicode character`() {
         expect<InvalidSyntaxException>("Syntax Error: Cannot contain the invalid character \"\\u0003\".") {
-            deserialize(schema.executeBlocking("\u0003"))
+            deserialize(schema.execute("\u0003"))
         }
     }
 
     @Test
     @Specification("2.1.1 Unicode")
-    fun `ignore unicode BOM character`() {
-        val map = deserialize(schema.executeBlocking("\uFEFF{fizz}"))
+    suspend fun `ignore unicode BOM character`() {
+        val map = deserialize(schema.execute("\uFEFF{fizz}"))
         assertNoErrors(map)
         map.extract<String>("data/fizz") shouldBe "buzz"
     }
@@ -48,7 +48,7 @@ class SourceTextSpecificationTest {
         "2.1.5 Insignificant Commas",
         "2.1.7 Ignored Tokens"
     )
-    fun `ignore whitespace, line terminator, comma characters`() {
+    suspend fun `ignore whitespace, line terminator, comma characters`() {
         executeEqualQueries(
             schema,
             mapOf(
@@ -72,7 +72,7 @@ class SourceTextSpecificationTest {
 
     @Test
     @Specification("2.1.4 Comments")
-    fun `support comments`() {
+    suspend fun `support comments`() {
         executeEqualQueries(
             schema,
             mapOf(
@@ -96,16 +96,16 @@ class SourceTextSpecificationTest {
 
     @Test
     @Specification("2.1.9 Names")
-    fun `names should be case sensitive`() {
+    suspend fun `names should be case sensitive`() {
         expect<ValidationException>("Property FIZZ on Query does not exist") {
-            deserialize(schema.executeBlocking("{FIZZ}"))
+            deserialize(schema.execute("{FIZZ}"))
         }
 
         expect<ValidationException>("Property Fizz on Query does not exist") {
-            deserialize(schema.executeBlocking("{Fizz}"))
+            deserialize(schema.execute("{Fizz}"))
         }
 
-        val mapLowerCase = deserialize(schema.executeBlocking("{fizz}"))
+        val mapLowerCase = deserialize(schema.execute("{fizz}"))
         assertNoErrors(mapLowerCase)
         mapLowerCase.extract<String>("data/fizz") shouldBe "buzz"
     }

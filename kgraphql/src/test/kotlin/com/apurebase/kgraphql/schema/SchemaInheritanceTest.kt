@@ -18,7 +18,7 @@ class SchemaInheritanceTest {
     class C(override var name: String, override var age: Int, var pesel: String = "") : A(name, age)
 
     @Test
-    fun `call to ignore property should cascade to subclasses`() {
+    suspend fun `call to ignore property should cascade to subclasses`() {
         val name = "PELE"
         val age = 20
 
@@ -32,11 +32,11 @@ class SchemaInheritanceTest {
         }
 
         expect<ValidationException>("Property id on B does not exist") {
-            deserialize(schema.executeBlocking("{b{id, name, age}}"))
+            deserialize(schema.execute("{b{id, name, age}}"))
         }
 
         expect<ValidationException>("Property id on C does not exist") {
-            deserialize(schema.executeBlocking("{c{id, name, age}}"))
+            deserialize(schema.execute("{c{id, name, age}}"))
         }
     }
 }

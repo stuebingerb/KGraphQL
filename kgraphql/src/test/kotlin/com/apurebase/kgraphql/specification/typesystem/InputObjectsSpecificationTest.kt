@@ -31,17 +31,17 @@ class InputObjectsSpecificationTest {
     }
 
     @Test
-    fun `an input object defines a set of input fields - scalars, enums, or other input objects`() {
+    suspend fun `an input object defines a set of input fields - scalars, enums, or other input objects`() {
         val two = object {
             val two = InputTwo(InputOne(MockEnum.M1, "M1"), 3434, listOf("23", "34", "21", "434"))
         }
         val variables = objectMapper.writeValueAsString(two)
-        val response = deserialize(schema.executeBlocking("query(\$two: InputTwo!){test(input: \$two)}", variables))
+        val response = deserialize(schema.execute("query(\$two: InputTwo!){test(input: \$two)}", variables))
         response.extract<String>("data/test") shouldBe "success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])"
     }
 
     @Test
-    fun `input objects may contain nullable circular references`() {
+    suspend fun `input objects may contain nullable circular references`() {
         val schema = KGraphQL.schema {
             inputType<Circular>()
             query("circular") {
@@ -54,7 +54,7 @@ class InputObjectsSpecificationTest {
             val cirSuccess = Circular(Circular(null, "SUCCESS"))
         }
         val response = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 "query(\$cirNull: Circular!, \$cirSuccess: Circular!){" +
                     "null: circular(cir: \$cirNull)" +
                     "success: circular(cir: \$cirSuccess)}",
@@ -67,7 +67,7 @@ class InputObjectsSpecificationTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/93
     @Test
-    fun `incorrect input parameter should throw an appropriate exception`() {
+    suspend fun `incorrect input parameter should throw an appropriate exception`() {
         data class MyInput(val value1: String)
 
         val schema = KGraphQL.schema {
@@ -77,7 +77,7 @@ class InputObjectsSpecificationTest {
         }
 
         val exception = shouldThrowExactly<InvalidInputValueException> {
-            schema.executeBlocking(
+            schema.execute(
                 """
                 {
                     main(input: { valu1: "Hello" })
@@ -97,7 +97,7 @@ class InputObjectsSpecificationTest {
     }
 
     @Test
-    fun `input objects should take fields from primary constructor`() {
+    suspend fun `input objects should take fields from primary constructor`() {
         val schema = KGraphQL.schema {
             query("test") {
                 resolver { input: NonDataClass -> input }
@@ -122,7 +122,7 @@ class InputObjectsSpecificationTest {
 
         """.trimIndent()
 
-        val response1 = schema.executeBlocking(
+        val response1 = schema.execute(
             """
             query {
                 test(input: {param1: "myParam1"}) { param2 param3 }
@@ -133,7 +133,7 @@ class InputObjectsSpecificationTest {
             {"data":{"test":{"param2":8,"param3":null}}}
         """.trimIndent()
 
-        val response2 = schema.executeBlocking(
+        val response2 = schema.execute(
             """
             query {
                 test(input: {param3: true}) { param2 param3 }

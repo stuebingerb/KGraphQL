@@ -38,32 +38,32 @@ class AccessRulesTest {
     }
 
     @Test
-    fun `allow when matching`() {
+    suspend fun `allow when matching`() {
         val kobe = deserialize(
-            schema.executeBlocking("{black_mamba{name}}", context = context { +"LAKERS" })
+            schema.execute("{black_mamba{name}}", context = context { +"LAKERS" })
         ).extract<String>("data/black_mamba/name")
 
         kobe shouldBe "KOBE"
     }
 
     @Test
-    fun `reject when not matching`() {
+    suspend fun `reject when not matching`() {
         expect<IllegalAccessException>("ILLEGAL ACCESS") {
             deserialize(
-                schema.executeBlocking("{ black_mamba {id} }", context = context { +"LAKERS" })
+                schema.execute("{ black_mamba {id} }", context = context { +"LAKERS" })
             ).extract<String>("data/black_mamba/id")
         }
     }
 
     @Test
-    fun `allow property resolver access rule`() {
-        deserialize(schema.executeBlocking("{white_mamba {item}}")).extract<String>("data/white_mamba/item") shouldBe "item"
+    suspend fun `allow property resolver access rule`() {
+        deserialize(schema.execute("{white_mamba {item}}")).extract<String>("data/white_mamba/item") shouldBe "item"
     }
 
     @Test
-    fun `reject property resolver access rule`() {
+    suspend fun `reject property resolver access rule`() {
         expect<IllegalAccessException>("ILLEGAL ACCESS") {
-            schema.executeBlocking("{black_mamba {item}}", context = context { +"LAKERS" }).also(::println)
+            schema.execute("{black_mamba {item}}", context = context { +"LAKERS" }).also(::println)
         }
     }
 
