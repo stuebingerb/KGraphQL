@@ -10,8 +10,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.server.core)
 
-    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.junit.jupiter.core)
     testImplementation(libs.kotest)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.server.auth)
+    testRuntimeOnly(libs.junit.launcher)
 }
