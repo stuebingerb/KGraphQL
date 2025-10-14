@@ -11,6 +11,7 @@ import com.apurebase.kgraphql.shouldBeInstanceOf
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 data class Actor(var name: String? = "", var age: Int? = 0)
@@ -55,7 +56,7 @@ class OperationsSpecificationTest {
     }
 
     @Test
-    suspend fun `unnamed and named queries are equivalent`() {
+    fun `unnamed and named queries are equivalent`() = runTest {
         executeEqualQueries(
             newSchema(),
             mapOf("data" to mapOf("fizz" to "buzz")),
@@ -66,7 +67,7 @@ class OperationsSpecificationTest {
     }
 
     @Test
-    suspend fun `unnamed and named mutations are equivalent`() {
+    fun `unnamed and named mutations are equivalent`() = runTest {
         executeEqualQueries(
             newSchema(),
             mapOf("data" to mapOf("createActor" to mapOf("name" to "Kurt Russel"))),
@@ -76,7 +77,7 @@ class OperationsSpecificationTest {
     }
 
     @Test
-    suspend fun `handle subscription`() {
+    fun `handle subscription`() = runTest {
         val schema = newSchema()
         schema.execute("subscription {subscriptionActor(subscription : \"mySubscription\"){name}}")
 
@@ -101,7 +102,7 @@ class OperationsSpecificationTest {
     }
 
     @Test
-    suspend fun `Subscription return type must be the same as the publisher's`() {
+    fun `Subscription return type must be the same as the publisher's`() = runTest {
         val exception = shouldThrowExactly<ExecutionException> {
             newSchema().execute("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
         }

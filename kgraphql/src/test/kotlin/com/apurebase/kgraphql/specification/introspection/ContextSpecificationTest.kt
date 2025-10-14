@@ -5,13 +5,14 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class ContextSpecificationTest {
 
     @Test
     @Suppress("UNUSED_ANONYMOUS_PARAMETER")
-    suspend fun `query resolver should not return context param`() {
+    fun `query resolver should not return context param`() = runTest {
         val schema = defaultSchema {
             query("sample") {
                 resolver { ctx: Context, limit: Int -> "SAMPLE" }
@@ -24,7 +25,7 @@ class ContextSpecificationTest {
 
     @Test
     @Suppress("UNUSED_ANONYMOUS_PARAMETER")
-    suspend fun `mutation resolver should not return context param`() {
+    fun `mutation resolver should not return context param`() = runTest {
         val schema = defaultSchema {
             query("sample") {
                 resolver { -> "dummy" }

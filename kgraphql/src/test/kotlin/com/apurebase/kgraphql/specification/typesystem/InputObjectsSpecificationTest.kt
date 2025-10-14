@@ -10,6 +10,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Suppress("unused")
@@ -31,7 +32,7 @@ class InputObjectsSpecificationTest {
     }
 
     @Test
-    suspend fun `an input object defines a set of input fields - scalars, enums, or other input objects`() {
+    fun `an input object defines a set of input fields - scalars, enums, or other input objects`() = runTest {
         val two = object {
             val two = InputTwo(InputOne(MockEnum.M1, "M1"), 3434, listOf("23", "34", "21", "434"))
         }
@@ -41,7 +42,7 @@ class InputObjectsSpecificationTest {
     }
 
     @Test
-    suspend fun `input objects may contain nullable circular references`() {
+    fun `input objects may contain nullable circular references`() = runTest {
         val schema = KGraphQL.schema {
             inputType<Circular>()
             query("circular") {
@@ -67,7 +68,7 @@ class InputObjectsSpecificationTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/93
     @Test
-    suspend fun `incorrect input parameter should throw an appropriate exception`() {
+    fun `incorrect input parameter should throw an appropriate exception`() = runTest {
         data class MyInput(val value1: String)
 
         val schema = KGraphQL.schema {
@@ -97,7 +98,7 @@ class InputObjectsSpecificationTest {
     }
 
     @Test
-    suspend fun `input objects should take fields from primary constructor`() {
+    fun `input objects should take fields from primary constructor`() = runTest {
         val schema = KGraphQL.schema {
             query("test") {
                 resolver { input: NonDataClass -> input }

@@ -23,6 +23,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSupertypeOf
@@ -99,7 +100,7 @@ class SchemaBuilderTest {
 
     // https://github.com/stuebingerb/KGraphQL/issues/321
     @Test
-    suspend fun `transformations should change the return type`() {
+    fun `transformations should change the return type`() = runTest {
         data class Foo(val id: Int, val name: String?, val nameWithDefault: String?, val transformedId: Int)
 
         val numbers = mapOf(1 to "one", 2 to "two")
@@ -224,7 +225,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `KFunction resolver`() {
+    fun `KFunction resolver`() = runTest {
         val actorService = object {
             fun getMainActor() = Actor("Little John", 44)
             fun getActor(id: Int) = when (id) {
@@ -261,7 +262,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `_ should be allowed as receiver argument name`() {
+    fun `_ should be allowed as receiver argument name`() = runTest {
         val schema = defaultSchema {
             query("actor") {
                 resolver { -> Actor("Boguś Linda", 4343) }
@@ -280,7 +281,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `enums should be recognized automatically`() {
+    fun `enums should be recognized automatically`() = runTest {
         val schema = defaultSchema {
             query("actor") {
                 resolver { type: FilmType -> Actor("Boguś Linda $type", 4343) }
@@ -293,7 +294,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `enums should support a custom type name`() {
+    fun `enums should support a custom type name`() = runTest {
         val schema = defaultSchema {
             query("actor") {
                 resolver { type: FilmType -> Actor("Boguś Linda $type", 4343) }
@@ -310,7 +311,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `java arrays should be supported`() {
+    fun `java arrays should be supported`() = runTest {
         schema {
             query("actors") {
                 resolver { ->
@@ -366,7 +367,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `client code can declare custom generic type resolver`() {
+    fun `client code can declare custom generic type resolver`() = runTest {
         val typeResolver = object : DefaultGenericTypeResolver() {
             override fun unbox(obj: Any) = if (obj is Maybe<*>) obj.get() else super.unbox(obj)
             override fun resolveMonad(type: KType): KType {
@@ -427,7 +428,7 @@ class SchemaBuilderTest {
     data class LambdaWrapper(val lambda: () -> Int)
 
     @Test
-    suspend fun `function properties can be handled by providing generic type resolver`() {
+    fun `function properties can be handled by providing generic type resolver`() = runTest {
         val typeResolver = object : DefaultGenericTypeResolver() {
             override fun unbox(obj: Any) = if (obj is Function0<*>) obj() else super.unbox(obj)
             override fun resolveMonad(type: KType): KType {
@@ -460,7 +461,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `input value default value and description can be specified`() {
+    fun `input value default value and description can be specified`() = runTest {
         val expectedDescription = "Int Argument"
         val expectedDefaultValue = 33
         val schema = defaultSchema {
@@ -513,7 +514,7 @@ class SchemaBuilderTest {
     data class UserData(val username: String, val stuff: String)
 
     @Test
-    suspend fun `client code can declare custom context class and use it in query resolver`() {
+    fun `client code can declare custom context class and use it in query resolver`() = runTest {
         val schema = schema {
             query("name") {
                 resolver { ctx: Context -> ctx.get<UserData>()?.username }
@@ -527,7 +528,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `client code can use context class in property resolver`() {
+    fun `client code can use context class in property resolver`() = runTest {
         val georgeName = "George"
         val schema = schema {
             query("actor") {
@@ -664,7 +665,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `schema can contain resolvers with up to 9 parameters`() {
+    fun `schema can contain resolvers with up to 9 parameters`() = runTest {
         val schema = schema {
             query("queryWith1Param") {
                 resolver { val1: Int ->
@@ -725,7 +726,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `schema can contain suspend resolvers`() {
+    fun `schema can contain suspend resolvers`() = runTest {
         val schema = schema {
             query("queryWith1Param") {
                 resolver { val1: Int ->
@@ -808,7 +809,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `schema can have same type and input type with different names`() {
+    fun `schema can have same type and input type with different names`() = runTest {
         val schema = defaultSchema {
             query("createType") {
                 resolver { input: InputOne -> input }
@@ -832,7 +833,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `Short int types are mapped to Short Scalar`() {
+    fun `Short int types are mapped to Short Scalar`() = runTest {
         val schema = defaultSchema {
             extendedScalars()
             query("shortQuery") {
@@ -893,7 +894,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    suspend fun `specifying return type explicitly allows generic query creation that returns List of T`() {
+    fun `specifying return type explicitly allows generic query creation that returns List of T`() = runTest {
         val schema = defaultSchema {
             createGenericQuery(listOf("generic"))
         }

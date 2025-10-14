@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.integration.github
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -63,7 +64,7 @@ class GitHubIssue139 {
     }
 
     @Test
-    suspend fun `custom factory definitions`() {
+    fun `custom factory definitions`() = runTest {
         KGraphQL.schema {
             connection("item", Repo1)
             connection("element", Repo2)

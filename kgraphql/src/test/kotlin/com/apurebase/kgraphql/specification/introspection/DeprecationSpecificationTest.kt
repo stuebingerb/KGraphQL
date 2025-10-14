@@ -7,13 +7,14 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaException
 import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
 
 class DeprecationSpecificationTest {
 
     @Test
-    suspend fun `queries may be deprecated`() {
+    fun `queries may be deprecated`() = runTest {
         val expected = "sample query"
         val schema = defaultSchema {
             query("sample") {
@@ -31,7 +32,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    suspend fun `mutations may be deprecated`() {
+    fun `mutations may be deprecated`() = runTest {
         val expected = "sample mutation"
         val schema = defaultSchema {
             query("dummy") {
@@ -54,7 +55,7 @@ class DeprecationSpecificationTest {
     data class Sample(val content: String)
 
     @Test
-    suspend fun `kotlin field may be deprecated`() {
+    fun `kotlin field may be deprecated`() = runTest {
         val expected = "sample type"
         val schema = defaultSchema {
             query("sample") {
@@ -77,7 +78,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    suspend fun `extension field may be deprecated`() {
+    fun `extension field may be deprecated`() = runTest {
         val expected = "sample type"
         val schema = defaultSchema {
             query("sample") {
@@ -104,7 +105,7 @@ class DeprecationSpecificationTest {
     enum class SampleEnum { ONE, TWO, THREE }
 
     @Test
-    suspend fun `enum value may be deprecated`() {
+    fun `enum value may be deprecated`() = runTest {
         val expected = "some enum value"
         val schema = defaultSchema {
             query("sample") {
@@ -128,7 +129,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    suspend fun `optional input value may be deprecated`() {
+    fun `optional input value may be deprecated`() = runTest {
         data class InputType(val oldOptional: String?, val new: String)
 
         val expected = "deprecated input value"
@@ -173,7 +174,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    suspend fun `deprecated input values should not be returned by default`() {
+    fun `deprecated input values should not be returned by default`() = runTest {
         data class InputType(val oldOptional: String?, val new: String)
 
         val expected = "deprecated input value"
@@ -200,7 +201,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    suspend fun `optional field args may be deprecated`() {
+    fun `optional field args may be deprecated`() = runTest {
         val expected = "deprecated field arg"
 
         @Suppress("UNUSED_ANONYMOUS_PARAMETER")
@@ -243,7 +244,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    suspend fun `deprecated field args should not be returned by default`() {
+    fun `deprecated field args should not be returned by default`() = runTest {
         val expected = "deprecated input value"
 
         @Suppress("UNUSED_ANONYMOUS_PARAMETER")

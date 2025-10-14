@@ -7,13 +7,14 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class MapMergeTest {
     private val jsonNodeFactory = JsonNodeFactory.instance
 
     @Test
-    suspend fun `merge should add property`() {
+    fun `merge should add property`() = runTest {
         val existing = createMap("param1" to CompletableDeferred(jsonNodeFactory.textNode("value1")))
         val update = CompletableDeferred(jsonNodeFactory.textNode("value2"))
 
@@ -23,7 +24,7 @@ class MapMergeTest {
     }
 
     @Test
-    suspend fun `merge should add nested property`() {
+    fun `merge should add nested property`() = runTest {
         val existing = createMap("param1" to CompletableDeferred(jsonNodeFactory.textNode("value1")))
         val update = CompletableDeferred(jsonNodeFactory.objectNode().put("param2", "value2"))
 
@@ -33,7 +34,7 @@ class MapMergeTest {
     }
 
     @Test
-    suspend fun `merge should not change simple node`() {
+    fun `merge should not change simple node`() = runTest {
         val existingValue = CompletableDeferred(jsonNodeFactory.textNode("value1"))
         val existing = createMap("param" to existingValue)
         val update = CompletableDeferred(jsonNodeFactory.textNode("value2"))
@@ -49,7 +50,7 @@ class MapMergeTest {
     }
 
     @Test
-    suspend fun `merge should not merge simple node with object node`() {
+    fun `merge should not merge simple node with object node`() = runTest {
         val existingValue = CompletableDeferred(jsonNodeFactory.textNode("value1"))
         val existing = createMap("param" to existingValue)
         val update = CompletableDeferred(jsonNodeFactory.objectNode())
@@ -66,7 +67,7 @@ class MapMergeTest {
     }
 
     @Test
-    suspend fun `merge should not merge object node with simple node`() {
+    fun `merge should not merge object node with simple node`() = runTest {
         val existingObj = CompletableDeferred(jsonNodeFactory.objectNode().put("other", "value1"))
         val existing = createMap("param" to existingObj)
         val update = CompletableDeferred(jsonNodeFactory.textNode("value2"))

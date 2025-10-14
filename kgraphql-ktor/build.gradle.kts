@@ -11,6 +11,7 @@ dependencies {
     implementation(libs.ktor.server.core)
 
     testImplementation(libs.junit.jupiter.core)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotest)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.server.auth)

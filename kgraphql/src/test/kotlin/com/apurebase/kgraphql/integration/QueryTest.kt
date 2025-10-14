@@ -11,11 +11,12 @@ import com.apurebase.kgraphql.schema.execution.Execution
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class QueryTest : BaseSchemaTest() {
     @Test
-    suspend fun `query nested selection set`() {
+    fun `query nested selection set`() = runTest {
         val map = execute("{film{title, director{name, age}}}")
         assertNoErrors(map)
         map.extract<String>("data/film/title") shouldBe prestige.title
@@ -24,7 +25,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query collection field`() {
+    fun `query collection field`() = runTest {
         val map = execute("{film{title, director{favActors{name, age}}}}")
         assertNoErrors(map)
         map.extract<Map<String, String>>("data/film/director/favActors[0]") shouldBe
@@ -35,28 +36,28 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query scalar field`() {
+    fun `query scalar field`() = runTest {
         val map = execute("{film{id}}")
         assertNoErrors(map)
         map.extract<String>("data/film/id") shouldBe "${prestige.id.literal}:${prestige.id.numeric}"
     }
 
     @Test
-    suspend fun `query with selection set on collection`() {
+    fun `query with selection set on collection`() = runTest {
         val map = execute("{film{title, director{favActors{name}}}}")
         assertNoErrors(map)
         map.extract<Map<String, String>>("data/film/director/favActors[0]") shouldBe mapOf("name" to prestige.director.favActors[0].name)
     }
 
     @Test
-    suspend fun `query with selection set on collection 2`() {
+    fun `query with selection set on collection 2`() = runTest {
         val map = execute("{film{title, director{favActors{age}}}}")
         assertNoErrors(map)
         map.extract<Map<String, Int>>("data/film/director/favActors[0]") shouldBe mapOf("age" to prestige.director.favActors[0].age)
     }
 
     @Test
-    suspend fun `query with invalid field name`() {
+    fun `query with invalid field name`() = runTest {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{film{title, director{name, favDish}}}")
         }
@@ -67,35 +68,35 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with argument`() {
+    fun `query with argument`() = runTest {
         val map = execute("{filmByRank(rank: 1){title}}")
         assertNoErrors(map)
         map.extract<String>("data/filmByRank/title") shouldBe "Prestige"
     }
 
     @Test
-    suspend fun `query with argument 2`() {
+    fun `query with argument 2`() = runTest {
         val map = execute("{filmByRank(rank: 2){title}}")
         assertNoErrors(map)
         map.extract<String>("data/filmByRank/title") shouldBe "Se7en"
     }
 
     @Test
-    suspend fun `query with alias`() {
+    fun `query with alias`() = runTest {
         val map = execute("{bestFilm: filmByRank(rank: 1){title}}")
         assertNoErrors(map)
         map.extract<String>("data/bestFilm/title") shouldBe "Prestige"
     }
 
     @Test
-    suspend fun `query with field alias`() {
+    fun `query with field alias`() = runTest {
         val map = execute("{filmByRank(rank: 2){fullTitle: title}}")
         assertNoErrors(map)
         map.extract<String>("data/filmByRank/fullTitle") shouldBe "Se7en"
     }
 
     @Test
-    suspend fun `query with multiple aliases`() {
+    fun `query with multiple aliases`() = runTest {
         val map = execute("{bestFilm: filmByRank(rank: 1){title}, secondBestFilm: filmByRank(rank: 2){title}}")
         assertNoErrors(map)
         map.extract<String>("data/bestFilm/title") shouldBe "Prestige"
@@ -103,7 +104,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with ignored property`() {
+    fun `query with ignored property`() = runTest {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{scenario{author, content}}")
         }
@@ -114,7 +115,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with interface`() {
+    fun `query with interface`() = runTest {
         val map = execute("{randomPerson{name \n age}}")
         map.extract<Map<String, String>>("data/randomPerson") shouldBe
             mapOf(
@@ -124,7 +125,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with collection elements interface`() {
+    fun `query with collection elements interface`() = runTest {
         val map = execute("{people{name, age}}")
         map.extract<Map<String, String>>("data/people[0]") shouldBe
             mapOf(
@@ -134,7 +135,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query extension property`() {
+    fun `query extension property`() = runTest {
         val map = execute("{actors{name, age, isOld}}")
         for (i in 0..4) {
             val isOld = map.extract<Boolean>("data/actors[$i]/isOld")
@@ -144,7 +145,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query extension property with arguments`() {
+    fun `query extension property with arguments`() = runTest {
         val map = execute("{actors{name, picture(big: true)}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
@@ -153,7 +154,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query extension property with optional argument`() {
+    fun `query extension property with optional argument`() = runTest {
         val map = execute("{actors{name, picture}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
@@ -162,7 +163,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query extension property with optional annotated argument`() {
+    fun `query extension property with optional annotated argument`() = runTest {
         val map = execute("{actors{name, pictureWithArgs}}")
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name").replace(' ', '_')
@@ -171,25 +172,25 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with mandatory generic input type`() {
+    fun `query with mandatory generic input type`() = runTest {
         val map = execute("""{actorsByTags(tags: ["1", "2", "3"]){name}}""")
         assertNoErrors(map)
     }
 
     @Test
-    suspend fun `query with optional generic input type`() {
+    fun `query with optional generic input type`() = runTest {
         val map = execute("{actorsByTagsOptional{name}}")
         assertNoErrors(map)
     }
 
     @Test
-    suspend fun `query with nullable generic input type`() {
+    fun `query with nullable generic input type`() = runTest {
         val map = execute("{actorsByTagsNullable{name}}")
         assertNoErrors(map)
     }
 
     @Test
-    suspend fun `query with transformed property`() {
+    fun `query with transformed property`() = runTest {
         val map = execute("{scenario{id, content(uppercase: false)}}")
         map.extract<String>("data/scenario/content") shouldBe "Very long scenario"
 
@@ -198,7 +199,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with invalid field arguments`() {
+    fun `query with invalid field arguments`() = runTest {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{scenario{id(uppercase: true), content}}")
         }
@@ -209,7 +210,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with external fragment`() {
+    fun `query with external fragment`() = runTest {
         val map = execute("{film{title, ...dir }} fragment dir on Film {director{name, age}}")
         assertNoErrors(map)
         map.extract<String>("data/film/title") shouldBe prestige.title
@@ -218,7 +219,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with nested external fragment`() {
+    fun `query with nested external fragment`() = runTest {
         val map = execute(
             """
             {
@@ -253,7 +254,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with two nested external fragments`() {
+    fun `query with two nested external fragments`() = runTest {
         val map = execute(
             """
             {
@@ -292,7 +293,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with two fragments`() {
+    fun `query with two fragments`() = runTest {
         val map = execute(
             """
             {
@@ -321,7 +322,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with two inline fragments`() {
+    fun `query with two inline fragments`() = runTest {
         val map = execute(
             """
             {
@@ -339,7 +340,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with typename and other property`() {
+    fun `query with typename and other property`() = runTest {
         data class FooChild(val barChild: String)
         data class Foo(val bar: String, val child: FooChild?)
 
@@ -411,7 +412,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with mixed selections`() {
+    fun `query with mixed selections`() = runTest {
         val map = execute(
             """
             {
@@ -436,7 +437,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with missing fragment type`() {
+    fun `query with missing fragment type`() = runTest {
         val exception = shouldThrowExactly<ValidationException> {
             execute(
                 """
@@ -457,7 +458,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with missing named fragment type`() {
+    fun `query with missing named fragment type`() = runTest {
         val exception = shouldThrowExactly<ValidationException> {
             execute(
                 """
@@ -476,7 +477,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with missing selection set`() {
+    fun `query with missing selection set`() = runTest {
         val exception = shouldThrowExactly<ValidationException> {
             execute("{film}")
         }
@@ -489,7 +490,7 @@ class QueryTest : BaseSchemaTest() {
     data class SampleNode(val id: Int, val name: String, val fields: List<String>? = null)
 
     @Test
-    suspend fun `access to execution node`() {
+    fun `access to execution node`() = runTest {
         val result = defaultSchema {
             query("root") {
                 resolver { node: Execution.Node ->
@@ -532,7 +533,7 @@ class QueryTest : BaseSchemaTest() {
 
     // cf. https://spec.graphql.org/October2021/#example-77852
     @Test
-    suspend fun `multiple selection sets for the same object should be merged on top level`() {
+    fun `multiple selection sets for the same object should be merged on top level`() = runTest {
         data class Person(val firstName: String, val lastName: String)
 
         val response = defaultSchema {
@@ -557,7 +558,7 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `multiple selection sets for the same object should be merged on object level`() {
+    fun `multiple selection sets for the same object should be merged on object level`() = runTest {
         data class Person(val firstName: String, val lastName: String)
         data class PersonWrapper(val person: Person)
 
@@ -585,13 +586,20 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `multiple complex selection sets for the same object should be merged on top level`() {
+    fun `multiple complex selection sets for the same object should be merged on top level`() = runTest {
         data class Address(val zipCode: String, val street: String, val city: String, val country: String)
         data class Person(val firstName: String, val lastName: String, val birthDate: String, val address: Address)
 
         val response = defaultSchema {
             query("me") {
-                resolver { -> Person("John", "Doe", "1.1.1970", Address("12345", "Main Street", "SomeCity", "SomeCountry")) }
+                resolver { ->
+                    Person(
+                        "John",
+                        "Doe",
+                        "1.1.1970",
+                        Address("12345", "Main Street", "SomeCity", "SomeCountry")
+                    )
+                }
             }
         }.execute(
             """

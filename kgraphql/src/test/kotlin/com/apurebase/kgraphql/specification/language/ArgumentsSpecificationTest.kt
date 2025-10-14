@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.executeEqualQueries
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -59,7 +60,7 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    suspend fun `arguments are unordered`() {
+    fun `arguments are unordered`() = runTest {
         executeEqualQueries(
             schema,
             mapOf("data" to mapOf("actor" to mapOf("favDishes" to listOf("burger", "bread")))),
@@ -69,7 +70,7 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    suspend fun `many arguments can exist on given field`() {
+    fun `many arguments can exist on given field`() = runTest {
         val response = deserialize(schema.execute("{actor{favDishes(size: 2, prefix: \"b\")}}"))
         response shouldBe mapOf<String, Any>(
             "data" to mapOf(
@@ -84,7 +85,7 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    suspend fun `all arguments to suspendResolvers`() {
+    fun `all arguments to suspendResolvers`() = runTest {
         val request = """
             {
                 actor {
@@ -114,7 +115,7 @@ class ArgumentsSpecificationTest {
     }
 
     @Test
-    suspend fun `property arguments should accept default values`() {
+    fun `property arguments should accept default values`() = runTest {
         val schema = defaultSchema {
             query("actor") {
                 resolver {
@@ -165,7 +166,7 @@ class ArgumentsSpecificationTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/144
     @Test
-    suspend fun `arguments with lists should preserve generic type`() {
+    fun `arguments with lists should preserve generic type`() = runTest {
         val schema = schema {
             stringScalar<LocalDate> {
                 serialize = { date -> date.toString() }

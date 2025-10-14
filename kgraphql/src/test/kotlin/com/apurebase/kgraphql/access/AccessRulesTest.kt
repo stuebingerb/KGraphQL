@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class AccessRulesTest {
@@ -38,7 +39,7 @@ class AccessRulesTest {
     }
 
     @Test
-    suspend fun `allow when matching`() {
+    fun `allow when matching`() = runTest {
         val kobe = deserialize(
             schema.execute("{black_mamba{name}}", context = context { +"LAKERS" })
         ).extract<String>("data/black_mamba/name")
@@ -47,7 +48,7 @@ class AccessRulesTest {
     }
 
     @Test
-    suspend fun `reject when not matching`() {
+    fun `reject when not matching`() = runTest {
         expect<IllegalAccessException>("ILLEGAL ACCESS") {
             deserialize(
                 schema.execute("{ black_mamba {id} }", context = context { +"LAKERS" })
@@ -56,12 +57,12 @@ class AccessRulesTest {
     }
 
     @Test
-    suspend fun `allow property resolver access rule`() {
+    fun `allow property resolver access rule`() = runTest {
         deserialize(schema.execute("{white_mamba {item}}")).extract<String>("data/white_mamba/item") shouldBe "item"
     }
 
     @Test
-    suspend fun `reject property resolver access rule`() {
+    fun `reject property resolver access rule`() = runTest {
         expect<IllegalAccessException>("ILLEGAL ACCESS") {
             schema.execute("{black_mamba {item}}", context = context { +"LAKERS" }).also(::println)
         }

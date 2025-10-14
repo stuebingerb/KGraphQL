@@ -5,12 +5,13 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class DocumentationSpecificationTest {
 
     @Test
-    suspend fun `queries may be documented`() {
+    fun `queries may be documented`() = runTest {
         val expected = "sample query"
         val schema = defaultSchema {
             query("sample") {
@@ -24,7 +25,7 @@ class DocumentationSpecificationTest {
     }
 
     @Test
-    suspend fun `mutations may be documented`() {
+    fun `mutations may be documented`() = runTest {
         val expected = "sample mutation"
         val schema = defaultSchema {
             query("dummy") {
@@ -43,7 +44,7 @@ class DocumentationSpecificationTest {
     data class Sample(val content: String)
 
     @Test
-    suspend fun `object type may be documented`() {
+    fun `object type may be documented`() = runTest {
         val expected = "sample type"
         val schema = defaultSchema {
             query("sample") {
@@ -59,7 +60,7 @@ class DocumentationSpecificationTest {
     }
 
     @Test
-    suspend fun `input type may be documented`() {
+    fun `input type may be documented`() = runTest {
         val expected = "sample type"
         val schema = defaultSchema {
             query("sample") {
@@ -76,7 +77,7 @@ class DocumentationSpecificationTest {
     }
 
     @Test
-    suspend fun `kotlin field may be documented`() {
+    fun `kotlin field may be documented`() = runTest {
         val expected = "sample type"
         val schema = defaultSchema {
             query("sample") {
@@ -95,7 +96,7 @@ class DocumentationSpecificationTest {
     }
 
     @Test
-    suspend fun `extension field may be documented`() {
+    fun `extension field may be documented`() = runTest {
         val expected = "sample type"
         val schema = defaultSchema {
             query("sample") {
@@ -120,7 +121,7 @@ class DocumentationSpecificationTest {
     enum class SampleEnum { ONE, TWO, THREE }
 
     @Test
-    suspend fun `enum value may be documented`() {
+    fun `enum value may be documented`() = runTest {
         val expected = "some enum value"
         val schema = defaultSchema {
             query("sample") {
@@ -145,7 +146,7 @@ class DocumentationSpecificationTest {
     data class Documented(val id: Int)
 
     @Test
-    suspend fun `type may be documented`() {
+    fun `type may be documented`() = runTest {
         val expected = "very documented type"
         val schema = defaultSchema {
             query("documented") {

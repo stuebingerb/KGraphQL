@@ -6,19 +6,20 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class EnumTest : BaseSchemaTest() {
 
     @Test
-    suspend fun `query with enum field`() {
+    fun `query with enum field`() = runTest {
         val map = execute("{film{type}}")
         assertNoErrors(map)
         map.extract<String>("data/film/type") shouldBe "FULL_LENGTH"
     }
 
     @Test
-    suspend fun `query with enum argument`() {
+    fun `query with enum argument`() = runTest {
         val map = execute("{ films: filmsByType(type: FULL_LENGTH){title, type}}")
         assertNoErrors(map)
         map.extract<String>("data/films[0]/type") shouldBe "FULL_LENGTH"
@@ -26,7 +27,7 @@ class EnumTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with enum array variables`() {
+    fun `query with enum array variables`() = runTest {
         val schema = defaultSchema {
             configure {
                 wrapErrors = false

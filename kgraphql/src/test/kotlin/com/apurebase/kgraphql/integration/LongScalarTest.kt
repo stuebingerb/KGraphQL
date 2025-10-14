@@ -5,12 +5,13 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class LongScalarTest {
 
     @Test
-    suspend fun testLongField() {
+    fun testLongField() = runTest {
         val schema = defaultSchema {
             extendedScalars()
             query("long") {
@@ -24,7 +25,7 @@ class LongScalarTest {
     }
 
     @Test
-    suspend fun testLongArgument() {
+    fun testLongArgument() = runTest {
         val schema = defaultSchema {
             extendedScalars()
             query("isLong") {
@@ -47,7 +48,7 @@ class LongScalarTest {
     data class VeryLong(val long: Long)
 
     @Test
-    suspend fun `Schema may declare custom long scalar type`() {
+    fun `Schema may declare custom long scalar type`() = runTest {
         val schema = KGraphQL.schema {
             longScalar<VeryLong> {
                 deserialize = ::VeryLong

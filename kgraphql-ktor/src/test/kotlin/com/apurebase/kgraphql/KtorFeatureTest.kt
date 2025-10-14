@@ -6,6 +6,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.ApplicationCall
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -17,7 +18,7 @@ class KtorFeatureTest : KtorTest() {
     data class User(val id: Int = -1, val name: String = "")
 
     @Test
-    suspend fun `Simple query test`() {
+    fun `Simple query test`() = runTest {
         val server = withServer {
             query("hello") {
                 resolver { -> "World!" }
@@ -33,7 +34,7 @@ class KtorFeatureTest : KtorTest() {
     }
 
     @Test
-    suspend fun `Simple mutation test`() {
+    fun `Simple mutation test`() = runTest {
         val server = withServer {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -55,7 +56,7 @@ class KtorFeatureTest : KtorTest() {
     data class UserData(val username: String, val stuff: String)
 
     @Test
-    suspend fun `Simple context test`() {
+    fun `Simple context test`() = runTest {
         val georgeName = "George"
         val contextSetup: ContextBuilder.(ApplicationCall) -> Unit = { _ ->
             +UserData(georgeName, "STUFF")
@@ -106,7 +107,7 @@ class KtorFeatureTest : KtorTest() {
     data class InputTwo(val one: InputOne, val quantity: Int, val tokens: List<String>)
 
     @Test
-    suspend fun `Simple variables test`() {
+    fun `Simple variables test`() = runTest {
         val server = withServer {
             inputType<InputTwo>()
             query("test") { resolver { input: InputTwo -> "success: $input" } }
@@ -134,7 +135,7 @@ class KtorFeatureTest : KtorTest() {
     }
 
     @Test
-    suspend fun `Error response test`() {
+    fun `Error response test`() = runTest {
         val server = withServer {
             query("actor") {
                 resolver { -> Actor("George", 23) }

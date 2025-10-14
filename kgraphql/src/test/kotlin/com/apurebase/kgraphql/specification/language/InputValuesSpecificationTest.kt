@@ -9,6 +9,7 @@ import com.apurebase.kgraphql.extract
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -41,7 +42,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.1 Int Value")
-    suspend fun `Int input value`() {
+    fun `Int input value`() = runTest {
         val input = 4356
         val response = deserialize(schema.execute("{ Int(value: $input) }"))
         response.extract<Int>("data/Int") shouldBe input
@@ -50,7 +51,7 @@ class InputValuesSpecificationTest {
     @ParameterizedTest
     @ValueSource(strings = ["42.0", "\"foo\"", "bar"])
     @Specification("2.9.1 Int Value")
-    suspend fun `Invalid Int input value`(value: String) {
+    fun `Invalid Int input value`(value: String) = runTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             deserialize(schema.execute("{ Int(value: $value) }"))
         }
@@ -62,7 +63,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.2 Float Value")
-    suspend fun `Float input value`() {
+    fun `Float input value`() = runTest {
         val input = 4356.34
         val response = deserialize(schema.execute("{ Float(value: $input) }"))
         response.extract<Double>("data/Float") shouldBe input
@@ -70,7 +71,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.2 Float Value")
-    suspend fun `Double input value`() {
+    fun `Double input value`() = runTest {
         // GraphQL Float is Kotlin Double
         val input = 4356.34
         val response = deserialize(schema.execute("{ Double(value: $input) }"))
@@ -79,7 +80,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.2 Float Value")
-    suspend fun `Double with exponential input value`() {
+    fun `Double with exponential input value`() = runTest {
         val input = 4356.34e2
         val response = deserialize(schema.execute("{ Double(value: $input) }"))
         response.extract<Double>("data/Double") shouldBe input
@@ -102,7 +103,7 @@ class InputValuesSpecificationTest {
         ]
     )
     @Specification("2.9.3 Boolean Value")
-    suspend fun `Boolean input value`(input: String, expected: Boolean) {
+    fun `Boolean input value`(input: String, expected: Boolean) = runTest {
         val response = deserialize(schema.execute("{ Boolean(value: $input) }"))
         response.extract<Boolean>("data/Boolean") shouldBe expected
     }
@@ -110,7 +111,7 @@ class InputValuesSpecificationTest {
     @ParameterizedTest
     @ValueSource(strings = ["null", "42", "\"foo\"", "[\"foo\", \"bar\"]"])
     @Specification("2.9.3 Boolean Value")
-    suspend fun `Invalid Boolean input value`(value: String) {
+    fun `Invalid Boolean input value`(value: String) = runTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             deserialize(schema.execute("{ Boolean(value: $value) }"))
         }
@@ -122,7 +123,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.4 String Value")
-    suspend fun `String input value`() {
+    fun `String input value`() = runTest {
         val input = "\\\\Ala ma kota \\n\\\\kot ma Alę"
         val expected = "\\Ala ma kota \n\\kot ma Alę"
         val response = deserialize(schema.execute("{ String(value: \"$input\") }"))
@@ -131,7 +132,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.4 String Value")
-    suspend fun `String block input value`() {
+    fun `String block input value`() = runTest {
         val input = "\\Ala ma kota \n\\kot ma Alę"
         val expected = "\\Ala ma kota \n\\kot ma Alę"
         val response = deserialize(schema.execute("{ String(value: \"\"\"$input\"\"\") }"))
@@ -141,7 +142,7 @@ class InputValuesSpecificationTest {
     @ParameterizedTest
     @ValueSource(strings = ["null", "true", "42", "[\"foo\", \"bar\"]"])
     @Specification("2.9.4 String Value")
-    suspend fun `Invalid String input value`(value: String) {
+    fun `Invalid String input value`(value: String) = runTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             deserialize(schema.execute("{ String(value: $value) }"))
         }
@@ -153,14 +154,14 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.5 Null Value")
-    suspend fun `Null input value`() {
+    fun `Null input value`() = runTest {
         val response = deserialize(schema.execute("{ Null(value: null) }"))
         response.extract<Nothing?>("data/Null") shouldBe null
     }
 
     @Test
     @Specification("2.9.6 Enum Value")
-    suspend fun `Enum input value`() {
+    fun `Enum input value`() = runTest {
         val response = deserialize(schema.execute("{ Enum(value: ENUM1) }"))
         response.extract<String>("data/Enum") shouldBe FakeEnum.ENUM1.toString()
     }
@@ -168,7 +169,7 @@ class InputValuesSpecificationTest {
     @ParameterizedTest
     @ValueSource(strings = ["ENUM3"])
     @Specification("2.9.6 Enum Value")
-    suspend fun `Invalid Enum input value`(value: String) {
+    fun `Invalid Enum input value`(value: String) = runTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             deserialize(schema.execute("{ Enum(value: $value) }"))
         }
@@ -180,7 +181,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.7 List Value")
-    suspend fun `List input value`() {
+    fun `List input value`() = runTest {
         val response = deserialize(schema.execute("{ List(value: [23, 3, 23]) }"))
         response.extract<List<Int>>("data/List") shouldBe listOf(23, 3, 23)
     }
@@ -188,7 +189,7 @@ class InputValuesSpecificationTest {
     @ParameterizedTest
     @ValueSource(strings = ["true", "\"foo\""])
     @Specification("2.9.7 List Value")
-    suspend fun `Invalid List input value`(value: String) {
+    fun `Invalid List input value`(value: String) = runTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             deserialize(schema.execute("{ List(value: $value) }"))
         }
@@ -200,7 +201,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
-    suspend fun `Literal object input value`() {
+    fun `Literal object input value`() = runTest {
         val response = deserialize(
             schema.execute("{ Object(value: { number: 232, description: \"little number\" }) }")
         )
@@ -210,7 +211,7 @@ class InputValuesSpecificationTest {
     @ParameterizedTest
     @ValueSource(strings = ["null", "true", "42"])
     @Specification("2.9.8 Object Value")
-    suspend fun `Invalid Literal object input value`(value: String) {
+    fun `Invalid Literal object input value`(value: String) = runTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             schema.execute("{ Object(value: { number: 232, description: \"little number\", list: $value }) }")
         }
@@ -222,7 +223,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
-    suspend fun `Invalid Literal object input value - null`() {
+    fun `Invalid Literal object input value - null`() = runTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             schema.execute("{ Object(value: null) }")
         }
@@ -234,7 +235,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
-    suspend fun `Literal object input value with list field`() {
+    fun `Literal object input value with list field`() = runTest {
         val response = deserialize(
             schema.execute(
                 """
@@ -255,7 +256,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
-    suspend fun `Object input value`() {
+    fun `Object input value`() = runTest {
         val response = deserialize(
             schema.execute(
                 request = "query(\$object: FakeData!) { Object(value: \$object) }",
@@ -267,7 +268,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
-    suspend fun `Object input value with list field`() {
+    fun `Object input value with list field`() = runTest {
         val response = deserialize(
             schema.execute(
                 request = "query(\$object: FakeData!){ ObjectList(value: \$object) }",
@@ -279,7 +280,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
-    suspend fun `Input object value mixed with variables`() {
+    fun `Input object value mixed with variables`() = runTest {
         val response = schema.execute(
             """
             query ObjectVariablesMixed(${'$'}description: String!, ${'$'}number: Int! = 25) {
@@ -301,7 +302,7 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
-    suspend fun `Unknown object input value type`() {
+    fun `Unknown object input value type`() = runTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             schema.execute("query(\$object: FakeDate) { Object(value: \$object) }")
         }
@@ -322,7 +323,7 @@ class InputValuesSpecificationTest {
 
     // https://github.com/aPureBase/KGraphQL/issues/199
     @Test
-    suspend fun `input object value with interface`() {
+    fun `input object value with interface`() = runTest {
         val schema = KGraphQL.schema {
             inputType<Dessert> {
                 name = "DessertInput"

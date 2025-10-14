@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.7 Lists")
@@ -15,7 +16,7 @@ import org.junit.jupiter.api.Test
 class ListsSpecificationTest {
 
     @Test
-    suspend fun `list arguments are valid`() {
+    fun `list arguments are valid`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String> -> list }
@@ -34,7 +35,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `lists with nullable entries are valid`() {
+    fun `lists with nullable entries are valid`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String?> -> list }
@@ -51,7 +52,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `lists with non-nullable entries should not accept list with null element`() {
+    fun `lists with non-nullable entries should not accept list with null element`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String> -> list }
@@ -68,7 +69,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `by default coerce single element input as collection`() {
+    fun `by default coerce single element input as collection`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String> -> list }
@@ -85,7 +86,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `null value is not coerced as single element collection`() {
+    fun `null value is not coerced as single element collection`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String>? -> list }
@@ -103,7 +104,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `list argument can be declared non-nullable`() {
+    fun `list argument can be declared non-nullable`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String> -> list }
@@ -120,7 +121,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `Iterable implementations are treated as list`() {
+    fun `Iterable implementations are treated as list`() = runTest {
 
         fun getResult(): Iterable<String> = listOf("POTATO", "BATATO", "ROTATO")
 
@@ -135,7 +136,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `input objects with sets should work properly with direct input`() {
+    fun `input objects with sets should work properly with direct input`() = runTest {
         data class TestObject(val list: List<String>, val set: Set<String>)
 
         val schema = KGraphQL.schema {
@@ -163,7 +164,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `input objects with sets should work properly with variables`() {
+    fun `input objects with sets should work properly with variables`() = runTest {
         data class TestObject(val list: List<String>, val set: Set<String>)
 
         val schema = KGraphQL.schema {
@@ -195,7 +196,7 @@ class ListsSpecificationTest {
 
     // https://github.com/stuebingerb/KGraphQL/issues/110
     @Test
-    suspend fun `queries with nested lists should work properly`() {
+    fun `queries with nested lists should work properly`() = runTest {
         val schema = KGraphQL.schema {
             query("getNestedList") {
                 resolver { -> listOf(listOf("foo", "bar"), listOf("foobar")) }
@@ -210,7 +211,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    suspend fun `mutations with nested lists should work properly`() {
+    fun `mutations with nested lists should work properly`() = runTest {
         data class NestedLists(
             val nested1: List<List<String?>>,
             val nested2: List<List<List<List<List<String>?>>?>>,

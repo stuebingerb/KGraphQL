@@ -11,13 +11,14 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.shouldBeInstanceOf
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.8 Non-null")
 class NonNullSpecificationTest {
 
     @Test
-    suspend fun `if the result of non-null type is null, error should be raised`() {
+    fun `if the result of non-null type is null, error should be raised`() = runTest {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { string: String? -> string!! }
@@ -30,7 +31,7 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    suspend fun `nullable input types are always optional`() {
+    fun `nullable input types are always optional`() = runTest {
         val schema = KGraphQL.schema {
             query("nullable") {
                 resolver { input: String? -> input }
@@ -45,7 +46,7 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    suspend fun `non-null types are always required`() {
+    fun `non-null types are always required`() = runTest {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { input: String -> input }
@@ -57,7 +58,7 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    suspend fun `variable of a nullable type cannot be provided to a non-null argument`() {
+    fun `variable of a nullable type cannot be provided to a non-null argument`() = runTest {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { input: String -> input }
@@ -73,7 +74,7 @@ class NonNullSpecificationTest {
     data class Type2(val items: List<Type1?>)
 
     @Test
-    suspend fun `null within arrays should work`() {
+    fun `null within arrays should work`() = runTest {
         val schema = KGraphQL.schema {
             query("data") {
                 resolver { ->
@@ -106,7 +107,7 @@ class NonNullSpecificationTest {
     data class MyInput(val value1: String, val value2: String?, val value3: Int)
 
     @Test
-    suspend fun `missing nullable values without Kotlin default values should execute successfully and use null`() {
+    fun `missing nullable values without Kotlin default values should execute successfully and use null`() = runTest {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyInput -> "${input.value1} - ${input.value2 ?: "Nada"} - ${input.value3}" }
@@ -125,7 +126,7 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    suspend fun `missing non-nullable values without Kotlin default values should raise an error`() {
+    fun `missing non-nullable values without Kotlin default values should raise an error`() = runTest {
         val schema = KGraphQL.schema {
             inputType<MyInput> {
                 property(MyInput::value1) {
@@ -151,7 +152,7 @@ class NonNullSpecificationTest {
     data class MyOptionalInput(val value1: String = "Hello", val value2: String? = "World")
 
     @Test
-    suspend fun `missing nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
+    fun `missing nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() = runTest {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
@@ -170,7 +171,7 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    suspend fun `missing non-nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
+    fun `missing non-nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() = runTest {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }

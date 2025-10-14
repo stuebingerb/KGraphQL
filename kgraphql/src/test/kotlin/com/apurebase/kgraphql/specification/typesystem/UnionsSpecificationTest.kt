@@ -15,6 +15,7 @@ import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.execution.Execution
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
@@ -22,7 +23,7 @@ import java.time.Instant
 class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
-    suspend fun `query union property`() {
+    fun `query union property`() = runTest {
         val map = execute(
             "{actors{name, favourite{ ... on Actor {name}, ... on Director {name age}, ... on Scenario{content(uppercase: false)}}}}",
             null
@@ -39,7 +40,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query union property with external fragment`() {
+    fun `query union property with external fragment`() = runTest {
         val map = execute(
             "{actors{name, favourite{ ...actor, ...director, ...scenario }}}" +
                 "fragment actor on Actor {name}" +
@@ -58,14 +59,14 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query union property with invalid selection set`() {
+    fun `query union property with invalid selection set`() = runTest {
         expect<ValidationException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]") {
             execute("{actors{name, favourite{ name }}}")
         }
     }
 
     @Test
-    suspend fun `a union type should allow requesting __typename`() {
+    fun `a union type should allow requesting __typename`() = runTest {
         val result = execute(
             """{
                 actors {
@@ -92,7 +93,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `a union type should allow requesting __typename only`() {
+    fun `a union type should allow requesting __typename only`() = runTest {
         val result = execute(
             """{
                 actors {
@@ -111,7 +112,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `a union type should require a selection for all potential types`() {
+    fun `a union type should require a selection for all potential types`() = runTest {
         expect<ValidationException>("Missing selection set for type Scenario") {
             execute(
                 """{
@@ -128,7 +129,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `Nullable union types should be valid`() {
+    fun `Nullable union types should be valid`() = runTest {
         val result = execute(
             """{
               actors(all: true) {
@@ -149,7 +150,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `Non nullable union types should fail`() {
+    fun `Non nullable union types should fail`() = runTest {
         expect<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was null") {
             execute(
                 """{
@@ -227,7 +228,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Suppress("UNUSED_ANONYMOUS_PARAMETER") // "ctx" must stay as-is because resolver cannot handle unnamed parameter
     @Test
-    suspend fun `automatic unions out of sealed classes`() {
+    fun `automatic unions out of sealed classes`() = runTest {
         defaultSchema {
             unionType<AAA>()
 
@@ -267,7 +268,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `union types in lists`() {
+    fun `union types in lists`() = runTest {
         defaultSchema {
             unionType<WithFields>()
 
@@ -293,7 +294,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `union types with custom name def resolver`() {
+    fun `union types with custom name def resolver`() = runTest {
         defaultSchema {
             unionType<WithFields> {
                 subTypeBlock = {
@@ -346,7 +347,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     // https://github.com/aPureBase/KGraphQL/issues/105
     @Test
-    suspend fun `sealed classes unions should allow requesting __typename`() {
+    fun `sealed classes unions should allow requesting __typename`() = runTest {
         val schema = KGraphQL.schema {
             longScalar<Instant> {
                 serialize = { it.toEpochMilli() }
@@ -384,7 +385,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     // https://github.com/aPureBase/KGraphQL/issues/105
     @Test
-    suspend fun `inner sealed classes unions should allow requesting __typename`() {
+    fun `inner sealed classes unions should allow requesting __typename`() = runTest {
         val schema = KGraphQL.schema {
             longScalar<Instant> {
                 serialize = { it.toEpochMilli() }
@@ -433,7 +434,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     // https://github.com/aPureBase/KGraphQL/issues/109
     @Test
-    suspend fun `list of union type should work as expected`() {
+    fun `list of union type should work as expected`() = runTest {
         val schema = KGraphQL.schema {
             unionType<QualificationItem>()
 

@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.3 Interfaces")
@@ -23,20 +24,20 @@ class InterfacesSpecificationTest {
     }
 
     @Test
-    suspend fun `Interfaces represent a list of named fields and their arguments`() {
+    fun `Interfaces represent a list of named fields and their arguments`() = runTest {
         val map = deserialize(schema.execute("{simple{exe}}"))
         map.extract<String>("data/simple/exe") shouldBe "EXE"
     }
 
     @Test
-    suspend fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`() {
+    fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`() = runTest {
         expect<ValidationException>("Property stuff on SimpleInterface does not exist") {
             schema.execute("{simple{exe, stuff}}")
         }
     }
 
     @Test
-    suspend fun `Query for fields of interface implementation can be done only by fragments`() {
+    fun `Query for fields of interface implementation can be done only by fragments`() = runTest {
         val map = deserialize(schema.execute("{simple{exe ... on Simple { stuff }}}"))
         map.extract<String>("data/simple/stuff") shouldBe "CMD"
     }

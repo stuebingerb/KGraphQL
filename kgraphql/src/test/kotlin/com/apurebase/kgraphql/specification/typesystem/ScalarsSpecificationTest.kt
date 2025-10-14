@@ -11,6 +11,7 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.scalar.ID
 import com.apurebase.kgraphql.schema.scalar.StringScalarCoercion
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -19,7 +20,7 @@ import java.util.UUID
 class ScalarsSpecificationTest {
 
     @Test
-    suspend fun `built-in scalars should be available by default`() {
+    fun `built-in scalars should be available by default`() = runTest {
         val schema = KGraphQL.schema {
             query("int") {
                 resolver<Int> { 1 }
@@ -67,7 +68,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    suspend fun `extended scalars should be available if included`() {
+    fun `extended scalars should be available if included`() = runTest {
         val schema = KGraphQL.schema {
             extendedScalars()
             query("long") {
@@ -86,7 +87,7 @@ class ScalarsSpecificationTest {
     data class Person(val uuid: UUID, val name: String)
 
     @Test
-    suspend fun `type systems can add additional scalars with semantic meaning`() {
+    fun `type systems can add additional scalars with semantic meaning`() = runTest {
         val uuid = UUID.randomUUID()
         val testedSchema = KGraphQL.schema {
             stringScalar<UUID> {
@@ -119,7 +120,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    suspend fun `integer value represents a value grater than 2^-31 and less or equal to 2^31`() {
+    fun `integer value represents a value grater than 2^-31 and less or equal to 2^31`() = runTest {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -135,7 +136,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    suspend fun `when float is expected as an input type, both integer and float input values are accepted`() {
+    fun `when float is expected as an input type, both integer and float input values are accepted`() = runTest {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -149,7 +150,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    suspend fun `server can declare custom UUID type`() {
+    fun `server can declare custom UUID type`() = runTest {
         val testedSchema = KGraphQL.schema {
             stringScalar<UUID> {
                 name = "UUID"
@@ -169,7 +170,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    suspend fun `server can use built-in ID type`() {
+    fun `server can use built-in ID type`() = runTest {
         data class IdPerson(val id: ID, val name: String)
 
         val testedSchema = KGraphQL.schema {
@@ -259,7 +260,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    suspend fun `for numeric scalars, input string with numeric content must raise a query error indicating an incorrect type`() {
+    fun `for numeric scalars, input string with numeric content must raise a query error indicating an incorrect type`() = runTest {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -277,7 +278,7 @@ class ScalarsSpecificationTest {
     data class Number(val int: Int)
 
     @Test
-    suspend fun `Schema may declare custom int scalar type`() {
+    fun `Schema may declare custom int scalar type`() = runTest {
         val schema = KGraphQL.schema {
             intScalar<Number> {
                 deserialize = ::Number
@@ -297,7 +298,7 @@ class ScalarsSpecificationTest {
     data class Bool(val boolean: Boolean)
 
     @Test
-    suspend fun `Schema may declare custom boolean scalar type`() {
+    fun `Schema may declare custom boolean scalar type`() = runTest {
         val schema = KGraphQL.schema {
             booleanScalar<Bool> {
                 deserialize = ::Bool
@@ -323,7 +324,7 @@ class ScalarsSpecificationTest {
     data class Multi(val boo: Boo, val str: String, val num: Num)
 
     @Test
-    suspend fun `schema may declare custom double scalar type`() {
+    fun `schema may declare custom double scalar type`() = runTest {
         val schema = KGraphQL.schema {
             floatScalar<Dob> {
                 deserialize = ::Dob
@@ -341,7 +342,7 @@ class ScalarsSpecificationTest {
     }
 
     @Test
-    suspend fun `scalars within input variables`() {
+    fun `scalars within input variables`() = runTest {
         val schema = KGraphQL.schema {
             booleanScalar<Boo> {
                 deserialize = ::Boo
@@ -448,7 +449,7 @@ class ScalarsSpecificationTest {
     data class NewPart(val manufacturer: String, val name: String, val oem: Boolean, val addedDate: LocalDate)
 
     @Test
-    suspend fun `schema may declare LocalDate custom scalar`() {
+    fun `schema may declare LocalDate custom scalar`() = runTest {
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }

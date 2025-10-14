@@ -16,6 +16,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldNotStartWith
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class IntrospectionSpecificationTest {
@@ -34,7 +35,7 @@ class IntrospectionSpecificationTest {
     data class Data(val string: String)
 
     @Test
-    suspend fun `__typename field can be used to obtain type of object`() {
+    fun `__typename field can be used to obtain type of object`() = runTest {
         val schema = defaultSchema {
             query("sample") {
                 resolver { -> Data("Ronaldingo") }
@@ -46,7 +47,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `__typename field can be used to obtain type of query`() {
+    fun `__typename field can be used to obtain type of query`() = runTest {
         val schema = defaultSchema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -58,7 +59,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `__typename field can be used to obtain type of mutation`() {
+    fun `__typename field can be used to obtain type of mutation`() = runTest {
         val schema = defaultSchema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -73,7 +74,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `__typename field cannot be used on scalars`() {
+    fun `__typename field cannot be used on scalars`() = runTest {
         val schema = defaultSchema {
             query("sample") {
                 resolver { -> Data("Ronaldingo") }
@@ -92,7 +93,7 @@ class IntrospectionSpecificationTest {
     data class EnumData(val enum: SampleEnum)
 
     @Test
-    suspend fun `__typename field cannot be used on enums`() {
+    fun `__typename field cannot be used on enums`() = runTest {
         val schema = defaultSchema {
             query("sample") {
                 resolver { -> EnumData(SampleEnum.VALUE) }
@@ -109,7 +110,7 @@ class IntrospectionSpecificationTest {
     data class Union2(val two: String)
 
     @Test
-    suspend fun `__typename field can be used to obtain type of union member in runtime`() {
+    fun `__typename field can be used to obtain type of union member in runtime`() = runTest {
         val schema = defaultSchema {
             type<Data> {
                 unionProperty("union") {
@@ -167,7 +168,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `field __schema is accessible from the type of the root of a query operation`() {
+    fun `field __schema is accessible from the type of the root of a query operation`() = runTest {
         val schema = defaultSchema {
             query("data") {
                 resolver<String> { "DADA" }
@@ -179,7 +180,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `field __types is accessible from the type of the root of a query operation`() {
+    fun `field __types is accessible from the type of the root of a query operation`() = runTest {
         val schema = defaultSchema {
             query("data") {
                 resolver<String> { "DADA" }
@@ -238,7 +239,7 @@ class IntrospectionSpecificationTest {
     class Face(override val value: String, override val value2: Boolean = false) : InterInter
 
     @Test
-    suspend fun `__typename returns actual type of object`() {
+    fun `__typename returns actual type of object`() = runTest {
         val schema = defaultSchema {
             query("interface") {
                 resolver { ->
@@ -320,7 +321,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `introspection field __typename must not leak into schema introspection`() {
+    fun `introspection field __typename must not leak into schema introspection`() = runTest {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
@@ -336,7 +337,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `introspection types should not contain duplicated float type for kotlin Double and Float`() {
+    fun `introspection types should not contain duplicated float type for kotlin Double and Float`() = runTest {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
@@ -351,7 +352,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `introspection shouldn't contain LookupSchema nor SchemaProxy`() {
+    fun `introspection shouldn't contain LookupSchema nor SchemaProxy`() = runTest {
         unionSchema.execute(Introspection.query()).run {
             this shouldNotContain "LookupSchema"
             this shouldNotContain "SchemaProxy"
@@ -359,7 +360,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `__Directive introspection should return all built-in directives as expected`() {
+    fun `__Directive introspection should return all built-in directives as expected`() = runTest {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
@@ -402,7 +403,7 @@ class IntrospectionSpecificationTest {
      * Not part of spec, but assumption of many graphql tools
      */
     @Test
-    suspend fun `query type should have non null, empty interface list`() {
+    fun `query type should have non null, empty interface list`() = runTest {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
@@ -417,7 +418,7 @@ class IntrospectionSpecificationTest {
      * Not part of spec, but assumption of many graphql tools
      */
     @Test
-    suspend fun `__Directive introspection type should have onField, onFragment, onOperation fields`() {
+    fun `__Directive introspection type should have onField, onFragment, onOperation fields`() = runTest {
         val schema = defaultSchema {
             query("interface") {
                 resolver { -> Face("~~MOCK~~") }
@@ -435,7 +436,7 @@ class IntrospectionSpecificationTest {
     }
 
     @Test
-    suspend fun `all available SpecLevels of the introspection query should return without errors`() {
+    fun `all available SpecLevels of the introspection query should return without errors`() = runTest {
         Introspection.SpecLevel.entries.forEach { _ ->
             val schema = defaultSchema {
                 query("sample") {

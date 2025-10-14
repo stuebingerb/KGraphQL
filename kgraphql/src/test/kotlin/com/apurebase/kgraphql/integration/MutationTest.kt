@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class MutationTest : BaseSchemaTest() {
@@ -14,7 +15,7 @@ class MutationTest : BaseSchemaTest() {
     private val testActor = Actor("Michael Caine", 72)
 
     @Test
-    suspend fun `simple mutation multiple fields`() {
+    fun `simple mutation multiple fields`() = runTest {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){name, age}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf(
@@ -24,63 +25,63 @@ class MutationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `simple mutation single field`() {
+    fun `simple mutation single field`() = runTest {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){name}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("name" to testActor.name)
     }
 
     @Test
-    suspend fun `simple mutation single field 2`() {
+    fun `simple mutation single field 2`() = runTest {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("age" to testActor.age)
     }
 
     @Test
-    suspend fun `invalid mutation name`() {
+    fun `invalid mutation name`() = runTest {
         expect<ValidationException>("Property createBanana on Mutation does not exist") {
             execute("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         }
     }
 
     @Test
-    suspend fun `invalid argument type`() {
+    fun `invalid argument type`() = runTest {
         expect<InvalidInputValueException>("Cannot coerce \"fwfwf\" to numeric constant") {
             execute("mutation {createActor(name: \"${testActor.name}\", age: \"fwfwf\"){age}}")
         }
     }
 
     @Test
-    suspend fun `invalid arguments number`() {
+    fun `invalid arguments number`() = runTest {
         expect<ValidationException>("createActor does support arguments [name, age]. Found arguments [name, age, bananan]") {
             execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 
     @Test
-    suspend fun `invalid arguments number with NotIntrospected class`() {
+    fun `invalid arguments number with NotIntrospected class`() = runTest {
         expect<ValidationException>("createActorWithContext does support arguments [name, age]. Found arguments [name, age, bananan]") {
             execute("mutation {createActorWithContext(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 
     @Test
-    suspend fun `mutation with alias`() {
+     fun `mutation with alias`() = runTest {
         val map = execute("mutation {caine : createActor(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/caine") shouldBe mapOf<String, Any>("age" to testActor.age)
     }
 
     @Test
-    suspend fun `mutation with field alias`() {
+    fun `mutation with field alias`() = runTest {
         val map = execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}){howOld: age}}")
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActor") shouldBe mapOf<String, Any>("howOld" to testActor.age)
     }
 
     @Test
-    suspend fun `simple mutation with aliased input type`() {
+    fun `simple mutation with aliased input type`() = runTest {
         val map = execute(
             "mutation(\$newActor: ActorInput!) { createActorWithAliasedInputType(newActor: \$newActor) {name}}",
             variables = "{\"newActor\": {\"name\": \"${testActor.name}\", \"age\": ${testActor.age}}}"

@@ -5,13 +5,14 @@ import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.expect
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 class SchemaConfigurationTest {
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    suspend fun `execution result should be the same with and without caching`(withCaching: Boolean) {
+    fun `execution result should be the same with and without caching`(withCaching: Boolean) = runTest {
         val schema = schema {
             configure {
                 useCachingDocumentParser = withCaching
@@ -28,7 +29,7 @@ class SchemaConfigurationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    suspend fun `execution result should use pretty printing if configured`(withPrettyPrinter: Boolean) {
+    fun `execution result should use pretty printing if configured`(withPrettyPrinter: Boolean) = runTest {
         val schema = schema {
             configure {
                 useDefaultPrettyPrinter = withPrettyPrinter
@@ -57,7 +58,7 @@ class SchemaConfigurationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    suspend fun `introspections should be allowed depending on configuration`(introspectionAllowed: Boolean) {
+    fun `introspections should be allowed depending on configuration`(introspectionAllowed: Boolean) = runTest {
         val schema = defaultSchema {
             configure {
                 introspection = introspectionAllowed

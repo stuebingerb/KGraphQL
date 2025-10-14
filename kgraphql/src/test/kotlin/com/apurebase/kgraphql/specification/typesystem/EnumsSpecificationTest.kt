@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.5 Enums")
@@ -30,16 +31,15 @@ class EnumsSpecificationTest {
     }
 
     @Test
-    suspend fun `string literals must not be accepted as an enum input`() {
+    fun `string literals must not be accepted as an enum input`() = runTest {
         expect<InvalidInputValueException>("String literal '\"COOL\"' is invalid value for enum type Coolness") {
             schema.execute("{cool(cool : \"COOL\")}")
         }
     }
 
     @Test
-    suspend fun `string constants are accepted as an enum input`() {
+    fun `string constants are accepted as an enum input`() = runTest {
         val response = deserialize(schema.execute("{cool(cool : COOL)}"))
         response.extract<String>("data/cool") shouldBe "COOL"
     }
-
 }

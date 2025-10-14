@@ -4,6 +4,7 @@ import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -11,19 +12,19 @@ import org.junit.jupiter.api.assertThrows
 class DirectivesSpecificationTest : BaseSchemaTest() {
 
     @Test
-    suspend fun `query with @include directive on field`() {
+    fun `query with @include directive on field`() = runTest {
         val map = execute("{film{title, year @include(if: false)}}")
         assertThrows<IllegalArgumentException> { map.extract("data/film/year") }
     }
 
     @Test
-    suspend fun `query with @skip directive on field`() {
+    fun `query with @skip directive on field`() = runTest {
         val map = execute("{film{title, year @skip(if: true)}}")
         assertThrows<IllegalArgumentException> { map.extract("data/film/year") }
     }
 
     @Test
-    suspend fun `query with @include and @skip directive on field`() {
+    fun `query with @include and @skip directive on field`() = runTest {
         val mapBothSkip = execute("{film{title, year @include(if: false) @skip(if: true)}}")
         assertThrows<IllegalArgumentException> { mapBothSkip.extract("data/film/year") }
 
@@ -38,7 +39,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with @include and @skip directive on field object`() {
+    fun `query with @include and @skip directive on field object`() = runTest {
         val mapWithSkip = execute("{ number(big: true), film @skip(if: true) { title } }")
         assertThrows<IllegalArgumentException> { mapWithSkip.extract("data/film") }
 
@@ -53,7 +54,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `mutation with @include and @skip directive on field object`() {
+    fun `mutation with @include and @skip directive on field object`() = runTest {
         val mapWithSkip = execute("mutation { createActor(name: \"actor\", age: 42) @skip(if: true) { name age } }")
         assertThrows<IllegalArgumentException> { mapWithSkip.extract("data/createActor") }
 
@@ -70,7 +71,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    suspend fun `query with @include directive on field with variable`() {
+    fun `query with @include directive on field with variable`() = runTest {
         val map = execute(
             "query film (\$include: Boolean!) {film{title, year @include(if: \$include)}}",
             "{\"include\":\"false\"}"

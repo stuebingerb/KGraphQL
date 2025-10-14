@@ -4,13 +4,14 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.schema.SchemaException
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class ObjectTest {
     data class Person(val name: String, val age: Int)
 
     @Test
-    suspend fun `property name should default to Kotlin name`() {
+    fun `property name should default to Kotlin name`() = runTest {
         val schema = KGraphQL.schema {
             query("getPerson") {
                 resolver { name: String -> Person(name = name, age = 42) }
@@ -42,7 +43,7 @@ class ObjectTest {
     }
 
     @Test
-    suspend fun `property name should be configurable`() {
+    fun `property name should be configurable`() = runTest {
         val schema = KGraphQL.schema {
             type<Person> {
                 property(Person::age) {

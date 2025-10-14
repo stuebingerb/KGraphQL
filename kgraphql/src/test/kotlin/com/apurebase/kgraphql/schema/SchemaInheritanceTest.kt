@@ -4,6 +4,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -18,7 +19,7 @@ class SchemaInheritanceTest {
     class C(override var name: String, override var age: Int, var pesel: String = "") : A(name, age)
 
     @Test
-    suspend fun `call to ignore property should cascade to subclasses`() {
+    fun `call to ignore property should cascade to subclasses`() = runTest {
         val name = "PELE"
         val age = 20
 

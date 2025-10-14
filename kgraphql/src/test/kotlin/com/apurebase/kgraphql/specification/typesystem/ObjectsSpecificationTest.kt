@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.schema.SchemaException
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.test.runTest
 import nidomiro.kdataloader.ExecutionResult
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -302,7 +303,7 @@ class ObjectsSpecificationTest {
     data class FewFields(val name: String = "Boguś", val surname: String = "Linda")
 
     @Test
-    suspend fun `fields are conceptually ordered in the same order in which they were encountered during query execution`() {
+    fun `fields are conceptually ordered in the same order in which they were encountered during query execution`() = runTest {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
             type<ManyFields> {
@@ -332,7 +333,7 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    suspend fun `fragment spread fields occur before the following fields`() {
+    fun `fragment spread fields occur before the following fields`() = runTest {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
         }
@@ -348,7 +349,7 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    suspend fun `fragments for which the type does not apply does not affect ordering`() {
+    fun `fragments for which the type does not apply does not affect ordering`() = runTest {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
             type<FewFields>()
@@ -368,7 +369,7 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    suspend fun `if a field is queried multiple times in a selection, it is ordered by the first time it is encountered`() {
+    fun `if a field is queried multiple times in a selection, it is ordered by the first time it is encountered`() = runTest {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
         }
@@ -416,7 +417,7 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    suspend fun `field resolution order does not affect response field order`() {
+    fun `field resolution order does not affect response field order`() = runTest {
         val schema = schema {
             type<Actor> {
                 property("long") {
@@ -450,7 +451,7 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    suspend fun `operation resolution order does not affect response field order`() {
+    fun `operation resolution order does not affect response field order`() = runTest {
         val schema = schema {
             query("long") {
                 resolver<String> {

@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("2.7 Field Alias")
@@ -28,7 +29,7 @@ class FieldAliasSpecificationTest {
     }
 
     @Test
-    suspend fun `can define response object field name`() {
+    fun `can define response object field name`() = runTest {
         val map =
             deserialize(schema.execute("{actor{ageMonths: age(inMonths : true) ageYears: age(inMonths : false)}}"))
         map.extract<Int>("data/actor/ageMonths") shouldBe age * 12
@@ -36,7 +37,7 @@ class FieldAliasSpecificationTest {
     }
 
     @Test
-    suspend fun `top level of a query can be given alias`() {
+    fun `top level of a query can be given alias`() = runTest {
         val map = deserialize(schema.execute("{ bogus : actor{name}}"))
         map.extract<String>("data/bogus/name") shouldBe actorName
     }

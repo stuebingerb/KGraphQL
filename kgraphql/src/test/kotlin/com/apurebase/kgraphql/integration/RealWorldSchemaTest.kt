@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.KGraphQL
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class RealWorldSchemaTest {
@@ -43,7 +44,7 @@ class RealWorldSchemaTest {
 
     // https://github.com/apureBase/KGraphQL/issues/75
     @Test
-    suspend fun `issue-75 object is not of declaring class - full sample`() {
+    fun `issue-75 object is not of declaring class - full sample`() = runTest {
         val schema = KGraphQL.schema {
             configure {
                 useDefaultPrettyPrinter = true
