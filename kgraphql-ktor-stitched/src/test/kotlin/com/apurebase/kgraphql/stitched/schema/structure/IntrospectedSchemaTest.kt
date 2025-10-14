@@ -4,6 +4,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.SchemaPrinter
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class IntrospectedSchemaTest {
@@ -15,7 +16,7 @@ class IntrospectedSchemaTest {
     }
 
     @Test
-    suspend fun `introspected schema should result in the same SDL as the schema itself`() {
+    fun `introspected schema should result in the same SDL as the schema itself`() = runTest {
         val schema = KGraphQL.schema {
             extendedScalars()
 
