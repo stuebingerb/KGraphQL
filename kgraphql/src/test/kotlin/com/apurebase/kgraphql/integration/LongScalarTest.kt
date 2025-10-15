@@ -5,12 +5,13 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class LongScalarTest {
 
     @Test
-    fun testLongField() {
+    fun testLongField() = runTest {
         val schema = defaultSchema {
             extendedScalars()
             query("long") {
@@ -18,13 +19,13 @@ class LongScalarTest {
             }
         }
 
-        val response = schema.executeBlocking("{ long }")
+        val response = schema.execute("{ long }")
         val long = deserialize(response).extract<Long>("data/long")
         long shouldBe Long.MAX_VALUE
     }
 
     @Test
-    fun testLongArgument() {
+    fun testLongArgument() = runTest {
         val schema = defaultSchema {
             extendedScalars()
             query("isLong") {
@@ -39,7 +40,7 @@ class LongScalarTest {
         }
 
         val isLong = deserialize(
-            schema.executeBlocking("{ isLong(long: ${Int.MAX_VALUE.toLong() + 1}) }")
+            schema.execute("{ isLong(long: ${Int.MAX_VALUE.toLong() + 1}) }")
         ).extract<String>("data/isLong")
         isLong shouldBe "YES"
     }
@@ -47,7 +48,7 @@ class LongScalarTest {
     data class VeryLong(val long: Long)
 
     @Test
-    fun `Schema may declare custom long scalar type`() {
+    fun `Schema may declare custom long scalar type`() = runTest {
         val schema = KGraphQL.schema {
             longScalar<VeryLong> {
                 deserialize = ::VeryLong
@@ -60,7 +61,7 @@ class LongScalarTest {
         }
 
         val value = Int.MAX_VALUE.toLong() + 2
-        val response = deserialize(schema.executeBlocking("{ number(number: $value) }"))
+        val response = deserialize(schema.execute("{ number(number: $value) }"))
         response.extract<Long>("data/number") shouldBe value
     }
 }

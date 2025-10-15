@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.schema.SchemaException
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.test.runTest
 import nidomiro.kdataloader.ExecutionResult
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -302,7 +303,7 @@ class ObjectsSpecificationTest {
     data class FewFields(val name: String = "Boguś", val surname: String = "Linda")
 
     @Test
-    fun `fields are conceptually ordered in the same order in which they were encountered during query execution`() {
+    fun `fields are conceptually ordered in the same order in which they were encountered during query execution`() = runTest {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
             type<ManyFields> {
@@ -312,7 +313,7 @@ class ObjectsSpecificationTest {
             }
         }
 
-        val result = schema.executeBlocking("{many{id, id2, value, active, smooth, name}}")
+        val result = schema.execute("{many{id, id2, value, active, smooth, name}}")
         with(result) {
             indexOf("\"name\"") shouldBeGreaterThan indexOf("\"smooth\"")
             indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"active\"")
@@ -321,7 +322,7 @@ class ObjectsSpecificationTest {
             indexOf("\"id2\"") shouldBeGreaterThan indexOf("\"id\"")
         }
 
-        val result2 = schema.executeBlocking("{many{name, active, id2, value, smooth, id}}")
+        val result2 = schema.execute("{many{name, active, id2, value, smooth, id}}")
         with(result2) {
             indexOf("\"id\"") shouldBeGreaterThan indexOf("\"smooth\"")
             indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"value\"")
@@ -332,13 +333,13 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    fun `fragment spread fields occur before the following fields`() {
+    fun `fragment spread fields occur before the following fields`() = runTest {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
         }
 
         val result =
-            schema.executeBlocking("{many{active, ...Fields , smooth, id}} fragment Fields on ManyFields { id2, value }")
+            schema.execute("{many{active, ...Fields , smooth, id}} fragment Fields on ManyFields { id2, value }")
         with(result) {
             indexOf("\"id\"") shouldBeGreaterThan indexOf("\"smooth\"")
             indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"value\"")
@@ -348,13 +349,13 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    fun `fragments for which the type does not apply does not affect ordering`() {
+    fun `fragments for which the type does not apply does not affect ordering`() = runTest {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
             type<FewFields>()
         }
 
-        val result = schema.executeBlocking(
+        val result = schema.execute(
             "{many{active, ...Fields, ...Few , smooth, id}} " +
                 "fragment Fields on ManyFields { id2, value }" +
                 "fragment Few on FewFields { name } "
@@ -368,12 +369,12 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    fun `if a field is queried multiple times in a selection, it is ordered by the first time it is encountered`() {
+    fun `if a field is queried multiple times in a selection, it is ordered by the first time it is encountered`() = runTest {
         val schema = schema {
             query("many") { resolver { -> ManyFields() } }
         }
 
-        val result = schema.executeBlocking("{many{id, id2, value, id, active, smooth}}")
+        val result = schema.execute("{many{id, id2, value, id, active, smooth}}")
         with(result) {
             //ensure that "id" appears only once
             indexOf("\"id\"") shouldBe lastIndexOf("\"id\"")
@@ -385,7 +386,7 @@ class ObjectsSpecificationTest {
         }
 
         val resultFragment =
-            schema.executeBlocking("{many{id, id2, ...Many, active, smooth}} fragment Many on ManyFields{value, id}")
+            schema.execute("{many{id, id2, ...Many, active, smooth}} fragment Many on ManyFields{value, id}")
         with(resultFragment) {
             //ensure that "id" appears only once
             indexOf("\"id\"") shouldBe lastIndexOf("\"id\"")
@@ -416,7 +417,7 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    fun `field resolution order does not affect response field order`() {
+    fun `field resolution order does not affect response field order`() = runTest {
         val schema = schema {
             type<Actor> {
                 property("long") {
@@ -438,19 +439,19 @@ class ObjectsSpecificationTest {
             }
         }
 
-        val responseShortAfterLong = schema.executeBlocking("{actor{long, short}}")
+        val responseShortAfterLong = schema.execute("{actor{long, short}}")
         with(responseShortAfterLong) {
             indexOf("short") shouldBeGreaterThan indexOf("long")
         }
 
-        val responseLongAfterShort = schema.executeBlocking("{actor{short, long}}")
+        val responseLongAfterShort = schema.execute("{actor{short, long}}")
         with(responseLongAfterShort) {
             indexOf("long") shouldBeGreaterThan indexOf("short")
         }
     }
 
     @Test
-    fun `operation resolution order does not affect response field order`() {
+    fun `operation resolution order does not affect response field order`() = runTest {
         val schema = schema {
             query("long") {
                 resolver<String> {
@@ -466,7 +467,7 @@ class ObjectsSpecificationTest {
             }
         }
 
-        val responseShortAfterLong = schema.executeBlocking("{long, short}")
+        val responseShortAfterLong = schema.execute("{long, short}")
         with(responseShortAfterLong) {
             indexOf("short") shouldBeGreaterThan indexOf("long")
         }

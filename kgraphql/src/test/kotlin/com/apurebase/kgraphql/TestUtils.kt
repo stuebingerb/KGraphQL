@@ -47,9 +47,9 @@ fun assertNoErrors(map: Map<*, *>) {
     if (map["data"] == null) throw AssertionError("Data is null")
 }
 
-fun executeEqualQueries(schema: Schema, expected: Map<*, *>, vararg queries: String) {
+suspend fun executeEqualQueries(schema: Schema, expected: Map<*, *>, vararg queries: String) {
     queries.map { request ->
-        schema.executeBlocking(request).deserialize()
+        schema.execute(request).deserialize()
     }.forAll { map ->
         map shouldBe expected
     }

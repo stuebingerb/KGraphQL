@@ -39,10 +39,11 @@ dependencies {
     implementation(libs.aedile)
 
     testImplementation(libs.kotest)
-    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.junit.jupiter.core)
     testImplementation(libs.junit.jupiter.params)
     testImplementation(libs.kotlinx.coroutines.debug)
     testImplementation(libs.kotlinx.coroutines.test)
+    testRuntimeOnly(libs.junit.launcher)
 
     testFixturesImplementation(libs.kotest)
 

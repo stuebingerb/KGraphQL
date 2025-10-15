@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.extract
 import io.kotest.matchers.collections.shouldHaveSize
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.runTest
 import nidomiro.kdataloader.ExecutionResult
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
@@ -69,9 +70,9 @@ class DataLoaderExecutionTest {
     }
 
     @Test
-    fun `stress test with dataloaders and custom supervisor jobs`() {
+    fun `stress test with dataloaders and custom supervisor jobs`() = runTest {
         val result = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 """
                  {
                      data1: items(amount: 250) { ...Fields }

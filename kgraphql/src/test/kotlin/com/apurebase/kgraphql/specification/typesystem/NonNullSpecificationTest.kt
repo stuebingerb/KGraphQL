@@ -11,53 +11,54 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.shouldBeInstanceOf
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.8 Non-null")
 class NonNullSpecificationTest {
 
     @Test
-    fun `if the result of non-null type is null, error should be raised`() {
+    fun `if the result of non-null type is null, error should be raised`() = runTest {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { string: String? -> string!! }
             }
         }
         val exception = shouldThrowExactly<ExecutionException> {
-            schema.executeBlocking("{nonNull}")
+            schema.execute("{nonNull}")
         }
         exception.originalError shouldBeInstanceOf java.lang.NullPointerException::class
     }
 
     @Test
-    fun `nullable input types are always optional`() {
+    fun `nullable input types are always optional`() = runTest {
         val schema = KGraphQL.schema {
             query("nullable") {
                 resolver { input: String? -> input }
             }
         }
 
-        val responseOmittedInput = deserialize(schema.executeBlocking("{nullable}"))
+        val responseOmittedInput = deserialize(schema.execute("{nullable}"))
         responseOmittedInput.extract<Any?>("data/nullable") shouldBe null
 
-        val responseNullInput = deserialize(schema.executeBlocking("{nullable(input: null)}"))
+        val responseNullInput = deserialize(schema.execute("{nullable(input: null)}"))
         responseNullInput.extract<Any?>("data/nullable") shouldBe null
     }
 
     @Test
-    fun `non-null types are always required`() {
+    fun `non-null types are always required`() = runTest {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { input: String -> input }
             }
         }
         expect<ValidationException>("Missing value for non-nullable argument input on the field 'nonNull'") {
-            schema.executeBlocking("{nonNull}")
+            schema.execute("{nonNull}")
         }
     }
 
     @Test
-    fun `variable of a nullable type cannot be provided to a non-null argument`() {
+    fun `variable of a nullable type cannot be provided to a non-null argument`() = runTest {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { input: String -> input }
@@ -65,7 +66,7 @@ class NonNullSpecificationTest {
         }
 
         expect<InvalidInputValueException>("Invalid variable ${'$'}arg argument type String, expected String!\n") {
-            schema.executeBlocking("query(\$arg: String){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
+            schema.execute("query(\$arg: String){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
         }
     }
 
@@ -73,7 +74,7 @@ class NonNullSpecificationTest {
     data class Type2(val items: List<Type1?>)
 
     @Test
-    fun `null within arrays should work`() {
+    fun `null within arrays should work`() = runTest {
         val schema = KGraphQL.schema {
             query("data") {
                 resolver { ->
@@ -87,7 +88,7 @@ class NonNullSpecificationTest {
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 data {
@@ -106,14 +107,14 @@ class NonNullSpecificationTest {
     data class MyInput(val value1: String, val value2: String?, val value3: Int)
 
     @Test
-    fun `missing nullable values without Kotlin default values should execute successfully and use null`() {
+    fun `missing nullable values without Kotlin default values should execute successfully and use null`() = runTest {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyInput -> "${input.value1} - ${input.value2 ?: "Nada"} - ${input.value3}" }
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 main(input: { value1: "Hello", value3: 42 })
@@ -125,7 +126,7 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    fun `missing non-nullable values without Kotlin default values should raise an error`() {
+    fun `missing non-nullable values without Kotlin default values should raise an error`() = runTest {
         val schema = KGraphQL.schema {
             inputType<MyInput> {
                 property(MyInput::value1) {
@@ -138,7 +139,7 @@ class NonNullSpecificationTest {
         }
 
         expect<InvalidInputValueException>("Missing non-optional input fields: valueOne, value3") {
-            schema.executeBlocking(
+            schema.execute(
                 """
                 {
                     main(input: { value2: "World" })
@@ -151,14 +152,14 @@ class NonNullSpecificationTest {
     data class MyOptionalInput(val value1: String = "Hello", val value2: String? = "World")
 
     @Test
-    fun `missing nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
+    fun `missing nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() = runTest {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 main(input: { value1: "Hello" })
@@ -170,14 +171,14 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    fun `missing non-nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() {
+    fun `missing non-nullable values with Kotlin default values should execute successfully and use Kotlin defaults`() = runTest {
         val schema = KGraphQL.schema {
             query("main") {
                 resolver { input: MyOptionalInput -> "${input.value1} - ${input.value2 ?: "Nada"}" }
             }
         }
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
                 main(input: { value2: "World, again" })

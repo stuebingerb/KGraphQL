@@ -16,6 +16,7 @@ import com.apurebase.kgraphql.stitched.schema.configuration.StitchedSchemaConfig
 import com.apurebase.kgraphql.stitched.schema.execution.RemoteRequestExecutor
 import com.fasterxml.jackson.databind.JsonNode
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.util.Locale
 import java.util.UUID
@@ -41,8 +42,8 @@ class StitchedSchemaTest {
      * Executes the default introspection query against this [Schema] and returns it
      * as parsed [IntrospectedSchema]
      */
-    private fun Schema.introspected(): IntrospectedSchema {
-        val introspectionResponse = executeBlocking(Introspection.query())
+    private suspend fun Schema.introspected(): IntrospectedSchema {
+        val introspectionResponse = execute(Introspection.query())
         return IntrospectedSchema.fromIntrospectionResponse(introspectionResponse)
     }
 
@@ -77,7 +78,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    fun `stitched schema should skip duplicate types by name and prefer local types`() {
+    fun `stitched schema should skip duplicate types by name and prefer local types`() = runTest {
         val schema = StitchedKGraphQL.stitchedSchema {
             configure {
                 remoteExecutor = DummyRemoteRequestExecutor
@@ -113,7 +114,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    fun `stitched schema should include local and remote types with proper fields`() {
+    fun `stitched schema should include local and remote types with proper fields`() = runTest {
         val schema = StitchedKGraphQL.stitchedSchema {
             configure {
                 remoteExecutor = DummyRemoteRequestExecutor
@@ -174,7 +175,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    fun `stitched schema should include union types with proper possible types`() {
+    fun `stitched schema should include union types with proper possible types`() = runTest {
         val schema = StitchedKGraphQL.stitchedSchema {
             configure {
                 remoteExecutor = DummyRemoteRequestExecutor
@@ -214,7 +215,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    fun `stitched schema should include all local and remote queries`() {
+    fun `stitched schema should include all local and remote queries`() = runTest {
         val schema = StitchedKGraphQL.stitchedSchema {
             configure {
                 remoteExecutor = DummyRemoteRequestExecutor
@@ -283,7 +284,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    fun `stitched schema should include all local and remote mutations`() {
+    fun `stitched schema should include all local and remote mutations`() = runTest {
         val schema = StitchedKGraphQL.stitchedSchema {
             configure {
                 remoteExecutor = DummyRemoteRequestExecutor
@@ -351,7 +352,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    fun `schema with remote input types should be printed as expected`() {
+    fun `schema with remote input types should be printed as expected`() = runTest {
         data class TestObject(val name: String)
 
         val schema = StitchedKGraphQL.stitchedSchema {
@@ -394,7 +395,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    fun `schema with remote extension properties should be printed as expected`() {
+    fun `schema with remote extension properties should be printed as expected`() = runTest {
         data class TestObject(val name: String)
 
         val schema = StitchedKGraphQL.stitchedSchema {
@@ -440,7 +441,7 @@ class StitchedSchemaTest {
     }
 
     @Test
-    fun `schema with deprecated remote fields should be printed as expected`() {
+    fun `schema with deprecated remote fields should be printed as expected`() = runTest {
         data class TestObject(val name: String)
 
         val schema = StitchedKGraphQL.stitchedSchema {
@@ -489,7 +490,7 @@ class StitchedSchemaTest {
     class Face(override val value: String, override val value2: Boolean = false) : InterInter
 
     @Test
-    fun `schema with remote interfaces should be printed as expected`() {
+    fun `schema with remote interfaces should be printed as expected`() = runTest {
         val schema = StitchedKGraphQL.stitchedSchema {
             configure {
                 remoteExecutor = DummyRemoteRequestExecutor
@@ -655,7 +656,7 @@ class StitchedSchemaTest {
 
     // TODO: make configurable? this doesn't seem like *always* intended
     @Test
-    fun `stitched operations should include optional input arguments`() {
+    fun `stitched operations should include optional input arguments`() = runTest {
         data class SimpleClass(val existing: String)
 
         val schema = StitchedKGraphQL.stitchedSchema {
@@ -715,7 +716,7 @@ class StitchedSchemaTest {
         SchemaPrinter().print(schema) shouldBe expectedSDL
         SchemaPrinter().print(schema.introspected()) shouldBe expectedSDL
 
-        schema.executeBlocking(
+        schema.execute(
             """
             {
               __type(name: "SimpleClass") { name kind fields { name } }

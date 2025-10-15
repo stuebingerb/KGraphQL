@@ -7,15 +7,15 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaBuilderTest
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.test.runTest
 import nidomiro.kdataloader.ExecutionResult
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
 class DataLoaderPropertyDSLTest {
-
     @Test
-    fun `prepare() should support multiple arguments`() {
+    fun `prepare() should support multiple arguments`() = runTest {
         val schema = defaultSchema {
             query("parent") {
                 resolver { -> Parent() }
@@ -31,7 +31,7 @@ class DataLoaderPropertyDSLTest {
                 }
             }
         }
-        val results = schema.executeBlocking(
+        val results = schema.execute(
             """
             {
                 parent {

@@ -6,7 +6,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.ApplicationCall
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -18,7 +18,7 @@ class KtorFeatureTest : KtorTest() {
     data class User(val id: Int = -1, val name: String = "")
 
     @Test
-    fun `Simple query test`() {
+    fun `Simple query test`() = runTest {
         val server = withServer {
             query("hello") {
                 resolver { -> "World!" }
@@ -28,14 +28,13 @@ class KtorFeatureTest : KtorTest() {
         val response = server("query") {
             field("hello")
         }
-        runBlocking {
-            response.bodyAsText() shouldBe "{\"data\":{\"hello\":\"World!\"}}"
-            response.contentType() shouldBe ContentType.Application.Json
-        }
+
+        response.bodyAsText() shouldBe "{\"data\":{\"hello\":\"World!\"}}"
+        response.contentType() shouldBe ContentType.Application.Json
     }
 
     @Test
-    fun `Simple mutation test`() {
+    fun `Simple mutation test`() = runTest {
         val server = withServer {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -48,17 +47,16 @@ class KtorFeatureTest : KtorTest() {
         val response = server("mutation") {
             field("hello")
         }
-        runBlocking {
-            response.bodyAsText() shouldBe "{\"data\":{\"hello\":\"World! mutation\"}}"
-            response.contentType() shouldBe ContentType.Application.Json
-        }
+
+        response.bodyAsText() shouldBe "{\"data\":{\"hello\":\"World! mutation\"}}"
+        response.contentType() shouldBe ContentType.Application.Json
     }
 
     data class Actor(val name: String, val age: Int)
     data class UserData(val username: String, val stuff: String)
 
     @Test
-    fun `Simple context test`() {
+    fun `Simple context test`() = runTest {
         val georgeName = "George"
         val contextSetup: ContextBuilder.(ApplicationCall) -> Unit = { _ ->
             +UserData(georgeName, "STUFF")
@@ -90,20 +88,16 @@ class KtorFeatureTest : KtorTest() {
                 field("name(addStuff: true)")
             }
         }
-        runBlocking {
-            response.bodyAsText() shouldBe "{\"data\":{\"actor\":{\"name\":\"${georgeName}STUFF\"}}}"
-            response.contentType() shouldBe ContentType.Application.Json
-        }
+        response.bodyAsText() shouldBe "{\"data\":{\"actor\":{\"name\":\"${georgeName}STUFF\"}}}"
+        response.contentType() shouldBe ContentType.Application.Json
 
         response = server("query") {
             field("actor") {
                 field("nickname")
             }
         }
-        runBlocking {
-            response.bodyAsText() shouldBe "{\"data\":{\"actor\":{\"nickname\":\"Hodor and $georgeName\"}}}"
-            response.contentType() shouldBe ContentType.Application.Json
-        }
+        response.bodyAsText() shouldBe "{\"data\":{\"actor\":{\"nickname\":\"Hodor and $georgeName\"}}}"
+        response.contentType() shouldBe ContentType.Application.Json
     }
 
     enum class MockEnum { M1, M2 }
@@ -113,7 +107,7 @@ class KtorFeatureTest : KtorTest() {
     data class InputTwo(val one: InputOne, val quantity: Int, val tokens: List<String>)
 
     @Test
-    fun `Simple variables test`() {
+    fun `Simple variables test`() = runTest {
         val server = withServer {
             inputType<InputTwo>()
             query("test") { resolver { input: InputTwo -> "success: $input" } }
@@ -136,14 +130,12 @@ class KtorFeatureTest : KtorTest() {
                 }
             }
         }
-        runBlocking {
-            response.bodyAsText() shouldBe "{\"data\":{\"test\":\"success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])\"}}"
-            response.contentType() shouldBe ContentType.Application.Json
-        }
+        response.bodyAsText() shouldBe "{\"data\":{\"test\":\"success: InputTwo(one=InputOne(enum=M1, id=M1), quantity=3434, tokens=[23, 34, 21, 434])\"}}"
+        response.contentType() shouldBe ContentType.Application.Json
     }
 
     @Test
-    fun `Error response test`() {
+    fun `Error response test`() = runTest {
         val server = withServer {
             query("actor") {
                 resolver { -> Actor("George", 23) }
@@ -155,10 +147,8 @@ class KtorFeatureTest : KtorTest() {
                 field("nickname")
             }
         }
-        runBlocking {
-            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"line\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"GRAPHQL_VALIDATION_FAILED\"}}]}"
-            response.contentType() shouldBe ContentType.Application.Json
-        }
+        response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"line\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"GRAPHQL_VALIDATION_FAILED\"}}]}"
+        response.contentType() shouldBe ContentType.Application.Json
     }
 
     @Test
@@ -174,8 +164,6 @@ class KtorFeatureTest : KtorTest() {
                 field("nickname")
             }
         }
-        runBlocking {
-            response.status shouldBe HttpStatusCode.Unauthorized
-        }
+        response.status shouldBe HttpStatusCode.Unauthorized
     }
 }

@@ -10,12 +10,13 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("2.10 Variables")
 class VariablesSpecificationTest : BaseSchemaTest() {
     @Test
-    fun `query with variables`() {
+    fun `query with variables`() = runTest {
         val result = execute(
             query = "mutation(\$name: String!, \$age : Int!) {createActor(name: \$name, age: \$age){name, age}}",
             variables = "{\"name\":\"Boguś Linda\", \"age\": 22}"
@@ -25,7 +26,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with int variable`() {
+    fun `query with int variable`() = runTest {
         val result =
             execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1}")
         assertNoErrors(result)
@@ -35,7 +36,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     // Json only has one number type, so "1" and "1.0" are the same, and input coercion should be able to handle
     // the value accordingly
     @Test
-    fun `query with int variable should allow whole floating point numbers`() {
+    fun `query with int variable should allow whole floating point numbers`() = runTest {
         val result =
             execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1.0}")
         assertNoErrors(result)
@@ -43,14 +44,14 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with int variable should not allow floating point numbers that are not whole`() {
+    fun `query with int variable should not allow floating point numbers that are not whole`() = runTest {
         expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
             execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1.01}")
         }
     }
 
     @Test
-    fun `query with custom int scalar variable should allow whole floating point numbers`() {
+    fun `query with custom int scalar variable should allow whole floating point numbers`() = runTest {
         val result = execute(
             query = "query(\$rank: Rank!) {filmByCustomRank(rank: \$rank) {title}}",
             variables = "{\"rank\": 1.0}"
@@ -60,7 +61,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with custom int scalar variable should not allow floating point numbers that are not whole`() {
+    fun `query with custom int scalar variable should not allow floating point numbers that are not whole`() = runTest {
         expect<InvalidInputValueException>("argument '1.01' is not valid value of type Rank") {
             execute(
                 query = "query(\$rank: Rank!) {filmByCustomRank(rank: \$rank) {title}}",
@@ -72,7 +73,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     // Json only has one number type, so "1" and "1.0" are the same, and input coercion should be able to handle
     // the value accordingly
     @Test
-    fun `query with long variable should allow whole floating point numbers`() {
+    fun `query with long variable should allow whole floating point numbers`() = runTest {
         val result = execute(
             query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}",
             variables = "{\"rank\": 1.0}"
@@ -82,7 +83,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with long variable should not allow floating point numbers that are not whole`() {
+    fun `query with long variable should not allow floating point numbers that are not whole`() = runTest {
         expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
             execute(
                 query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}",
@@ -94,7 +95,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     // Json only has one number type, so "1" and "1.0" are the same, and input coercion should be able to handle
     // the value accordingly
     @Test
-    fun `query with short variable should allow whole floating point numbers`() {
+    fun `query with short variable should allow whole floating point numbers`() = runTest {
         val result = execute(
             query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}",
             variables = "{\"rank\": 1.0}"
@@ -104,7 +105,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with short variable should not allow floating point numbers that are not whole`() {
+    fun `query with short variable should not allow floating point numbers that are not whole`() = runTest {
         expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
             execute(
                 query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}",
@@ -114,42 +115,42 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with float variable`() {
+    fun `query with float variable`() = runTest {
         val result = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 42.3}")
         assertNoErrors(result)
         result.extract<Float>("data/float") shouldBe 42.3
     }
 
     @Test
-    fun `query with float variable in exponential notation`() {
+    fun `query with float variable in exponential notation`() = runTest {
         val result = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 2.1e1}")
         assertNoErrors(result)
         result.extract<Float>("data/float") shouldBe 2.1e1
     }
 
     @Test
-    fun `query with float variable should allow integer input`() {
+    fun `query with float variable should allow integer input`() = runTest {
         val result = execute(query = "query(\$float: Float!) {float(float: \$float)}", variables = "{\"float\": 42}")
         assertNoErrors(result)
         result.extract<Float>("data/float") shouldBe 42.0
     }
 
     @Test
-    fun `query with boolean variable`() {
+    fun `query with boolean variable`() = runTest {
         val result = execute(query = "query(\$big: Boolean!) {number(big: \$big)}", variables = "{\"big\": true}")
         assertNoErrors(result)
         result.extract<Int>("data/number") shouldBe 10000
     }
 
     @Test
-    fun `query with boolean variable default value`() {
+    fun `query with boolean variable default value`() = runTest {
         val result = execute(query = "query(\$big: Boolean = true) {number(big: \$big)}")
         assertNoErrors(result)
         result.extract<Int>("data/number") shouldBe 10000
     }
 
     @Test
-    fun `query with enum variable`() {
+    fun `query with enum variable`() = runTest {
         val result = execute(
             query = "query(\$type: FilmType!) {filmsByType(type: \$type) {title}}",
             variables = "{\"type\": \"FULL_LENGTH\"}"
@@ -161,7 +162,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with variables and string default value`() {
+    fun `query with variables and string default value`() = runTest {
         val result = execute(
             query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!) {createActor(name: \$name, age: \$age){name, age}}",
             variables = "{\"age\": 22}"
@@ -171,7 +172,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `fragment with variable`() {
+    fun `fragment with variable`() = runTest {
         val result = execute(
             query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!, \$big: Boolean!) {createActor(name: \$name, age: \$age){...Linda}}" +
                 "fragment Linda on Actor {picture(big: \$big)}",
@@ -182,7 +183,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `fragment with missing variable`() {
+    fun `fragment with missing variable`() = runTest {
         expect<ValidationException>("Variable '\$big' was not declared for this operation") {
             execute(
                 query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!) {createActor(name: \$name, age: \$age){...Linda}}" +
@@ -193,7 +194,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `advanced variables`() {
+    fun `advanced variables`() = runTest {
         val request = """
             mutation MultipleCreate(
                 ${'$'}name1: String!,
@@ -250,7 +251,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `required variable arrays`() {
+    fun `required variable arrays`() = runTest {
         val request = """
             mutation MultipleCreate(
                 ${'$'}agesName1: String!,
@@ -283,7 +284,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     // https://github.com/aPureBase/KGraphQL/issues/137
     @Test
-    fun `complex variable arrays`() {
+    fun `complex variable arrays`() = runTest {
         val schema = KGraphQL.schema {
             configure { wrapErrors = false }
             inputType<InputType>()
@@ -294,7 +295,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
             }
         }
 
-        val result = schema.executeBlocking(
+        val result = schema.execute(
             """
                 query Query(${'$'}searches: [InputType!]!) {
                     search(criteria: { inputs: ${'$'}searches })
@@ -314,7 +315,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `invalid properties should result in appropriate errors`() {
+    fun `invalid properties should result in appropriate errors`() = runTest {
         data class SampleObject(val id: String, val name: String)
 
         val schema = KGraphQL.schema {
@@ -350,7 +351,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         """.trimIndent()
 
         expect<InvalidInputValueException>("Property 'readonlyExtension' on 'SampleObjectInput' does not exist") {
-            schema.executeBlocking(
+            schema.execute(
                 """
                 {
                     validateSample(sample: {id: "valid", name: "name", readonlyExtension: "readonlyExtension"})
@@ -361,7 +362,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
         // It should not matter if SampleObjectInput is provided directly or via variables, the error message should be equal
         expect<InvalidInputValueException>("Property 'readonlyExtension' on 'SampleObjectInput' does not exist") {
-            schema.executeBlocking(
+            schema.execute(
                 """
                 query (${'$'}sample: SampleObjectInput!) {
                     validateSample(sample: ${'$'}sample)

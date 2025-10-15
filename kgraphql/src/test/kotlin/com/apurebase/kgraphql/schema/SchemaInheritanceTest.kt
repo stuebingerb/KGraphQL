@@ -4,6 +4,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -18,7 +19,7 @@ class SchemaInheritanceTest {
     class C(override var name: String, override var age: Int, var pesel: String = "") : A(name, age)
 
     @Test
-    fun `call to ignore property should cascade to subclasses`() {
+    fun `call to ignore property should cascade to subclasses`() = runTest {
         val name = "PELE"
         val age = 20
 
@@ -32,11 +33,11 @@ class SchemaInheritanceTest {
         }
 
         expect<ValidationException>("Property id on B does not exist") {
-            deserialize(schema.executeBlocking("{b{id, name, age}}"))
+            deserialize(schema.execute("{b{id, name, age}}"))
         }
 
         expect<ValidationException>("Property id on C does not exist") {
-            deserialize(schema.executeBlocking("{c{id, name, age}}"))
+            deserialize(schema.execute("{c{id, name, age}}"))
         }
     }
 }

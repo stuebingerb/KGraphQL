@@ -23,6 +23,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSupertypeOf
@@ -99,7 +100,7 @@ class SchemaBuilderTest {
 
     // https://github.com/stuebingerb/KGraphQL/issues/321
     @Test
-    fun `transformations should change the return type`() {
+    fun `transformations should change the return type`() = runTest {
         data class Foo(val id: Int, val name: String?, val nameWithDefault: String?, val transformedId: Int)
 
         val numbers = mapOf(1 to "one", 2 to "two")
@@ -117,13 +118,13 @@ class SchemaBuilderTest {
             }
         }
 
-        testedSchema.executeBlocking(
+        testedSchema.execute(
             "{ foo(id: 1) { id name nameWithDefault transformedId } }"
         ) shouldBe """
             {"data":{"foo":{"id":1,"name":"one","nameWithDefault":"one","transformedId":"1"}}}
         """.trimIndent()
 
-        testedSchema.executeBlocking(
+        testedSchema.execute(
             "{ foo(id: 3) { id name nameWithDefault transformedId } }"
         ) shouldBe """
             {"data":{"foo":{"id":3,"name":null,"nameWithDefault":"(no name)","transformedId":"3"}}}
@@ -224,7 +225,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `KFunction resolver`() {
+    fun `KFunction resolver`() = runTest {
         val actorService = object {
             fun getMainActor() = Actor("Little John", 44)
             fun getActor(id: Int) = when (id) {
@@ -256,12 +257,12 @@ class SchemaBuilderTest {
         property shouldNotBe null
         property.returnType.unwrapped().name shouldBe "Actor"
 
-        deserialize(tested.executeBlocking("{mainActor{name}}"))
-        deserialize(tested.executeBlocking("{actorById(id: 1){name}}"))
+        deserialize(tested.execute("{mainActor{name}}"))
+        deserialize(tested.execute("{actorById(id: 1){name}}"))
     }
 
     @Test
-    fun `_ should be allowed as receiver argument name`() {
+    fun `_ should be allowed as receiver argument name`() = runTest {
         val schema = defaultSchema {
             query("actor") {
                 resolver { -> Actor("Boguś Linda", 4343) }
@@ -276,11 +277,11 @@ class SchemaBuilderTest {
             }
         }
 
-        schema.executeBlocking("{actor{favDishes(size: 2)}}").also(::println).deserialize()
+        schema.execute("{actor{favDishes(size: 2)}}").also(::println).deserialize()
     }
 
     @Test
-    fun `enums should be recognized automatically`() {
+    fun `enums should be recognized automatically`() = runTest {
         val schema = defaultSchema {
             query("actor") {
                 resolver { type: FilmType -> Actor("Boguś Linda $type", 4343) }
@@ -288,12 +289,12 @@ class SchemaBuilderTest {
         }
 
         val result =
-            deserialize(schema.executeBlocking("query(\$type: FilmType = FULL_LENGTH){actor(type: \$type){name}}"))
+            deserialize(schema.execute("query(\$type: FilmType = FULL_LENGTH){actor(type: \$type){name}}"))
         result.extract<String>("data/actor/name") shouldBe "Boguś Linda FULL_LENGTH"
     }
 
     @Test
-    fun `enums should support a custom type name`() {
+    fun `enums should support a custom type name`() = runTest {
         val schema = defaultSchema {
             query("actor") {
                 resolver { type: FilmType -> Actor("Boguś Linda $type", 4343) }
@@ -305,12 +306,12 @@ class SchemaBuilderTest {
         }
 
         val result =
-            deserialize(schema.executeBlocking("query(\$type: TYPE = FULL_LENGTH){actor(type: \$type){name}}"))
+            deserialize(schema.execute("query(\$type: TYPE = FULL_LENGTH){actor(type: \$type){name}}"))
         result.extract<String>("data/actor/name") shouldBe "Boguś Linda FULL_LENGTH"
     }
 
     @Test
-    fun `java arrays should be supported`() {
+    fun `java arrays should be supported`() = runTest {
         schema {
             query("actors") {
                 resolver { ->
@@ -320,7 +321,7 @@ class SchemaBuilderTest {
                     )
                 }
             }
-        }.executeBlocking("{actors { name } }").let(::println)
+        }.execute("{actors { name } }").let(::println)
     }
 
     class InputOne(val string: String)
@@ -366,7 +367,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `client code can declare custom generic type resolver`() {
+    fun `client code can declare custom generic type resolver`() = runTest {
         val typeResolver = object : DefaultGenericTypeResolver() {
             override fun unbox(obj: Any) = if (obj is Maybe<*>) obj.get() else super.unbox(obj)
             override fun resolveMonad(type: KType): KType {
@@ -391,7 +392,7 @@ class SchemaBuilderTest {
             query("undefinedValue") { resolver<Maybe<String>> { Maybe.Undefined } }
         }
 
-        deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name fields { type {ofType {kind name}}}}}}}}}")).let {
+        deserialize(schema.execute("{__schema{queryType{fields{ type { ofType { kind name fields { type {ofType {kind name}}}}}}}}}")).let {
             it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/kind") shouldBe "OBJECT"
             it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/name") shouldBe "SomeWithGenericType"
             it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/kind") shouldBe "SCALAR"
@@ -409,25 +410,25 @@ class SchemaBuilderTest {
             it.extract<String>("data/__schema/queryType/fields[3]/type/ofType/name") shouldBe "String"
         }
 
-        deserialize(schema.executeBlocking("{definedValueProp {value}}")).extract<Int>("data/definedValueProp/value") shouldBe 33
-        deserialize(schema.executeBlocking("{undefinedValueProp {anotherValue}}")).let {
+        deserialize(schema.execute("{definedValueProp {value}}")).extract<Int>("data/definedValueProp/value") shouldBe 33
+        deserialize(schema.execute("{undefinedValueProp {anotherValue}}")).let {
             it.extract<String>("data/undefinedValueProp/anotherValue") shouldBe "foo"
         }
-        deserialize(schema.executeBlocking("{definedValue}")).let {
+        deserialize(schema.execute("{definedValue}")).let {
             it.extract<String>("data/definedValue") shouldBe "good!"
         }
         expect<IllegalArgumentException>("Requested value is not defined!") {
-            deserialize(schema.executeBlocking("{undefinedValue}"))
+            deserialize(schema.execute("{undefinedValue}"))
         }
         expect<IllegalArgumentException>("Requested value is not defined!") {
-            deserialize(schema.executeBlocking("{undefinedValueProp {value}}"))
+            deserialize(schema.execute("{undefinedValueProp {value}}"))
         }
     }
 
     data class LambdaWrapper(val lambda: () -> Int)
 
     @Test
-    fun `function properties can be handled by providing generic type resolver`() {
+    fun `function properties can be handled by providing generic type resolver`() = runTest {
         val typeResolver = object : DefaultGenericTypeResolver() {
             override fun unbox(obj: Any) = if (obj is Function0<*>) obj() else super.unbox(obj)
             override fun resolveMonad(type: KType): KType {
@@ -449,18 +450,18 @@ class SchemaBuilderTest {
             }
         }
 
-        deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name fields { type {ofType {kind name}}}}}}}}}")).let {
+        deserialize(schema.execute("{__schema{queryType{fields{ type { ofType { kind name fields { type {ofType {kind name}}}}}}}}}")).let {
             it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/kind") shouldBe "OBJECT"
             it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/name") shouldBe "LambdaWrapper"
             it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/kind") shouldBe "SCALAR"
             it.extract<String>("data/__schema/queryType/fields[0]/type/ofType/fields[0]/type/ofType/name") shouldBe "Int"
         }
 
-        deserialize(schema.executeBlocking("{lambda {lambda}}")).extract<Int>("data/lambda/lambda") shouldBe 1
+        deserialize(schema.execute("{lambda {lambda}}")).extract<Int>("data/lambda/lambda") shouldBe 1
     }
 
     @Test
-    fun `input value default value and description can be specified`() {
+    fun `input value default value and description can be specified`() = runTest {
         val expectedDescription = "Int Argument"
         val expectedDefaultValue = 33
         val schema = defaultSchema {
@@ -475,11 +476,11 @@ class SchemaBuilderTest {
         intArg?.defaultValue shouldBe expectedDefaultValue.toString()
         intArg?.description shouldBe expectedDescription
 
-        val response = deserialize(schema.executeBlocking("{data}"))
+        val response = deserialize(schema.execute("{data}"))
         response.extract<Int>("data/data") shouldBe 33
 
         val introspection =
-            deserialize(schema.executeBlocking("{__schema{queryType{fields{name, args{name, description, defaultValue}}}}}"))
+            deserialize(schema.execute("{__schema{queryType{fields{name, args{name, description, defaultValue}}}}}"))
         introspection.extract<String>("data/__schema/queryType/fields[0]/args[0]/description") shouldBe expectedDescription
     }
 
@@ -513,7 +514,7 @@ class SchemaBuilderTest {
     data class UserData(val username: String, val stuff: String)
 
     @Test
-    fun `client code can declare custom context class and use it in query resolver`() {
+    fun `client code can declare custom context class and use it in query resolver`() = runTest {
         val schema = schema {
             query("name") {
                 resolver { ctx: Context -> ctx.get<UserData>()?.username }
@@ -522,12 +523,12 @@ class SchemaBuilderTest {
 
         val georgeName = "George"
         val response =
-            deserialize(schema.executeBlocking("{name}", context = context { +UserData(georgeName, "STUFF") }))
+            deserialize(schema.execute("{name}", context = context { +UserData(georgeName, "STUFF") }))
         response.extract<String>("data/name") shouldBe georgeName
     }
 
     @Test
-    fun `client code can use context class in property resolver`() {
+    fun `client code can use context class in property resolver`() = runTest {
         val georgeName = "George"
         val schema = schema {
             query("actor") {
@@ -554,7 +555,7 @@ class SchemaBuilderTest {
             inject("ADA")
         }
         val response =
-            deserialize(schema.executeBlocking("{actor{ nickname, name(addStuff: true) }}", context = context))
+            deserialize(schema.execute("{actor{ nickname, name(addStuff: true) }}", context = context))
         response.extract<String>("data/actor/name") shouldBe "${georgeName}STUFF"
         response.extract<String>("data/actor/nickname") shouldBe "Hodor and $georgeName"
     }
@@ -592,9 +593,9 @@ class SchemaBuilderTest {
         val val9: Int = 9
     )
 
-    private fun checkNineValuesSchema(schema: Schema) {
+    private suspend fun checkNineValuesSchema(schema: Schema) {
         val response = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 "{" +
                     "queryWith1Param(val1: 2) { val1 }" +
                     "queryWith2Params(val1: 2, val2: \"3\") { val1, val2 }" +
@@ -664,7 +665,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `schema can contain resolvers with up to 9 parameters`() {
+    fun `schema can contain resolvers with up to 9 parameters`() = runTest {
         val schema = schema {
             query("queryWith1Param") {
                 resolver { val1: Int ->
@@ -725,7 +726,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `schema can contain suspend resolvers`() {
+    fun `schema can contain suspend resolvers`() = runTest {
         val schema = schema {
             query("queryWith1Param") {
                 resolver { val1: Int ->
@@ -808,7 +809,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `schema can have same type and input type with different names`() {
+    fun `schema can have same type and input type with different names`() = runTest {
         val schema = defaultSchema {
             query("createType") {
                 resolver { input: InputOne -> input }
@@ -824,7 +825,7 @@ class SchemaBuilderTest {
         schema.typeByKClass(InputOne::class) shouldNotBe null
         schema.inputTypeByKClass(InputOne::class) shouldNotBe null
 
-        val introspection = deserialize(schema.executeBlocking("{__schema{types{name}}}"))
+        val introspection = deserialize(schema.execute("{__schema{types{name}}}"))
         val types = introspection.extract<List<Map<String, String>>>("data/__schema/types")
         val names = types.map { it["name"] }
         names shouldContain "TypeAsInput"
@@ -832,7 +833,7 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `Short int types are mapped to Short Scalar`() {
+    fun `Short int types are mapped to Short Scalar`() = runTest {
         val schema = defaultSchema {
             extendedScalars()
             query("shortQuery") {
@@ -840,13 +841,13 @@ class SchemaBuilderTest {
             }
         }
 
-        val typesIntrospection = deserialize(schema.executeBlocking("{__schema{types{name}}}"))
+        val typesIntrospection = deserialize(schema.execute("{__schema{types{name}}}"))
         val types = typesIntrospection.extract<List<Map<String, String>>>("data/__schema/types")
         val names = types.map { it["name"] }
         names shouldContain "Short"
 
         val response =
-            deserialize(schema.executeBlocking("{__schema{queryType{fields{ type { ofType { kind name }}}}}}"))
+            deserialize(schema.execute("{__schema{queryType{fields{ type { ofType { kind name }}}}}}"))
         response.extract<String>("data/__schema/queryType/fields[0]/type/ofType/kind") shouldBe "SCALAR"
         response.extract<String>("data/__schema/queryType/fields[0]/type/ofType/name") shouldBe "Short"
     }
@@ -893,11 +894,11 @@ class SchemaBuilderTest {
     }
 
     @Test
-    fun `specifying return type explicitly allows generic query creation that returns List of T`() {
+    fun `specifying return type explicitly allows generic query creation that returns List of T`() = runTest {
         val schema = defaultSchema {
             createGenericQuery(listOf("generic"))
         }
-        val result = deserialize(schema.executeBlocking("{data}"))
+        val result = deserialize(schema.execute("{data}"))
         result.extract<List<String>>("data/data") shouldBe listOf("generic")
     }
 

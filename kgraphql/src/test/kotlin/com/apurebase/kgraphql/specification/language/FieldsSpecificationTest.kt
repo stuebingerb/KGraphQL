@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("2.5 Fields")
@@ -22,8 +23,8 @@ class FieldsSpecificationTest {
     }
 
     @Test
-    fun `field may itself contain a selection set`() {
-        val response = deserialize(schema.executeBlocking("{actor{id, actualActor{name, age}}}"))
+    fun `field may itself contain a selection set`() = runTest {
+        val response = deserialize(schema.execute("{actor{id, actualActor{name, age}}}"))
         val map = response.extract<Map<String, Any>>("data/actor/actualActor")
         map shouldBe mapOf("name" to "Boguś Linda", "age" to age)
     }

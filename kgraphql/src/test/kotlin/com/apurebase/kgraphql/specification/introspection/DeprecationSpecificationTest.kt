@@ -7,13 +7,14 @@ import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaException
 import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
 
 class DeprecationSpecificationTest {
 
     @Test
-    fun `queries may be deprecated`() {
+    fun `queries may be deprecated`() = runTest {
         val expected = "sample query"
         val schema = defaultSchema {
             query("sample") {
@@ -23,7 +24,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__schema{queryType{fields(includeDeprecated: true){name, deprecationReason, isDeprecated}}}}"))
+            deserialize(schema.execute("{__schema{queryType{fields(includeDeprecated: true){name, deprecationReason, isDeprecated}}}}"))
         response.extract<Map<String, Any?>>("data/__schema/queryType/fields[0]") shouldContainAll mapOf(
             "deprecationReason" to expected,
             "isDeprecated" to true
@@ -31,7 +32,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    fun `mutations may be deprecated`() {
+    fun `mutations may be deprecated`() = runTest {
         val expected = "sample mutation"
         val schema = defaultSchema {
             query("dummy") {
@@ -44,7 +45,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__schema{mutationType{fields(includeDeprecated: true){name, deprecationReason, isDeprecated}}}}"))
+            deserialize(schema.execute("{__schema{mutationType{fields(includeDeprecated: true){name, deprecationReason, isDeprecated}}}}"))
         response.extract<Map<String, Any?>>("data/__schema/mutationType/fields[0]") shouldContainAll mapOf(
             "deprecationReason" to expected,
             "isDeprecated" to true
@@ -54,7 +55,7 @@ class DeprecationSpecificationTest {
     data class Sample(val content: String)
 
     @Test
-    fun `kotlin field may be deprecated`() {
+    fun `kotlin field may be deprecated`() = runTest {
         val expected = "sample type"
         val schema = defaultSchema {
             query("sample") {
@@ -69,7 +70,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__type(name: \"Sample\"){fields(includeDeprecated: true){isDeprecated, deprecationReason}}}"))
+            deserialize(schema.execute("{__type(name: \"Sample\"){fields(includeDeprecated: true){isDeprecated, deprecationReason}}}"))
         response.extract<Map<String, Any?>>("data/__type/fields[0]") shouldContainAll mapOf(
             "deprecationReason" to expected,
             "isDeprecated" to true
@@ -77,7 +78,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    fun `extension field may be deprecated`() {
+    fun `extension field may be deprecated`() = runTest {
         val expected = "sample type"
         val schema = defaultSchema {
             query("sample") {
@@ -93,7 +94,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__type(name: \"Sample\"){fields(includeDeprecated: true){name, isDeprecated, deprecationReason}}}"))
+            deserialize(schema.execute("{__type(name: \"Sample\"){fields(includeDeprecated: true){name, isDeprecated, deprecationReason}}}"))
         response.extract<Map<String, Any?>>("data/__type/fields[1]") shouldContainAll mapOf(
             "deprecationReason" to expected,
             "isDeprecated" to true
@@ -104,7 +105,7 @@ class DeprecationSpecificationTest {
     enum class SampleEnum { ONE, TWO, THREE }
 
     @Test
-    fun `enum value may be deprecated`() {
+    fun `enum value may be deprecated`() = runTest {
         val expected = "some enum value"
         val schema = defaultSchema {
             query("sample") {
@@ -119,7 +120,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__type(name: \"SampleEnum\"){enumValues(includeDeprecated: true){name, isDeprecated, deprecationReason}}}"))
+            deserialize(schema.execute("{__type(name: \"SampleEnum\"){enumValues(includeDeprecated: true){name, isDeprecated, deprecationReason}}}"))
         response.extract<Map<String, Any?>>("data/__type/enumValues[0]") shouldContainAll mapOf(
             "name" to SampleEnum.ONE.name,
             "deprecationReason" to expected,
@@ -128,7 +129,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    fun `optional input value may be deprecated`() {
+    fun `optional input value may be deprecated`() = runTest {
         data class InputType(val oldOptional: String?, val new: String)
 
         val expected = "deprecated input value"
@@ -144,7 +145,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__type(name: \"InputType\"){inputFields(includeDeprecated: true){name, deprecationReason, isDeprecated}}}"))
+            deserialize(schema.execute("{__type(name: \"InputType\"){inputFields(includeDeprecated: true){name, deprecationReason, isDeprecated}}}"))
         response.extract<Map<String, Any?>>("data/__type/inputFields[0]") shouldContainAll mapOf(
             "name" to "new",
             "deprecationReason" to null,
@@ -173,7 +174,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    fun `deprecated input values should not be returned by default`() {
+    fun `deprecated input values should not be returned by default`() = runTest {
         data class InputType(val oldOptional: String?, val new: String)
 
         val expected = "deprecated input value"
@@ -189,7 +190,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__type(name: \"InputType\"){inputFields{name, deprecationReason, isDeprecated}}}"))
+            deserialize(schema.execute("{__type(name: \"InputType\"){inputFields{name, deprecationReason, isDeprecated}}}"))
         response.extract<Map<String, Any?>>("data/__type/inputFields[0]") shouldContainAll mapOf(
             "name" to "new",
             "deprecationReason" to null,
@@ -200,7 +201,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    fun `optional field args may be deprecated`() {
+    fun `optional field args may be deprecated`() = runTest {
         val expected = "deprecated field arg"
 
         @Suppress("UNUSED_ANONYMOUS_PARAMETER")
@@ -214,7 +215,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__schema{queryType{fields{name, args(includeDeprecated: true){name deprecationReason isDeprecated}}}}}"))
+            deserialize(schema.execute("{__schema{queryType{fields{name, args(includeDeprecated: true){name deprecationReason isDeprecated}}}}}"))
         response.extract<Map<String, Any?>>("data/__schema/queryType/fields[0]/args[0]") shouldContainAll mapOf(
             "name" to "oldOptional",
             "deprecationReason" to expected,
@@ -243,7 +244,7 @@ class DeprecationSpecificationTest {
     }
 
     @Test
-    fun `deprecated field args should not be returned by default`() {
+    fun `deprecated field args should not be returned by default`() = runTest {
         val expected = "deprecated input value"
 
         @Suppress("UNUSED_ANONYMOUS_PARAMETER")
@@ -257,7 +258,7 @@ class DeprecationSpecificationTest {
         }
 
         val response =
-            deserialize(schema.executeBlocking("{__schema{queryType{fields{name, args{name deprecationReason isDeprecated}}}}}"))
+            deserialize(schema.execute("{__schema{queryType{fields{name, args{name deprecationReason isDeprecated}}}}}"))
         response.extract<Map<String, Any?>>("data/__schema/queryType/fields[0]/args[0]") shouldContainAll mapOf(
             "name" to "new",
             "deprecationReason" to null,

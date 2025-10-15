@@ -8,6 +8,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("3.1.7 Lists")
@@ -15,7 +16,7 @@ import org.junit.jupiter.api.Test
 class ListsSpecificationTest {
 
     @Test
-    fun `list arguments are valid`() {
+    fun `list arguments are valid`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String> -> list }
@@ -27,14 +28,14 @@ class ListsSpecificationTest {
         """.trimIndent()
 
         val response =
-            deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
+            deserialize(schema.execute("query(\$list: [String!]!) { list(list: \$list) }", variables))
         response.extract<String>("data/list[0]") shouldBe "GAGA"
         response.extract<String>("data/list[1]") shouldBe "DADA"
         response.extract<String>("data/list[2]") shouldBe "PADA"
     }
 
     @Test
-    fun `lists with nullable entries are valid`() {
+    fun `lists with nullable entries are valid`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String?> -> list }
@@ -46,12 +47,12 @@ class ListsSpecificationTest {
         """.trimIndent()
 
         val response =
-            deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
+            deserialize(schema.execute("query(\$list: [String!]!) { list(list: \$list) }", variables))
         response.extract<String>("data/list[1]") shouldBe null
     }
 
     @Test
-    fun `lists with non-nullable entries should not accept list with null element`() {
+    fun `lists with non-nullable entries should not accept list with null element`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String> -> list }
@@ -63,12 +64,12 @@ class ListsSpecificationTest {
         """.trimIndent()
 
         expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
-            schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables)
+            schema.execute("query(\$list: [String!]!) { list(list: \$list) }", variables)
         }
     }
 
     @Test
-    fun `by default coerce single element input as collection`() {
+    fun `by default coerce single element input as collection`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String> -> list }
@@ -80,12 +81,12 @@ class ListsSpecificationTest {
         """.trimIndent()
 
         val response =
-            deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
+            deserialize(schema.execute("query(\$list: [String!]!) { list(list: \$list) }", variables))
         response.extract<String>("data/list[0]") shouldBe "GAGA"
     }
 
     @Test
-    fun `null value is not coerced as single element collection`() {
+    fun `null value is not coerced as single element collection`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String>? -> list }
@@ -98,12 +99,12 @@ class ListsSpecificationTest {
         """.trimIndent()
 
         val response =
-            deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
+            deserialize(schema.execute("query(\$list: [String!]!) { list(list: \$list) }", variables))
         response.extract<String>("data/list") shouldBe null
     }
 
     @Test
-    fun `list argument can be declared non-nullable`() {
+    fun `list argument can be declared non-nullable`() = runTest {
         val schema = KGraphQL.schema {
             query("list") {
                 resolver { list: Iterable<String> -> list }
@@ -115,12 +116,12 @@ class ListsSpecificationTest {
         """.trimIndent()
 
         val response =
-            deserialize(schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables))
+            deserialize(schema.execute("query(\$list: [String!]!) { list(list: \$list) }", variables))
         response.extract<Any>("data/list") shouldNotBe null
     }
 
     @Test
-    fun `Iterable implementations are treated as list`() {
+    fun `Iterable implementations are treated as list`() = runTest {
 
         fun getResult(): Iterable<String> = listOf("POTATO", "BATATO", "ROTATO")
 
@@ -130,12 +131,12 @@ class ListsSpecificationTest {
             }
         }
 
-        val response = deserialize(schema.executeBlocking("{ list }"))
+        val response = deserialize(schema.execute("{ list }"))
         response.extract<Iterable<String>>("data/list") shouldBe getResult()
     }
 
     @Test
-    fun `input objects with sets should work properly with direct input`() {
+    fun `input objects with sets should work properly with direct input`() = runTest {
         data class TestObject(val list: List<String>, val set: Set<String>)
 
         val schema = KGraphQL.schema {
@@ -146,10 +147,10 @@ class ListsSpecificationTest {
                 resolver { input: TestObject -> input }
             }
         }
-        val queryResponse = deserialize(schema.executeBlocking("{ getObject { list set } }"))
+        val queryResponse = deserialize(schema.execute("{ getObject { list set } }"))
         queryResponse.toString() shouldBe "{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"
         val mutationResponse = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 """
                 mutation {
                   addObject(input: { list: ["foo", "bar", "foo", "bar"], set: ["foo", "bar", "foo", "bar"] }) {
@@ -163,7 +164,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    fun `input objects with sets should work properly with variables`() {
+    fun `input objects with sets should work properly with variables`() = runTest {
         data class TestObject(val list: List<String>, val set: Set<String>)
 
         val schema = KGraphQL.schema {
@@ -177,10 +178,10 @@ class ListsSpecificationTest {
         val variables = """
             { "inputData": { "list": ["foo", "bar", "foo", "bar"], "set": ["foo", "bar", "foo", "bar"] } }
         """.trimIndent()
-        val queryResponse = deserialize(schema.executeBlocking("{ getObject { list set } }"))
+        val queryResponse = deserialize(schema.execute("{ getObject { list set } }"))
         queryResponse.toString() shouldBe "{data={getObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"
         val mutationResponse = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 """
                 mutation(${'$'}inputData: TestObjectInput!) {
                   addObject(input: ${'$'}inputData) {
@@ -195,14 +196,14 @@ class ListsSpecificationTest {
 
     // https://github.com/stuebingerb/KGraphQL/issues/110
     @Test
-    fun `queries with nested lists should work properly`() {
+    fun `queries with nested lists should work properly`() = runTest {
         val schema = KGraphQL.schema {
             query("getNestedList") {
                 resolver { -> listOf(listOf("foo", "bar"), listOf("foobar")) }
             }
         }
 
-        val response = deserialize(schema.executeBlocking("{ getNestedList }"))
+        val response = deserialize(schema.execute("{ getNestedList }"))
         response.extract<List<List<String>>>("data/getNestedList") shouldBe listOf(
             listOf("foo", "bar"),
             listOf("foobar")
@@ -210,7 +211,7 @@ class ListsSpecificationTest {
     }
 
     @Test
-    fun `mutations with nested lists should work properly`() {
+    fun `mutations with nested lists should work properly`() = runTest {
         data class NestedLists(
             val nested1: List<List<String?>>,
             val nested2: List<List<List<List<List<String>?>>?>>,
@@ -231,7 +232,7 @@ class ListsSpecificationTest {
         }
 
         val response = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 """
                     mutation {
                       createNestedLists(

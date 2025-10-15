@@ -11,6 +11,7 @@ import com.apurebase.kgraphql.shouldBeInstanceOf
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 data class Actor(var name: String? = "", var age: Int? = 0)
@@ -55,7 +56,7 @@ class OperationsSpecificationTest {
     }
 
     @Test
-    fun `unnamed and named queries are equivalent`() {
+    fun `unnamed and named queries are equivalent`() = runTest {
         executeEqualQueries(
             newSchema(),
             mapOf("data" to mapOf("fizz" to "buzz")),
@@ -66,7 +67,7 @@ class OperationsSpecificationTest {
     }
 
     @Test
-    fun `unnamed and named mutations are equivalent`() {
+    fun `unnamed and named mutations are equivalent`() = runTest {
         executeEqualQueries(
             newSchema(),
             mapOf("data" to mapOf("createActor" to mapOf("name" to "Kurt Russel"))),
@@ -76,34 +77,34 @@ class OperationsSpecificationTest {
     }
 
     @Test
-    fun `handle subscription`() {
+    fun `handle subscription`() = runTest {
         val schema = newSchema()
-        schema.executeBlocking("subscription {subscriptionActor(subscription : \"mySubscription\"){name}}")
+        schema.execute("subscription {subscriptionActor(subscription : \"mySubscription\"){name}}")
 
         subscriptionResult = ""
-        schema.executeBlocking("mutation {createActor(name : \"Kurt Russel\"){name}}")
+        schema.execute("mutation {createActor(name : \"Kurt Russel\"){name}}")
 
         subscriptionResult shouldBe "{\"data\":{\"name\":\"Kurt Russel\"}}"
 
         subscriptionResult = ""
-        schema.executeBlocking("mutation{createActor(name : \"Kurt Russel1\"){name}}")
+        schema.execute("mutation{createActor(name : \"Kurt Russel1\"){name}}")
         subscriptionResult shouldBe "{\"data\":{\"name\":\"Kurt Russel1\"}}"
 
         subscriptionResult = ""
-        schema.executeBlocking("mutation{createActor(name : \"Kurt Russel2\"){name}}")
+        schema.execute("mutation{createActor(name : \"Kurt Russel2\"){name}}")
         subscriptionResult shouldBe "{\"data\":{\"name\":\"Kurt Russel2\"}}"
 
-        schema.executeBlocking("subscription {unsubscriptionActor(subscription : \"mySubscription\"){name}}")
+        schema.execute("subscription {unsubscriptionActor(subscription : \"mySubscription\"){name}}")
 
         subscriptionResult = ""
-        schema.executeBlocking("mutation{createActor(name : \"Kurt Russel\"){name}}")
+        schema.execute("mutation{createActor(name : \"Kurt Russel\"){name}}")
         subscriptionResult shouldBe ""
     }
 
     @Test
-    fun `Subscription return type must be the same as the publisher's`() {
+    fun `Subscription return type must be the same as the publisher's`() = runTest {
         val exception = shouldThrowExactly<ExecutionException> {
-            newSchema().executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
+            newSchema().execute("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
         }
         exception.originalError shouldBeInstanceOf SchemaException::class
         exception shouldHaveMessage "Subscription return type must be the same as the publisher's"

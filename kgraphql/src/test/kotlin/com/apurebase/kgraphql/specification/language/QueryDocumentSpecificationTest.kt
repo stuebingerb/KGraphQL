@@ -9,6 +9,7 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 @Specification("2.2 Query Document")
@@ -25,23 +26,23 @@ class QueryDocumentSpecificationTest {
     }
 
     @Test
-    fun `anonymous operation must be the only defined operation`() {
+    fun `anonymous operation must be the only defined operation`() = runTest {
         expect<ValidationException>("anonymous operation must be the only defined operation") {
-            deserialize(schema.executeBlocking("query {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
+            deserialize(schema.execute("query {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
         }
     }
 
     @Test
-    fun `must provide operation name when multiple named operations`() {
+    fun `must provide operation name when multiple named operations`() = runTest {
         expect<ValidationException>("Must provide an operation name from: [FIZZ, BUZZ], found null") {
-            deserialize(schema.executeBlocking("query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
+            deserialize(schema.execute("query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
         }
     }
 
     @Test
-    fun `execute operation by name in variable`() {
+    fun `execute operation by name in variable`() = runTest {
         val map = deserialize(
-            schema.executeBlocking(
+            schema.execute(
                 "query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}",
                 "{\"operationName\":\"FIZZ\"}"
             )

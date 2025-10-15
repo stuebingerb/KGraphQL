@@ -293,12 +293,12 @@ abstract class BaseSchemaTest {
     @AfterEach
     fun cleanup() = createdActors.clear()
 
-    fun execute(
+    suspend fun execute(
         query: String,
         variables: String? = null,
         context: Context = Context(emptyMap()),
         operationName: String? = null,
     ) = testedSchema
-        .executeBlocking(query, variables, context, operationName)
+        .execute(query, variables, context, operationName)
         .deserialize()
 }

@@ -3,16 +3,32 @@ package com.apurebase.kgraphql.integration
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
-import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
-import kotlin.system.measureTimeMillis
 
 class ParallelExecutionTest {
 
     data class AType(val id: Int)
+
+    private fun suspendResolversSchema(dispatcher: CoroutineDispatcher) = KGraphQL.schema {
+        configure {
+            coroutineDispatcher = dispatcher
+        }
+        repeat(1000) {
+            query("automated_$it") {
+                resolver { ->
+                    delay(3)
+                    "$it"
+                }
+            }
+        }
+    }
 
     private val syncResolversSchema = KGraphQL.schema {
         repeat(1000) {
@@ -25,18 +41,10 @@ class ParallelExecutionTest {
         }
     }
 
-    private val suspendResolverSchema = KGraphQL.schema {
-        repeat(1000) {
-            query("automated_$it") {
-                resolver { ->
-                    delay(3)
-                    "$it"
-                }
-            }
+    private fun suspendPropertySchema(dispatcher: CoroutineDispatcher) = KGraphQL.schema {
+        configure {
+            coroutineDispatcher = dispatcher
         }
-    }
-
-    private val suspendPropertySchema = KGraphQL.schema {
         query("getAll") {
             resolver { -> (0..999).map { AType(it) } }
         }
@@ -55,9 +63,10 @@ class ParallelExecutionTest {
     private val query = "{\n" + (0..999).joinToString("") { "automated_${it}\n" } + " }"
 
     @Test
-    fun `suspendable property resolvers`() {
+    fun `suspendable property resolvers`() = runTest {
         val query = "{getAll{id,children{id}}}"
-        val map = deserialize(suspendPropertySchema.executeBlocking(query))
+        val schema = suspendPropertySchema(this@runTest.coroutineContext[CoroutineDispatcher]!!)
+        val map = deserialize(schema.execute(query))
 
         map.extract<Int>("data/getAll[0]/id") shouldBe 0
         map.extract<Int>("data/getAll[500]/id") shouldBe 500
@@ -69,8 +78,8 @@ class ParallelExecutionTest {
     }
 
     @Test
-    fun `1000 synchronous resolvers sleeping with Thread sleep`() {
-        val map = deserialize(syncResolversSchema.executeBlocking(query))
+    fun `1000 synchronous resolvers sleeping with Thread sleep`() = runTest {
+        val map = deserialize(syncResolversSchema.execute(query))
         map.extract<String>("data/automated_0") shouldBe "0"
         map.extract<String>("data/automated_271") shouldBe "271"
         map.extract<String>("data/automated_314") shouldBe "314"
@@ -79,8 +88,9 @@ class ParallelExecutionTest {
     }
 
     @Test
-    fun `1000 suspending resolvers sleeping with suspending delay`() {
-        val map = deserialize(suspendResolverSchema.executeBlocking(query))
+    fun `1000 suspending resolvers sleeping with suspending delay`() = runTest {
+        val schema = suspendResolversSchema(this@runTest.coroutineContext[CoroutineDispatcher]!!)
+        val map = deserialize(schema.execute(query))
         map.extract<String>("data/automated_0") shouldBe "0"
         map.extract<String>("data/automated_271") shouldBe "271"
         map.extract<String>("data/automated_314") shouldBe "314"
@@ -88,13 +98,11 @@ class ParallelExecutionTest {
         map.extract<String>("data/automated_999") shouldBe "999"
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `execution should run in parallel`() {
-        val duration = measureTimeMillis {
-            deserialize(syncResolversSchema.executeBlocking(query))
-        }
-        // syncResolversSchema has 1000 resolvers, each waiting for 3ms. Usually, execution
-        // takes about 300ms so if it takes 3s, we apparently ran sequentially.
-        duration shouldBeLessThan 3000
+    fun `execution should run in parallel`() = runTest {
+        val schema = suspendResolversSchema(this@runTest.coroutineContext[CoroutineDispatcher]!!)
+        deserialize(schema.execute(query))
+        currentTime shouldBe 3
     }
 }
