@@ -32,6 +32,12 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
     private val builtInScalarNames = setOf("Int", "Float", "String", "Boolean", "ID")
 
     /**
+     * Set of special characters that need to be escaped in descriptions, cf.
+     * https://spec.graphql.org/September2025/#sec-String-Value
+     */
+    private val descriptionSpecialCharacters = setOf('\\', '"', '\n')
+
+    /**
      * Returns the given [schema] in schema definition language (SDL). Types and fields are sorted
      * ascending by their name and appear in order of their corresponding spec section, i.e.
      *
@@ -66,16 +72,14 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
                 appendLine("schema {")
                 val indentation = "  "
                 // The query root operation type must always be provided
-                appendDescription(schema.queryType, indentation)
+                // Root operation types do not support descriptions, cf. https://spec.graphql.org/September2025/#RootOperationTypeDefinition
                 appendLine("${indentation}query: ${schema.queryType.name}")
                 // The mutation root operation type is optional; if it is not provided, the service does not support mutations
                 schema.mutationType?.let {
-                    appendDescription(it, indentation)
                     appendLine("${indentation}mutation: ${it.name}")
                 }
                 // Similarly, the subscription root operation type is also optional; if it is not provided, the service does not support subscriptions
                 schema.subscriptionType?.let {
-                    appendDescription(it, indentation)
                     appendLine("${indentation}subscription: ${it.name}")
                 }
                 appendLine("}")
@@ -238,17 +242,24 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
             .takeIf { it.isNotEmpty() }
             ?.joinToString(separator = " & ", prefix = " implements ") ?: ""
 
-    private fun Any.description(): List<String>? = when (this) {
-        is __Described -> description?.takeIf { it.isNotBlank() }?.lines()
-        is __Type -> description?.takeIf { it.isNotBlank() }?.lines()
+    private fun Any.description(): String? = when (this) {
+        is __Described -> description?.takeIf { it.isNotBlank() }
+        is __Type -> description?.takeIf { it.isNotBlank() }
         else -> null
     }
 
     // https://spec.graphql.org/October2021/#sec-Descriptions
     private fun StringBuilder.appendDescription(type: Any, indentation: String = ""): StringBuilder {
         type.description()?.takeIf { config.includeDescriptions }?.let { description ->
-            description.forEach {
-                appendLine("$indentation\"$it\"")
+            // Use block strings if we have a description with special characters (including newline)
+            if (description.any { it in descriptionSpecialCharacters }) {
+                appendLine("$indentation\"\"\"")
+                description.lines().forEach {
+                    appendLine("$indentation$it")
+                }
+                appendLine("$indentation\"\"\"")
+            } else {
+                appendLine("$indentation\"$description\"")
             }
         }
         return this
