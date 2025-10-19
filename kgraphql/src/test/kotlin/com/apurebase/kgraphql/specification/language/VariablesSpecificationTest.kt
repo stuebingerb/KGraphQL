@@ -10,6 +10,7 @@ import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 @Specification("2.10 Variables")
@@ -142,10 +143,81 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with boolean variable default value`() {
+    fun `query with boolean variable and variable default value`() {
         val result = execute(query = "query(\$big: Boolean = true) {number(big: \$big)}")
         assertNoErrors(result)
         result.extract<Int>("data/number") shouldBe 10000
+    }
+
+    // https://spec.graphql.org/September2025/#sec-All-Variable-Usages-Are-Allowed.Allowing-Optional-Variables-When-Default-Values-Exist
+    // "A notable exception to typical variable type compatibility is allowing a variable definition with a nullable type to be provided to a non-null location as long as either that variable or that location provides a default value."
+    @Test
+    fun `query with boolean variable and location default value`() {
+        val result = execute(query = "query(\$big: Boolean) {bigNumber(big: \$big)}")
+        assertNoErrors(result)
+        result.extract<Int>("data/bigNumber") shouldBe 10000
+    }
+
+    @Test
+    fun `query with boolean variable and variable default value but explicit null provided`() {
+        expect<InvalidInputValueException>("argument 'null' is not valid value of type Boolean") {
+            execute(query = "query(\$big: Boolean = true) {number(big: \$big)}", variables = "{\"big\": null}")
+        }
+    }
+
+    @Test
+    fun `query with boolean variable and location default value but explicit null provided`() {
+        expect<InvalidInputValueException>("argument 'null' is not valid value of type Boolean") {
+            execute(query = "query(\$big: Boolean) {bigNumber(big: \$big)}", variables = "{\"big\": null}")
+        }
+    }
+
+    @Test
+    fun `query with list variable and variable default value`() {
+        val result = execute(query = "query(\$tags: [String] = []) {actorsByTags(tags: \$tags) { name }}")
+        assertNoErrors(result)
+        result.extract<List<String>>("data/actorsByTags") shouldNotBe null
+    }
+
+    @Test
+    fun `query with list variable and location default value`() {
+        val result = execute(query = "query(\$tags: [String]) {actorsByTagsWithDefault(tags: \$tags) { name }}")
+        assertNoErrors(result)
+        result.extract<List<String>>("data/actorsByTagsWithDefault") shouldNotBe null
+    }
+
+    @Test
+    fun `query with list variable and variable default value but explicit null list provided`() {
+        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
+            execute(
+                query = "query(\$tags: [String] = []) {actorsByTags(tags: \$tags) { name }}",
+                variables = "{\"tags\": null}"
+            )
+        }
+    }
+
+    @Test
+    fun `query with list variable and variable default value but explicit null element provided`() {
+        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
+            execute(
+                query = "query(\$tags: [String] = []) {actorsByTags(tags: \$tags) { name }}",
+                variables = "{\"tags\": [null]}"
+            )
+        }
+    }
+
+    @Test
+    fun `query with list variable and location default value but explicit null list provided`() {
+        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
+            execute(query = "query(\$tags: [String] = null) {actorsByTags(tags: \$tags) { name }}")
+        }
+    }
+
+    @Test
+    fun `query with list variable and location default value but explicit null element provided`() {
+        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
+            execute(query = "query(\$tags: [String] = [null]) {actorsByTags(tags: \$tags) { name }}")
+        }
     }
 
     @Test

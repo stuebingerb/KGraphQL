@@ -183,6 +183,12 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `query with generic input typ and default`() {
+        val map = execute("{actorsByTagsWithDefault{name}}")
+        assertNoErrors(map)
+    }
+
+    @Test
     fun `query with nullable generic input type`() {
         val map = execute("{actorsByTagsNullable{name}}")
         assertNoErrors(map)

@@ -53,7 +53,7 @@ open class ArgumentTransformer {
                 }
 
                 else -> {
-                    val transformedValue = transformValue(parameter.type, value!!, variables, true)
+                    val transformedValue = transformValue(parameter.type, value!!, variables, true, parameter.default)
                     if (transformedValue == null && parameter.type.isNotNullable()) {
                         throw InvalidInputValueException(
                             "argument ${parameter.name} is not optional, value cannot be null",
@@ -73,11 +73,14 @@ open class ArgumentTransformer {
         // Normally, single values should be coerced to a list with one element. But not if that single value is a
         // list of a nested list. Seems strange but cf. https://spec.graphql.org/October2021/#sec-List.Input-Coercion
         // This parameter is used to track if we have seen a ListValueNode in the recursive call chain.
-        coerceSingleValueAsList: Boolean
+        coerceSingleValueAsList: Boolean,
+        // Location default value to allow calling with a nullable variable type, cf.
+        // https://spec.graphql.org/September2025/#sec-All-Variable-Usages-Are-Allowed.Allowing-Optional-Variables-When-Default-Values-Exist
+        locationDefaultValue: Any?
     ): Any? {
         return when {
             value is ValueNode.VariableNode -> {
-                variables.get(type, value)?.let { transformValue(type, it, variables, coerceSingleValueAsList) }
+                variables.get(type, value, locationDefaultValue)?.let { transformValue(type, it, variables, coerceSingleValueAsList, locationDefaultValue) } ?: locationDefaultValue
             }
 
             // https://spec.graphql.org/October2021/#sec-List.Input-Coercion
@@ -119,7 +122,8 @@ open class ArgumentTransformer {
                         paramType,
                         valueField.value,
                         variables,
-                        coerceSingleValueAsList
+                        coerceSingleValueAsList,
+                        locationDefaultValue
                     )
                 }
 
@@ -183,29 +187,25 @@ open class ArgumentTransformer {
         type: Type.AList,
         values: List<ValueNode>,
         variables: Variables,
-        coerceSingleValueAsList: Boolean
+        coerceSingleValueAsList: Boolean,
+        defaultValue: Any? = null
     ): Collection<*> = if (type.kClass.isSubclassOf(Set::class)) {
         values.mapTo(mutableSetOf()) { valueNode ->
-            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList)
+            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList, defaultValue)
         }
     } else {
         values.map { valueNode ->
-            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList)
+            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList, defaultValue)
         }
     }
 
-    private fun transformString(value: ValueNode, type: Type): Any {
-
-        fun throwInvalidEnumValue(enumType: Type.Enum<*>) {
-            throw InvalidInputValueException(
-                "Invalid enum ${enumType.name} value. Expected one of ${enumType.values.map { it.value }}",
-                value
-            )
-        }
-
+    private fun transformString(value: ValueNode, type: Type): Any =
         (type as? Type.Enum<*>)?.let { enumType ->
-            return if (value is ValueNode.EnumValueNode) {
-                enumType.values.firstOrNull { it.name == value.value }?.value ?: throwInvalidEnumValue(enumType)
+            if (value is ValueNode.EnumValueNode) {
+                enumType.values.firstOrNull { it.name == value.value }?.value ?: throw InvalidInputValueException(
+                    "Invalid enum ${enumType.name} value. Expected one of ${enumType.values.map { it.value }}",
+                    value
+                )
             } else {
                 throw InvalidInputValueException(
                     "String literal '${value.valueNodeName}' is invalid value for enum type ${enumType.name}",
@@ -213,10 +213,9 @@ open class ArgumentTransformer {
                 )
             }
         } ?: (type as? Type.Scalar<*>)?.let { scalarType ->
-            return deserializeScalar(scalarType, value)
+            deserializeScalar(scalarType, value)
         } ?: throw InvalidInputValueException(
             "Invalid argument value '${value.valueNodeName}' for type ${type.name}",
             value
         )
-    }
 }

@@ -122,7 +122,6 @@ public final class com/apurebase/kgraphql/request/Variables {
 	public final fun copy (Lcom/apurebase/kgraphql/request/VariablesJson;Ljava/util/List;)Lcom/apurebase/kgraphql/request/Variables;
 	public static synthetic fun copy$default (Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/request/VariablesJson;Ljava/util/List;ILjava/lang/Object;)Lcom/apurebase/kgraphql/request/Variables;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun get (Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/model/ast/ValueNode$VariableNode;)Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;
 	public final fun getRaw ()Lcom/fasterxml/jackson/databind/JsonNode;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

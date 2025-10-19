@@ -57,7 +57,7 @@ class NonNullSpecificationTest {
     }
 
     @Test
-    fun `variable of a nullable type cannot be provided to a non-null argument`() {
+    fun `variable of a nullable type cannot be provided to a non-null argument without default`() {
         val schema = KGraphQL.schema {
             query("nonNull") {
                 resolver { input: String -> input }
