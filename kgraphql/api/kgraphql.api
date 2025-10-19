@@ -1486,20 +1486,19 @@ public abstract class com/apurebase/kgraphql/schema/model/ast/DefinitionNode : c
 public abstract class com/apurebase/kgraphql/schema/model/ast/DefinitionNode$ExecutableDefinitionNode : com/apurebase/kgraphql/schema/model/ast/DefinitionNode {
 	public synthetic fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Location;Lcom/apurebase/kgraphql/schema/model/ast/NameNode;Ljava/util/List;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/SelectionSetNode;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getDirectives ()Ljava/util/List;
-	public final fun getName ()Lcom/apurebase/kgraphql/schema/model/ast/NameNode;
+	public fun getName ()Lcom/apurebase/kgraphql/schema/model/ast/NameNode;
 	public final fun getSelectionSet ()Lcom/apurebase/kgraphql/schema/model/ast/SelectionSetNode;
 	public final fun getVariableDefinitions ()Ljava/util/List;
 }
 
 public final class com/apurebase/kgraphql/schema/model/ast/DefinitionNode$ExecutableDefinitionNode$FragmentDefinitionNode : com/apurebase/kgraphql/schema/model/ast/DefinitionNode$ExecutableDefinitionNode {
 	public fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Location;Lcom/apurebase/kgraphql/schema/model/ast/NameNode;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/SelectionSetNode;Lcom/apurebase/kgraphql/schema/model/ast/TypeNode$NamedTypeNode;)V
-	public synthetic fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Location;Lcom/apurebase/kgraphql/schema/model/ast/NameNode;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/SelectionSetNode;Lcom/apurebase/kgraphql/schema/model/ast/TypeNode$NamedTypeNode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getName ()Lcom/apurebase/kgraphql/schema/model/ast/NameNode;
 	public final fun getTypeCondition ()Lcom/apurebase/kgraphql/schema/model/ast/TypeNode$NamedTypeNode;
 }
 
 public final class com/apurebase/kgraphql/schema/model/ast/DefinitionNode$ExecutableDefinitionNode$OperationDefinitionNode : com/apurebase/kgraphql/schema/model/ast/DefinitionNode$ExecutableDefinitionNode {
 	public fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Location;Lcom/apurebase/kgraphql/schema/model/ast/NameNode;Ljava/util/List;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/SelectionSetNode;Lcom/apurebase/kgraphql/schema/model/ast/OperationTypeNode;)V
-	public synthetic fun <init> (Lcom/apurebase/kgraphql/schema/model/ast/Location;Lcom/apurebase/kgraphql/schema/model/ast/NameNode;Ljava/util/List;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/SelectionSetNode;Lcom/apurebase/kgraphql/schema/model/ast/OperationTypeNode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getOperation ()Lcom/apurebase/kgraphql/schema/model/ast/OperationTypeNode;
 }
 
@@ -2142,13 +2141,6 @@ public final class com/apurebase/kgraphql/schema/structure/LookupSchema$DefaultI
 public final class com/apurebase/kgraphql/schema/structure/RequestInterpreter {
 	public fun <init> (Lcom/apurebase/kgraphql/schema/structure/SchemaModel;)V
 	public final fun createExecutionPlan (Lcom/apurebase/kgraphql/schema/model/ast/DocumentNode;Ljava/lang/String;Lcom/apurebase/kgraphql/request/VariablesJson;)Lcom/apurebase/kgraphql/schema/execution/ExecutionPlan;
-}
-
-public final class com/apurebase/kgraphql/schema/structure/RequestInterpreter$InterpreterContext {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/structure/RequestInterpreter;Ljava/util/Map;Ljava/util/List;)V
-	public final fun get (Lcom/apurebase/kgraphql/schema/model/ast/SelectionNode$FragmentNode$FragmentSpreadNode;)Lcom/apurebase/kgraphql/schema/execution/Execution$Fragment;
-	public final fun getDeclaredVariables ()Ljava/util/List;
-	public final fun getFragments ()Ljava/util/Map;
 }
 
 public class com/apurebase/kgraphql/schema/structure/SchemaCompilation {

@@ -40,10 +40,15 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     @Test
     fun `query union property with external fragment`() {
         val map = execute(
-            "{actors{name, favourite{ ...actor, ...director, ...scenario }}}" +
-                "fragment actor on Actor {name}" +
-                "fragment director on Director {name age}" +
-                "fragment scenario on Scenario{content(uppercase: false)} ", null
+            """
+            {
+                actors{ name, favourite{ ...actor, ...director, ...scenario }}}
+                
+                fragment actor on Actor {name}
+                fragment director on Director {name age}
+                fragment scenario on Scenario{content(uppercase: false)
+            }
+        """.trimIndent()
         )
         for (i in 0..4) {
             val name = map.extract<String>("data/actors[$i]/name")

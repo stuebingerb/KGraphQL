@@ -7,22 +7,22 @@ sealed class DefinitionNode(override val loc: Location?) : ASTNode() {
 
     sealed class ExecutableDefinitionNode(
         loc: Location?,
-        val name: NameNode?,
+        open val name: NameNode?,
         val variableDefinitions: List<VariableDefinitionNode>?,
         val directives: List<DirectiveNode>?,
         val selectionSet: SelectionSetNode
     ) : DefinitionNode(loc) {
         class FragmentDefinitionNode(
             loc: Location?,
-            name: NameNode,
-            directives: List<DirectiveNode> = listOf(),
+            override val name: NameNode,
+            directives: List<DirectiveNode>,
             selectionSet: SelectionSetNode,
             val typeCondition: NamedTypeNode
         ) : ExecutableDefinitionNode(loc, name, emptyList(), directives, selectionSet)
 
         class OperationDefinitionNode(
             loc: Location?,
-            name: NameNode? = null,
+            name: NameNode?,
             variableDefinitions: List<VariableDefinitionNode>?,
             directives: List<DirectiveNode>?,
             selectionSet: SelectionSetNode,

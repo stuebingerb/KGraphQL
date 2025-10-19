@@ -189,6 +189,39 @@ class FragmentsSpecificationTest {
         }
     }
 
+    @Test
+    fun `queries with unused fragments should be denied`() {
+        expect<ValidationException>("Found unused fragments: [unused_film_title]") {
+            baseTestSchema.execute(
+                """
+            {
+                film {
+                    ...film_title
+                }
+            }
+            
+            fragment film_title on Film {
+                title
+                director {
+                    ...director_name
+                }
+            }
+            
+            fragment director_name on Director {
+                name
+            }
+            
+            fragment unused_film_title on Film {
+                director {
+                    name
+                    age
+                }
+            }
+        """
+            )
+        }
+    }
+
     sealed class TopUnion(val field: String) {
         class Union1(val names: List<String>) : TopUnion("union1")
         class Union2(val numbers: List<Int>, val booleans: List<Boolean>) : TopUnion("union2")
