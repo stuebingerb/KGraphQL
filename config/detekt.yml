@@ -44,7 +44,7 @@ naming:
 
 exceptions:
   SwallowedException:
-    active: false
+    active: true
   TooGenericExceptionCaught:
     active: false
   TooGenericExceptionThrown:
