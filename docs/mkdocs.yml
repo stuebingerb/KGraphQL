@@ -74,6 +74,7 @@ nav:
       - 'Operations': 'Reference/operations.md'
       - 'Configuration': 'Reference/configuration.md'
       - 'Resolver': 'Reference/resolver.md'
+      - 'Error Handling': 'Reference/errorHandling.md'
       - 'Deprecation': 'Reference/deprecation.md'
       - 'Access Rule': 'Reference/accessRule.md'
       - 'Type System':

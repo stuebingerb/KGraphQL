@@ -142,7 +142,7 @@ The `transformation` function allows to attach data transformation on any existi
     }
     ```
 
-Transformations can also be used to change the return type of a property, e.g. to make nullable
+Transformations can also be used to change the return type of a property, for example to make nullable
 properties non-nullable:
 
 === "Example"
