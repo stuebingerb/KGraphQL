@@ -52,8 +52,24 @@ abstract class BaseSchemaTest {
         }
 
         query("number") {
-            description = "returns little of big number"
-            resolver { big: Boolean -> if (big) 10000 else 0 }
+            description = "returns little or big number"
+            resolver { big: Boolean ->
+                if (big) {
+                    10000
+                } else {
+                    0
+                }
+            }
+        }
+        query("bigNumber") {
+            description = "returns little or big number, defaulting to big"
+            resolver { big: Boolean ->
+                if (big) {
+                    10000
+                } else {
+                    0
+                }
+            }.withArgs { arg { name = "big"; defaultValue = true } }
         }
         query("float") {
             description = "returns the given float"
@@ -80,6 +96,14 @@ abstract class BaseSchemaTest {
         query("actorsByTagsOptional") {
             description = "testing ktype & jvm erasure problems"
             resolver { tags: List<String>? ->
+                mutableListOf(bradPitt, morganFreeman, kevinSpacey, tomHardy)
+            }.withArgs {
+                arg<List<String>>(optional = true) { name = "tags"; defaultValue = emptyList() }
+            }
+        }
+        query("actorsByTagsWithDefault") {
+            description = "testing ktype & jvm erasure problems"
+            resolver { tags: List<String> ->
                 mutableListOf(bradPitt, morganFreeman, kevinSpacey, tomHardy)
             }.withArgs {
                 arg<List<String>>(optional = true) { name = "tags"; defaultValue = emptyList() }
