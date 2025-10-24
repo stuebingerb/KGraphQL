@@ -29,6 +29,7 @@ import java.util.Stack
 class RequestInterpreter(private val schemaModel: SchemaModel) {
 
     private val directivesByName = schemaModel.directives.associateBy { it.name }
+    private val usedFragments: MutableSet<String> = mutableSetOf()
 
     inner class InterpreterContext(
         // Fragments defined for the current operation
@@ -38,6 +39,9 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     ) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
+
+        fun getFragment(name: String) = fragments[name].also { usedFragments.add(name) }
+
         fun get(node: FragmentSpreadNode): Execution.Fragment? {
             if (fragmentsStack.contains(node.name.value)) {
                 throw ValidationException("Fragment spread circular references are not allowed", node)
@@ -50,7 +54,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             val elements = selectionSet.selections.map { conditionType.handleSelectionFieldOrFragment(it, this) }
             fragmentsStack.pop()
 
-            return Execution.Fragment(node, condition, elements, node.directives?.lookup())
+            return Execution.Fragment(node, condition, elements, node.directives?.lookup()).also { usedFragments.add(node.name.value) }
         }
     }
 
@@ -78,7 +82,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             val name = fragmentDef.name!!.value
 
             if (fragmentDefinitionNodes.count { it.name!!.value == name } > 1) {
-                throw ValidationException("There can be only one fragment named $name.", fragmentDef)
+                throw ValidationException("There can be only one fragment named $name", fragmentDef)
             }
 
             name to (type to fragmentDef.selectionSet)
@@ -92,6 +96,11 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             }
         ).also {
             it.isSubscription = operation.operation == OperationTypeNode.SUBSCRIPTION
+
+            val unusedFragments = ctx.fragments.keys.filter { fragment -> fragment !in usedFragments }
+            if (unusedFragments.isNotEmpty()) {
+                throw ValidationException("Found unused fragments: $unusedFragments")
+            }
         }
     }
 
@@ -255,8 +264,8 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                         it is FieldNode && it.name.value == "__typename"
                             -> listOf(it)
 
-                        it is FragmentSpreadNode && ctx.fragments[it.name.value]?.first?.name == possibleType.name
-                            -> ctx.fragments.getValue(it.name.value).second.selections
+                        it is FragmentSpreadNode && ctx.getFragment(it.name.value)?.first?.name == possibleType.name
+                            -> ctx.getFragment(it.name.value)!!.second.selections
 
                         it is InlineFragmentNode && possibleType.name == it.typeCondition?.name?.value
                             -> it.selectionSet.selections

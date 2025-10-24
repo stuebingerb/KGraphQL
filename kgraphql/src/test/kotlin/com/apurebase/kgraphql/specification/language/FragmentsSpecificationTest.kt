@@ -165,7 +165,7 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `queries with duplicated fragments are denied`() {
-        expect<ValidationException>("There can be only one fragment named film_title.") {
+        expect<ValidationException>("There can be only one fragment named film_title") {
             baseTestSchema.execute(
                 """
             {
@@ -179,6 +179,31 @@ class FragmentsSpecificationTest {
             }
             
             fragment film_title on Film {
+                director {
+                    name
+                    age
+                }
+            }
+        """
+            )
+        }
+    }
+    @Test
+    fun `queries with unused fragments are denied`() {
+        expect<ValidationException>("Found unused fragments: [unused_film_title]") {
+            baseTestSchema.execute(
+                """
+            {
+                film {
+                    ...film_title
+                }
+            }
+            
+            fragment film_title on Film {
+                title
+            }
+            
+            fragment unused_film_title on Film {
                 director {
                     name
                     age
