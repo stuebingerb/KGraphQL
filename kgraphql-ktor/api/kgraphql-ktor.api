@@ -7,6 +7,7 @@ public final class com/apurebase/kgraphql/GraphQL {
 public final class com/apurebase/kgraphql/GraphQL$Configuration : com/apurebase/kgraphql/schema/dsl/SchemaConfigurationDSL {
 	public fun <init> ()V
 	public final fun context (Lkotlin/jvm/functions/Function2;)V
+	public final fun errorHandler (Lkotlin/jvm/functions/Function1;)V
 	public final fun getEndpoint ()Ljava/lang/String;
 	public final fun getPlayground ()Z
 	public final fun schema (Lkotlin/jvm/functions/Function1;)V

@@ -178,4 +178,24 @@ class KtorFeatureTest : KtorTest() {
             response.status shouldBe HttpStatusCode.Unauthorized
         }
     }
+
+    @Test
+    fun `error handler should work`() {
+        val errorHandler: (Throwable) -> GraphQLError = { e -> GraphQLError(message = e.message ?: "unknown") }
+
+        val server = withServer(errorHandler = errorHandler) {
+            query("error") {
+                resolver<String> { -> throw Exception("Error message") }
+            }
+        }
+
+        val response = server("query") {
+            field("error")
+        }
+        runBlocking {
+            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[],\"path\":[],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.contentType() shouldBe ContentType.Application.Json
+        }
+
+    }
 }
