@@ -19,6 +19,7 @@ open class KtorTest {
         ctxBuilder: ContextBuilder.(ApplicationCall) -> Unit = {},
         authHeader: String? = null,
         errorHandler: ((Throwable) -> GraphQLError)? = null,
+        wrapErrors: Boolean? = null,
         block: SchemaBuilder.() -> Unit
     ): (String, Kraph.() -> Unit) -> HttpResponse {
         return { type, kraph ->
@@ -38,6 +39,7 @@ open class KtorTest {
                         authenticate(optional = authHeader == null) { next() }
                     }
                     errorHandler?.let { this.errorHandler(it) }
+                    wrapErrors?.let { this.wrapErrors = it }
                     schema(block)
                 }
 

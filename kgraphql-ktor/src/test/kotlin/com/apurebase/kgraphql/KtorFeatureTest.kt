@@ -180,7 +180,7 @@ class KtorFeatureTest : KtorTest() {
     }
 
     @Test
-    fun `error handler should work`() {
+    fun `should work with error handler`() {
         val errorHandler: (Throwable) -> GraphQLError = { e -> GraphQLError(message = e.message ?: "unknown") }
 
         val server = withServer(errorHandler = errorHandler) {
@@ -196,6 +196,39 @@ class KtorFeatureTest : KtorTest() {
             response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[],\"path\":[],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
             response.contentType() shouldBe ContentType.Application.Json
         }
+    }
 
+    @Test
+    fun `should work without error handler`() {
+        val server = withServer {
+            query("error") {
+                resolver<String> { -> throw Exception("Error message") }
+            }
+        }
+
+        val response = server("query") {
+            field("error")
+        }
+        runBlocking {
+            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[{\"line\":2,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.contentType() shouldBe ContentType.Application.Json
+        }
+    }
+
+    @Test
+    fun `should work without error handler and wrap errors`() {
+        val server = withServer(wrapErrors = false) {
+            query("error") {
+                resolver<String> { -> throw Exception("Error message") }
+            }
+        }
+
+        val response = server("query") {
+            field("error")
+        }
+        runBlocking {
+            response.status shouldBe HttpStatusCode.InternalServerError
+
+        }
     }
 }
