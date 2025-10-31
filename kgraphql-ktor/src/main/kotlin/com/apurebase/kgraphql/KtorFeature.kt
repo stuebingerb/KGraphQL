@@ -45,13 +45,13 @@ class GraphQL(val schema: Schema) {
             wrapWith = block
         }
 
-        fun errorHandler(block: (e: Throwable) -> GraphQLError) {
+        fun errorHandler(block: (e: Throwable) -> Throwable) {
             errorHandler = block
         }
 
         internal var contextSetup: (ContextBuilder.(ApplicationCall) -> Unit)? = null
         internal var wrapWith: (Route.(next: Route.() -> Unit) -> Unit)? = null
-        internal var errorHandler: ((Throwable) -> GraphQLError)? = null
+        internal var errorHandler: ((Throwable) -> Throwable) = { e -> e }
         internal var schemaBlock: (SchemaBuilder.() -> Unit)? = null
     }
 
@@ -122,8 +122,10 @@ class GraphQL(val schema: Schema) {
                         proceed()
                     }
                 } catch (e: Throwable) {
-                    val error = config.errorHandler?.invoke(e) ?: e
-                    if (error !is GraphQLError) throw e
+                    val error = config.errorHandler(e)
+                    if (error !is GraphQLError) {
+                        throw e
+                    }
 
                     context.respondText(
                         error.serialize(),
