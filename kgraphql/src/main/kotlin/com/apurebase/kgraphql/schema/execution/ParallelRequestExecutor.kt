@@ -16,7 +16,6 @@ import com.apurebase.kgraphql.schema.structure.Type
 import com.apurebase.kgraphql.toMapAsync
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.CompletableDeferred
@@ -62,7 +61,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
     private val argumentsHandler = schema.configuration.argumentTransformer
 
-    private val jsonNodeFactory = JsonNodeFactory.instance
+    private val jsonNodeFactory = schema.configuration.objectMapper.nodeFactory
 
     private val dispatcher = schema.configuration.coroutineDispatcher
 
