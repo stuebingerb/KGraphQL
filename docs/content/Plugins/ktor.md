@@ -50,13 +50,13 @@ test it out directly within the browser.
 The GraphQL feature is extending the standard [KGraphQL configuration](../Reference/configuration.md) and providing its own
 set of configuration as described in the table below.
 
-| Property   | Description                                                                                                                                                                    | Default value  |
-|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
-| playground | Gives you out of the box access to a [GraphQL playground](https://github.com/graphql/graphiql)                                                                                 | `false`        |
-| endpoint   | This specifies what route will be delivering the GraphQL endpoint. When `playground` is enabled, it will use this endpoint also.                                               | `/graphql`     |
-| context    | Refer to example below                                                                                                                                                         |                |
-| wrap       | If you want to wrap the route into something before KGraphQL will install the GraphQL route. You can use this wrapper. See example below for a more in depth on how to use it. |                |
-| schema     | This is where you are defining your schema. Please refer to [KGraphQL References](../Reference/operations.md) for further documentation on this.                               | ***required*** |
+| Property     | Description                                                                                                                                                                         | Default value  |
+|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
+| endpoint     | This specifies what route will be delivering the GraphQL endpoint. When `playground` is enabled, it will use this endpoint also.                                                    | `/graphql`     |
+| context      | Refer to example below                                                                                                                                                              |                |
+| wrap         | If you want to wrap the route into something before KGraphQL will install the GraphQL route. You can use this wrapper. See example below for a more in depth on how to use it.      |                |
+| errorHandler | Allows interaction with exceptions thrown during GraphQL execution and optional mapping to another one — in particular mapping to `GraphQLError` for serialization in the response. |                |
+| schema       | This is where you are defining your schema. Please refer to [KGraphQL References](../Reference/operations.md) for further documentation on this.                                    | ***required*** |
 
 ### Wrap
 
@@ -91,6 +91,35 @@ To get access to the context
           "Hello ${user.name}"
         }
       }  
+    }
+    ```
+
+### Error Handler
+
+By default, KGraphQL will wrap non-`GraphQLError` exceptions into an `ExecutionException` (when `wrapErrors = true`)
+or rethrow them to be handled by Ktor (when `wrapErrors = false`).
+
+The `errorHandler` provides a way to **intercept and transform exceptions** before they are serialized.  
+It is always defined — by default it simply returns the same exception instance (`{ e -> e }`),  
+but you can override it to map specific exception types to `GraphQLError` or other `Throwable` instances.
+
+=== "Example"
+    ```kotlin
+    errorHandler { e ->
+        when (e) {
+            is ValidationException -> GraphQLError(e.message, extensions = mapOf("type" to "VALIDATION_ERROR"))
+            is DomainException -> GraphQLError(e.message, extensions = mapOf("type" to "DOMAIN_ERROR"))
+            is GraphQLError -> e
+            else -> ExecutionException(e.message ?: "Unknown execution error", cause = e)
+        }
+    }
+    schema {
+        query("hello") {
+            resolver { ctx: Context ->
+                val user = ctx.get<User>()!!
+                "Hello ${user.name}"
+            }
+        }
     }
     ```
 
