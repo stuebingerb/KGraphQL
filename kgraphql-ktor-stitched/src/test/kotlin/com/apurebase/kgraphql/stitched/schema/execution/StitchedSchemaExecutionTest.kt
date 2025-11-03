@@ -39,7 +39,6 @@ class StitchedSchemaExecutionTest {
     data class Remote1WithChild(val foo1: String, val child: Child)
     data class RemoteWithList(val foo: String, val bars: List<String>)
 
-    @Suppress("unused")
     enum class RemoteEnum {
         REMOTE1, REMOTE2
     }
@@ -128,6 +127,12 @@ class StitchedSchemaExecutionTest {
     private fun SchemaBuilder.complexRemoteSchema2WithInputObject() = run {
         query("remote2") {
             resolver { inputObject: Child? -> inputObject?.let { Remote2(inputObject.childFoo, 13) } }
+        }
+    }
+
+    private fun SchemaBuilder.remoteSchema2WithEnum() = run {
+        query("remote2") {
+            resolver { -> RemoteEnum.REMOTE2 }
         }
     }
 
@@ -915,6 +920,78 @@ class StitchedSchemaExecutionTest {
             )
         }.bodyAsText() shouldBe """
             {"data":{"remote1":"REMOTE1"}}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `stitched schema with shared enums should work as expected`() = testApplication {
+        // All schemas use the same enum class; this must not cause problems
+        install(GraphQL.FeatureInstance("KGraphql - Remote1")) {
+            endpoint = "remote1"
+            schema {
+                remoteSchema1WithEnum()
+            }
+        }
+        install(GraphQL.FeatureInstance("KGraphql - Remote2")) {
+            endpoint = "remote2"
+            schema {
+                remoteSchema2WithEnum()
+            }
+        }
+        install(StitchedGraphQL.FeatureInstance("KGraphql - Local")) {
+            endpoint = "local"
+            stitchedSchema {
+                configure {
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
+                }
+                localSchema {
+                    query("local") {
+                        resolver<RemoteEnum?> { null }
+                    }
+                }
+                remoteSchema("remote1") {
+                    getRemoteSchema {
+                        remoteSchema1WithEnum()
+                    }
+                }
+                remoteSchema("remote2") {
+                    getRemoteSchema {
+                        remoteSchema2WithEnum()
+                    }
+                }
+            }
+        }
+
+        val sdl = client.get("local?schema").bodyAsText()
+        sdl shouldBe """
+            type Query {
+              local: RemoteEnum
+              remote1: RemoteEnum!
+              remote2: RemoteEnum!
+            }
+
+            enum RemoteEnum {
+              REMOTE1
+              REMOTE2
+            }
+
+        """.trimIndent()
+
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(
+                graphqlRequest(
+                    """
+                    query {
+                        remote1
+                        remote2
+                        local
+                    }
+                    """.trimIndent()
+                )
+            )
+        }.bodyAsText() shouldBe """
+            {"data":{"remote1":"REMOTE1","remote2":"REMOTE2","local":null}}
         """.trimIndent()
     }
 
