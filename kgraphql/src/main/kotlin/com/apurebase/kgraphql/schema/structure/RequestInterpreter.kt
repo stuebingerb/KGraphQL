@@ -213,15 +213,19 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             (schemaModel.remoteTypesBySchema[field.remoteUrl]
                 ?: schemaModel.queryTypes.values).mapNotNullTo(HashSet()) { it.name }
 
+        val nodeArgs = node.arguments?.toArguments()
+        val usedVariableNames = nodeArgs.orEmpty().values
+            .filterIsInstance<ValueNode.VariableNode>()
+            .mapTo(HashSet()) { it.name.value }
         return Execution.Remote(
             selectionNode = node,
             field = field,
             children = handleReturnType(ctx, field.returnType, node),
             key = node.name.value,
             alias = node.alias?.value,
-            arguments = node.arguments?.toArguments(),
+            arguments = nodeArgs,
             directives = node.directives?.lookup(),
-            variables = ctx.declaredVariables,
+            variables = ctx.declaredVariables?.filter { it.variable.name.value in usedVariableNames },
             namedFragments = node.selectionSet?.selections?.namedFragments()
                 ?.filter { it.condition.onType.name in typesFromSameSchema }
                 ?.distinctBy { (it.selectionNode as FragmentSpreadNode).name.value },
