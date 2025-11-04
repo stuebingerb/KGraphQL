@@ -19,27 +19,19 @@ class StitchedSchemaCompilation(
     private val remoteSchemaCompilation = RemoteSchemaCompilation(configuration)
 
     override suspend fun perform(): DefaultSchema {
-        definition.unions.forEach { handleUnionType(it) }
-        definition.objects.forEach { handleObjectType(it.kClass) }
-        definition.inputObjects.forEach { handleInputType(it.kClass) }
+        handleBaseTypes()
 
         definition.remoteSchemas.forEach { (url, schema) ->
             remoteSchemaCompilation.perform(url, schema)
         }
 
-        val queryType =
-            handleQueries(definition.queries.map { handleOperation(it) } + remoteSchemaCompilation.remoteQueries)
-        val mutationType =
-            handleMutations(definition.mutations.map { handleOperation(it) } + remoteSchemaCompilation.remoteMutations)
-        val subscriptionType = handleSubscriptions(definition.subscriptions.map { handleOperation(it) })
+        val queryType = handleQueries(localQueryFields() + remoteSchemaCompilation.remoteQueries)
+        val mutationType = handleMutations(localMutationFields() + remoteSchemaCompilation.remoteMutations)
+        val subscriptionType = handleSubscriptions(localSubscriptionFields())
 
-        queryTypeProxies.forEach { (kClass, typeProxy) ->
-            introspectPossibleTypes(kClass, typeProxy)
-            introspectInterfaces(kClass, typeProxy)
-        }
+        introspectTypes()
 
-        val typesByName =
-            (queryTypeProxies.values + enums.values + scalars.values + inputTypeProxies.values + unions).associateByTo(
+        val typesByName = (queryTypeProxies.values + enums.values + scalars.values + inputTypeProxies.values + unions).associateByTo(
                 mutableMapOf()
             ) { it.name }
         (remoteSchemaCompilation.remoteQueryTypeProxies + remoteSchemaCompilation.remoteInputTypeProxies).forEach {
@@ -51,40 +43,46 @@ class StitchedSchemaCompilation(
         }
 
         definition.stitchedProperties.groupBy { it.typeName }.forEach { (typeName, stitchedProperties) ->
-            val originalType: TypeProxy = typesByName[typeName] as? TypeProxy
-                ?: throw SchemaException("Stitched type $typeName does not exist")
-            val stitchedFields = stitchedProperties.map { property ->
-                validateName(property.fieldName)
-                if (originalType.fields?.any { it.name == property.fieldName } == true) {
-                    throw SchemaException("Cannot add stitched field with duplicated name '${property.fieldName}'")
-                }
-                val remoteQuery = queryType.fields?.firstOrNull { it.name == property.remoteQueryName }
-                    ?: error("Stitched remote query ${property.remoteQueryName} does not exist")
-                var stitchedType = remoteQuery.returnType
-
-                if (!property.nullable && stitchedType.isNullable()) {
-                    stitchedType = Type.NonNull(stitchedType)
-                } else if (property.nullable && stitchedType.isNotNullable()) {
-                    stitchedType = stitchedType.unwrapNonNull()
-                }
-
-                val argsFromParent =
-                    property.inputArguments.filter { it.parentFieldName != null }.associate { inputArgument ->
-                        remoteQuery.args.first { it.name == inputArgument.name } to inputArgument.parentFieldName!!
+            wrapExceptions("Unable to handle stitched type '$typeName'") {
+                val originalType: TypeProxy = typesByName[typeName] as? TypeProxy
+                    ?: throw SchemaException("Type does not exist in any schema")
+                val stitchedFields = stitchedProperties.map { property ->
+                    validateName(property.fieldName)
+                    if (originalType.fields?.any { it.name == property.fieldName } == true) {
+                        throw SchemaException("Cannot add stitched field with duplicated name '${property.fieldName}'")
                     }
-                val args = remoteQuery.args.filterNot { arg -> arg.name in argsFromParent.keys.map { it.name } }
-                val stitchedField =
-                    Field.Delegated(property.fieldName, null, false, null, args, stitchedType, argsFromParent)
-                val stitchedRemoteUrl = (remoteQuery as? Field.RemoteOperation<*, *>)?.remoteUrl
-                    ?: configuration.localUrl
-                    ?: throw SchemaException("Remote type without url")
-                remoteSchemaCompilation.remoteRootOperation(stitchedField, stitchedRemoteUrl, property.remoteQueryName)
-            }
-            val proxiedOriginalType = originalType.proxied
-            originalType.proxied = when (proxiedOriginalType) {
-                is Type.RemoteObject -> proxiedOriginalType.withStitchedFields(stitchedFields)
-                is Type.Object<*> -> proxiedOriginalType.withStitchedFields(stitchedFields)
-                else -> throw SchemaException("Type ${proxiedOriginalType.unwrapped().name} cannot be stitched")
+                    val remoteQuery = queryType.fields?.firstOrNull { it.name == property.remoteQueryName }
+                        ?: throw SchemaException("Stitched remote query '${property.remoteQueryName}' does not exist")
+                    var stitchedType = remoteQuery.returnType
+
+                    if (!property.nullable && stitchedType.isNullable()) {
+                        stitchedType = Type.NonNull(stitchedType)
+                    } else if (property.nullable && stitchedType.isNotNullable()) {
+                        stitchedType = stitchedType.unwrapNonNull()
+                    }
+
+                    val argsFromParent =
+                        property.inputArguments.filter { it.parentFieldName != null }.associate { inputArgument ->
+                            remoteQuery.args.first { it.name == inputArgument.name } to inputArgument.parentFieldName!!
+                        }
+                    val args = remoteQuery.args.filterNot { arg -> arg.name in argsFromParent.keys.map { it.name } }
+                    val stitchedField =
+                        Field.Delegated(property.fieldName, null, false, null, args, stitchedType, argsFromParent)
+                    val stitchedRemoteUrl = (remoteQuery as? Field.RemoteOperation<*, *>)?.remoteUrl
+                        ?: configuration.localUrl
+                        ?: throw SchemaException("Remote type without url")
+                    remoteSchemaCompilation.remoteRootOperation(
+                        stitchedField,
+                        stitchedRemoteUrl,
+                        property.remoteQueryName
+                    )
+                }
+                val proxiedOriginalType = originalType.proxied
+                originalType.proxied = when (proxiedOriginalType) {
+                    is Type.RemoteObject -> proxiedOriginalType.withStitchedFields(stitchedFields)
+                    is Type.Object<*> -> proxiedOriginalType.withStitchedFields(stitchedFields)
+                    else -> throw SchemaException("Type '${proxiedOriginalType.unwrapped().name}' cannot be stitched")
+                }
             }
         }
 

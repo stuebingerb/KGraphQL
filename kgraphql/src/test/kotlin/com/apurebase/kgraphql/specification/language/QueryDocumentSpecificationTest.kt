@@ -26,14 +26,14 @@ class QueryDocumentSpecificationTest {
 
     @Test
     fun `anonymous operation must be the only defined operation`() {
-        expect<ValidationException>("anonymous operation must be the only defined operation") {
+        expect<ValidationException>("Anonymous operation must be the only defined operation") {
             deserialize(schema.executeBlocking("query {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
         }
     }
 
     @Test
     fun `must provide operation name when multiple named operations`() {
-        expect<ValidationException>("Must provide an operation name from: [FIZZ, BUZZ], found null") {
+        expect<ValidationException>("Must provide an operation name from: [FIZZ, BUZZ], found: null") {
             deserialize(schema.executeBlocking("query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}"))
         }
     }

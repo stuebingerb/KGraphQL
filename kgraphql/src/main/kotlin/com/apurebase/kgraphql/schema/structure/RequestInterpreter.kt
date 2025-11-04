@@ -78,7 +78,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             val name = fragmentDef.name!!.value
 
             if (fragmentDefinitionNodes.count { it.name!!.value == name } > 1) {
-                throw ValidationException("There can be only one fragment named $name.", fragmentDef)
+                throw ValidationException("There can be only one fragment named '$name'", fragmentDef)
             }
 
             name to (type to fragmentDef.selectionSet)
@@ -109,7 +109,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         }
     } else if (type.unwrapped().fields?.isNotEmpty() == true) {
         throw ValidationException(
-            "Missing selection set on property ${propertyName?.value} of type ${type.unwrapped().name}",
+            "Missing selection set on property '${propertyName?.value}' of type '${type.unwrapped().name}'",
             selectionSet
         )
     } else {
@@ -158,7 +158,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
     ): Execution.Node {
         return when (val field = this[node.name.value]) {
             null -> throw ValidationException(
-                "Property ${node.name.value} on $name does not exist",
+                "Property '${node.name.value}' on '$name' does not exist",
                 node
             )
 
@@ -272,7 +272,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                 if (!mergedSelectionsForType.isNullOrEmpty()) {
                     handleReturnType(ctx, possibleType, SelectionSetNode(null, mergedSelectionsForType))
                 } else {
-                    throw ValidationException("Missing selection set for type ${possibleType.name}", selectionNode)
+                    throw ValidationException("Missing selection set for type '${possibleType.name}'", selectionNode)
                 }
             }
 
@@ -288,12 +288,12 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
     private fun unknownFragmentTypeException(fragment: FragmentNode) = when (fragment) {
         is FragmentSpreadNode -> ValidationException(
-            message = "Fragment ${fragment.name.value} not found",
+            message = "Fragment '${fragment.name.value}' not found",
             node = fragment
         )
 
         is InlineFragmentNode -> ValidationException(
-            message = "Unknown type ${fragment.typeCondition?.name?.value} in type condition on fragment",
+            message = "Unknown type '${fragment.typeCondition?.name?.value}' in type condition on fragment",
             node = fragment
         )
     }
@@ -302,7 +302,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
     private fun findDirective(invocation: DirectiveNode): Directive {
         return directivesByName[invocation.name.value.removePrefix("@")]
-            ?: throw ValidationException("Directive ${invocation.name.value} does not exist", invocation)
+            ?: throw ValidationException("Directive '${invocation.name.value}' does not exist", invocation)
     }
 
     private fun DocumentNode.getOperation(
@@ -315,7 +315,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             else -> {
                 val operationNamesFound = operations.mapNotNull { it.name?.value }.also {
                     if (it.size != operations.size) {
-                        throw ValidationException("anonymous operation must be the only defined operation")
+                        throw ValidationException("Anonymous operation must be the only defined operation")
                     }
                 }.joinToString(prefix = "[", postfix = "]")
 
@@ -325,7 +325,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                 )?.let { it as? ValueNode.StringValueNode }?.value
 
                 operations.firstOrNull { it.name?.value == operationName }
-                    ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found $operationName")
+                    ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found: $operationName")
             }
         }
     }

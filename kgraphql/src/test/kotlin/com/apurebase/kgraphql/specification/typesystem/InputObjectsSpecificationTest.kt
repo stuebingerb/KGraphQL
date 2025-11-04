@@ -152,7 +152,7 @@ class InputObjectsSpecificationTest {
             val hello: String = "world"
         }
 
-        expect<SchemaException>("An input type must define one or more fields. Found none on type ClassWithEmptyConstructorInput") {
+        expect<SchemaException>("Unable to handle 'query(\"test\")': An input type must define one or more fields. Found none on type 'ClassWithEmptyConstructorInput'") {
             KGraphQL.schema {
                 query("test") {
                     resolver { input: ClassWithEmptyConstructor -> input }

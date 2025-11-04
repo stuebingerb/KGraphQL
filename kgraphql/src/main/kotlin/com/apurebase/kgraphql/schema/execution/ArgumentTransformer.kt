@@ -32,7 +32,7 @@ open class ArgumentTransformer {
 
         if (unsupportedArguments?.isNotEmpty() == true) {
             throw InvalidInputValueException(
-                "$funName does support arguments ${inputValues.map { it.name }}. Found arguments ${args.keys}",
+                "'$funName' does support arguments: ${inputValues.map { it.name }}. Found arguments: ${args.keys}",
                 executionNode.selectionNode
             )
         }

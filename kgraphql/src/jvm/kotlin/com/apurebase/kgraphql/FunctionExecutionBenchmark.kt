@@ -17,7 +17,7 @@ import java.util.function.BiFunction
 /**
  * Contrary to Java 8 which has about 43 different specialized function interfaces
  * to avoid boxing and unboxing as much as possible, the Function objects compiled by Kotlin
- * only implement fully generic interfaces, effectively using the Object type for any input or output value.
+ * only implement fully generic interfaces, effectively using the object type for any input or output value.
  *
  * This benchmark proves, that it makes no performance difference?
  */

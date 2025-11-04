@@ -165,7 +165,7 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `queries with duplicated fragments are denied`() {
-        expect<ValidationException>("There can be only one fragment named film_title.") {
+        expect<ValidationException>("There can be only one fragment named 'film_title'") {
             baseTestSchema.execute(
                 """
             {
@@ -349,7 +349,7 @@ class FragmentsSpecificationTest {
     // https://github.com/aPureBase/KGraphQL/issues/189
     @Test
     fun `queries with missing fragments should return proper error message`() {
-        expect<ValidationException>("Fragment film_title_misspelled not found") {
+        expect<ValidationException>("Fragment 'film_title_misspelled' not found") {
             baseTestSchema.execute(
                 """
             {

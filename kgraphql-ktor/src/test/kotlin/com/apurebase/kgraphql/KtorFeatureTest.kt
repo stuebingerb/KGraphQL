@@ -156,7 +156,9 @@ class KtorFeatureTest : KtorTest() {
             }
         }
         runBlocking {
-            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Property nickname on Actor does not exist\",\"locations\":[{\"line\":3,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"GRAPHQL_VALIDATION_FAILED\"}}]}"
+            response.bodyAsText() shouldBe """
+                {"errors":[{"message":"Property 'nickname' on 'Actor' does not exist","locations":[{"line":3,"column":1}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+            """.trimIndent()
             response.contentType() shouldBe ContentType.Application.Json
         }
     }

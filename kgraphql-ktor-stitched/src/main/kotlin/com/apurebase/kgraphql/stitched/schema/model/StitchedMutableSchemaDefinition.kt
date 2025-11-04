@@ -35,7 +35,7 @@ class StitchedMutableSchemaDefinition : MutableSchemaDefinition() {
 
     fun addRemoteSchema(url: String, schema: __Schema) {
         if (url in remoteSchemas.keys) {
-            throw SchemaException("Cannot add remote schema with duplicated url $url")
+            throw SchemaException("Cannot add remote schema with duplicated url '$url'")
         }
         remoteSchemas[url] = schema
     }

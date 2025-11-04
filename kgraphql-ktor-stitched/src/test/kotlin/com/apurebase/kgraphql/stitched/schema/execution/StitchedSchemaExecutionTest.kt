@@ -1930,7 +1930,7 @@ class StitchedSchemaExecutionTest {
                 )
             )
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Property nonexisting on Remote2 does not exist","locations":[{"line":2,"column":13}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+            {"errors":[{"message":"Property 'nonexisting' on 'Remote2' does not exist","locations":[{"line":2,"column":13}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
     }
 
@@ -2988,7 +2988,7 @@ class StitchedSchemaExecutionTest {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failSyntax }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Property failSyntax on Query does not exist","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+            {"errors":[{"message":"Property 'failSyntax' on 'Query' does not exist","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
         // Query that failed during execution

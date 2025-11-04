@@ -179,6 +179,10 @@ class SchemaBuilder {
             }
         }
 
+        if (enumValues.isEmpty()) {
+            throw SchemaException("Enum '${type.name}' must have at least one value")
+        }
+
         val kqlEnumValues = enumValues.map { value ->
             type.valueDefinitions[value]?.let { valueDSL ->
                 EnumValueDef(
@@ -194,12 +198,7 @@ class SchemaBuilder {
     }
 
     inline fun <reified T : Enum<T>> enum(noinline block: (EnumDSL<T>.() -> Unit)? = null) {
-        val enumValues = enumValues<T>()
-        if (enumValues.isEmpty()) {
-            throw SchemaException("Enum of type ${T::class} must have at least one value")
-        } else {
-            enum(T::class, enumValues<T>(), block)
-        }
+        enum(T::class, enumValues<T>(), block)
     }
 
     //================================================================================
@@ -213,7 +212,9 @@ class SchemaBuilder {
     }
 
     inline fun <reified T : Any> unionType(noinline block: UnionTypeDSL.() -> Unit = {}): TypeID {
-        if (!T::class.isSealed) throw SchemaException("Can't generate a union type out of a non sealed class. '${T::class.simpleName}'")
+        if (!T::class.isSealed) {
+            throw SchemaException("Can't generate a union type out of a non-sealed class '${T::class.simpleName}'")
+        }
 
         return unionType(T::class.simpleName!!) {
             block()

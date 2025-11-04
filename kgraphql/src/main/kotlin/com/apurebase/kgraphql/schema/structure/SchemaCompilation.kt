@@ -26,6 +26,7 @@ import com.apurebase.kgraphql.schema.model.QueryDef
 import com.apurebase.kgraphql.schema.model.SchemaDefinition
 import com.apurebase.kgraphql.schema.model.Transformation
 import com.apurebase.kgraphql.schema.model.TypeDef
+import kotlinx.coroutines.CancellationException
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
@@ -66,17 +67,13 @@ open class SchemaCompilation(
     }
 
     open suspend fun perform(): DefaultSchema {
-        definition.unions.forEach { handleUnionType(it) }
-        definition.objects.forEach { handleObjectType(it.kClass) }
-        definition.inputObjects.forEach { handleInputType(it.kClass) }
-        val queryType = handleQueries(definition.queries.map { handleOperation(it) })
-        val mutationType = handleMutations(definition.mutations.map { handleOperation(it) })
-        val subscriptionType = handleSubscriptions(definition.subscriptions.map { handleOperation(it) })
+        handleBaseTypes()
 
-        queryTypeProxies.forEach { (kClass, typeProxy) ->
-            introspectPossibleTypes(kClass, typeProxy)
-            introspectInterfaces(kClass, typeProxy)
-        }
+        val queryType = handleQueries(localQueryFields())
+        val mutationType = handleMutations(localMutationFields())
+        val subscriptionType = handleSubscriptions(localSubscriptionFields())
+
+        introspectTypes()
 
         val model = SchemaModel(
             query = queryType,
@@ -97,7 +94,20 @@ open class SchemaCompilation(
         return schema
     }
 
-    protected fun introspectPossibleTypes(kClass: KClass<*>, typeProxy: TypeProxy) {
+    protected suspend fun handleBaseTypes() {
+        definition.unions.forEach {
+            wrapExceptions("Unable to handle union type '${it.name}'") { handleUnionType(it) }
+        }
+        definition.objects.forEach {
+            wrapExceptions("Unable to handle object type '${it.name}'") { handleObjectType(it.kClass) }
+        }
+        definition.inputObjects.forEach {
+            wrapExceptions("Unable to handle input type '${it.name}'") { handleInputType(it.kClass) }
+        }
+
+    }
+
+    private fun introspectPossibleTypes(kClass: KClass<*>, typeProxy: TypeProxy) {
         val proxied = typeProxy.proxied
         if (proxied is Type.Interface<*>) {
             val possibleTypes = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
@@ -108,7 +118,7 @@ open class SchemaCompilation(
         }
     }
 
-    protected fun introspectInterfaces(kClass: KClass<*>, typeProxy: TypeProxy) {
+    private fun introspectInterfaces(kClass: KClass<*>, typeProxy: TypeProxy) {
         val proxied = typeProxy.proxied
         if (proxied is Type.Object<*>) {
             val interfaces = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
@@ -126,8 +136,26 @@ open class SchemaCompilation(
     }
 
     protected suspend fun handlePartialDirective(directive: Directive.Partial): Directive {
-        val inputValues = handleInputValues(directive.name, directive.execution, emptyList())
+        val inputValues = handleInputValues(directive.execution, emptyList())
         return directive.toDirective(inputValues)
+    }
+
+    protected suspend fun localSubscriptionFields() = definition.subscriptions.map {
+        wrapExceptions("Unable to handle 'subscription(\"${it.name}\")'") {
+            handleOperation(it)
+        }
+    }
+
+    protected suspend fun localMutationFields() = definition.mutations.map {
+        wrapExceptions("Unable to handle 'mutation(\"${it.name}\")'") {
+            handleOperation(it)
+        }
+    }
+
+    protected suspend fun localQueryFields() = definition.queries.map {
+        wrapExceptions("Unable to handle 'query(\"${it.name}\")'") {
+            handleOperation(it)
+        }
     }
 
     protected suspend fun handleQueries(declaredFields: List<Field>): Type {
@@ -155,6 +183,11 @@ open class SchemaCompilation(
         }
     }
 
+    protected fun introspectTypes() = queryTypeProxies.forEach { (kClass, typeProxy) ->
+        introspectPossibleTypes(kClass, typeProxy)
+        introspectInterfaces(kClass, typeProxy)
+    }
+
     protected fun handleSubscriptions(declaredFields: List<Field>): Type? {
         return if (declaredFields.isNotEmpty()) {
             Type.OperationObject(
@@ -179,14 +212,22 @@ open class SchemaCompilation(
         })
     )
 
-    protected suspend fun handleOperation(operation: BaseOperationDef<*, *>): Field {
+    protected suspend fun <T : Any> wrapExceptions(prefix: String, block: suspend () -> T): T = try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        throw SchemaException("$prefix: ${e.message}", e)
+    }
+
+    private suspend fun handleOperation(operation: BaseOperationDef<*, *>): Field {
         val returnType = handlePossiblyWrappedType(operation.returnType, TypeCategory.QUERY)
-        val inputValues = handleInputValues(operation.name, operation, operation.inputValues)
+        val inputValues = handleInputValues(operation, operation.inputValues)
         return Field.Function(operation, returnType, inputValues)
     }
 
     private suspend fun handleUnionProperty(unionProperty: PropertyDef.Union<*>): Field {
-        val inputValues = handleInputValues(unionProperty.name, unionProperty, unionProperty.inputValues)
+        val inputValues = handleInputValues(unionProperty, unionProperty.inputValues)
         val type = applyNullability(unionProperty.nullable, handleUnionType(unionProperty.union))
         return Field.Union(unionProperty, type, inputValues)
     }
@@ -205,7 +246,7 @@ open class SchemaCompilation(
             description = null
         ).let { applyNullability(kType.isMarkedNullable, handleUnionType(it)) }
 
-        kType.jvmErasure == Any::class -> throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()")
+        kType.jvmErasure == Any::class -> throw SchemaException("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver { ... }.returns<T>()")
 
         kType.jvmErasure.isSubclassOf(Enum::class) -> handleEnumType(kType, kType.jvmErasure.java as Class<Enum<*>>)
 
@@ -251,10 +292,6 @@ open class SchemaCompilation(
             else -> return type
         }
 
-        if (kClass == Context::class) {
-            throw SchemaException("Context type cannot be part of schema")
-        }
-
         val cachedInstances = when (typeCategory) {
             TypeCategory.QUERY -> queryTypeProxies
             TypeCategory.INPUT -> inputTypeProxies
@@ -273,7 +310,7 @@ open class SchemaCompilation(
         operation: PropertyDef.DataLoadedFunction<T, K, R>
     ): Field {
         val returnType = handlePossiblyWrappedType(operation.returnType, TypeCategory.QUERY)
-        val inputValues = handleInputValues(operation.name, operation.prepare, operation.inputValues)
+        val inputValues = handleInputValues(operation.prepare, operation.inputValues)
 
         return Field.DataLoader(
             kql = operation,
@@ -283,7 +320,7 @@ open class SchemaCompilation(
         )
     }
 
-    protected suspend fun handleObjectType(kClass: KClass<*>): Type {
+    private suspend fun handleObjectType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
         val objectDefs = definition.objects.filter { it.kClass.isSuperclassOf(kClass) }
         val objectDef = objectDefs.find { it.kClass == kClass } ?: TypeDef.Object(kClass.defaultKQLTypeName(), kClass)
@@ -291,10 +328,10 @@ open class SchemaCompilation(
         if (!objectDef.isIntrospectionType()) {
             validateName(objectDef.name)
             if ((enums.values + scalars.values + inputTypeProxies.values + unions).any { it.name == objectDef.name }) {
-                throw SchemaException("Cannot add Object type with duplicated name ${objectDef.name}")
+                throw SchemaException("Cannot add object type with duplicated name '${objectDef.name}'")
             }
             if (queryTypeProxies.any { it.key != kClass && it.value.name == objectDef.name }) {
-                throw SchemaException("Cannot add Object type with duplicated name ${objectDef.name}")
+                throw SchemaException("Cannot add object type with duplicated name '${objectDef.name}'")
             }
         }
 
@@ -345,7 +382,7 @@ open class SchemaCompilation(
             .map { property -> handleUnionProperty(property) }
 
         val typenameResolver: suspend (Any) -> String = { value: Any ->
-            queryTypeProxies[value.javaClass.kotlin]?.name ?: error("No query type proxy found for $value")
+            queryTypeProxies[value.javaClass.kotlin]?.name ?: error("No query type proxy found for '$value'")
         }
 
         val __typenameField = typenameField(FunctionWrapper.on(typenameResolver, true))
@@ -372,7 +409,7 @@ open class SchemaCompilation(
         }
 
         if (declaredFields.isEmpty()) {
-            throw SchemaException("An object type must define one or more fields. Found none on type ${objectDef.name}")
+            throw SchemaException("An object type must define one or more fields. Found none on type '${objectDef.name}'")
         }
 
         declaredFields.forEach { validateName(it.name) }
@@ -386,11 +423,11 @@ open class SchemaCompilation(
         return typeProxy
     }
 
-    protected suspend fun handleInputType(kClass: KClass<*>): Type {
+    private suspend fun handleInputType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
 
         val primaryConstructor = kClass.primaryConstructor
-            ?: throw SchemaException("Java class '${kClass.simpleName}' as inputType is not supported")
+            ?: throw SchemaException("Java class '${kClass.simpleName}' as input type is not supported")
 
         val inputObjectDef =
             definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName().let {
@@ -403,10 +440,10 @@ open class SchemaCompilation(
 
         validateName(inputObjectDef.name)
         if ((enums.values + scalars.values + queryTypeProxies.values + unions).any { it.name == inputObjectDef.name }) {
-            throw SchemaException("Cannot add Input type with duplicated name ${inputObjectDef.name}")
+            throw SchemaException("Cannot add input type with duplicated name '${inputObjectDef.name}'")
         }
         if (inputTypeProxies.any { it.key != kClass && it.value.name == inputObjectDef.name }) {
-            throw SchemaException("Cannot add Input type with duplicated name ${inputObjectDef.name}")
+            throw SchemaException("Cannot add input type with duplicated name '${inputObjectDef.name}'")
         }
 
         val objectType = Type.Input(inputObjectDef)
@@ -419,7 +456,7 @@ open class SchemaCompilation(
                 enums.values
             )
         ) {
-            throw SchemaException("Cannot add Input type with duplicated name ${typeProxy.name}")
+            throw SchemaException("Cannot add input type with duplicated name '${typeProxy.name}'")
         }
         inputTypeProxies[kClass] = typeProxy
 
@@ -444,7 +481,7 @@ open class SchemaCompilation(
         }
 
         if (fields.isEmpty()) {
-            throw SchemaException("An input type must define one or more fields. Found none on type ${inputObjectDef.name}")
+            throw SchemaException("An input type must define one or more fields. Found none on type '${inputObjectDef.name}'")
         }
 
         fields.forEach { validateName(it.name) }
@@ -454,7 +491,6 @@ open class SchemaCompilation(
     }
 
     private suspend fun handleInputValues(
-        operationName: String,
         operation: FunctionWrapper<*>,
         inputValues: List<InputValueDef<*>>
     ): List<InputValue<*>> {
@@ -463,7 +499,7 @@ open class SchemaCompilation(
             .filterNot { it in operation.argumentsDescriptor.keys }
 
         if (invalidInputValues.isNotEmpty()) {
-            throw SchemaException("Invalid input values on $operationName: $invalidInputValues")
+            throw SchemaException("Invalid input values: $invalidInputValues, available: ${operation.argumentsDescriptor.keys}")
         }
 
         return operation.argumentsDescriptor.map { (name, kType) ->
@@ -471,24 +507,24 @@ open class SchemaCompilation(
             val kqlInput = inputValue ?: InputValueDef(kType.jvmErasure, name)
             val inputType = handlePossiblyWrappedType(inputValue?.kType ?: kType, TypeCategory.INPUT)
             if (kqlInput.isDeprecated && !inputType.isNullable()) {
-                throw SchemaException("Required arguments cannot be marked as deprecated")
+                throw SchemaException("Required argument '${kqlInput.name}' cannot be marked as deprecated")
             }
             InputValue(kqlInput, inputType)
         }
     }
 
-    protected suspend fun handleUnionType(union: TypeDef.Union): Type.Union {
+    private suspend fun handleUnionType(union: TypeDef.Union): Type.Union {
         val possibleTypes = union.members.map {
             handleRawType(it, TypeCategory.QUERY)
         }
 
         val invalidPossibleTypes = possibleTypes.filterNot { it.kind == TypeKind.OBJECT }
         if (invalidPossibleTypes.isNotEmpty()) {
-            throw SchemaException("Invalid union type members")
+            throw SchemaException("Invalid union type members: ${invalidPossibleTypes.map { it.name }}")
         }
 
         val __typenameField = typenameField(FunctionWrapper.on({ value: Any ->
-            queryTypeProxies[value.javaClass.kotlin]?.name ?: error("No query type proxy found for $value")
+            queryTypeProxies[value.javaClass.kotlin]?.name ?: error("No query type proxy found for '$value'")
         }, true))
 
         val unionType = Type.Union(union, __typenameField, possibleTypes)
@@ -504,9 +540,9 @@ open class SchemaCompilation(
         val type = handlePossiblyWrappedType(parameter.type, TypeCategory.INPUT)
         val actualKqlProperty = kqlProperty ?: kProperty?.let { PropertyDef.Kotlin(it) }
         if (actualKqlProperty?.isDeprecated == true && !type.isNullable()) {
-            throw SchemaException("Required fields cannot be marked as deprecated")
+            throw SchemaException("Required field '${actualKqlProperty.name}' cannot be marked as deprecated")
         }
-        val parameterName = parameter.name ?: throw SchemaException("No name available for parameter $parameter")
+        val parameterName = parameter.name ?: throw SchemaException("No name available for parameter '$parameter'")
         return InputValue(
             InputValueDef(
                 kClass = parameter.type.jvmErasure,
@@ -527,7 +563,7 @@ open class SchemaCompilation(
     ): Field.Kotlin<*, *> {
         val returnType = handlePossiblyWrappedType(transformation?.kFunction?.returnType ?: kProperty.returnType, TypeCategory.QUERY)
         val inputValues = if (transformation != null) {
-            handleInputValues("$kProperty transformation", transformation.transformation, emptyList())
+            handleInputValues(transformation.transformation, emptyList())
         } else {
             emptyList()
         }

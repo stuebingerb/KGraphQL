@@ -30,7 +30,7 @@ class InterfacesSpecificationTest {
 
     @Test
     fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`() {
-        expect<ValidationException>("Property stuff on SimpleInterface does not exist") {
+        expect<ValidationException>("Property 'stuff' on 'SimpleInterface' does not exist") {
             schema.executeBlocking("{simple{exe, stuff}}")
         }
     }

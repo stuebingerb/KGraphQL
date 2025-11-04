@@ -161,7 +161,7 @@ class DeprecationSpecificationTest {
     fun `required input value may not be deprecated`() {
         data class InputType(val oldRequired: String, val new: String)
 
-        expect<SchemaException>("Required fields cannot be marked as deprecated") {
+        expect<SchemaException>("Unable to handle input type 'InputType': Required field 'oldRequired' cannot be marked as deprecated") {
             defaultSchema {
                 inputType<InputType> {
                     InputType::oldRequired.configure {
@@ -230,7 +230,7 @@ class DeprecationSpecificationTest {
     @Test
     fun `required field args may not be deprecated`() {
         @Suppress("UNUSED_ANONYMOUS_PARAMETER")
-        expect<SchemaException>("Required arguments cannot be marked as deprecated") {
+        expect<SchemaException>("Unable to handle 'query(\"data\")': Required argument 'oldRequired' cannot be marked as deprecated") {
             defaultSchema {
                 query("data") {
                     resolver { oldRequired: String, new: String -> "" }.withArgs {
