@@ -31,8 +31,6 @@ class RemoteArgumentTransformer : ArgumentTransformer() {
             (field as? Field.RemoteOperation<*, *>)?.field?.argsFromParent.orEmpty()
         // Resolve input arguments before calling remote schemas
         val nodeArgs = executionNode.arguments.orEmpty()
-        val usedVariableNames =
-            nodeArgs.values.filterIsInstance<ValueNode.VariableNode>().mapTo(HashSet()) { it.name.value }
         val mappedNodeArgs = nodeArgs.map {
             it.key to it.value
         } + argsFromParent.map {
@@ -60,7 +58,7 @@ class RemoteArgumentTransformer : ArgumentTransformer() {
                     alias = executionNode.alias,
                     arguments = mappedArgumentNodes,
                     directives = executionNode.directives,
-                    variables = executionNode.variables?.filter { it.variable.name.value in usedVariableNames },
+                    variables = executionNode.variables,
                     namedFragments = executionNode.namedFragments,
                     remoteUrl = executionNode.remoteUrl,
                     remoteOperation = executionNode.remoteOperation,
