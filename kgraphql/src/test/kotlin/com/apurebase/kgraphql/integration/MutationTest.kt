@@ -39,7 +39,7 @@ class MutationTest : BaseSchemaTest() {
 
     @Test
     fun `invalid mutation name`() {
-        expect<ValidationException>("Property createBanana on Mutation does not exist") {
+        expect<ValidationException>("Property 'createBanana' on 'Mutation' does not exist") {
             execute("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         }
     }
@@ -53,14 +53,14 @@ class MutationTest : BaseSchemaTest() {
 
     @Test
     fun `invalid arguments number`() {
-        expect<ValidationException>("createActor does support arguments [name, age]. Found arguments [name, age, bananan]") {
+        expect<ValidationException>("'createActor' does support arguments: [name, age], found: [name, age, bananan]") {
             execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 
     @Test
     fun `invalid arguments number with NotIntrospected class`() {
-        expect<ValidationException>("createActorWithContext does support arguments [name, age]. Found arguments [name, age, bananan]") {
+        expect<ValidationException>("'createActorWithContext' does support arguments: [name, age], found: [name, age, bananan]") {
             execute("mutation {createActorWithContext(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }

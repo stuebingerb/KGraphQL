@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.specification.typesystem
 
 import com.apurebase.kgraphql.Actor
+import com.apurebase.kgraphql.FilmType
 import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.expect
@@ -19,8 +20,8 @@ class ObjectsSpecificationTest {
     data class Type(val field: String)
 
     @Test
-    fun `all fields defined within an Object type must not have a name which begins with __`() {
-        expect<SchemaException>("Illegal name '__field'. Names starting with '__' are reserved for introspection system") {
+    fun `all fields defined within an object type must not have a name which begins with __`() {
+        expect<SchemaException>("Unable to handle 'query(\"underscore\")': Illegal name '__field'. Names starting with '__' are reserved for introspection system") {
             schema {
                 query("underscore") {
                     resolver { -> Underscore(0) }
@@ -30,10 +31,10 @@ class ObjectsSpecificationTest {
     }
 
     @Test
-    fun `all fields defined within an Object type must have a unique name`() {
+    fun `all fields defined within an object type must have a unique name`() {
         data class Person(val name: String, val age: Int)
 
-        expect<SchemaException>("Cannot add extension field with duplicated name 'age'") {
+        expect<SchemaException>("Unable to handle object type 'Person': Cannot add extension field with duplicated name 'age'") {
             schema {
                 type<Person> {
                     property("age") {
@@ -47,7 +48,7 @@ class ObjectsSpecificationTest {
             }
         }
 
-        expect<SchemaException>("Cannot add dataloaded field with duplicated name 'age'") {
+        expect<SchemaException>("Unable to handle object type 'Person': Cannot add dataloaded field with duplicated name 'age'") {
             schema {
                 type<Person> {
                     dataProperty<Int, String>("age") {
@@ -62,7 +63,7 @@ class ObjectsSpecificationTest {
             }
         }
 
-        expect<SchemaException>("Cannot add union field with duplicated name 'age'") {
+        expect<SchemaException>("Unable to handle union type 'PersonUnion': Cannot add union field with duplicated name 'age'") {
             schema {
                 type<Person> {
                     unionProperty("age") {
@@ -80,7 +81,7 @@ class ObjectsSpecificationTest {
         }
 
         // Conflicts should not only be detected with kotlin properties but also with previous extensions
-        expect<SchemaException>("Cannot add dataloaded field with duplicated name 'newAge'") {
+        expect<SchemaException>("Unable to handle object type 'Person': Cannot add dataloaded field with duplicated name 'newAge'") {
             schema {
                 type<Person> {
                     property("newAge") {
@@ -100,7 +101,7 @@ class ObjectsSpecificationTest {
 
         // We process fields in fixed order, not as they were configured: even though the union property
         // was added first, the regular property still "wins"
-        expect<SchemaException>("Cannot add union field with duplicated name 'newAge'") {
+        expect<SchemaException>("Unable to handle union type 'PersonUnion': Cannot add union field with duplicated name 'newAge'") {
             schema {
                 type<Person> {
                     unionProperty("newAge") {
@@ -258,7 +259,7 @@ class ObjectsSpecificationTest {
     @ParameterizedTest
     @ValueSource(strings = ["name", "Name", "NAME", "legal_name", "name1", "nameWithNumber_42", "_underscore", "_more_under_scores_", "even__", "more__underscores"])
     @Specification("2.1.9 Names")
-    fun `legal field names defined within an Object type should be possible`(legalName: String) {
+    fun `legal field names defined within an object type should be possible`(legalName: String) {
         val schema = schema {
             type<Type> {
                 property(Type::field) {
@@ -276,8 +277,8 @@ class ObjectsSpecificationTest {
     @ParameterizedTest
     @ValueSource(strings = ["special!", "1special", "big$", "ßpecial", "<UNK>pecial", "42", "speciäl"])
     @Specification("2.1.9 Names")
-    fun `illegal field names defined within an Object type should result in an appropriate exception`(illegalName: String) {
-        expect<SchemaException>("Illegal name '$illegalName'. Names must start with a letter or underscore, and may only contain [_a-zA-Z0-9]") {
+    fun `illegal field names defined within an object type should result in an appropriate exception`(illegalName: String) {
+        expect<SchemaException>("Unable to handle object type 'Type': Illegal name '$illegalName'. Names must start with a letter or underscore, and may only contain [_a-zA-Z0-9]") {
             schema {
                 type<Type> {
                     property(Type::field) {
@@ -399,7 +400,7 @@ class ObjectsSpecificationTest {
 
     @Test
     fun `all arguments defined within a field must not have a name which begins with __`() {
-        expect<SchemaException>("Illegal name '__id'. Names starting with '__' are reserved for introspection system") {
+        expect<SchemaException>("Unable to handle 'query(\"many\")': Illegal name '__id'. Names starting with '__' are reserved for introspection system") {
             schema {
                 query("many") { resolver { __id: String -> ManyFields(__id) } }
             }
@@ -410,8 +411,22 @@ class ObjectsSpecificationTest {
 
     @Test
     fun `an object type must define one or more fields`() {
-        expect<SchemaException>("An object type must define one or more fields. Found none on type Empty") {
+        expect<SchemaException>("Unable to handle object type 'Empty': An object type must define one or more fields. Found none on type 'Empty'") {
             schema { type<Empty>() }
+        }
+    }
+
+    @Test
+    fun `enum classes are not valid object types`() {
+        expect<SchemaException>("Unable to handle object type 'FilmType': Cannot handle enum class 'com.apurebase.kgraphql.FilmType' as object type") {
+            schema { type<FilmType>() }
+        }
+    }
+
+    @Test
+    fun `functions are not valid object types`() {
+        expect<SchemaException>("Unable to handle object type 'Function': Cannot handle function class 'kotlin.Function' as object type") {
+            schema { type<Function<*>>() }
         }
     }
 

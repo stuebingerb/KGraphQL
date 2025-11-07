@@ -131,7 +131,7 @@ class TypeSystemSpecificationTest {
 
     @Test
     fun `all types within a GraphQL schema must have unique names`() {
-        expect<SchemaException>("Cannot add Object type with duplicated name String") {
+        expect<SchemaException>("Cannot add object type with duplicated name 'String'") {
             schema {
                 type<String>()
                 query("getString") {
@@ -139,21 +139,51 @@ class TypeSystemSpecificationTest {
                 }
             }
         }
-        expect<SchemaException>("Cannot add Object type with duplicated name String") {
+        expect<SchemaException>("Unable to handle 'query(\"getString\")': Cannot add object type with duplicated name 'Type'") {
+            schema {
+                type<InputType> {
+                    name = "Type"
+                }
+                query("getString") {
+                    resolver { -> Type("string") }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle 'query(\"getString\")': Cannot add object type with duplicated name 'Type'") {
+            schema {
+                inputType<InputType> {
+                    name = "Type"
+                }
+                query("getString") {
+                    resolver { -> Type("string") }
+                }
+            }
+        }
+        expect<SchemaException>("Cannot add object type with duplicated name 'String'") {
             schema {
                 type<Type> {
                     name = "String"
                 }
             }
         }
-        expect<SchemaException>("Cannot add Input type with duplicated name String") {
+        expect<SchemaException>("Cannot add input type with duplicated name 'String'") {
             schema {
                 inputType<Type> {
                     name = "String"
                 }
             }
         }
-        expect<SchemaException>("Cannot add Object type with duplicated name Type") {
+        expect<SchemaException>("Unable to handle 'query(\"getString\")': Cannot add input type with duplicated name 'InputTypeInput'") {
+            schema {
+                type<Type> {
+                    name = "InputTypeInput"
+                }
+                query("getString") {
+                    resolver { input: InputType -> input.name }
+                }
+            }
+        }
+        expect<SchemaException>("Cannot add object type with duplicated name 'Type'") {
             schema {
                 inputType<Type>()
                 type<Type>()
@@ -162,7 +192,7 @@ class TypeSystemSpecificationTest {
                 }
             }
         }
-        expect<SchemaException>("Cannot add Object type with duplicated name Type") {
+        expect<SchemaException>("Unable to handle 'query(\"getString\")': Cannot add object type with duplicated name 'Type'") {
             schema {
                 type<__Type> {
                     name = "Type"
@@ -172,7 +202,7 @@ class TypeSystemSpecificationTest {
                 }
             }
         }
-        expect<SchemaException>("Cannot add Input type with duplicated name Type") {
+        expect<SchemaException>("Cannot add input type with duplicated name 'Type'") {
             schema {
                 type<Type>()
                 inputType<Type>()
@@ -181,7 +211,7 @@ class TypeSystemSpecificationTest {
                 }
             }
         }
-        expect<SchemaException>("Cannot add Input type with duplicated name Type") {
+        expect<SchemaException>("Cannot add input type with duplicated name 'Type'") {
             schema {
                 type<Type>()
                 inputType<TypeInput> {
@@ -189,7 +219,7 @@ class TypeSystemSpecificationTest {
                 }
             }
         }
-        expect<SchemaException>("Cannot add Input type with duplicated name TypeInput") {
+        expect<SchemaException>("Cannot add input type with duplicated name 'TypeInput'") {
             schema {
                 type<Type> {
                     name = "TypeInput"
@@ -197,7 +227,7 @@ class TypeSystemSpecificationTest {
                 inputType<TypeInput>()
             }
         }
-        expect<SchemaException>("Cannot add Input type with duplicated name TypeInput") {
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Cannot add input type with duplicated name 'TypeInput'") {
             schema {
                 type<Type> {
                     name = "TypeInput"
@@ -207,10 +237,58 @@ class TypeSystemSpecificationTest {
                 }
             }
         }
-        expect<SchemaException>("Cannot add Input type with duplicated name TypeInput") {
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Cannot add input type with duplicated name 'TypeInput'") {
             schema {
                 query("test") {
                     resolver { input: TypeInput -> input }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `all queries within a GraphQL schema must have unique names`() {
+        expect<SchemaException>("Cannot add query with duplicated name 'test'") {
+            schema {
+                query("test") {
+                    resolver { -> "test1" }
+                }
+                query("test") {
+                    resolver { -> "test2" }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `all mutations within a GraphQL schema must have unique names`() {
+        expect<SchemaException>("Cannot add mutation with duplicated name 'test'") {
+            schema {
+                query("dummy") {
+                    resolver { -> "dummy"}
+                }
+                mutation("test") {
+                    resolver { -> "test1" }
+                }
+                mutation("test") {
+                    resolver { -> "test2" }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `all subscriptions within a GraphQL schema must have unique names`() {
+        expect<SchemaException>("Cannot add subscription with duplicated name 'test'") {
+            schema {
+                query("dummy") {
+                    resolver { -> "dummy"}
+                }
+                subscription("test") {
+                    resolver { -> "test1" }
+                }
+                subscription("test") {
+                    resolver { -> "test2" }
                 }
             }
         }
@@ -242,14 +320,14 @@ class TypeSystemSpecificationTest {
                 }
             }
         }
-        expect<SchemaException>("Illegal name '__Type'. Names starting with '__' are reserved for introspection system") {
+        expect<SchemaException>("Unable to handle 'query(\"testQuery\")': Illegal name '__Type'. Names starting with '__' are reserved for introspection system") {
             schema {
                 query("testQuery") {
                     resolver { -> __Type("name") }
                 }
             }
         }
-        expect<SchemaException>("Illegal name '__TypeInput'. Names starting with '__' are reserved for introspection system") {
+        expect<SchemaException>("Unable to handle 'mutation(\"testMutation\")': Illegal name '__TypeInput'. Names starting with '__' are reserved for introspection system") {
             schema {
                 query("testQuery") {
                     resolver { -> Type("name") }

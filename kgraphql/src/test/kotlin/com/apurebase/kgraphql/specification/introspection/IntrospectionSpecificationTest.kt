@@ -80,7 +80,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        expect<ValidationException>("Property __typename on String does not exist") {
+        expect<ValidationException>("Property '__typename' on 'String' does not exist") {
             schema.executeBlocking("{sample{string{__typename}}}")
         }
     }
@@ -99,7 +99,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        expect<ValidationException>("Property __typename on SampleEnum does not exist") {
+        expect<ValidationException>("Property '__typename' on 'SampleEnum' does not exist") {
             schema.executeBlocking("{sample{enum{__typename}}}")
         }
     }

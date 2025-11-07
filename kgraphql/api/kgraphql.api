@@ -2161,17 +2161,17 @@ public class com/apurebase/kgraphql/schema/structure/SchemaCompilation {
 	protected final fun getScalars ()Ljava/util/Map;
 	protected final fun getSchemaProxy ()Lcom/apurebase/kgraphql/schema/introspection/SchemaProxy;
 	protected final fun getUnions ()Ljava/util/List;
-	protected final fun handleInputType (Lkotlin/reflect/KClass;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun handleBaseTypes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun handleMutations (Ljava/util/List;)Lcom/apurebase/kgraphql/schema/structure/Type;
-	protected final fun handleObjectType (Lkotlin/reflect/KClass;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	protected final fun handleOperation (Lcom/apurebase/kgraphql/schema/model/BaseOperationDef;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun handlePartialDirective (Lcom/apurebase/kgraphql/schema/directive/Directive$Partial;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun handleQueries (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun handleSubscriptions (Ljava/util/List;)Lcom/apurebase/kgraphql/schema/structure/Type;
-	protected final fun handleUnionType (Lcom/apurebase/kgraphql/schema/model/TypeDef$Union;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	protected final fun introspectInterfaces (Lkotlin/reflect/KClass;Lcom/apurebase/kgraphql/schema/structure/TypeProxy;)V
-	protected final fun introspectPossibleTypes (Lkotlin/reflect/KClass;Lcom/apurebase/kgraphql/schema/structure/TypeProxy;)V
+	protected final fun introspectTypes ()V
+	protected final fun localMutationFields (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun localQueryFields (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun localSubscriptionFields (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun perform (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun wrapExceptions (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/apurebase/kgraphql/schema/structure/SchemaModel : com/apurebase/kgraphql/schema/introspection/__Schema {

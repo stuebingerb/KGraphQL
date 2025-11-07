@@ -459,6 +459,107 @@ class SchemaBuilderTest {
         deserialize(schema.executeBlocking("{lambda {lambda}}")).extract<Int>("data/lambda/lambda") shouldBe 1
     }
 
+    sealed class SealedData(val a: Result<Long>)
+    class SealedData1(a: Result<Long>) : SealedData(a)
+
+    // https://github.com/stuebingerb/KGraphQL/issues/434
+    @Test
+    fun `schema compilation problems should result in helpful error`() {
+        expect<SchemaException>("Unable to handle 'query(\"result\")': Could not resolve resulting type for monad kotlin.Result<kotlin.Int>. Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types") {
+            defaultSchema {
+                query("result") {
+                    resolver { -> Result.success(42) }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle 'query(\"result\")': Could not resolve resulting type for monad kotlin.Result<kotlin.String>. Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types") {
+            defaultSchema {
+                query("result") {
+                    resolver { input: Result<String> -> input }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle 'query(\"myData\")': Could not resolve resulting type for monad kotlin.Result<kotlin.Long>. Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types") {
+            data class MyData(val a: Int, val b: Result<Long>)
+            defaultSchema {
+                query("myData") {
+                    resolver { -> MyData(42, Result.failure(IllegalArgumentException())) }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle 'mutation(\"myData\")': Could not resolve resulting type for monad kotlin.Result<kotlin.Long>. Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types") {
+            data class MyData(val a: Int, val b: Result<Long>)
+            defaultSchema {
+                query("dummy") {
+                    resolver { -> "dummy" }
+                }
+                mutation("myData") {
+                    resolver { -> MyData(42, Result.failure(IllegalArgumentException())) }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle object type 'MyData': Could not resolve resulting type for monad kotlin.Result<kotlin.Int>. Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types") {
+            data class MyData(val a: Int)
+            defaultSchema {
+                type<MyData> {
+                    property("b") {
+                        resolver { myData: MyData -> Result.success(myData.a) }
+                    }
+                }
+                query("myData") {
+                    resolver { -> MyData(42) }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle object type 'MyCustomData': Could not resolve resulting type for monad kotlin.Result<kotlin.Int>. Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types") {
+            data class MyData(val a: Int)
+            defaultSchema {
+                type<MyData> {
+                    name = "MyCustomData"
+                    transformation(MyData::a) { a: Int ->
+                        Result.success(a * 2)
+                    }
+                }
+                query("myData") {
+                    resolver { -> MyData(42) }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle input type 'MyCustomData': Required field 'a' cannot be marked as deprecated") {
+            data class MyData(val a: Int)
+            defaultSchema {
+                inputType<MyData> {
+                    name = "MyCustomData"
+                    property(MyData::a) {
+                        deprecate("deprecated")
+                    }
+                }
+                query("myData") {
+                    resolver { -> MyData(42) }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle union type 'myUnion': Could not resolve resulting type for monad kotlin.Result<kotlin.Long>?. Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types") {
+            data class MyData(val a: Int, val b: Result<Long>? = null)
+            defaultSchema {
+                unionType("myUnion") {
+                    type<MyData>()
+                }
+                query("myData") {
+                    resolver { -> MyData(42) }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle union type 'SealedData': Could not resolve resulting type for monad kotlin.Result<kotlin.Long>. Please provide custom GenericTypeResolver to KGraphQL configuration to register your generic types") {
+            defaultSchema {
+                unionType<SealedData>()
+                query("myData") {
+                    resolver { -> SealedData1(Result.success(42)) }
+                }
+            }
+        }
+    }
+
     @Test
     fun `input value default value and description can be specified`() {
         val expectedDescription = "Int Argument"
@@ -486,7 +587,7 @@ class SchemaBuilderTest {
     @Suppress("unused")
     @Test
     fun `arg name must match exactly one of type property`() {
-        expect<SchemaException>("Invalid input values on data: [intss]") {
+        expect<SchemaException>("Unable to handle 'query(\"data\")': Invalid input values: [intss], available: [int, string]") {
             defaultSchema {
                 query("data") {
                     resolver { int: Int, string: String? -> int }.withArgs {
@@ -561,7 +662,7 @@ class SchemaBuilderTest {
 
     @Test
     fun `context type cannot be part of schema`() {
-        expect<SchemaException>("Context type cannot be part of schema") {
+        expect<SchemaException>("Unable to handle 'query(\"name\")': Context type cannot be part of schema") {
             schema {
                 query("name") {
                     resolver { ctx: Context -> ctx }
@@ -885,7 +986,7 @@ class SchemaBuilderTest {
 
     @Test
     fun `not specifying return value explicitly with generic query creation throws exception`() {
-        expect<SchemaException>("If you construct a query/mutation generically, you must specify the return type T explicitly with resolver{ ... }.returns<T>()") {
+        expect<SchemaException>("Unable to handle 'query(\"data\")': If you construct a query/mutation generically, you must specify the return type T explicitly with resolver { ... }.returns<T>()") {
             defaultSchema {
                 createGenericQueryWithoutReturns(InputOne("generic"))
             }
@@ -950,7 +1051,7 @@ class SchemaBuilderTest {
     // https://github.com/aPureBase/KGraphQL/issues/106
     @Test
     fun `Java class as inputType should throw an appropriate exception`() {
-        expect<SchemaException>("Java class 'LatLng' as inputType is not supported") {
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Java class 'LatLng' as input type is not supported") {
             schema {
                 query("test") {
                     resolver { radius: Double, location: LatLng ->

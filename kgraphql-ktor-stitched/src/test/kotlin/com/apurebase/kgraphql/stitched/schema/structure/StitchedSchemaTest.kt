@@ -538,7 +538,7 @@ class StitchedSchemaTest {
     @Test
     fun `schema should prevent duplicate field names from stitching`() {
         data class SimpleClass(val existing: String)
-        expect<SchemaException>("Cannot add stitched field with duplicated name 'existing'") {
+        expect<SchemaException>("Unable to handle stitched type 'SimpleClass': Cannot add stitched field with duplicated name 'existing'") {
             StitchedKGraphQL.stitchedSchema {
                 configure {
                     remoteExecutor = DummyRemoteRequestExecutor
@@ -603,7 +603,7 @@ class StitchedSchemaTest {
     @Test
     fun `schema should prevent invalid field names from stitching`() {
         data class SimpleClass(val existing: String)
-        expect<SchemaException>("Illegal name '__extension'. Names starting with '__' are reserved for introspection system") {
+        expect<SchemaException>("Unable to handle stitched type 'SimpleClass': Illegal name '__extension'. Names starting with '__' are reserved for introspection system") {
             StitchedKGraphQL.stitchedSchema {
                 configure {
                     remoteExecutor = DummyRemoteRequestExecutor
@@ -647,6 +647,93 @@ class StitchedSchemaTest {
                 localSchema {
                     query("other") {
                         resolver { -> "other" }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `schema should prevent invalid remote types from stitching`() {
+        expect<SchemaException>("Unable to handle stitched type 'SimpleClass': Type does not exist in any schema") {
+            StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
+                localSchema {
+                    query("dummy") {
+                        resolver { -> "dummy" }
+                    }
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        query("extension") {
+                            resolver { -> "extension" }
+                        }
+                    }
+                }
+                type("SimpleClass") {
+                    stitchedProperty("extension") {
+                        remoteQuery("extension")
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `schema should prevent invalid remote queries from stitching`() {
+        data class SimpleClass(val existing: String)
+        expect<SchemaException>("Unable to handle stitched type 'SimpleClass': Stitched remote query 'nonExisting' does not exist") {
+            StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
+                localSchema {
+                    query("dummy") {
+                        resolver { -> "dummy" }
+                    }
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        query("simple") {
+                            resolver { -> SimpleClass("existing") }
+                        }
+                    }
+                }
+                type("SimpleClass") {
+                    stitchedProperty("extension") {
+                        remoteQuery("nonExisting")
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `schema should prevent duplicate remote urls`() {
+        expect<SchemaException>("Cannot add remote schema with duplicated url 'remote'") {
+            StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
+                localSchema {
+                    query("dummy") {
+                        resolver { -> "dummy" }
+                    }
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        query("test1") {
+                            resolver { -> "test1" }
+                        }
+                    }
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        query("test2") {
+                            resolver { -> "test2" }
+                        }
                     }
                 }
             }

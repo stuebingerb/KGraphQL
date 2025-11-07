@@ -36,20 +36,23 @@ class ScalarsSpecificationTest {
             query("boolean") {
                 resolver<Boolean> { true }
             }
-            // TODO: ID, cf. https://github.com/stuebingerb/KGraphQL/issues/83
+            query("id") {
+                resolver<ID> { ID("bar") }
+            }
         }
 
-        val response = deserialize(schema.executeBlocking("{ int float double string boolean }"))
+        val response = deserialize(schema.executeBlocking("{ int float double string boolean id }"))
         response.extract<Int>("data/int") shouldBe 1
         response.extract<Float>("data/float") shouldBe 2.0
         response.extract<Double>("data/double") shouldBe 3.0
         response.extract<String>("data/string") shouldBe "foo"
         response.extract<Boolean>("data/boolean") shouldBe true
+        response.extract<ID>("data/id") shouldBe "bar"
     }
 
     @Test
     fun `extended scalars should not be available by default`() {
-        expect<SchemaException>("An object type must define one or more fields. Found none on type Long") {
+        expect<SchemaException>("Unable to handle 'query(\"long\")': An object type must define one or more fields. Found none on type 'Long'") {
             KGraphQL.schema {
                 query("long") {
                     resolver<Long> { 1L }
@@ -57,7 +60,7 @@ class ScalarsSpecificationTest {
             }
         }
 
-        expect<SchemaException>("An object type must define one or more fields. Found none on type Short") {
+        expect<SchemaException>("Unable to handle 'query(\"short\")': An object type must define one or more fields. Found none on type 'Short'") {
             KGraphQL.schema {
                 query("short") {
                     resolver<Short> { 2.toShort() }

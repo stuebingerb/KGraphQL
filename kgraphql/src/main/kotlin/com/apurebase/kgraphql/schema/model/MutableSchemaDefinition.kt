@@ -89,17 +89,16 @@ open class MutableSchemaDefinition {
     ) {
         if (scalars.any { it.kClass == member } || enums.any { it.kClass == member }) {
             throw SchemaException(
-                "The member types of a Union type must all be Object base types; " +
-                    "Scalar, Interface and Union types may not be member types of a Union"
+                "The member types of a union type must all be object base types; scalar, interface and union types may not be member types of a union"
             )
         }
 
         if (member.isSubclassOf(Collection::class)) {
-            throw SchemaException("Collection may not be member type of a Union '${union.name}'")
+            throw SchemaException("Collection may not be member type of a union '${union.name}'")
         }
 
         if (member.isSubclassOf(Map::class)) {
-            throw SchemaException("Map may not be member type of a Union '${union.name}'")
+            throw SchemaException("Map may not be member type of a union '${union.name}'")
         }
 
         if (compiledObjects.none { it.kClass == member }) {
@@ -109,39 +108,39 @@ open class MutableSchemaDefinition {
 
     fun addQuery(query: QueryDef<*>) {
         if (query.checkEqualName(queries)) {
-            throw SchemaException("Cannot add query with duplicated name ${query.name}")
+            throw SchemaException("Cannot add query with duplicated name '${query.name}'")
         }
         queries.add(query)
     }
 
     fun addMutation(mutation: MutationDef<*>) {
         if (mutation.checkEqualName(mutations)) {
-            throw SchemaException("Cannot add mutation with duplicated name ${mutation.name}")
+            throw SchemaException("Cannot add mutation with duplicated name '${mutation.name}'")
         }
         mutations.add(mutation)
     }
 
     fun addSubscription(subscription: SubscriptionDef<*>) {
         if (subscription.checkEqualName(subscriptions)) {
-            throw SchemaException("Cannot add subscription with duplicated name ${subscription.name}")
+            throw SchemaException("Cannot add subscription with duplicated name '${subscription.name}'")
         }
         subscriptions.add(subscription)
     }
 
-    fun addScalar(scalar: TypeDef.Scalar<*>) = addType(scalar, scalars, "Scalar")
+    fun addScalar(scalar: TypeDef.Scalar<*>) = addType(scalar, scalars, "scalar")
 
-    fun addEnum(enum: TypeDef.Enumeration<*>) = addType(enum, enums, "Enumeration")
+    fun addEnum(enum: TypeDef.Enumeration<*>) = addType(enum, enums, "enumeration")
 
-    fun addObject(objectType: TypeDef.Object<*>) = addType(objectType, objects, "Object")
+    fun addObject(objectType: TypeDef.Object<*>) = addType(objectType, objects, "object")
 
-    fun addUnion(union: TypeDef.Union) = addType(union, unions, "Union")
+    fun addUnion(union: TypeDef.Union) = addType(union, unions, "union")
 
-    fun addInputObject(input: TypeDef.Input<*>) = addType(input, inputObjects, "Input")
+    fun addInputObject(input: TypeDef.Input<*>) = addType(input, inputObjects, "input")
 
     private fun <T : Definition> addType(type: T, target: ArrayList<T>, typeCategory: String) {
         validateName(type.name)
         if (type.checkEqualName(objects, inputObjects, scalars, unions, enums)) {
-            throw SchemaException("Cannot add $typeCategory type with duplicated name ${type.name}")
+            throw SchemaException("Cannot add $typeCategory type with duplicated name '${type.name}'")
         }
         target.add(type)
     }

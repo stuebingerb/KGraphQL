@@ -24,7 +24,7 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
     if (!(args.isNotEmpty() || selectionArgs?.isNotEmpty() != true)) {
         return listOf(
             ValidationException(
-                message = "Property $name on type $parentTypeName has no arguments, found: ${selectionArgs.map { it.name.value }}",
+                message = "Property '$name' on type '$parentTypeName' has no arguments, found: ${selectionArgs.map { it.name.value }}",
                 nodes = selectionArgs
             )
         )
@@ -38,7 +38,7 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
     if (!invalidArguments.isNullOrEmpty()) {
         exceptions.add(
             ValidationException(
-                message = "$name does support arguments $parameterNames. Found arguments ${selectionArgs.map { it.name.value }}"
+                message = "'$name' does support arguments: $parameterNames, found: ${selectionArgs.map { it.name.value }}"
             )
         )
     }
@@ -91,7 +91,7 @@ fun validateName(name: String) {
 
 // function before generic, because it is its subset
 fun assertValidObjectType(kClass: KClass<*>) = when {
-    kClass.isSubclassOf(Function::class) -> throw SchemaException("Cannot handle function $kClass as Object type")
-    kClass.isSubclassOf(Enum::class) -> throw SchemaException("Cannot handle enum class $kClass as Object type")
+    kClass.isSubclassOf(Function::class) -> throw SchemaException("Cannot handle function class '${kClass.qualifiedName}' as object type")
+    kClass.isSubclassOf(Enum::class) -> throw SchemaException("Cannot handle enum class '${kClass.qualifiedName}' as object type")
     else -> Unit
 }

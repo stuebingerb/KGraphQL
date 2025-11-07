@@ -31,11 +31,11 @@ class SchemaInheritanceTest {
             query("c") { resolver { -> C(name, age) } }
         }
 
-        expect<ValidationException>("Property id on B does not exist") {
+        expect<ValidationException>("Property 'id' on 'B' does not exist") {
             deserialize(schema.executeBlocking("{b{id, name, age}}"))
         }
 
-        expect<ValidationException>("Property id on C does not exist") {
+        expect<ValidationException>("Property 'id' on 'C' does not exist") {
             deserialize(schema.executeBlocking("{c{id, name, age}}"))
         }
     }

@@ -84,7 +84,7 @@ class ObjectTest {
 
     @Test
     fun `property name must not start with __ when configured`() {
-        expect<SchemaException>("Illegal name '__name'. Names starting with '__' are reserved for introspection system") {
+        expect<SchemaException>("Unable to handle object type 'Person': Illegal name '__name'. Names starting with '__' are reserved for introspection system") {
             KGraphQL.schema {
                 type<Person> {
                     property(Person::name) {

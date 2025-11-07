@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.specification.typesystem
 
-import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
@@ -112,7 +111,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `a union type should require a selection for all potential types`() {
-        expect<ValidationException>("Missing selection set for type Scenario") {
+        expect<ValidationException>("Missing selection set for type 'Scenario'") {
             execute(
                 """{
                 actors {
@@ -167,8 +166,8 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `The member types of a Union type must all be Object base types`() {
-        expect<SchemaException>("The member types of a Union type must all be Object base types; Scalar, Interface and Union types may not be member types of a Union") {
+    fun `the member types of a union type must all be object base types`() {
+        expect<SchemaException>("The member types of a union type must all be object base types; scalar, interface and union types may not be member types of a union") {
             KGraphQL.schema {
                 unionType("invalid") {
                     type<String>()
@@ -190,8 +189,8 @@ class UnionsSpecificationTest : BaseSchemaTest() {
      * Kotlin is non-nullable by default (T!), so test covers only case for collections
      */
     @Test
-    fun `List may not be member type of a Union`() {
-        expect<SchemaException>("Collection may not be member type of a Union 'Invalid'") {
+    fun `List may not be member type of a union`() {
+        expect<SchemaException>("Collection may not be member type of a union 'Invalid'") {
             KGraphQL.schema {
                 unionType("Invalid") {
                     type<Collection<*>>()
@@ -199,7 +198,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
         }
 
-        expect<SchemaException>("Map may not be member type of a Union 'Invalid'") {
+        expect<SchemaException>("Map may not be member type of a union 'Invalid'") {
             KGraphQL.schema {
                 unionType("Invalid") {
                     type<Map<String, String>>()
@@ -209,8 +208,8 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `Function type may not be member types of a Union`() {
-        expect<SchemaException>("Cannot handle function class kotlin.Function as Object type") {
+    fun `function type may not be member types of a union`() {
+        expect<SchemaException>("Unable to handle union type 'invalid': Cannot handle function class 'kotlin.Function' as object type") {
             KGraphQL.schema {
                 unionType("invalid") {
                     type<Function<*>>()
@@ -225,14 +224,13 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         class CCC(val s: String) : AAA()
     }
 
-    @Suppress("UNUSED_ANONYMOUS_PARAMETER") // "ctx" must stay as-is because resolver cannot handle unnamed parameter
     @Test
     fun `automatic unions out of sealed classes`() {
         defaultSchema {
             unionType<AAA>()
 
             query("returnUnion") {
-                resolver { ctx: Context, isB: Boolean ->
+                resolver { isB: Boolean ->
                     if (isB) {
                         AAA.BBB(1)
                     } else {
@@ -240,24 +238,23 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        }
-            .executeBlocking(
-                """
-                {
-                    f: returnUnion(isB: false) {
-                        ... on BBB { i }
-                        ... on CCC { s }
-                    }
-                    t: returnUnion(isB: true) {
-                        ... on BBB { i }
-                        ... on CCC { s }                
-                    }
+        }.executeBlocking(
+            """
+            {
+                f: returnUnion(isB: false) {
+                    ... on BBB { i }
+                    ... on CCC { s }
                 }
-                """.trimIndent()
-            ).deserialize().run {
-                extract<String>("data/f/s") shouldBe "String"
-                extract<Int>("data/t/i") shouldBe 1
+                t: returnUnion(isB: true) {
+                    ... on BBB { i }
+                    ... on CCC { s }                
+                }
             }
+            """.trimIndent()
+        ).deserialize().run {
+            extract<String>("data/f/s") shouldBe "String"
+            extract<Int>("data/t/i") shouldBe 1
+        }
     }
 
     @Suppress("unused")

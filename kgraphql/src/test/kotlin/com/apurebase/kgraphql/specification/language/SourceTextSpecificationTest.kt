@@ -97,11 +97,11 @@ class SourceTextSpecificationTest {
     @Test
     @Specification("2.1.9 Names")
     fun `names should be case sensitive`() {
-        expect<ValidationException>("Property FIZZ on Query does not exist") {
+        expect<ValidationException>("Property 'FIZZ' on 'Query' does not exist") {
             deserialize(schema.executeBlocking("{FIZZ}"))
         }
 
-        expect<ValidationException>("Property Fizz on Query does not exist") {
+        expect<ValidationException>("Property 'Fizz' on 'Query' does not exist") {
             deserialize(schema.executeBlocking("{Fizz}"))
         }
 
