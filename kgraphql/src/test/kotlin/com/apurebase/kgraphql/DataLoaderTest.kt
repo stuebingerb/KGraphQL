@@ -113,7 +113,8 @@ class DataLoaderTest {
                 resolver { ->
                     (1..3).map {
                         ABC(
-                            "Testing $it", if (it == 2) {
+                            "Testing $it",
+                            if (it == 2) {
                                 null
                             } else {
                                 it

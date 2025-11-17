@@ -104,7 +104,6 @@ open class SchemaCompilation(
         definition.inputObjects.forEach {
             wrapExceptions("Unable to handle input type '${it.name}'") { handleInputType(it.kClass) }
         }
-
     }
 
     private fun introspectPossibleTypes(kClass: KClass<*>, typeProxy: TypeProxy) {
@@ -552,7 +551,8 @@ open class SchemaCompilation(
                 isDeprecated = actualKqlProperty?.isDeprecated ?: false,
                 deprecationReason = actualKqlProperty?.deprecationReason,
                 parameterName = parameterName
-            ), type
+            ),
+            type
         )
     }
 
@@ -561,7 +561,8 @@ open class SchemaCompilation(
         kqlProperty: PropertyDef.Kotlin<*, *>?,
         transformation: Transformation<*, *>?
     ): Field.Kotlin<*, *> {
-        val returnType = handlePossiblyWrappedType(transformation?.kFunction?.returnType ?: kProperty.returnType, TypeCategory.QUERY)
+        val returnType =
+            handlePossiblyWrappedType(transformation?.kFunction?.returnType ?: kProperty.returnType, TypeCategory.QUERY)
         val inputValues = if (transformation != null) {
             handleInputValues(transformation.transformation, emptyList())
         } else {

@@ -92,7 +92,6 @@ class ListsSpecificationTest {
             }
         }
 
-
         val variables = """
             { "list": null }
         """.trimIndent()
@@ -187,7 +186,8 @@ class ListsSpecificationTest {
                     list set
                   }
                 }
-                """.trimIndent(), variables
+                """.trimIndent(),
+                variables
             )
         )
         mutationResponse.toString() shouldBe "{data={addObject={list=[foo, bar, foo, bar], set=[foo, bar]}}}"

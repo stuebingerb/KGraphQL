@@ -28,5 +28,4 @@ class FakeComplicatedDataLoad : CoroutineScope {
             "${cache1.get(delay to returnValue)}:${cache2.get(delay to returnValue)}"
         }.await()
     }
-
 }

@@ -289,7 +289,8 @@ class InputValuesSpecificationTest {
                     list: ["number", ${'$'}description, "little number"]
                 })
             }
-        """.trimIndent(), """{ "description": "Custom description" }"""
+            """.trimIndent(),
+            """{ "description": "Custom description" }"""
         ).deserialize()
 
         response.extract<List<String>>("data/ObjectList") shouldBe listOf(
@@ -336,19 +337,23 @@ class InputValuesSpecificationTest {
             }
         }
 
-        schema.executeBlocking("""
+        schema.executeBlocking(
+            """
             query {
                 dessert { id name }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"data":{"dessert":{"id":"id-1","name":"name-1"}}}
         """.trimIndent()
 
-        schema.executeBlocking("""
+        schema.executeBlocking(
+            """
             mutation {
                 updateDessert(dessert: {id: "id-2", name: "name-2"}) { id name }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"data":{"updateDessert":{"id":"id-2","name":"name-2"}}}
         """.trimIndent()
     }

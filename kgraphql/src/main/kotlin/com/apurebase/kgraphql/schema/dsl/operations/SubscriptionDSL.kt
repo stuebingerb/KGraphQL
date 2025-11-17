@@ -83,7 +83,6 @@ fun <T : Any> subscribe(
         override fun onError(throwable: Throwable) {
             publisher.unsubscribe(subscription)
         }
-
     }
     publisher.subscribe(subscription, subscriber)
     return output

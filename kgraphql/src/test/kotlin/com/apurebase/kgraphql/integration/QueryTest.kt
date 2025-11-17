@@ -438,7 +438,6 @@ class QueryTest : BaseSchemaTest() {
         map.extract<String>("data/film/director/name") shouldBe prestige.director.name
         map.extract<Int>("data/film/director/age") shouldBe prestige.director.age
         map.extract<String>("data/film/__typename") shouldBe "Film"
-
     }
 
     @Test

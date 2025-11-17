@@ -63,10 +63,11 @@ class DataLoaderPropertyDSL<T, K, R>(
 
     fun accessRule(rule: (T, Context) -> Exception?) {
         val accessRuleAdapter: (T?, Context) -> Exception? = { parent, ctx ->
-            if (parent != null) rule(
-                parent,
-                ctx
-            ) else IllegalArgumentException("Unexpected null parent of kotlin property")
+            if (parent != null) {
+                rule(parent, ctx)
+            } else {
+                IllegalArgumentException("Unexpected null parent of kotlin property")
+            }
         }
         this.accessRuleBlock = accessRuleAdapter
     }

@@ -52,10 +52,11 @@ class UnionPropertyDSL<T : Any>(val name: String, block: UnionPropertyDSL<T>.() 
     fun accessRule(rule: (T, Context) -> Exception?) {
 
         val accessRuleAdapter: (T?, Context) -> Exception? = { parent, ctx ->
-            if (parent != null) rule(
-                parent,
-                ctx
-            ) else IllegalArgumentException("Unexpected null parent of kotlin property")
+            if (parent != null) {
+                rule(parent, ctx)
+            } else {
+                IllegalArgumentException("Unexpected null parent of kotlin property")
+            }
         }
 
         this.accessRuleBlock = accessRuleAdapter

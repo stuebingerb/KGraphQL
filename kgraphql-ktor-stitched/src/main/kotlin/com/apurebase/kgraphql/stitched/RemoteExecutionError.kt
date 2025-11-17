@@ -15,4 +15,3 @@ class RemoteExecutionException(message: String, node: Execution.Remote) : GraphQ
         "detail" to mapOf("remoteUrl" to node.remoteUrl, "remoteOperation" to node.remoteOperation)
     )
 )
-

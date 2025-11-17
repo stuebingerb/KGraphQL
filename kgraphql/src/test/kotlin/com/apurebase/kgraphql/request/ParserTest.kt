@@ -60,9 +60,7 @@ class ParserTest {
     }
 
     private fun shouldThrowSyntaxError(src: String, block: InvalidSyntaxException.() -> Pair<Int, Int>?) =
-        shouldThrowSyntaxError(
-            Source(src), block
-        )
+        shouldThrowSyntaxError(Source(src), block)
 
     @Test
     fun `parse provides useful errors`() {

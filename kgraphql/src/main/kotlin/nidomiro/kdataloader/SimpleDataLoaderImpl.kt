@@ -125,7 +125,6 @@ open class SimpleDataLoaderImpl<K, R>(
                     clear(queueEntry.key)
                 }
             }
-
         }
     }
 

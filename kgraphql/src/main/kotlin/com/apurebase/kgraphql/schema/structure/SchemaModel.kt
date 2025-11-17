@@ -49,4 +49,3 @@ data class SchemaModel(
 
     override val subscriptionType: Type? = subscription
 }
-

@@ -2,6 +2,7 @@ plugins {
     id("library-conventions")
     alias(libs.plugins.serialization)
     alias(libs.plugins.kotlinx.kover)
+    alias(libs.plugins.ktlint)
 }
 
 dependencies {

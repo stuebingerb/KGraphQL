@@ -135,7 +135,8 @@ class RealWorldSchemaTest {
                 __typename
               }
             }
-        """, "{\"traceID\": \"646851f15cb2dad1\"}"
+            """,
+            "{\"traceID\": \"646851f15cb2dad1\"}"
         )
 
         result shouldBe """

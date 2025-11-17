@@ -20,7 +20,6 @@ class ListInputCoercionTest {
         query("NullableNestedSet") { resolver { value: Set<Set<Int?>?>? -> value } }
         query("NullableNestedSetListSet") { resolver { value: Set<List<Set<Int?>?>?>? -> value } }
         query("RequiredSet") { resolver { value: Set<Int?> -> value } }
-
     }
 
     @Test

@@ -44,5 +44,4 @@ data class Token(
     var next: Token? = null
 ) {
     override fun toString() = "[kind: $kind, start: $start, end: $end, line: $line, column: $column, value: $value]"
-
 }

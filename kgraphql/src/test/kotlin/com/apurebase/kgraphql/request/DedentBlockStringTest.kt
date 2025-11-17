@@ -114,7 +114,6 @@ class DedentBlockStringTest {
         )
     }
 
-
     ///////////////////////////////////////////
     //////// getBlockStringIndentation ////////
     ///////////////////////////////////////////
@@ -207,5 +206,4 @@ class DedentBlockStringTest {
             "\"\"\""
         )
     }
-
 }

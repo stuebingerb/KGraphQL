@@ -15,7 +15,6 @@ class DataLoader<K, V>(private val batchLoader: suspend (List<K>) -> Map<K, V?>)
         suspend fun load(key: K, valueResult: CompletableDeferred<Any?>) {
             actor.send(Add(key, valueResult))
         }
-
     }
 
     fun begin(totalTimes: Int, scope: CoroutineScope): DataScope {

@@ -114,9 +114,8 @@ interface Type : __Type {
 
         fun withInterfaces(interfaces: List<Type>) = Object(definition, allFields, interfaces)
 
-        fun withStitchedFields(stitchedFields: List<Field>): RemoteObject = RemoteObject(
-            name, description, allFields + stitchedFields, interfaces
-        )
+        fun withStitchedFields(stitchedFields: List<Field>): RemoteObject =
+            RemoteObject(name, description, allFields + stitchedFields, interfaces)
     }
 
     class Interface<T : Any>(
@@ -379,9 +378,8 @@ interface Type : __Type {
 
         override val possibleTypes: List<Type>? = null
 
-        fun withStitchedFields(stitchedFields: List<Field>): RemoteObject = RemoteObject(
-            name, description, allFields + stitchedFields, interfaces
-        )
+        fun withStitchedFields(stitchedFields: List<Field>): RemoteObject =
+            RemoteObject(name, description, allFields + stitchedFields, interfaces)
     }
 
     class RemoteInterface(

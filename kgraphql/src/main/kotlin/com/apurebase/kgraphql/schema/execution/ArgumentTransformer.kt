@@ -80,7 +80,9 @@ open class ArgumentTransformer {
     ): Any? {
         return when {
             value is ValueNode.VariableNode -> {
-                variables.get(type, value, locationDefaultValue)?.let { transformValue(type, it, variables, coerceSingleValueAsList, locationDefaultValue) } ?: locationDefaultValue
+                variables.get(type, value, locationDefaultValue)
+                    ?.let { transformValue(type, it, variables, coerceSingleValueAsList, locationDefaultValue) }
+                    ?: locationDefaultValue
             }
 
             // https://spec.graphql.org/October2021/#sec-List.Input-Coercion
@@ -108,7 +110,8 @@ open class ArgumentTransformer {
                     val fieldName = valueField.name.value
                     val inputField = inputFieldsByName[fieldName]
                         ?: throw InvalidInputValueException(
-                            "Property '$fieldName' on '${type.unwrapped().name}' does not exist", value
+                            "Property '$fieldName' on '${type.unwrapped().name}' does not exist",
+                            value
                         )
 
                     val paramType = inputField.type as? Type
@@ -150,7 +153,8 @@ open class ArgumentTransformer {
 
                 if (missingNonOptionalInputs.isNotEmpty()) {
                     throw InvalidInputValueException(
-                        "Missing non-optional input fields: ${missingNonOptionalInputs.joinToString()}", value
+                        "Missing non-optional input fields: ${missingNonOptionalInputs.joinToString()}",
+                        value
                     )
                 }
 
