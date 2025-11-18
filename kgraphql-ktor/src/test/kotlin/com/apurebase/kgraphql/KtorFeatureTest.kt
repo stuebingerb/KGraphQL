@@ -230,7 +230,6 @@ class KtorFeatureTest : KtorTest() {
         }
         runBlocking {
             response.status shouldBe HttpStatusCode.InternalServerError
-
         }
     }
 }

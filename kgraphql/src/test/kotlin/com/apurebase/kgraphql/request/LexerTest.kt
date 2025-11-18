@@ -483,7 +483,6 @@ internal class LexerTest {
             value shouldBe "slashes \\\\ \\/"
         }
 
-
         lexOne(
             """""${'"'}
 
@@ -517,7 +516,6 @@ internal class LexerTest {
             column shouldBe 6
             value shouldBe "second_token"
         }
-
 
         val str2 = listOf(
             "\"\"\" \n",
@@ -1081,7 +1079,6 @@ internal class LexerTest {
         )
     }
 
-
     // ---------------------------------------------//
     // ----------- isPunctuatorTokenKind -----------//
     // ---------------------------------------------//
@@ -1116,5 +1113,4 @@ internal class LexerTest {
         isPunctuatorToken("\"str\"") shouldBe false
         isPunctuatorToken("\"\"\"str\"\"\"") shouldBe false
     }
-
 }

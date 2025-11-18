@@ -265,4 +265,3 @@ private val introspectionTypes = setOf(
  * Returns whether the current [TypeDef] is an introspection type from [introspectionTypes]
  */
 internal fun TypeDef.isIntrospectionType() = (this as? TypeDef.Kotlin<*>)?.kClass in introspectionTypes
-

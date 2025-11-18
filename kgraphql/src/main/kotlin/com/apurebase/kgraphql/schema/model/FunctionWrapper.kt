@@ -61,7 +61,6 @@ interface FunctionWrapper<T> : Publisher {
             function: suspend (R, E, W, Q, A, S, G, H, J) -> T,
             hasReceiver: Boolean = false
         ) = ArityNine(function, hasReceiver)
-
     }
 
     val kFunction: KFunction<T>

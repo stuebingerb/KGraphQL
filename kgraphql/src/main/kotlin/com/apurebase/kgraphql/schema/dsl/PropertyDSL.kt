@@ -40,10 +40,11 @@ class PropertyDSL<T : Any, R>(val name: String, block: PropertyDSL<T, R>.() -> U
     fun accessRule(rule: (T, Context) -> Exception?) {
 
         val accessRuleAdapter: (T?, Context) -> Exception? = { parent, ctx ->
-            if (parent != null) rule(
-                parent,
-                ctx
-            ) else IllegalArgumentException("Unexpected null parent of kotlin property")
+            if (parent != null) {
+                rule(parent, ctx)
+            } else {
+                IllegalArgumentException("Unexpected null parent of kotlin property")
+            }
         }
 
         this.accessRuleBlock = accessRuleAdapter

@@ -39,5 +39,4 @@ class SelectionSetsSpecificationTest {
         val map = response.extract<Map<String, Any>>("data/actor")
         map shouldBe mapOf<String, Any>("age" to age)
     }
-
 }

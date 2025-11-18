@@ -25,11 +25,15 @@ class TimedAutoDispatcherImpl<K, R>(
             var job: Job? = null
             while (true) {
                 autoChannel.receive()
-                if (job?.isActive == true) job.cancelAndJoin()
+                if (job?.isActive == true) {
+                    job.cancelAndJoin()
+                }
                 job = launch(CoroutineName("TimedAutoDispatcherImpl:autoChannel") + coroutineContext) {
                     delay(options.waitInterval)
-                    if (isActive) launch {
-                        dispatch()
+                    if (isActive) {
+                        launch {
+                            dispatch()
+                        }
                     }
                 }
             }

@@ -265,7 +265,7 @@ class TypeSystemSpecificationTest {
         expect<SchemaException>("Cannot add mutation with duplicated name 'test'") {
             schema {
                 query("dummy") {
-                    resolver { -> "dummy"}
+                    resolver { -> "dummy" }
                 }
                 mutation("test") {
                     resolver { -> "test1" }
@@ -282,7 +282,7 @@ class TypeSystemSpecificationTest {
         expect<SchemaException>("Cannot add subscription with duplicated name 'test'") {
             schema {
                 query("dummy") {
-                    resolver { -> "dummy"}
+                    resolver { -> "dummy" }
                 }
                 subscription("test") {
                     resolver { -> "test1" }

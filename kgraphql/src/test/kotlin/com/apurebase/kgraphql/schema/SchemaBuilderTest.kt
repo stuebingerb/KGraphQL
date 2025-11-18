@@ -1028,7 +1028,8 @@ class SchemaBuilderTest {
     fun `creation of properties from a list`() {
         val props = listOf(
             Prop(typeOf<Int>()) { 0 },
-            Prop(typeOf<String>()) { "test" })
+            Prop(typeOf<String>()) { "test" }
+        )
 
         val schema = defaultSchema {
             query("scenario") {

@@ -16,3 +16,32 @@ end_of_line = crlf
 
 [*.{md,mdx}]
 trim_trailing_whitespace = false
+
+# noinspection EditorConfigKeyCorrectness
+[*.{kt,kts}]
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+ij_kotlin_packages_to_use_import_on_demand = unset
+ij_kotlin_allow_trailing_comma_on_call_site = false
+ktlint_standard = disabled
+ktlint_experimental = disabled
+ktlint_standard_if-else-wrapping = enabled
+ktlint_standard_multiline-if-else = enabled
+ktlint_standard_import-ordering = enabled
+ktlint_standard_no-empty-file = enabled
+ktlint_standard_modifier-order = enabled
+ktlint_standard_multiline-loop = enabled
+ktlint_standard_no-blank-line-before-rbrace = enabled
+ktlint_standard_no-blank-lines-in-chained-method-calls = enabled
+ktlint_standard_no-consecutive-blank-lines = enabled
+ktlint_standard_no-empty-class-body = enabled
+ktlint_standard_no-line-break-after-else = enabled
+ktlint_standard_no-line-break-before-assignment = enabled
+ktlint_standard_no-semi = enabled
+ktlint_standard_no-trailing-spaces = enabled
+ktlint_standard_comma-spacing = enabled
+ktlint_standard_curly-spacing = enabled
+ktlint_standard_double-colon-spacing = enabled
+ktlint_standard_unnecessary-parentheses-before-trailing-lambda = enabled
+ktlint_standard_argument-list-wrapping = enabled

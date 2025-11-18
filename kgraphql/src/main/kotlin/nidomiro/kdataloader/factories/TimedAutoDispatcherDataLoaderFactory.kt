@@ -16,4 +16,5 @@ class TimedAutoDispatcherDataLoaderFactory<K, R>(
     cachePrimes,
     { _: DataLoaderOptions<K, R>, bl: BatchLoader<K, R>, parent ->
         TimedAutoDispatcherImpl(optionsFactory(), bl, null)
-    })
+    }
+)

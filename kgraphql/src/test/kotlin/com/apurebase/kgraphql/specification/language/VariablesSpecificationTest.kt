@@ -228,7 +228,8 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         )
         assertNoErrors(result)
         result.extract<Map<String, String>>("data/filmsByType") shouldBe listOf(
-            mapOf("title" to "Prestige"), mapOf("title" to "Se7en")
+            mapOf("title" to "Prestige"),
+            mapOf("title" to "Se7en")
         )
     }
 

@@ -109,4 +109,3 @@ class OperationsSpecificationTest {
         exception shouldHaveMessage "Subscription return type must be the same as the publisher's"
     }
 }
-

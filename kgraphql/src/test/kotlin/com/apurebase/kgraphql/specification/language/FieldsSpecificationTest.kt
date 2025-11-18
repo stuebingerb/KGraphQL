@@ -28,4 +28,3 @@ class FieldsSpecificationTest {
         map shouldBe mapOf("name" to "Boguś Linda", "age" to age)
     }
 }
-

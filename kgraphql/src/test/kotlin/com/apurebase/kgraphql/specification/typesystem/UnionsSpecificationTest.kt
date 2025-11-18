@@ -286,7 +286,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                     ... on Value2 { s, fields }
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
         ).deserialize().run {
             extract<Int>("data/returnUnion/i") shouldBe 1
             shouldThrowExactly<IllegalArgumentException> { extract("data/returnUnion/s") }
@@ -331,15 +331,9 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             val dummy: String = "dummy" // because no empty types in gql
         ) : ContactStatus()
 
-        data class Invited(
-            val invitationId: String,
-            val invitedAt: Instant
-        ) : ContactStatus()
+        data class Invited(val invitationId: String, val invitedAt: Instant) : ContactStatus()
 
-        data class Onboarded(
-            val onboardedAt: Instant = Instant.now(),
-            val userId: String
-        ) : ContactStatus()
+        data class Onboarded(val onboardedAt: Instant = Instant.now(), val userId: String) : ContactStatus()
     }
 
     data class Carrier(
