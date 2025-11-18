@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.dokka")
     id("com.vanniktech.maven.publish")
     id("io.gitlab.arturbosch.detekt")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 group = "de.stuebingerb"

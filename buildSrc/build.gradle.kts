@@ -15,4 +15,5 @@ dependencies {
     implementation(libs.dokka.gradle)
     implementation(libs.mavenPublish.gradle)
     implementation(libs.detekt.gradle)
+    implementation(libs.ktlint.gradle)
 }
