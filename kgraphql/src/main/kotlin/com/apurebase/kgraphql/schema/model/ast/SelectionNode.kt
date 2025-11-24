@@ -3,9 +3,6 @@ package com.apurebase.kgraphql.schema.model.ast
 import com.apurebase.kgraphql.schema.model.ast.TypeNode.NamedTypeNode
 
 sealed class SelectionNode(val parent: SelectionNode?) : ASTNode() {
-
-    abstract val fullPath: String
-
     class FieldNode(
         parent: SelectionNode?,
         val alias: NameNode?,
@@ -25,14 +22,10 @@ sealed class SelectionNode(val parent: SelectionNode?) : ASTNode() {
             return this
         }
 
-        val aliasOrName get() = alias ?: name
-
-        override val fullPath get() = (parent?.fullPath?.let { "$it." } ?: "") + aliasOrName.value
+        val aliasOrName = alias ?: name
     }
 
     sealed class FragmentNode(parent: SelectionNode?, val directives: List<DirectiveNode>?) : SelectionNode(parent) {
-        override val fullPath get() = parent?.fullPath?.let { "$it." } ?: ""
-
         /**
          * ...FragmentName
          */

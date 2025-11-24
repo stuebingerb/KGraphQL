@@ -83,7 +83,9 @@ abstract class BaseSchemaTest {
             description = "all actors"
             resolver { all: Boolean? ->
                 mutableListOf(bradPitt, morganFreeman, kevinSpacey, tomHardy, christianBale).also {
-                    if (all == true) it.add(rickyGervais)
+                    if (all == true) {
+                        it.add(rickyGervais)
+                    }
                 }
             }
         }
