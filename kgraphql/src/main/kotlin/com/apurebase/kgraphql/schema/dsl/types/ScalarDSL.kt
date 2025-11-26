@@ -20,6 +20,8 @@ abstract class ScalarDSL<T : Any, Raw : Any>(kClass: KClass<T>) : ItemDSL() {
 
     var coercion: ScalarCoercion<T, Raw>? = null
 
+    var specifiedByURL: String? = null
+
     fun createCoercion(): ScalarCoercion<T, Raw> {
         return coercion ?: createCoercionFromFunctions()
     }

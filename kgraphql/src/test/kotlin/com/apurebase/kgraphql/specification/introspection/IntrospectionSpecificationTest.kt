@@ -387,7 +387,7 @@ class IntrospectionSpecificationTest {
             )
         )
 
-        response.extract<List<*>>("data/__schema/directives") shouldHaveSize 3
+        response.extract<List<*>>("data/__schema/directives") shouldHaveSize 4
 
         response.extract<String>("data/__schema/directives[0]/name") shouldBe "skip"
         response.extract<Boolean>("data/__schema/directives[0]/isRepeatable") shouldBe false
@@ -411,6 +411,14 @@ class IntrospectionSpecificationTest {
         response.extract<String>("data/__schema/directives[2]/args[0]/name") shouldBe "reason"
         response.extract<String>("data/__schema/directives[2]/args[0]/type/name") shouldBe "String"
         response.extract<String>("data/__schema/directives[2]/args[0]/type/kind") shouldBe "SCALAR"
+
+        response.extract<String>("data/__schema/directives[3]/name") shouldBe "specifiedBy"
+        response.extract<Boolean>("data/__schema/directives[3]/isRepeatable") shouldBe false
+        response.extract<List<*>>("data/__schema/directives[3]/args") shouldHaveSize 1
+        response.extract<String>("data/__schema/directives[3]/args[0]/name") shouldBe "url"
+        response.extract<String>("data/__schema/directives[3]/args[0]/type/kind") shouldBe "NON_NULL"
+        response.extract<String>("data/__schema/directives[3]/args[0]/type/ofType/name") shouldBe "String"
+        response.extract<String>("data/__schema/directives[3]/args[0]/type/ofType/kind") shouldBe "SCALAR"
     }
 
     /**

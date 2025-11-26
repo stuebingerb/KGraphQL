@@ -190,6 +190,7 @@ object Introspection {
               possibleTypes {
                 ...TypeRef
               }
+              specifiedByURL
             }
             
             fragment InputValue on __InputValue {

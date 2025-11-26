@@ -65,6 +65,8 @@ interface Type : __Type {
         override val fields: List<Field>? = allFields.filterNot { it.name.startsWith("__") }
 
         override fun get(name: String): Field? = fieldsByName[name]
+
+        override val specifiedByURL: String? = null
     }
 
     class OperationObject(
@@ -168,6 +170,8 @@ interface Type : __Type {
 
         override val possibleTypes: List<Type>? = null
 
+        override val specifiedByURL: String? = kqlType.specifiedByURL
+
         val coercion = kqlType.coercion
     }
 
@@ -196,6 +200,8 @@ interface Type : __Type {
         override val fields: List<Field>? = null
 
         override val possibleTypes: List<Type>? = null
+
+        override val specifiedByURL: String? = null
     }
 
     class Input<T : Any>(
@@ -220,6 +226,8 @@ interface Type : __Type {
         override val fields: List<Field>? = null
 
         override val possibleTypes: List<Type>? = null
+
+        override val specifiedByURL: String? = null
     }
 
     class Union(
@@ -268,6 +276,8 @@ interface Type : __Type {
         override val fields: List<Field>? = null
 
         override val possibleTypes: List<Type>? = null
+
+        override val specifiedByURL: String? = null
     }
 
     class _ExecutionNode : Type {
@@ -290,6 +300,8 @@ interface Type : __Type {
         override val fields: List<Field>? = null
 
         override val possibleTypes: List<Type>? = null
+
+        override val specifiedByURL: String? = null
     }
 
     class NonNull(override val ofType: Type) : Type {
@@ -311,6 +323,8 @@ interface Type : __Type {
         override val enumValues: List<__EnumValue>? = null
 
         override val inputFields: List<__InputValue>? = null
+
+        override val specifiedByURL: String? = null
 
         override fun isInstance(value: Any?): Boolean = false
     }
@@ -335,6 +349,8 @@ interface Type : __Type {
 
         override val inputFields: List<__InputValue>? = null
 
+        override val specifiedByURL: String? = null
+
         override fun isInstance(value: Any?): Boolean = false
     }
 
@@ -357,6 +373,8 @@ interface Type : __Type {
         override val inputFields: List<__InputValue>? = null
 
         override val ofType: Type? = null
+
+        override val specifiedByURL: String? = null
     }
 
     class RemoteObject(
@@ -421,9 +439,11 @@ interface Type : __Type {
         override val fields: List<Field>? = null
 
         override val possibleTypes: List<Type>? = null
+
+        override val specifiedByURL: String? = null
     }
 
-    class RemoteScalar(override val name: String, override val description: String?) : Type {
+    class RemoteScalar(override val name: String, override val description: String?, override val specifiedByURL: String?) : Type {
 
         override val kClass = null
 

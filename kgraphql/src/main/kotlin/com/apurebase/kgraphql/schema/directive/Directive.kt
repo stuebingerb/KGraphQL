@@ -7,6 +7,7 @@ import com.apurebase.kgraphql.schema.directive.DirectiveLocation.FIELD_DEFINITIO
 import com.apurebase.kgraphql.schema.directive.DirectiveLocation.FRAGMENT_SPREAD
 import com.apurebase.kgraphql.schema.directive.DirectiveLocation.INLINE_FRAGMENT
 import com.apurebase.kgraphql.schema.directive.DirectiveLocation.INPUT_FIELD_DEFINITION
+import com.apurebase.kgraphql.schema.directive.DirectiveLocation.SCALAR
 import com.apurebase.kgraphql.schema.introspection.__Directive
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
@@ -81,6 +82,21 @@ data class Directive(
             listOf(FIELD_DEFINITION, ARGUMENT_DEFINITION, INPUT_FIELD_DEFINITION, ENUM_VALUE),
             // DirectiveExecution is a no-op, since it cannot be used during execution.
             DirectiveExecution(FunctionWrapper.on { reason: String? -> DirectiveResult(true) })
+        )
+
+        /**
+         * https://spec.graphql.org/September2025/#sec--specifiedBy
+         *
+         * The `@specifiedBy` built-in directive is used within the type system definition language to provide a
+         * scalar specification URL for specifying the behavior of custom scalar types. The URL should point to a
+         * human-readable specification of the data format, serialization, and coercion rules.
+         * It must not appear on built-in scalar types.
+         */
+        val SPECIFIED_BY = Partial(
+            "specifiedBy",
+            listOf(SCALAR),
+            // DirectiveExecution is a no-op, since it cannot be used during execution.
+            DirectiveExecution(FunctionWrapper.on { url: String -> DirectiveResult(true) })
         )
     }
 }

@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.schema.SchemaPrinter
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
 class IntrospectedSchemaTest {
     data class TestObject(val name: String)
@@ -30,10 +31,15 @@ class IntrospectedSchemaTest {
                 resolver { input: TestObject -> input }
             }
             enum<TestEnum>()
+            stringScalar<UUID> {
+                deserialize = UUID::fromString
+                serialize = UUID::toString
+                specifiedByURL = "https://tools.ietf.org/html/rfc4122"
+            }
         }
 
         val schemaFromIntrospection = IntrospectedSchema.fromIntrospectionResponse(
-            schema.executeBlocking(Introspection.query())
+            schema.executeBlocking(Introspection.query(Introspection.SpecLevel.WorkingDraft))
         )
 
         SchemaPrinter().print(schemaFromIntrospection) shouldBe SchemaPrinter().print(schema)
