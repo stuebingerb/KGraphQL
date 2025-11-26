@@ -55,7 +55,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             val elements = selectionSet.selections.map { conditionType.handleSelectionFieldOrFragment(it, this) }
             fragmentsStack.pop()
 
-            return Execution.Fragment(node, condition, elements, node.directives?.lookup())
+            return Execution.Fragment(node, condition, elements, node.directives?.lookup(), null)
                 .also { usedFragments.add(node.name.value) }
         }
     }
@@ -151,7 +151,8 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                 selectionNode = fragment,
                 condition = TypeCondition(type),
                 directives = fragment.directives?.lookup(),
-                elements = fragment.selectionSet.selections.map { type.handleSelectionFieldOrFragment(it, ctx) }
+                elements = fragment.selectionSet.selections.map { type.handleSelectionFieldOrFragment(it, ctx) },
+                parent = null
             )
         }
     }
@@ -184,13 +185,13 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                     selectionNode = node,
                     field = field,
                     children = handleReturnType(ctx, field.returnType, node),
-                    key = node.name.value,
-                    alias = node.alias?.value,
                     arguments = node.arguments?.toArguments(),
                     directives = node.directives?.lookup(),
                     // TODO: can we use ctx.declaredVariables here? currently, variables are only assigned to root
                     //  and remote operation nodes, not field nodes and others
-                    variables = variables
+                    variables = variables,
+                    arrayIndex = null,
+                    parent = null
                 )
             }
         }
@@ -232,8 +233,6 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             selectionNode = node,
             field = field,
             children = handleReturnType(ctx, field.returnType, node),
-            key = node.name.value,
-            alias = node.alias?.value,
             arguments = nodeArgs,
             directives = node.directives?.lookup(),
             variables = ctx.declaredVariables?.filter { it.variable.name.value in usedVariableNames },
@@ -246,7 +245,8 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                 this == schemaModel.mutationType -> OperationTypeNode.MUTATION
                 this == schemaModel.subscriptionType -> OperationTypeNode.SUBSCRIPTION
                 else -> OperationTypeNode.QUERY
-            }
+            },
+            parent = null
         )
     }
 
@@ -291,9 +291,8 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             node = selectionNode,
             unionField = field,
             memberChildren = unionMembersChildren,
-            key = selectionNode.name.value,
-            alias = selectionNode.alias?.value,
-            directives = selectionNode.directives?.lookup()
+            directives = selectionNode.directives?.lookup(),
+            parent = null
         )
     }
 

@@ -54,15 +54,14 @@ class RemoteArgumentTransformer : ArgumentTransformer() {
                     selectionNode = executionNode.selectionNode,
                     field = executionNode.field,
                     children = executionNode.children,
-                    key = executionNode.key,
-                    alias = executionNode.alias,
                     arguments = mappedArgumentNodes,
                     directives = executionNode.directives,
                     variables = executionNode.variables,
                     namedFragments = executionNode.namedFragments,
                     remoteUrl = executionNode.remoteUrl,
                     remoteOperation = executionNode.remoteOperation,
-                    operationType = executionNode.operationType
+                    operationType = executionNode.operationType,
+                    parent = executionNode.parent
                 )
 
                 else -> null

@@ -1,6 +1,11 @@
 package com.apurebase.kgraphql.integration
 
+import com.apurebase.kgraphql.Actor
+import com.apurebase.kgraphql.Director
+import com.apurebase.kgraphql.Film
+import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
@@ -630,5 +635,236 @@ class QueryTest : BaseSchemaTest() {
         response shouldBe """
             {"data":{"me":{"firstName":"John","birthDate":"1.1.1970","address":{"city":"SomeCity","zipCode":"12345","street":"Main Street"},"lastName":"Doe"},"anotherMe":{"firstName":"John","lastName":"Doe"}}}
         """.trimIndent()
+    }
+
+    @Suppress("unused")
+    sealed class UnionExample {
+        class UnionMember1(val one: String) : UnionExample()
+        class UnionMember2(val two: String) : UnionExample()
+    }
+
+    @Test
+    fun `nodes should have correct path`() {
+        val schema = defaultSchema {
+            configure {
+                useDefaultPrettyPrinter = true
+            }
+            val favouriteID = unionType("Favourite") {
+                type<Actor>()
+                type<Scenario>()
+                type<Director>()
+            }
+            query("film") {
+                description = "mock film"
+                resolver { -> prestige }
+            }
+            type<Film> {
+                property("fullPath") {
+                    resolver { _: Film, node: Execution.Node -> node.fullPath.joinToString(".") }
+                }
+            }
+            type<Director> {
+                property("fullPath") {
+                    resolver { _: Director, node: Execution.Node -> node.fullPath.joinToString(".") }
+                }
+            }
+            type<Scenario> {
+                property("fullPath") {
+                    resolver { _: Scenario, node: Execution.Node -> node.fullPath.joinToString(".") }
+                }
+            }
+            type<Actor> {
+                property("fullPath") {
+                    resolver { _: Actor, node: Execution.Node -> node.fullPath.joinToString(".") }
+                }
+                unionProperty("favourite") {
+                    returnType = favouriteID
+                    resolver { actor ->
+                        when (actor) {
+                            bradPitt -> tomHardy
+                            tomHardy -> christopherNolan
+                            morganFreeman -> Scenario(Id("234", 33), "Paulo Coelho", "DUMB")
+                            rickyGervais -> null
+                            else -> christianBale
+                        }
+                    }
+                }
+                property("sealed") {
+                    resolver { actor ->
+                        when (actor) {
+                            bradPitt -> listOf(UnionExample.UnionMember1("one"))
+                            tomHardy -> listOf(UnionExample.UnionMember1("one"), UnionExample.UnionMember2("two"))
+                            morganFreeman -> listOf(UnionExample.UnionMember1("one"))
+                            rickyGervais -> null
+                            else -> listOf(UnionExample.UnionMember2("two"))
+                        }
+                    }
+                }
+            }
+            type<UnionExample.UnionMember1> {
+                property("fullPath") {
+                    resolver { _: UnionExample.UnionMember1, node: Execution.Node -> node.fullPath.joinToString(".") }
+                }
+            }
+            type<UnionExample.UnionMember2> {
+                property("fullPath") {
+                    resolver { _: UnionExample.UnionMember2, node: Execution.Node -> node.fullPath.joinToString(".") }
+                }
+            }
+            query("directors") {
+                resolver { -> listOf(christopherNolan, davidFincher, martinScorsese) }
+            }
+        }
+
+        // Nested structures with lists and unions from DSL
+        schema.executeBlocking(
+            """
+            {
+                film {
+                    fullPath
+                    ...on Film {
+                        director {
+                            fullPath
+                            favActors {
+                                fullPath
+                                favourite {
+                                    ...ActorPath
+                                    ...on Director {
+                                        fullPath
+                                        favActors {
+                                            fullPath
+                                            favourite {
+                                                ...ActorPath
+                                                ...on Director {
+                                                    fullPath
+                                                    favActors {
+                                                        ...ActorPath
+                                                    }
+                                                }
+                                                ...ScenarioPath
+                                            }
+                                        }
+                                    }
+                                    ...ScenarioPath
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            fragment ActorPath on Actor {
+                fullPath
+            }
+            
+            fragment ScenarioPath on Scenario {
+                fullPath
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {
+              "data" : {
+                "film" : {
+                  "fullPath" : "film.fullPath",
+                  "director" : {
+                    "fullPath" : "film.director.fullPath",
+                    "favActors" : [ {
+                      "fullPath" : "film.director.favActors.0.fullPath",
+                      "favourite" : {
+                        "fullPath" : "film.director.favActors.0.favourite.fullPath",
+                        "favActors" : [ {
+                          "fullPath" : "film.director.favActors.0.favourite.favActors.0.fullPath",
+                          "favourite" : {
+                            "fullPath" : "film.director.favActors.0.favourite.favActors.0.favourite.fullPath",
+                            "favActors" : [ {
+                              "fullPath" : "film.director.favActors.0.favourite.favActors.0.favourite.favActors.0.fullPath"
+                            }, {
+                              "fullPath" : "film.director.favActors.0.favourite.favActors.0.favourite.favActors.1.fullPath"
+                            } ]
+                          }
+                        }, {
+                          "fullPath" : "film.director.favActors.0.favourite.favActors.1.fullPath",
+                          "favourite" : {
+                            "fullPath" : "film.director.favActors.0.favourite.favActors.1.favourite.fullPath"
+                          }
+                        } ]
+                      }
+                    }, {
+                      "fullPath" : "film.director.favActors.1.fullPath",
+                      "favourite" : {
+                        "fullPath" : "film.director.favActors.1.favourite.fullPath"
+                      }
+                    } ]
+                  }
+                }
+              }
+            }
+            """.trimIndent()
+
+        // Aliased nodes
+        schema.executeBlocking("{ directors { path: fullPath fullPath } }") shouldBe """
+            {
+              "data" : {
+                "directors" : [ {
+                  "path" : "directors.0.path",
+                  "fullPath" : "directors.0.fullPath"
+                }, {
+                  "path" : "directors.1.path",
+                  "fullPath" : "directors.1.fullPath"
+                }, {
+                  "path" : "directors.2.path",
+                  "fullPath" : "directors.2.fullPath"
+                } ]
+              }
+            }
+            """.trimIndent()
+
+        // Union from sealed class
+        schema.executeBlocking("""
+            {
+              directors {
+                favActors {
+                  sealed {
+                    ...on UnionMember1 { fullPath }
+                    ...on UnionMember2 { fullPath }
+                  }
+                }
+              }
+            }
+        """.trimIndent()) shouldBe """
+            {
+              "data" : {
+                "directors" : [ {
+                  "favActors" : [ {
+                    "sealed" : [ {
+                      "fullPath" : "directors.0.favActors.0.sealed.0.fullPath"
+                    }, {
+                      "fullPath" : "directors.0.favActors.0.sealed.1.fullPath"
+                    } ]
+                  }, {
+                    "sealed" : [ {
+                      "fullPath" : "directors.0.favActors.1.sealed.0.fullPath"
+                    } ]
+                  } ]
+                }, {
+                  "favActors" : [ {
+                    "sealed" : [ {
+                      "fullPath" : "directors.1.favActors.0.sealed.0.fullPath"
+                    } ]
+                  }, {
+                    "sealed" : [ {
+                      "fullPath" : "directors.1.favActors.1.sealed.0.fullPath"
+                    } ]
+                  }, {
+                    "sealed" : [ {
+                      "fullPath" : "directors.1.favActors.2.sealed.0.fullPath"
+                    } ]
+                  } ]
+                }, {
+                  "favActors" : [ ]
+                } ]
+              }
+            }
+            """.trimIndent()
     }
 }

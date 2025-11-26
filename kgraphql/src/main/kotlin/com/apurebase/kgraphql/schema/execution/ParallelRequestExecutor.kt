@@ -182,7 +182,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 }
                 if (returnType.isList()) {
                     val valuesMap = values.toMapAsync(dispatcher) {
-                        createNode(ctx, it, node, returnType.unwrapList())
+                        createNode(ctx, it, node.withIndex(values.indexOf(it)), returnType.unwrapList())
                     }
                     values.fold(jsonNodeFactory.arrayNode(values.size)) { array, v ->
                         array.add(valuesMap[v]?.await())
@@ -245,11 +245,11 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         for (child in node.children) {
             when (child) {
                 is Execution.Fragment -> deferreds.add(ctx.scope.async {
-                    handleFragment(ctx, value, child)
+                    handleFragment(ctx, value, child.withParent(node))
                 })
 
                 else -> deferreds.add(ctx.scope.async {
-                    handleProperty(ctx, value, child, type)?.let { mapOf(it) } ?: emptyMap()
+                    handleProperty(ctx, value, child.withParent(node), type)?.let { mapOf(it) } ?: emptyMap()
                 })
             }
         }
@@ -316,8 +316,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 if (expectedType.isInstance(value) || (value is JsonNode && value["__typename"].textValue() == expectedType.name)) {
                     val childElements = container.elements.flatMap { child ->
                         when (child) {
-                            is Execution.Fragment -> handleFragment(ctx, value, child).toList()
-                            else -> listOfNotNull(handleProperty(ctx, value, child, expectedType))
+                            is Execution.Fragment -> handleFragment(ctx, value, child.withParent(container)).toList()
+                            else -> listOfNotNull(handleProperty(ctx, value, child.withParent(container), expectedType))
                         }
                     }
                     val mapped: Map<String, Deferred<JsonNode?>> = childElements.fold(mutableMapOf()) { map, entry ->
@@ -329,7 +329,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 // Union types do not define any fields, so children can only be fragments, cf.
                 // https://spec.graphql.org/October2021/#sec-Unions
                 return container.elements.filterIsInstance<Execution.Fragment>().flatMap {
-                    handleFragment(ctx, value, it).toList()
+                    handleFragment(ctx, value, it.withParent(container)).toList()
                 }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
             } else {
                 error("fragments can be specified on object types, interfaces, and unions")

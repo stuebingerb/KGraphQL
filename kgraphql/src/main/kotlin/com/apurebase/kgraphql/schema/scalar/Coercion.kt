@@ -16,8 +16,6 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode.StringValueNode
 import com.apurebase.kgraphql.schema.structure.Type
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
 
 private typealias JsonValueNode = com.fasterxml.jackson.databind.node.ValueNode
 
@@ -90,33 +88,3 @@ fun <T> serializeScalar(
 
     else -> throw ExecutionException("Unsupported coercion for scalar type ${scalar.name}", executionNode)
 }
-
-@Suppress("UNCHECKED_CAST")
-fun <T> serializeScalar(scalar: Type.Scalar<*>, value: T, executionNode: Execution): JsonElement =
-    when (scalar.coercion) {
-        is StringScalarCoercion<*> -> {
-            JsonPrimitive((scalar.coercion as StringScalarCoercion<T>).serialize(value))
-        }
-
-        is ShortScalarCoercion<*> -> {
-            JsonPrimitive((scalar.coercion as ShortScalarCoercion<T>).serialize(value))
-        }
-
-        is IntScalarCoercion<*> -> {
-            JsonPrimitive((scalar.coercion as IntScalarCoercion<T>).serialize(value))
-        }
-
-        is DoubleScalarCoercion<*> -> {
-            JsonPrimitive((scalar.coercion as DoubleScalarCoercion<T>).serialize(value))
-        }
-
-        is LongScalarCoercion<*> -> {
-            JsonPrimitive((scalar.coercion as LongScalarCoercion<T>).serialize(value))
-        }
-
-        is BooleanScalarCoercion<*> -> {
-            JsonPrimitive((scalar.coercion as BooleanScalarCoercion<T>).serialize(value))
-        }
-
-        else -> throw ExecutionException("Unsupported coercion for scalar type ${scalar.name}", executionNode)
-    }
