@@ -33,9 +33,10 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
             when (type.kind) {
                 TypeKind.OBJECT -> {
                     when (type.name) {
-                        "Query" -> handleRemoteQueries(type, url)
-                        "Mutation" -> handleRemoteMutations(type, url)
-                        "Subscription" -> TODO("remote subscriptions are not supported")
+                        schema.queryType.name ?: "Query" -> handleRemoteQueries(type, url)
+                        schema.mutationType?.name ?: "Mutation" -> handleRemoteMutations(type, url)
+                        schema.subscriptionType?.name ?: "Subscription" -> TODO("remote subscriptions are not supported")
+
                         else -> handleRemoteObjectType(type)
                     }
                 }
@@ -49,6 +50,37 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
                 TypeKind.NON_NULL -> {} // NOOP
             }
         }
+        // Replace any custom root operation type names with KGraphQL's default names, because there can only be one
+        // queryType/mutationType/subscriptionType for a schema.
+        val queryTypeName = schema.queryType.name
+        if (queryTypeName != "Query") {
+            remoteQueryTypeProxies[queryTypeName]?.let {
+                val standardizedQueryType = Type.RemoteObject(
+                    name = "Query",
+                    description = it.description,
+                    fields = it.fields.orEmpty() + typenameField(),
+                    interfaces = it.interfaces
+                )
+                it.proxied = standardizedQueryType
+                remoteQueryTypeProxies["Query"] = it
+                remoteQueryTypeProxies.remove(queryTypeName)
+            }
+        }
+        val mutationTypeName = schema.mutationType?.name
+        if (mutationTypeName != null && mutationTypeName != "Mutation") {
+            remoteQueryTypeProxies[mutationTypeName]?.let {
+                val standardizedMutationType = Type.RemoteObject(
+                    name = "Mutation",
+                    description = it.description,
+                    fields = it.fields.orEmpty() + typenameField(),
+                    interfaces = it.interfaces
+                )
+                it.proxied = standardizedMutationType
+                remoteQueryTypeProxies["Mutation"] = it
+                remoteQueryTypeProxies.remove(mutationTypeName)
+            }
+        }
+
         return (remoteQueryTypeProxies.values + remoteInputTypeProxies.values).toList()
     }
 
@@ -81,8 +113,7 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
                         ?.filterNot { it is Field.RemoteOperation<*, *> }
                         ?.mapTo(mutableSetOf()) { it.name }
                         .orEmpty() + "__typename"
-                    val filteredSelections = (node.selectionNode as? SelectionNode.FieldNode)
-                        ?.selectionSet?.selections
+                    val filteredSelections = node.selectionNode.selectionSet?.selections
                         ?.filter { it !is SelectionNode.FieldNode || it.name.value in availableFieldNames }
                         .orEmpty()
                     if (filteredSelections.isEmpty() && returnType.fields != null) {
