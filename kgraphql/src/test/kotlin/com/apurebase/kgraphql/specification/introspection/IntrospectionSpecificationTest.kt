@@ -10,6 +10,7 @@ import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldBeSortedBy
 import io.kotest.matchers.collections.shouldBeUnique
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -348,6 +349,20 @@ class IntrospectionSpecificationTest {
 
         val typenames = types.map { type -> type["name"] as String }
         typenames.shouldBeUnique()
+    }
+
+    @Test
+    fun `introspection types should be sorted alphabetically ignoring case`() {
+        val schema = defaultSchema {
+            query("interface") {
+                resolver { -> Face("~~MOCK~~") }
+            }
+        }
+
+        val map = deserialize(schema.executeBlocking(Introspection.query()))
+        val types = map.extract<List<Map<Any, *>>>("data/__schema/types")
+
+        types shouldBeSortedBy { type -> (type["name"] as String).lowercase() }
     }
 
     @Test

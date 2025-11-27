@@ -29,7 +29,7 @@ data class SchemaModel(
     private fun toTypeList(): List<Type> {
         val list = allTypes
             // workaround on the fact that Double and Float are treated as GraphQL Float
-            .filterNot { it is Type.Scalar<*> && it.kClass == Float::class }
+            .filterNot { it is Type.Scalar<*> && it.kClass == Double::class }
             .filterNot { it.kClass?.findAnnotation<NotIntrospected>() != null }
             // query must be present in introspection 'types' field for introspection tools
             .plus(query)
@@ -40,7 +40,7 @@ data class SchemaModel(
         if (subscription != null) {
             list += subscription
         }
-        return list.toList()
+        return list.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name.toString() })
     }
 
     override val queryType: Type = query

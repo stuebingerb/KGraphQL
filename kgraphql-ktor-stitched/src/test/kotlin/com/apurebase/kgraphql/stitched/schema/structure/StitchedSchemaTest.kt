@@ -812,4 +812,336 @@ class StitchedSchemaTest {
             {"data":{"__type":{"name":"SimpleClass","kind":"OBJECT","fields":[{"name":"existing"},{"name":"extension"},{"name":"extensionWithDefault"},{"name":"extensionWithOptional"}]}}}
         """.trimIndent()
     }
+
+    @Test
+    fun `remote schema with non-standard root type names should work`() {
+        // A minimal introspection response with custom query and mutation types
+        val introspectionResponse = """
+            {
+                "data": {
+                    "__schema": {
+                        "queryType": {
+                            "name": "QueryRoot",
+                            "kind": "OBJECT"
+                        },
+                        "mutationType": {
+                            "name": "MutationRoot",
+                            "kind": "OBJECT"
+                        },
+                        "subscriptionType": null,
+                        "types": [
+                            {
+                                "kind": "OBJECT",
+                                "name": "QueryRoot",
+                                "description": "The schema's entry-point for queries. This acts as the public, top-level API from which all queries must start.",
+                                "fields": [
+                                    {
+                                        "name": "app",
+                                        "description": "Returns the app name",
+                                        "args": [],
+                                        "type": {
+                                            "kind": "SCALAR",
+                                            "name": "String",
+                                            "ofType": null
+                                        },
+                                        "isDeprecated": false,
+                                        "deprecationReason": null
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "description": "Represents textual data as UTF-8 character sequences. This type is most often used by GraphQL to represent free-form human-readable text.",
+                                "fields": null,
+                                "inputFields": null,
+                                "interfaces": null,
+                                "enumValues": null,
+                                "possibleTypes": null
+                            },
+                            {
+                                "kind": "SCALAR",
+                                "name": "ID",
+                                "description": "The ID scalar type represents a unique identifier, often used to refetch an object or as the key for a cache",
+                                "fields": null,
+                                "inputFields": null,
+                                "interfaces": null,
+                                "enumValues": null,
+                                "possibleTypes": null
+                            },
+                            {
+                                "kind": "SCALAR",
+                                "name": "Boolean",
+                                "description": "The Boolean scalar type represents true or false",
+                                "fields": null,
+                                "inputFields": null,
+                                "interfaces": null,
+                                "enumValues": null,
+                                "possibleTypes": null
+                            },
+                            {
+                                "kind": "OBJECT",
+                                "name": "MutationRoot",
+                                "description": "Mutation object",
+                                "fields": [
+                                    {
+                                        "name": "cancelTask",
+                                        "description": "Cancels an active task.",
+                                        "args": [
+                                            {
+                                                "name": "id",
+                                                "description": "The ID of the task to be cancelled.",
+                                                "type": {
+                                                    "kind": "NON_NULL",
+                                                    "name": null,
+                                                    "ofType": {
+                                                        "kind": "SCALAR",
+                                                        "name": "ID",
+                                                        "ofType": null
+                                                    }
+                                                },
+                                                "defaultValue": null
+                                            },
+                                            {
+                                                "name": "force",
+                                                "description": "Whether to force cancel tasks with open sub-tasks.",
+                                                "type": {
+                                                    "kind": "SCALAR",
+                                                    "name": "Boolean",
+                                                    "ofType": null
+                                                },
+                                                "defaultValue": "false"
+                                            }
+                                        ],
+                                        "type": {
+                                            "kind": "SCALAR",
+                                            "name": "String",
+                                            "ofType": null
+                                        },
+                                        "isDeprecated": false,
+                                        "deprecationReason": null
+                                    }
+                                ]
+                            }
+                        ],
+                        "directives": []
+                    }
+                },
+                "extensions": {
+                    "cost": {
+                        "requestedQueryCost": 1,
+                        "actualQueryCost": 1
+                    }
+                },
+                "unsupported_extensions": {
+                    "version": "1.0.0"
+                }
+            }
+        """.trimIndent()
+
+        // Introspected schema should reflect those custom query and mutation types
+        val introspectedSchema = IntrospectedSchema.fromIntrospectionResponse(introspectionResponse)
+        SchemaPrinter().print(introspectedSchema) shouldBe """
+            schema {
+              query: QueryRoot
+              mutation: MutationRoot
+            }
+
+            type MutationRoot {
+              cancelTask(force: Boolean = false, id: ID!): String
+            }
+
+            type QueryRoot {
+              app: String
+            }
+            
+        """.trimIndent()
+
+        // In the stitched schema, after compilation, the custom query and mutation types should have standardized names
+        val stitchedSchema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
+            remoteSchema("remote") {
+                introspectedSchema
+            }
+        }
+
+        stitchedSchema.printSchema() shouldBe """
+            type Mutation {
+              cancelTask(force: Boolean = false, id: ID!): String
+            }
+
+            type Query {
+              app: String
+            }
+            
+        """.trimIndent()
+    }
+
+    @Test
+    fun `remote schema with non-standard root type names and references to root query type should work`() {
+        // A minimal introspection response with custom query and mutation types
+        val introspectionResponse = """
+            {
+                "data": {
+                    "__schema": {
+                        "queryType": {
+                            "name": "QueryRoot",
+                            "kind": "OBJECT"
+                        },
+                        "mutationType": {
+                            "name": "MutationRoot",
+                            "kind": "OBJECT"
+                        },
+                        "subscriptionType": null,
+                        "types": [
+                            {
+                                "kind": "OBJECT",
+                                "name": "QueryRoot",
+                                "description": "The schema's entry-point for queries. This acts as the public, top-level API from which all queries must start.",
+                                "fields": [
+                                    {
+                                        "name": "app",
+                                        "description": "Returns the app name",
+                                        "args": [],
+                                        "type": {
+                                            "kind": "SCALAR",
+                                            "name": "String",
+                                            "ofType": null
+                                        },
+                                        "isDeprecated": false,
+                                        "deprecationReason": null
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "description": "Represents textual data as UTF-8 character sequences. This type is most often used by GraphQL to represent free-form human-readable text.",
+                                "fields": null,
+                                "inputFields": null,
+                                "interfaces": null,
+                                "enumValues": null,
+                                "possibleTypes": null
+                            },
+                            {
+                                "kind": "SCALAR",
+                                "name": "ID",
+                                "description": "The ID scalar type represents a unique identifier, often used to refetch an object or as the key for a cache",
+                                "fields": null,
+                                "inputFields": null,
+                                "interfaces": null,
+                                "enumValues": null,
+                                "possibleTypes": null
+                            },
+                            {
+                                "kind": "SCALAR",
+                                "name": "Boolean",
+                                "description": "The Boolean scalar type represents true or false",
+                                "fields": null,
+                                "inputFields": null,
+                                "interfaces": null,
+                                "enumValues": null,
+                                "possibleTypes": null
+                            },
+                            {
+                                "kind": "OBJECT",
+                                "name": "MutationRoot",
+                                "description": "Mutation object",
+                                "fields": [
+                                    {
+                                        "name": "cancelTask",
+                                        "description": "Cancels an active task.",
+                                        "args": [
+                                            {
+                                                "name": "id",
+                                                "description": "The ID of the task to be cancelled.",
+                                                "type": {
+                                                    "kind": "NON_NULL",
+                                                    "name": null,
+                                                    "ofType": {
+                                                        "kind": "SCALAR",
+                                                        "name": "ID",
+                                                        "ofType": null
+                                                    }
+                                                },
+                                                "defaultValue": null
+                                            },
+                                            {
+                                                "name": "force",
+                                                "description": "Whether to force cancel tasks with open sub-tasks.",
+                                                "type": {
+                                                    "kind": "SCALAR",
+                                                    "name": "Boolean",
+                                                    "ofType": null
+                                                },
+                                                "defaultValue": "false"
+                                            }
+                                        ],
+                                        "type": {
+                                            "kind": "OBJECT",
+                                            "name": "QueryRoot",
+                                            "ofType": null
+                                        },
+                                        "isDeprecated": false,
+                                        "deprecationReason": null
+                                    }
+                                ]
+                            }
+                        ],
+                        "directives": []
+                    }
+                },
+                "extensions": {
+                    "cost": {
+                        "requestedQueryCost": 1,
+                        "actualQueryCost": 1
+                    }
+                },
+                "unsupported_extensions": {
+                    "version": "1.0.0"
+                }
+            }
+        """.trimIndent()
+
+        // Introspected schema should reflect those custom query and mutation types
+        val introspectedSchema = IntrospectedSchema.fromIntrospectionResponse(introspectionResponse)
+        SchemaPrinter().print(introspectedSchema) shouldBe """
+            schema {
+              query: QueryRoot
+              mutation: MutationRoot
+            }
+
+            type MutationRoot {
+              cancelTask(force: Boolean = false, id: ID!): QueryRoot
+            }
+
+            type QueryRoot {
+              app: String
+            }
+            
+        """.trimIndent()
+
+        // In the stitched schema, after compilation, the custom query and mutation types should have standardized names
+        val stitchedSchema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
+            remoteSchema("remote") {
+                introspectedSchema
+            }
+        }
+
+        stitchedSchema.printSchema() shouldBe """
+            type Mutation {
+              cancelTask(force: Boolean = false, id: ID!): Query
+            }
+
+            type Query {
+              app: String
+            }
+            
+        """.trimIndent()
+    }
 }

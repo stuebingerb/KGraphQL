@@ -9,7 +9,7 @@ import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.introspection.__Type
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json.Default.decodeFromString
+import kotlinx.serialization.json.Json
 
 @Serializable
 data class IntrospectionResponse(val data: IntrospectionData)
@@ -91,7 +91,15 @@ data class IntrospectedSchema(
     override val directives: List<IntrospectedDirective>,
 ) : __Schema {
     companion object {
+        // Decoding the IntrospectionResponse must not fail when there are additional entries in the response, cf.
+        // https://spec.graphql.org/September2025/#sec-Additional-Entries:
+        //   "Clients must ignore any entries other than those described above."
+        //
+        // Technically, we could support extensions but we're not doing anything with those anyway, so there's
+        // (currently) no point in mapping them.
+        private val json = Json { ignoreUnknownKeys = true }
+
         fun fromIntrospectionResponse(response: String) =
-            decodeFromString(IntrospectionResponse.serializer(), response).data.__schema
+            json.decodeFromString(IntrospectionResponse.serializer(), response).data.__schema
     }
 }
