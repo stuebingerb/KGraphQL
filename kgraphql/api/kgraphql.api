@@ -743,12 +743,14 @@ public final class com/apurebase/kgraphql/schema/dsl/types/UnionTypeDSL : com/ap
 }
 
 public class com/apurebase/kgraphql/schema/execution/ArgumentTransformer {
-	public fun <init> ()V
+	public fun <init> (Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;)V
+	public final fun getGenericTypeResolver ()Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;
 	public fun transformArguments (Ljava/lang/String;Ljava/lang/Object;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/ArgumentNodes;Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/schema/execution/Execution;Lcom/apurebase/kgraphql/Context;Lcom/apurebase/kgraphql/schema/model/FunctionWrapper;)Ljava/util/List;
 }
 
 public class com/apurebase/kgraphql/schema/execution/DefaultGenericTypeResolver : com/apurebase/kgraphql/schema/execution/GenericTypeResolver {
 	public fun <init> ()V
+	public fun box (Ljava/lang/Object;Lkotlin/reflect/KType;)Ljava/lang/Object;
 	public fun resolveMonad (Lkotlin/reflect/KType;)Lkotlin/reflect/KType;
 	public fun unbox (Ljava/lang/Object;)Ljava/lang/Object;
 }
@@ -851,12 +853,17 @@ public final class com/apurebase/kgraphql/schema/execution/ExecutionPlan : java/
 
 public abstract interface class com/apurebase/kgraphql/schema/execution/GenericTypeResolver {
 	public static final field Companion Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver$Companion;
+	public abstract fun box (Ljava/lang/Object;Lkotlin/reflect/KType;)Ljava/lang/Object;
 	public abstract fun resolveMonad (Lkotlin/reflect/KType;)Lkotlin/reflect/KType;
 	public abstract fun unbox (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/apurebase/kgraphql/schema/execution/GenericTypeResolver$Companion {
 	public final fun getDEFAULT ()Lcom/apurebase/kgraphql/schema/execution/DefaultGenericTypeResolver;
+}
+
+public final class com/apurebase/kgraphql/schema/execution/GenericTypeResolver$DefaultImpls {
+	public static fun box (Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;Ljava/lang/Object;Lkotlin/reflect/KType;)Ljava/lang/Object;
 }
 
 public final class com/apurebase/kgraphql/schema/execution/ParallelRequestExecutor : com/apurebase/kgraphql/schema/execution/RequestExecutor {

@@ -436,6 +436,7 @@ class SchemaBuilderTest {
                 Maybe::class -> Maybe.Defined(obj)
                 else -> super.box(obj, type)
             }
+
             override fun resolveMonad(type: KType) = when (type.jvmErasure) {
                 Maybe::class -> type.arguments.first().type ?: error("Could not resolve component type of $type")
                 else -> super.resolveMonad(type)
@@ -445,15 +446,18 @@ class SchemaBuilderTest {
         val schema = defaultSchema {
             configure { genericTypeResolver = typeResolver }
 
-            //Schema must define at least one query
-            query("query") {
-                resolver { x: String -> "" }
+            query("dummy") {
+                resolver { -> "dummy" }
             }
             mutation("mutation") {
                 resolver { data: InputType ->
-                    if (data.value is Maybe.Undefined) "undefined"
-                    else if (data.value.get() == null) "null"
-                    else "<${data.value.get()}>"
+                    if (data.value is Maybe.Undefined) {
+                        "undefined"
+                    } else if (data.value.get() == null) {
+                        "null"
+                    } else {
+                        "<${data.value.get()}>"
+                    }
                 }
             }
         }
