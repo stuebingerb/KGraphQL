@@ -1,6 +1,10 @@
 name: Benchmarks (Library)
+
 on:
   push:
+    branches:
+      - main
+  pull_request:
 
 permissions:
   contents: read

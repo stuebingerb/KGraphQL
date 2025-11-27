@@ -1,4 +1,5 @@
 name: Maven Publish
+
 on:
   release:
     types:
