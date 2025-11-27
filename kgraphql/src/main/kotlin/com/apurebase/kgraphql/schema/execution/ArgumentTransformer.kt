@@ -137,8 +137,11 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                         // Value was provided: use provided value
                         val provided = providedValuesByKParameter[parameter]
                         val value =
-                            if (parameter.type.arguments.isNotEmpty()) genericTypeResolver.box(provided, parameter.type)
-                            else provided
+                            if (parameter.type.arguments.isNotEmpty()) {
+                                genericTypeResolver.box(provided, parameter.type)
+                            } else {
+                                provided
+                            }
 
                         parameter to value
                     } else if (parameter.isOptional) {
