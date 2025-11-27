@@ -11,6 +11,7 @@ import kotlin.reflect.KType
 interface GenericTypeResolver {
 
     fun unbox(obj: Any): Any?
+    fun box(obj: Any?, type: KType): Any? = obj
 
     fun resolveMonad(type: KType): KType
 

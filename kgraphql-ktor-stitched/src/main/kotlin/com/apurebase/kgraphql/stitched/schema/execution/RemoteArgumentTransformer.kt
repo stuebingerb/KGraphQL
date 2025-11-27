@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.helpers.toValueNode
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
 import com.apurebase.kgraphql.schema.execution.Execution
+import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
@@ -16,7 +17,7 @@ import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.fasterxml.jackson.databind.node.ObjectNode
 
-class RemoteArgumentTransformer : ArgumentTransformer() {
+class RemoteArgumentTransformer(genericTypeResolver: GenericTypeResolver) : ArgumentTransformer(genericTypeResolver) {
     override fun transformArguments(
         funName: String,
         receiver: Any?,

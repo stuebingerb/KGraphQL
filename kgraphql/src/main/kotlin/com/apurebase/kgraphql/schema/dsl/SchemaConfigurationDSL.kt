@@ -32,7 +32,7 @@ open class SchemaConfigurationDSL {
             wrapErrors = wrapErrors,
             introspection = introspection,
             genericTypeResolver = genericTypeResolver,
-            argumentTransformer = ArgumentTransformer()
+            argumentTransformer = ArgumentTransformer(genericTypeResolver)
         )
     }
 }
