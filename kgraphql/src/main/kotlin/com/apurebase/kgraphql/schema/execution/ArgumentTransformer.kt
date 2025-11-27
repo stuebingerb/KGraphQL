@@ -14,7 +14,7 @@ import com.apurebase.kgraphql.schema.structure.Type
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
 
-open class ArgumentTransformer {
+open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
 
     open fun transformArguments(
         funName: String,
@@ -135,7 +135,15 @@ open class ArgumentTransformer {
                 val valueMap = constructorParametersByName.mapNotNull { (name, parameter) ->
                     if (providedValuesByKParameter.containsKey(parameter)) {
                         // Value was provided: use provided value
-                        parameter to providedValuesByKParameter[parameter]
+                        val provided = providedValuesByKParameter[parameter]
+                        val value =
+                            if (parameter.type.arguments.isNotEmpty()) {
+                                genericTypeResolver.box(provided, parameter.type)
+                            } else {
+                                provided
+                            }
+
+                        parameter to value
                     } else if (parameter.isOptional) {
                         // Value was not provided but parameter is optional: skip it (and use default from Kotlin)
                         null

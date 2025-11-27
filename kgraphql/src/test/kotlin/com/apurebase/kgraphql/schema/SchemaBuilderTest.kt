@@ -26,6 +26,7 @@ import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSupertypeOf
+import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.typeOf
 
 /**
@@ -353,7 +354,7 @@ class SchemaBuilderTest {
         schema.inputTypeByKClass(InputTwo::class) shouldNotBe null
     }
 
-    private sealed class Maybe<out T> {
+    sealed class Maybe<out T> {
         abstract fun get(): T
 
         data object Undefined : Maybe<Nothing>() {
@@ -421,6 +422,56 @@ class SchemaBuilderTest {
         }
         expect<IllegalArgumentException>("Requested value is not defined!") {
             deserialize(schema.executeBlocking("{undefinedValueProp {value}}"))
+        }
+    }
+
+    data class InputType(
+        val value: Maybe<String?> = Maybe.Undefined
+    )
+
+    @Test
+    fun `input types can have generic components`() {
+        val typeResolver = object : DefaultGenericTypeResolver() {
+            override fun box(obj: Any?, type: KType) = when (type.jvmErasure) {
+                Maybe::class -> Maybe.Defined(obj)
+                else -> super.box(obj, type)
+            }
+
+            override fun resolveMonad(type: KType) = when (type.jvmErasure) {
+                Maybe::class -> type.arguments.first().type ?: error("Could not resolve component type of $type")
+                else -> super.resolveMonad(type)
+            }
+        }
+
+        val schema = defaultSchema {
+            configure { genericTypeResolver = typeResolver }
+
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
+            mutation("mutation") {
+                resolver { data: InputType ->
+                    if (data.value is Maybe.Undefined) {
+                        "undefined"
+                    } else if (data.value.get() == null) {
+                        "null"
+                    } else {
+                        "<${data.value.get()}>"
+                    }
+                }
+            }
+        }
+
+        deserialize(schema.executeBlocking("mutation { mutation(data: {}) }")).let {
+            it.extract<String>("data/mutation") shouldBe "undefined"
+        }
+
+        deserialize(schema.executeBlocking("mutation { mutation(data: { value: null }) }")).let {
+            it.extract<String>("data/mutation") shouldBe "null"
+        }
+
+        deserialize(schema.executeBlocking("mutation { mutation(data: { value: \"test\" }) }")).let {
+            it.extract<String>("data/mutation") shouldBe "<test>"
         }
     }
 
