@@ -17,6 +17,7 @@ import com.apurebase.kgraphql.stitched.schema.execution.RemoteRequestExecutor
 import com.fasterxml.jackson.databind.JsonNode
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.util.Locale
 import java.util.UUID
 
@@ -704,6 +705,71 @@ class StitchedSchemaTest {
                 type("SimpleClass") {
                     stitchedProperty("extension") {
                         remoteQuery("nonExisting")
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `schema should prevent scalar types from stitching`() {
+        data class SimpleClass(val existing: String)
+        expect<SchemaException>("Unable to handle stitched type 'UUID': Type 'UUID' cannot be stitched") {
+            StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
+                localSchema {
+                    query("dummy") {
+                        resolver { -> "dummy" }
+                    }
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        query("simple") {
+                            resolver { input: String -> SimpleClass(input) }
+                        }
+                        stringScalar<UUID> {
+                            deserialize = UUID::fromString
+                            serialize = UUID::toString
+                        }
+                    }
+                }
+                type("UUID") {
+                    stitchedProperty("stitched") {
+                        remoteQuery("simple").withArgs {
+                            arg { name = "input"; parentFieldName = "foo" }
+                        }
+                    }
+                }
+            }
+        }
+        expect<SchemaException>("Unable to handle stitched type 'LocalDate': Type does not exist in any schema") {
+            StitchedKGraphQL.stitchedSchema {
+                configure {
+                    remoteExecutor = DummyRemoteRequestExecutor
+                }
+                localSchema {
+                    query("dummy") {
+                        resolver { -> "dummy" }
+                    }
+                    stringScalar<LocalDate> {
+                        deserialize = LocalDate::parse
+                        serialize = LocalDate::toString
+                    }
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        query("simple") {
+                            resolver { input: String -> SimpleClass(input) }
+                        }
+                    }
+                }
+                type("LocalDate") {
+                    stitchedProperty("stitched") {
+                        remoteQuery("simple").withArgs {
+                            arg { name = "input"; parentFieldName = "foo" }
+                        }
                     }
                 }
             }
