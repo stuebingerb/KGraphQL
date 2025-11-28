@@ -66,7 +66,8 @@ data class IntrospectedType(
     override val possibleTypes: List<IntrospectedType>? = null,
     override val enumValues: List<IntrospectedEnumValue>? = null,
     override val inputFields: List<IntrospectedInputValue>? = null,
-    override val ofType: IntrospectedType? = null
+    override val ofType: IntrospectedType? = null,
+    override val specifiedByURL: String? = null
 ) : __Type
 
 @Serializable
@@ -79,7 +80,8 @@ data class IntrospectedRootOperation(
     override val possibleTypes: List<IntrospectedType>? = null,
     override val enumValues: List<IntrospectedEnumValue>? = null,
     override val inputFields: List<IntrospectedInputValue>? = null,
-    override val ofType: IntrospectedType? = null
+    override val ofType: IntrospectedType? = null,
+    override val specifiedByURL: String? = null
 ) : __Type
 
 @Serializable

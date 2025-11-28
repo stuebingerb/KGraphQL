@@ -88,7 +88,15 @@ class SchemaBuilder {
     fun <T : Any> stringScalar(kClass: KClass<T>, block: ScalarDSL<T, String>.() -> Unit) {
         val scalar = StringScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
+        model.addScalar(
+            TypeDef.Scalar(
+                name = scalar.name,
+                kClass = kClass,
+                coercion = scalar.createCoercion(),
+                description = scalar.description,
+                specifiedByURL = scalar.specifiedByURL
+            )
+        )
     }
 
     inline fun <reified T : Any> stringScalar(noinline block: ScalarDSL<T, String>.() -> Unit) {
@@ -98,7 +106,15 @@ class SchemaBuilder {
     fun <T : Any> shortScalar(kClass: KClass<T>, block: ScalarDSL<T, Short>.() -> Unit) {
         val scalar = ShortScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
+        model.addScalar(
+            TypeDef.Scalar(
+                name = scalar.name,
+                kClass = kClass,
+                coercion = scalar.createCoercion(),
+                description = scalar.description,
+                specifiedByURL = scalar.specifiedByURL
+            )
+        )
     }
 
     inline fun <reified T : Any> shortScalar(noinline block: ScalarDSL<T, Short>.() -> Unit) {
@@ -108,7 +124,15 @@ class SchemaBuilder {
     fun <T : Any> intScalar(kClass: KClass<T>, block: ScalarDSL<T, Int>.() -> Unit) {
         val scalar = IntScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
+        model.addScalar(
+            TypeDef.Scalar(
+                name = scalar.name,
+                kClass = kClass,
+                coercion = scalar.createCoercion(),
+                description = scalar.description,
+                specifiedByURL = scalar.specifiedByURL
+            )
+        )
     }
 
     inline fun <reified T : Any> intScalar(noinline block: ScalarDSL<T, Int>.() -> Unit) {
@@ -118,7 +142,15 @@ class SchemaBuilder {
     fun <T : Any> floatScalar(kClass: KClass<T>, block: ScalarDSL<T, Double>.() -> Unit) {
         val scalar = DoubleScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
+        model.addScalar(
+            TypeDef.Scalar(
+                name = scalar.name,
+                kClass = kClass,
+                coercion = scalar.createCoercion(),
+                description = scalar.description,
+                specifiedByURL = scalar.specifiedByURL
+            )
+        )
     }
 
     inline fun <reified T : Any> floatScalar(noinline block: ScalarDSL<T, Double>.() -> Unit) {
@@ -128,7 +160,15 @@ class SchemaBuilder {
     fun <T : Any> longScalar(kClass: KClass<T>, block: ScalarDSL<T, Long>.() -> Unit) {
         val scalar = LongScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
+        model.addScalar(
+            TypeDef.Scalar(
+                name = scalar.name,
+                kClass = kClass,
+                coercion = scalar.createCoercion(),
+                description = scalar.description,
+                specifiedByURL = scalar.specifiedByURL
+            )
+        )
     }
 
     inline fun <reified T : Any> longScalar(noinline block: ScalarDSL<T, Long>.() -> Unit) {
@@ -138,7 +178,15 @@ class SchemaBuilder {
     fun <T : Any> booleanScalar(kClass: KClass<T>, block: ScalarDSL<T, Boolean>.() -> Unit) {
         val scalar = BooleanScalarDSL(kClass).apply(block)
         configuration.appendMapper(scalar, kClass)
-        model.addScalar(TypeDef.Scalar(scalar.name, kClass, scalar.createCoercion(), scalar.description))
+        model.addScalar(
+            TypeDef.Scalar(
+                name = scalar.name,
+                kClass = kClass,
+                coercion = scalar.createCoercion(),
+                description = scalar.description,
+                specifiedByURL = scalar.specifiedByURL
+            )
+        )
     }
 
     inline fun <reified T : Any> booleanScalar(noinline block: ScalarDSL<T, Boolean>.() -> Unit) {

@@ -42,7 +42,8 @@ interface TypeDef {
         name: String,
         override val kClass: KClass<T>,
         val coercion: ScalarCoercion<T, *>,
-        description: String?
+        description: String?,
+        val specifiedByURL: String? = null
     ) : BaseKQLType(name, description), Kotlin<T> {
         fun toScalarType(): Type.Scalar<T> = Type.Scalar(this)
     }

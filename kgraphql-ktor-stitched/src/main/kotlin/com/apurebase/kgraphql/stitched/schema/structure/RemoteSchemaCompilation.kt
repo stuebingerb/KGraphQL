@@ -148,7 +148,7 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
         val typeName = checkNotNull(type.name) {
             "Cannot handle remote type $type without name"
         }
-        val typeProxy = TypeProxy(Type.RemoteScalar(typeName, type.description))
+        val typeProxy = TypeProxy(Type.RemoteScalar(typeName, type.description, type.specifiedByURL))
         remoteQueryTypeProxies[typeName] = typeProxy
         return typeProxy
     }

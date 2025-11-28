@@ -97,7 +97,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
                     appendLine()
                 }
                 appendDescription(type)
-                appendLine("scalar ${type.name}")
+                appendLine("scalar ${type.name}${type.specifiedBy()}")
             }
         }
 
@@ -224,6 +224,12 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
             (it.name != subscriptionType?.name && it.name == "Subscription")
     }
 
+    private fun __Type.specifiedBy(): String = if (specifiedByURL != null) {
+        " @specifiedBy(url: \"$specifiedByURL\")"
+    } else {
+        ""
+    }
+
     private fun Depreciable.deprecationInfo(): String = if (isDeprecated) {
         " @deprecated(reason: \"$deprecationReason\")"
     } else {
@@ -231,7 +237,12 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
     }
 
     private fun __Directive.isBuiltIn(): Boolean =
-        name in setOf(Directive.DEPRECATED.name, Directive.INCLUDE.name, Directive.SKIP.name)
+        name in setOf(
+            Directive.DEPRECATED.name,
+            Directive.INCLUDE.name,
+            Directive.SKIP.name,
+            Directive.SPECIFIED_BY.name
+        )
 
     private fun __Type.isBuiltInScalar(): Boolean = name in builtInScalarNames
 

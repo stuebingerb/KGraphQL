@@ -48,7 +48,8 @@ open class MutableSchemaDefinition {
     protected val directives: ArrayList<Directive.Partial> = arrayListOf(
         Directive.SKIP,
         Directive.INCLUDE,
-        Directive.DEPRECATED
+        Directive.DEPRECATED,
+        Directive.SPECIFIED_BY
     )
     protected val inputObjects: ArrayList<TypeDef.Input<*>> = arrayListOf()
 

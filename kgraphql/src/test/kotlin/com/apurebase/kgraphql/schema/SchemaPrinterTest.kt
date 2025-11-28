@@ -290,6 +290,7 @@ class SchemaPrinterTest {
             stringScalar<UUID> {
                 deserialize = UUID::fromString
                 serialize = UUID::toString
+                specifiedByURL = "https://tools.ietf.org/html/rfc4122"
             }
             stringScalar<LocalDate> {
                 deserialize = LocalDate::parse
@@ -302,7 +303,7 @@ class SchemaPrinterTest {
         sdl shouldBe """
             scalar LocalDate
             
-            scalar UUID
+            scalar UUID @specifiedBy(url: "https://tools.ietf.org/html/rfc4122")
             
             type Query {
               dummy: String!
@@ -825,6 +826,8 @@ class SchemaPrinterTest {
             directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 
             directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+            
+            directive @specifiedBy(url: String!) on SCALAR
             
         """.trimIndent()
 

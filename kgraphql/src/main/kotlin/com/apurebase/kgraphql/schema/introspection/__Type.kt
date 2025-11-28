@@ -27,6 +27,9 @@ interface __Type {
     // NON_NULL and LIST only
     val ofType: __Type?
 
+    // SCALAR only
+    val specifiedByURL: String?
+
     fun typeReference(): String = when (kind) {
         TypeKind.NON_NULL -> "${ofType?.typeReference()}!"
         TypeKind.LIST -> "[${ofType?.typeReference()}]"
