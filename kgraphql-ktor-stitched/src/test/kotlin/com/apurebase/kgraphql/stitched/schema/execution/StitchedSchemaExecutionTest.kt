@@ -1,11 +1,12 @@
 package com.apurebase.kgraphql.stitched.schema.execution
 
 import com.apurebase.kgraphql.BuiltInErrorCodes
+import com.apurebase.kgraphql.ExecutionError
 import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.GraphQL
-import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.GraphqlRequest
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
+import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.stitched.StitchedGraphQL
 import com.apurebase.kgraphql.stitched.getRemoteSchema
 import com.apurebase.kgraphql.stitched.schema.structure.StitchedSchemaTest.Face
@@ -1930,7 +1931,7 @@ class StitchedSchemaExecutionTest {
                 )
             )
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Property 'nonexisting' on 'Remote2' does not exist","locations":[{"line":2,"column":13}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+            {"errors":[{"message":"Property 'nonexisting' on 'Remote2' does not exist","locations":[{"line":2,"column":13}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
     }
 
@@ -3021,11 +3022,15 @@ class StitchedSchemaExecutionTest {
 
     @Test
     fun `errors from remote execution should be propagated correctly`() = testApplication {
+        data class LocalType(val name: String)
+        data class RemoteType(val localName: String, val name: String)
+
         fun SchemaBuilder.remoteSchema() = run {
             query("failRemote") {
-                resolver<String> {
-                    throw GraphQLError(
+                resolver<String, Execution.Node> { node: Execution.Node ->
+                    throw ExecutionError(
                         message = "don't call me remote!",
+                        node = node,
                         extensions = mapOf(
                             "type" to BuiltInErrorCodes.BAD_USER_INPUT.name,
                             "remoteErrorKey" to listOf(
@@ -3039,6 +3044,25 @@ class StitchedSchemaExecutionTest {
             query("failRemote2") {
                 resolver<String> {
                     throw IllegalStateException()
+                }
+            }
+            query("failRemoteObject") {
+                resolver { localName: String ->
+                    listOf(
+                        RemoteType(localName, "remoteObject1"),
+                        RemoteType(localName, "remoteObject2")
+                    )
+                }
+            }
+            type<RemoteType> {
+                property("problematic") {
+                    resolver { parent: RemoteType ->
+                        if (parent.localName == "local1" && parent.name == "remoteObject2") {
+                            throw Exception()
+                        } else {
+                            "unproblematic"
+                        }
+                    }
                 }
             }
         }
@@ -3056,9 +3080,10 @@ class StitchedSchemaExecutionTest {
                 }
                 localSchema {
                     query("failLocal") {
-                        resolver<String> {
-                            throw GraphQLError(
+                        resolver<String, Execution.Node> { node: Execution.Node ->
+                            throw ExecutionError(
                                 message = "don't call me local!",
+                                node = node,
                                 extensions = mapOf(
                                     "type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name,
                                     "detail" to mapOf("localErrorKey" to "localErrorValue")
@@ -3066,10 +3091,20 @@ class StitchedSchemaExecutionTest {
                             )
                         }
                     }
+                    query("localTypes") {
+                        resolver { -> listOf(LocalType("local1"), LocalType("local2")) }
+                    }
                 }
                 remoteSchema("remote") {
                     getRemoteSchema {
                         remoteSchema()
+                    }
+                }
+                type("LocalType") {
+                    stitchedProperty("stitchedProperty") {
+                        remoteQuery("failRemoteObject").withArgs {
+                            arg { name = "localName"; parentFieldName = "name" }
+                        }
                     }
                 }
             }
@@ -3080,7 +3115,7 @@ class StitchedSchemaExecutionTest {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failSyntax }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Property 'failSyntax' on 'Query' does not exist","locations":[{"line":1,"column":3}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+            {"errors":[{"message":"Property 'failSyntax' on 'Query' does not exist","locations":[{"line":1,"column":3}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
         // Query that failed during execution
@@ -3089,27 +3124,31 @@ class StitchedSchemaExecutionTest {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failLocal }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"don't call me local!","locations":[],"path":[],"extensions":{"type":"INTERNAL_SERVER_ERROR","detail":{"localErrorKey":"localErrorValue"}}}]}
+            {"errors":[{"message":"don't call me local!","locations":[{"line":1,"column":3}],"extensions":{"type":"INTERNAL_SERVER_ERROR","detail":{"localErrorKey":"localErrorValue"}}}]}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failRemote }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"don't call me remote!","locations":[{"line":1,"column":3}],"path":[],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote","type":"BAD_USER_INPUT","remoteErrorKey":["remoteErrorValue1","remoteErrorValue2"]}}]}
+            {"errors":[{"message":"don't call me remote!","locations":[{"line":1,"column":3}],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote","type":"BAD_USER_INPUT","remoteErrorKey":["remoteErrorValue1","remoteErrorValue2"]}}]}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failRemote2 }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":3}],"path":[],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote2","type":"INTERNAL_SERVER_ERROR"}}]}
+            {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":3}],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote2","type":"INTERNAL_SERVER_ERROR"}}]}
+        """.trimIndent()
+
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(graphqlRequest("{ localTypes { name stitchedProperty { name localName problematic } } }"))
+        }.bodyAsText() shouldBe """
+            {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":21}],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemoteObject","type":"INTERNAL_SERVER_ERROR"}}]}
         """.trimIndent()
     }
 
     private fun graphqlRequest(query: String, variables: JsonObject? = null): String =
         encodeToString<GraphqlRequest>(GraphqlRequest(query = query, variables = variables))
 }
-
-// TODO:
-//  test some error cases (like field validation on remote properties etc)

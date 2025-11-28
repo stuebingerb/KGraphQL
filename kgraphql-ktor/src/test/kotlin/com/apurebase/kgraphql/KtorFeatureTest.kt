@@ -56,6 +56,8 @@ class KtorFeatureTest : KtorTest() {
 
     data class Actor(val name: String, val age: Int)
     data class UserData(val username: String, val stuff: String)
+    data class Movie(val title: String, val actors: List<Actor>)
+    data class Person(val name: String, val age: Int, val favouriteMovie: Movie)
 
     @Test
     fun `Simple context test`() {
@@ -106,6 +108,7 @@ class KtorFeatureTest : KtorTest() {
         }
     }
 
+    @Suppress("unused")
     enum class MockEnum { M1, M2 }
 
     data class InputOne(val enum: MockEnum, val id: String)
@@ -143,7 +146,7 @@ class KtorFeatureTest : KtorTest() {
     }
 
     @Test
-    fun `Error response test`() {
+    fun `request error response test`() {
         val server = withServer {
             query("actor") {
                 resolver { -> Actor("George", 23) }
@@ -157,7 +160,76 @@ class KtorFeatureTest : KtorTest() {
         }
         runBlocking {
             response.bodyAsText() shouldBe """
-                {"errors":[{"message":"Property 'nickname' on 'Actor' does not exist","locations":[{"line":3,"column":1}],"path":[],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+                {"errors":[{"message":"Property 'nickname' on 'Actor' does not exist","locations":[{"line":3,"column":1}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+            """.trimIndent()
+            response.contentType() shouldBe ContentType.Application.Json
+        }
+    }
+
+    @Test
+    fun `execution error response test`() {
+        val server = withServer {
+            type<Actor> {
+                property("nickname") {
+                    resolver { actor: Actor ->
+                        require(actor.age <= 30) { "Actors above 30 don't have nicknames" }
+                        actor.name.first().toString()
+                    }
+                }
+            }
+            query("actors") {
+                resolver { -> listOf(Actor("George", 23), Actor("John", 42), Actor("Jack", 21)) }
+            }
+        }
+
+        val response = server("query") {
+            field("actors") {
+                field("nickname")
+            }
+        }
+        runBlocking {
+            response.bodyAsText() shouldBe """
+                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":3,"column":1}],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}]}
+            """.trimIndent()
+            response.contentType() shouldBe ContentType.Application.Json
+        }
+    }
+
+    @Test
+    fun `nested execution error response test`() {
+        val server = withServer {
+            type<Actor> {
+                property("nickname") {
+                    resolver { actor: Actor ->
+                        require(actor.age <= 30) { "Actors above 30 don't have nicknames" }
+                        actor.name.first().toString()
+                    }
+                }
+            }
+            query("persons") {
+                resolver { ->
+                    listOf(
+                        Person("Mary", 32, Movie("Sharks", listOf(Actor("George", 23), Actor("Jack", 21)))),
+                        Person("Jimmy", 11, Movie("Unknown", listOf(Actor("John", 42))))
+                    )
+                }
+            }
+        }
+
+        val response = server("query") {
+            field("persons") {
+                field("name")
+                field("favouriteMovie") {
+                    field("actors") {
+                        field("name")
+                        field("nickname")
+                    }
+                }
+            }
+        }
+        runBlocking {
+            response.bodyAsText() shouldBe """
+                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":9,"column":1}],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}]}
             """.trimIndent()
             response.contentType() shouldBe ContentType.Application.Json
         }
@@ -183,7 +255,13 @@ class KtorFeatureTest : KtorTest() {
 
     @Test
     fun `should work with error handler`() {
-        val errorHandler: (Throwable) -> GraphQLError = { e -> GraphQLError(message = e.message ?: "unknown") }
+        val errorHandler: (Throwable) -> GraphQLError = { e ->
+            RequestError(
+                message = e.message ?: "unknown",
+                node = null,
+                extensions = mapOf("type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name)
+            )
+        }
 
         val server = withServer(errorHandler = errorHandler) {
             query("error") {
@@ -195,7 +273,7 @@ class KtorFeatureTest : KtorTest() {
             field("error")
         }
         runBlocking {
-            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[],\"path\":[],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
             response.contentType() shouldBe ContentType.Application.Json
         }
     }
@@ -212,7 +290,7 @@ class KtorFeatureTest : KtorTest() {
             field("error")
         }
         runBlocking {
-            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[{\"line\":2,\"column\":1}],\"path\":[],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[{\"line\":2,\"column\":1}],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
             response.contentType() shouldBe ContentType.Application.Json
         }
     }

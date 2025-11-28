@@ -1,4 +1,4 @@
-public final class com/apurebase/kgraphql/stitched/RemoteExecutionException : com/apurebase/kgraphql/GraphQLError {
+public final class com/apurebase/kgraphql/stitched/RemoteExecutionException : com/apurebase/kgraphql/ExecutionError {
 	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/execution/Execution$Remote;)V
 }
 

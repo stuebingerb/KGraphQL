@@ -6,21 +6,22 @@ Error handling is currently implemented in a basic way only, and does for exampl
 
 When an exception occurs, request execution is aborted and results in an error response depending on the type of exception.
 
-Exceptions that extend `GraphQLError` will be mapped to a response that contains an `errors` key:
+Exceptions that extend `GraphQLError` via either `RequestError` or `ExecutionError` will be mapped to a response that contains
+an `errors` key with optional `locations` and `path` keys detailing where it occurred.
+Sub classes can also provide arbitrary `extensions`, by default an error `type` will be added:
 
 === "Example"
     ```json
     {
         "errors": [
             {
-                "message": "Property nonexisting on MyType does not exist",
+                "message": "Property 'nonexisting' on 'MyType' does not exist",
                 "locations": [
                     {
-                        "line": 2,
-                        "column": 13
+                        "line": 3,
+                        "column": 1
                     }
                 ],
-                "path": [],
                 "extensions": {
                     "type": "GRAPHQL_VALIDATION_FAILED"
                 }
@@ -65,7 +66,6 @@ With `wrapErrors = true` (which is the default), exceptions are wrapped as `Exec
                         "column": 1
                     }
                 ],
-                "path": [],
                 "extensions": {
                     "type": "INTERNAL_SERVER_ERROR"
                 }
