@@ -15,9 +15,11 @@ import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
-class RemoteArgumentTransformer(genericTypeResolver: GenericTypeResolver) : ArgumentTransformer(genericTypeResolver) {
+class RemoteArgumentTransformer(val objectMapper: ObjectMapper, genericTypeResolver: GenericTypeResolver) :
+    ArgumentTransformer(genericTypeResolver) {
     override fun transformArguments(
         funName: String,
         receiver: Any?,
@@ -35,7 +37,10 @@ class RemoteArgumentTransformer(genericTypeResolver: GenericTypeResolver) : Argu
         val mappedNodeArgs = nodeArgs.map {
             it.key to it.value
         } + argsFromParent.map {
-            val parentValue = (receiver as? ObjectNode)?.get(it.value).toValueNode(it.key.type)
+            val parentValue = when (receiver) {
+                is ObjectNode -> receiver.get(it.value)
+                else -> (objectMapper.valueToTree(receiver) as? ObjectNode)?.get(it.value)
+            }.toValueNode(it.key.type)
             if (parentValue is ValueNode.NullValueNode && it.key.type.kind == TypeKind.NON_NULL) {
                 // parentValue is null but required for the remote operation; return null to skip call
                 // TODO: improve architecture - can we use directives?

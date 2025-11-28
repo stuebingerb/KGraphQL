@@ -2482,6 +2482,98 @@ class StitchedSchemaExecutionTest {
     }
 
     @Test
+    fun `schema with parent arguments from a local type should work as expected`() = testApplication {
+        data class Remote(val foo: String?)
+        data class Local(val foo: String?)
+
+        fun SchemaBuilder.remoteSchema() = run {
+            query("remoteFoo") {
+                resolver { input: String? -> Remote("remote-$input") }
+            }
+        }
+        install(GraphQL.FeatureInstance("KGraphql - Remote")) {
+            endpoint = "remote"
+            schema {
+                remoteSchema()
+            }
+        }
+        install(StitchedGraphQL.FeatureInstance("KGraphql - Local")) {
+            endpoint = "local"
+            stitchedSchema {
+                configure {
+                    remoteExecutor = TestRemoteRequestExecutor(client, objectMapper)
+                    localUrl = endpoint
+                }
+                localSchema {
+                    query("local") {
+                        resolver { fooInput: String? -> Local(fooInput) }
+                    }
+                }
+                remoteSchema("remote") {
+                    getRemoteSchema {
+                        remoteSchema()
+                    }
+                }
+                type("Local") {
+                    stitchedProperty("stitched") {
+                        remoteQuery("remoteFoo").withArgs {
+                            arg { name = "input"; parentFieldName = "foo" }
+                        }
+                    }
+                }
+            }
+        }
+
+        val sdl = client.get("local?schema").bodyAsText()
+        sdl shouldBe """
+            type Local {
+              foo: String
+              stitched: Remote
+            }
+            
+            type Query {
+              local(fooInput: String): Local!
+              remoteFoo(input: String): Remote!
+            }
+
+            type Remote {
+              foo: String
+            }
+
+        """.trimIndent()
+
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(
+                graphqlRequest(
+                    """
+                    {
+                      local(fooInput: "bar") { foo stitched { foo } }
+                    }
+                    """.trimIndent()
+                )
+            )
+        }.bodyAsText() shouldBe """
+            {"data":{"local":{"foo":"bar","stitched":{"foo":"remote-bar"}}}}
+        """.trimIndent()
+
+        client.post("local") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            setBody(
+                graphqlRequest(
+                    """
+                    {
+                      local(fooInput: null) { foo stitched { foo } }
+                    }
+                    """.trimIndent()
+                )
+            )
+        }.bodyAsText() shouldBe """
+            {"data":{"local":{"foo":null,"stitched":{"foo":"remote-null"}}}}
+        """.trimIndent()
+    }
+
+    @Test
     fun `schema with stitched extension properties and arguments should work as expected`() = testApplication {
         install(GraphQL.FeatureInstance("KGraphql - Remote1")) {
             endpoint = "remote1"
