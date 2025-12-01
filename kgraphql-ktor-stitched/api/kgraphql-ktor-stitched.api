@@ -132,7 +132,8 @@ public abstract class com/apurebase/kgraphql/stitched/schema/execution/AbstractR
 }
 
 public final class com/apurebase/kgraphql/stitched/schema/execution/RemoteArgumentTransformer : com/apurebase/kgraphql/schema/execution/ArgumentTransformer {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;)V
+	public fun <init> (Lcom/fasterxml/jackson/databind/ObjectMapper;Lcom/apurebase/kgraphql/schema/execution/GenericTypeResolver;)V
+	public final fun getObjectMapper ()Lcom/fasterxml/jackson/databind/ObjectMapper;
 	public fun transformArguments (Ljava/lang/String;Ljava/lang/Object;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/ArgumentNodes;Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/schema/execution/Execution;Lcom/apurebase/kgraphql/Context;Lcom/apurebase/kgraphql/schema/model/FunctionWrapper;)Ljava/util/List;
 }
 
