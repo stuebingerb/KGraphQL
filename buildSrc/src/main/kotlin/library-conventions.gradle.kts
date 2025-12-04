@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
     id("kotlin-conventions")
@@ -14,8 +15,12 @@ version = "0.37.0"
 kotlin {
     jvmToolchain(17)
     compilerOptions {
-        apiVersion.set(KotlinVersion.KOTLIN_2_1)
-        languageVersion.set(KotlinVersion.KOTLIN_2_1)
+        apiVersion = KotlinVersion.KOTLIN_2_1
+        languageVersion = KotlinVersion.KOTLIN_2_1
+    }
+    @OptIn(ExperimentalAbiValidation::class)
+    abiValidation {
+        enabled = true
     }
 }
 
