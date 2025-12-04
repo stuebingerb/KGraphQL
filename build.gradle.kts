@@ -1,5 +1,4 @@
 plugins {
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.18.1"
     alias(libs.plugins.kotlinx.kover)
     jacoco
 }
