@@ -1,0 +1,33 @@
+on:
+  push:
+    branches: main
+
+jobs:
+  benchmark_base_branch:
+    name: Bencher (Base)
+    permissions:
+      checks: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      - name: Compile benchmarks
+        run: ./gradlew jvmBenchmarkCompile
+      - name: Compile benchmarks
+        run: ./gradlew jvmBenchmarkJar
+      - uses: bencherdev/bencher@main
+      - name: Track base branch benchmarks with Bencher
+        run: |
+          bencher run \
+          --project d1158d5b-df59-4769-9ff0-8b2fd3d648b0 \
+          --token '${{ secrets.BENCHER_API_TOKEN }}' \
+          --branch main \
+          --testbed ubuntu-latest \
+          --threshold-measure latency \
+          --threshold-test t_test \
+          --threshold-max-sample-size 64 \
+          --threshold-upper-boundary 0.99 \
+          --thresholds-reset \
+          --err \
+          --github-actions '${{ secrets.GITHUB_TOKEN }}' \
+          --adapter java_jmh --file results.json "java -jar kgraphql/build/benchmarks/jvm/jars/kgraphql-jvm-jmh-0.37.0-JMH.jar -rf json -rff results.json"
