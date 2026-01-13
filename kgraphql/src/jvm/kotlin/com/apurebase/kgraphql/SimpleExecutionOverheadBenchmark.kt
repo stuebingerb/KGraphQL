@@ -18,7 +18,7 @@ import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 
 @State(Scope.Benchmark)
-@Warmup(iterations = 15)
+@Warmup(iterations = 3)
 @Measurement(iterations = 3)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class SimpleExecutionOverheadBenchmark {

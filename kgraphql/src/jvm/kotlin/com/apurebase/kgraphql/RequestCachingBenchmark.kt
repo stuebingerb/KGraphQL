@@ -12,8 +12,8 @@ import kotlinx.benchmark.Warmup
 import java.util.concurrent.TimeUnit
 
 @State(Scope.Benchmark)
-@Warmup(iterations = 10)
-@Measurement(iterations = 5)
+@Warmup(iterations = 3)
+@Measurement(iterations = 3)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class RequestCachingBenchmark {
     private val smallRequest = """

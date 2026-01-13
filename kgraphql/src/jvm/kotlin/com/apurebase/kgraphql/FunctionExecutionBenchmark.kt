@@ -22,8 +22,8 @@ import java.util.function.BiFunction
  * This benchmark proves, that it makes no performance difference?
  */
 @State(Scope.Benchmark)
-@Warmup(iterations = 5)
-@Measurement(iterations = 5)
+@Warmup(iterations = 3)
+@Measurement(iterations = 3)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class FunctionExecutionBenchmark {
 

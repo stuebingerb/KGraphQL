@@ -15,8 +15,8 @@ import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
 @State(Scope.Benchmark)
-@Warmup(iterations = 5)
-@Measurement(iterations = 5)
+@Warmup(iterations = 3)
+@Measurement(iterations = 3)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 open class ParallelExecutionBenchmark {
 
