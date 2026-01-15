@@ -1,0 +1,24 @@
+name: Benchmarks Cleanup (Pull Request)
+
+on:
+  pull_request:
+    types:
+      - closed
+
+permissions:
+  contents: read
+
+jobs:
+  archive_pr_branch:
+    name: Archive closed PR branch
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: bencherdev/bencher@main
+      - name: Archive closed PR branch with Bencher
+        run: |
+          bencher archive \
+          --project d1158d5b-df59-4769-9ff0-8b2fd3d648b0 \
+          --token '${{ secrets.BENCHER_API_TOKEN }}' \
+          --branch "$GITHUB_HEAD_REF"

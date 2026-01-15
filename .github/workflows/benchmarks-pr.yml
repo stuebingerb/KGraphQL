@@ -1,0 +1,42 @@
+name: Benchmarks (Pull Request)
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+
+permissions:
+  checks: write
+  pull-requests: write
+
+jobs:
+  benchmark_pr_branch:
+    name: Bencher (Pull Request)
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      - name: Run benchmarks
+        id: run
+        run: |
+          ./gradlew benchmark
+          echo "result_file=$(find . -type f -name 'jvm.json')" >> $GITHUB_OUTPUT
+      - uses: bencherdev/bencher@main
+      - name: Track benchmark result with Bencher
+        run: |
+          bencher run \
+          --project d1158d5b-df59-4769-9ff0-8b2fd3d648b0 \
+          --token '${{ secrets.BENCHER_API_TOKEN }}' \
+          --branch "$GITHUB_HEAD_REF" \
+          --start-point "$GITHUB_BASE_REF" \
+          --start-point-hash '${{ github.event.pull_request.base.sha }}' \
+          --start-point-clone-thresholds \
+          --start-point-reset \
+          --testbed ubuntu-latest \
+          --err \
+          --github-actions '${{ secrets.GITHUB_TOKEN }}' \
+          --adapter java_jmh --file ${{ steps.run.outputs.result_file }}
