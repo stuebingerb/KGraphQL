@@ -189,7 +189,7 @@ class KtorFeatureTest : KtorTest() {
         }
         runBlocking {
             response.bodyAsText() shouldBe """
-                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":3,"column":1}],"path":["actors",1,"nickname"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}]}
+                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":3,"column":1}],"path":["actors",1,"nickname"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":null}
             """.trimIndent()
             response.contentType() shouldBe ContentType.Application.Json
         }
@@ -207,7 +207,7 @@ class KtorFeatureTest : KtorTest() {
                 }
             }
             query("persons") {
-                resolver { ->
+                resolver<List<Person>?> {
                     listOf(
                         Person("Mary", 32, Movie("Sharks", listOf(Actor("George", 23), Actor("Jack", 21)))),
                         Person("Jimmy", 11, Movie("Unknown", listOf(Actor("John", 42))))
@@ -229,7 +229,7 @@ class KtorFeatureTest : KtorTest() {
         }
         runBlocking {
             response.bodyAsText() shouldBe """
-                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":9,"column":1}],"path":["persons",1,"favouriteMovie","actors",0,"nickname"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}]}
+                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":9,"column":1}],"path":["persons",1,"favouriteMovie","actors",0,"nickname"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":{"persons":null}}
             """.trimIndent()
             response.contentType() shouldBe ContentType.Application.Json
         }
@@ -273,7 +273,7 @@ class KtorFeatureTest : KtorTest() {
             field("error")
         }
         runBlocking {
-            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[{\"line\":2,\"column\":1}],\"path\":[\"error\"],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}],\"data\":null}"
             response.contentType() shouldBe ContentType.Application.Json
         }
     }
@@ -282,7 +282,7 @@ class KtorFeatureTest : KtorTest() {
     fun `should work without error handler`() {
         val server = withServer {
             query("error") {
-                resolver<String> { throw Exception("Error message") }
+                resolver<String?> { throw Exception("Error message") }
             }
         }
 
@@ -290,7 +290,7 @@ class KtorFeatureTest : KtorTest() {
             field("error")
         }
         runBlocking {
-            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[{\"line\":2,\"column\":1}],\"path\":[\"error\"],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[{\"line\":2,\"column\":1}],\"path\":[\"error\"],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}],\"data\":{\"error\":null}}"
             response.contentType() shouldBe ContentType.Application.Json
         }
     }

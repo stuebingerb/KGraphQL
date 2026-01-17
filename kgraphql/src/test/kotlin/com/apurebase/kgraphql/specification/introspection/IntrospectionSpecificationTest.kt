@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.introspection.TypeKind
@@ -81,7 +81,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        expect<ValidationException>("Property '__typename' on 'String' does not exist") {
+        expectRequestError<ValidationException>("Property '__typename' on 'String' does not exist") {
             schema.executeBlocking("{sample{string{__typename}}}")
         }
     }
@@ -100,7 +100,7 @@ class IntrospectionSpecificationTest {
             }
         }
 
-        expect<ValidationException>("Property '__typename' on 'SampleEnum' does not exist") {
+        expectRequestError<ValidationException>("Property '__typename' on 'SampleEnum' does not exist") {
             schema.executeBlocking("{sample{enum{__typename}}}")
         }
     }

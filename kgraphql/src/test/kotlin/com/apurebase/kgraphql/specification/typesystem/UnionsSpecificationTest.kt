@@ -7,6 +7,8 @@ import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.helpers.getFields
 import com.apurebase.kgraphql.integration.BaseSchemaTest
@@ -63,7 +65,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query union property with invalid selection set`() {
-        expect<ValidationException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]") {
+        expectRequestError<ValidationException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]") {
             testedSchema.executeBlocking("{actors{name, favourite{ name }}}")
         }
     }
@@ -116,7 +118,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `a union type should require a selection for all potential types`() {
-        expect<ValidationException>("Missing selection set for type 'Scenario'") {
+        expectRequestError<ValidationException>("Missing selection set for type 'Scenario'") {
             testedSchema.executeBlocking(
                 """{
                 actors {
@@ -154,7 +156,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `non-nullable union types should fail`() {
-        expect<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was 'null'") {
+        expectExecutionError<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was 'null'") {
             testedSchema.executeBlocking(
                 """{
                     actors(all: true) {

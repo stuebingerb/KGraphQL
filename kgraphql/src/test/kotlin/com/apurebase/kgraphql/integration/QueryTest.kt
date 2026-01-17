@@ -1,24 +1,27 @@
 package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.Actor
+import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.Director
+import com.apurebase.kgraphql.ExecutionError
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.Film
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
+import com.apurebase.kgraphql.RequestError
 import com.apurebase.kgraphql.Scenario
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.helpers.getFields
 import com.apurebase.kgraphql.schema.execution.Execution
-import io.kotest.assertions.throwables.shouldThrowExactly
+import com.apurebase.kgraphql.schema.scalar.ID
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContainOnlyOnce
-import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 
 class QueryTest : BaseSchemaTest() {
@@ -65,13 +68,9 @@ class QueryTest : BaseSchemaTest() {
 
     @Test
     fun `query with invalid field name`() {
-        val exception = shouldThrowExactly<ValidationException> {
+        expectRequestError<ValidationException>("Property 'favDish' on 'Director' does not exist") {
             testedSchema.executeBlocking("{film{title, director{name, favDish}}}")
         }
-        exception shouldHaveMessage "Property 'favDish' on 'Director' does not exist"
-        exception.extensions shouldBe mapOf(
-            "type" to "GRAPHQL_VALIDATION_FAILED"
-        )
     }
 
     @Test
@@ -112,13 +111,9 @@ class QueryTest : BaseSchemaTest() {
 
     @Test
     fun `query with ignored property`() {
-        val exception = shouldThrowExactly<ValidationException> {
+        expectRequestError<ValidationException>("Property 'author' on 'Scenario' does not exist") {
             testedSchema.executeBlocking("{scenario{author, content}}")
         }
-        exception shouldHaveMessage "Property 'author' on 'Scenario' does not exist"
-        exception.extensions shouldBe mapOf(
-            "type" to "GRAPHQL_VALIDATION_FAILED"
-        )
     }
 
     @Test
@@ -213,13 +208,9 @@ class QueryTest : BaseSchemaTest() {
 
     @Test
     fun `query with invalid field arguments`() {
-        val exception = shouldThrowExactly<ValidationException> {
+        expectRequestError<ValidationException>("Property 'id' on type 'Scenario' has no arguments, found: [uppercase]") {
             testedSchema.executeBlocking("{scenario{id(uppercase: true), content}}")
         }
-        exception shouldHaveMessage "Property 'id' on type 'Scenario' has no arguments, found: [uppercase]"
-        exception.extensions shouldBe mapOf(
-            "type" to "GRAPHQL_VALIDATION_FAILED"
-        )
     }
 
     @Test
@@ -450,7 +441,7 @@ class QueryTest : BaseSchemaTest() {
 
     @Test
     fun `query with missing fragment type`() {
-        val exception = shouldThrowExactly<ValidationException> {
+        expectRequestError<ValidationException>("Unknown type 'MissingType' in type condition on fragment") {
             testedSchema.executeBlocking(
                 """
                 {
@@ -463,15 +454,11 @@ class QueryTest : BaseSchemaTest() {
                 """.trimIndent()
             )
         }
-        exception shouldHaveMessage "Unknown type 'MissingType' in type condition on fragment"
-        exception.extensions shouldBe mapOf(
-            "type" to "GRAPHQL_VALIDATION_FAILED"
-        )
     }
 
     @Test
     fun `query with missing named fragment type`() {
-        val exception = shouldThrowExactly<ValidationException> {
+        expectRequestError<ValidationException>("Fragment 'film_title' not found") {
             testedSchema.executeBlocking(
                 """
                 {
@@ -482,21 +469,13 @@ class QueryTest : BaseSchemaTest() {
                 """.trimIndent()
             )
         }
-        exception shouldHaveMessage "Fragment 'film_title' not found"
-        exception.extensions shouldBe mapOf(
-            "type" to "GRAPHQL_VALIDATION_FAILED"
-        )
     }
 
     @Test
     fun `query with missing selection set`() {
-        val exception = shouldThrowExactly<ValidationException> {
+        expectRequestError<ValidationException>("Missing selection set on property 'film' of type 'Film'") {
             testedSchema.executeBlocking("{film}")
         }
-        exception shouldHaveMessage "Missing selection set on property 'film' of type 'Film'"
-        exception.extensions shouldBe mapOf(
-            "type" to "GRAPHQL_VALIDATION_FAILED"
-        )
     }
 
     data class SampleNode(val id: Int, val name: String, val fields: List<String>? = null)
@@ -903,6 +882,255 @@ class QueryTest : BaseSchemaTest() {
         }
     }
 
+    // https://spec.graphql.org/September2025/#example-072c4
+    @Test
+    fun partialResponseNullableField() {
+        data class Hero(val id: ID, val friends: List<Hero?> = emptyList())
+
+        val schema = KGraphQL.schema {
+            configure {
+                useDefaultPrettyPrinter = true
+            }
+            query("hero") {
+                resolver { -> Hero(ID("1"), listOf(Hero(ID("1000")), Hero(ID("1002")), Hero(ID("1003")))) }
+            }
+            type<Hero> {
+                property<String?>("name") {
+                    resolver { hero ->
+                        when (hero.id.value) {
+                            "1" -> "R2-D2"
+                            "1000" -> "Luke Skywalker"
+                            "1003" -> "Leia Organa"
+                            else -> throw Exception("Name for character with ID ${hero.id} could not be fetched.")
+                        }
+                    }
+                }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type Hero {
+              friends: [Hero]!
+              id: ID!
+              name: String
+            }
+
+            type Query {
+              hero: Hero!
+            }
+
+        """.trimIndent()
+
+        schema.executeBlocking("""
+            {
+              hero {
+                name
+                heroFriends: friends {
+                  id
+                  name
+                }
+              }
+            }
+        """.trimIndent()) shouldBe """
+            {
+              "errors" : [ {
+                "message" : "Name for character with ID ID(value=1002) could not be fetched.",
+                "locations" : [ {
+                  "line" : 6,
+                  "column" : 7
+                } ],
+                "path" : [ "hero", "heroFriends", 1, "name" ],
+                "extensions" : {
+                  "type" : "INTERNAL_SERVER_ERROR"
+                }
+              } ],
+              "data" : {
+                "hero" : {
+                  "name" : "R2-D2",
+                  "heroFriends" : [ {
+                    "id" : "1000",
+                    "name" : "Luke Skywalker"
+                  }, {
+                    "id" : "1002",
+                    "name" : null
+                  }, {
+                    "id" : "1003",
+                    "name" : "Leia Organa"
+                  } ]
+                }
+              }
+            }
+        """.trimIndent()
+    }
+
+    // https://spec.graphql.org/September2025/#example-c18ef
+    @Test
+    fun partialResponseNonNullableField() {
+        data class Hero(val id: ID, val friends: List<Hero?> = emptyList())
+
+        val schema = KGraphQL.schema {
+            configure {
+                useDefaultPrettyPrinter = true
+            }
+            query("hero") {
+                resolver { -> Hero(ID("1"), listOf(Hero(ID("1000")), Hero(ID("1002")), Hero(ID("1003")))) }
+            }
+            type<Hero> {
+                property("name") {
+                    resolver { hero ->
+                        when (hero.id.value) {
+                            "1" -> "R2-D2"
+                            "1000" -> "Luke Skywalker"
+                            "1003" -> "Leia Organa"
+                            else -> throw Exception("Name for character with ID ${hero.id} could not be fetched.")
+                        }
+                    }
+                }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type Hero {
+              friends: [Hero]!
+              id: ID!
+              name: String!
+            }
+
+            type Query {
+              hero: Hero!
+            }
+
+        """.trimIndent()
+
+        schema.executeBlocking("""
+            {
+              hero {
+                name
+                heroFriends: friends {
+                  id
+                  name
+                }
+              }
+            }
+        """.trimIndent()) shouldBe """
+            {
+              "errors" : [ {
+                "message" : "Name for character with ID ID(value=1002) could not be fetched.",
+                "locations" : [ {
+                  "line" : 6,
+                  "column" : 7
+                } ],
+                "path" : [ "hero", "heroFriends", 1, "name" ],
+                "extensions" : {
+                  "type" : "INTERNAL_SERVER_ERROR"
+                }
+              } ],
+              "data" : {
+                "hero" : {
+                  "name" : "R2-D2",
+                  "heroFriends" : [ {
+                    "id" : "1000",
+                    "name" : "Luke Skywalker"
+                  }, null, {
+                    "id" : "1003",
+                    "name" : "Leia Organa"
+                  } ]
+                }
+              }
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun partialResponseNullableList() {
+        data class Hero(val id: ID, val friends: List<Hero?> = emptyList())
+
+        val schema = KGraphQL.schema {
+            configure {
+                useDefaultPrettyPrinter = true
+            }
+            query("heroes") {
+                resolver<List<Hero>?> { throw IllegalStateException("There are no heroes anymore") }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type Hero {
+              friends: [Hero]!
+              id: ID!
+            }
+
+            type Query {
+              heroes: [Hero!]
+            }
+
+        """.trimIndent()
+
+        schema.executeBlocking("""
+            {
+              heroes {
+                id
+              }
+            }
+        """.trimIndent()) shouldBe """
+            {
+              "errors" : [ {
+                "message" : "There are no heroes anymore",
+                "locations" : [ {
+                  "line" : 2,
+                  "column" : 3
+                } ],
+                "path" : [ "heroes" ],
+                "extensions" : {
+                  "type" : "INTERNAL_SERVER_ERROR"
+                }
+              } ],
+              "data" : {
+                "heroes" : null
+              }
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `errors during object field execution should not stop other fields`() {
+        data class HighlanderMovie(val highlander1: String?)
+        data class Person(val firstName: String, val lastName: String)
+
+        val schema = KGraphQL.schema {
+            query("movie") {
+                resolver { -> HighlanderMovie("Connor MacLeod") }
+            }
+            type<HighlanderMovie> {
+                property<String?>("highlander2") {
+                    resolver { throw Exception("There can only be one!") }
+                }
+                property("director") {
+                    resolver { Person("Russel", "Mulcahy") }
+                }
+            }
+        }
+        schema.executeBlocking("""
+            { movie { highlander1 highlander2 director { firstName lastName } } }
+        """.trimIndent()) shouldBe """
+            {"errors":[{"message":"There can only be one!","locations":[{"line":1,"column":23}],"path":["movie","highlander2"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":{"movie":{"highlander1":"Connor MacLeod","highlander2":null,"director":{"firstName":"Russel","lastName":"Mulcahy"}}}}
+        """.trimIndent()
+
+        schema.executeBlocking("""
+            {
+              movie { ...MovieFragment }
+            }
+            
+            fragment MovieFragment on HighlanderMovie {
+              highlander1
+              highlander2
+              director { firstName lastName }
+            }
+        """.trimIndent()) shouldBe """
+            {"errors":[{"message":"There can only be one!","locations":[{"line":7,"column":3}],"path":["movie","highlander2"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":{"movie":{"highlander1":"Connor MacLeod","highlander2":null,"director":{"firstName":"Russel","lastName":"Mulcahy"}}}}
+        """.trimIndent()
+    }
+
     @Test
     fun `invalid collection values should result in an error`() {
         val schema = KGraphQL.schema {
@@ -919,8 +1147,45 @@ class QueryTest : BaseSchemaTest() {
             
         """.trimIndent()
 
-        expect<ExecutionException>("Invalid collection value for non-collection property 'invalidList'") {
+        expectExecutionError<ExecutionException>("Invalid collection value for non-collection property 'invalidList'") {
             schema.executeBlocking("{ invalidList }")
         }
+    }
+
+    @Test
+    fun `resolvers should be able to throw custom request errors`() {
+        data class Item(val data: String)
+        class ForbiddenError(node: Execution.Node, message: String) :
+            RequestError(message, node = node.selectionNode, extensions = mapOf("type" to "FORBIDDEN"))
+
+        val schema = KGraphQL.schema {
+            query("items") {
+                resolver<Item, Execution.Node> { node: Execution.Node ->
+                    throw ForbiddenError(node, "Not allowed")
+                }
+            }
+        }
+        schema.executeBlocking("{ items { data }}") shouldBe """
+            {"errors":[{"message":"Not allowed","locations":[{"line":1,"column":3}],"extensions":{"type":"FORBIDDEN"}}]}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `resolvers should be able to return data and raise execution errors`() {
+        data class Item(val data: String)
+        class MissingItemError(message: String, node: Execution.Node) :
+            ExecutionError(message, node, extensions = mapOf("type" to "NOT_FOUND", "reason" to "Item is missing"))
+
+        val schema = KGraphQL.schema {
+            query("items") {
+                resolver { node: Execution.Node, ctx: Context ->
+                    ctx.raiseError(MissingItemError("Cannot get item 'missing'", node))
+                    listOf(Item("Existing 1"), Item("Existing 2"))
+                }
+            }
+        }
+        schema.executeBlocking("{ items { data }}") shouldBe """
+            {"errors":[{"message":"Cannot get item 'missing'","locations":[{"line":1,"column":3}],"path":["items"],"extensions":{"type":"NOT_FOUND","reason":"Item is missing"}}],"data":{"items":[{"data":"Existing 1"},{"data":"Existing 2"}]}}
+        """.trimIndent()
     }
 }

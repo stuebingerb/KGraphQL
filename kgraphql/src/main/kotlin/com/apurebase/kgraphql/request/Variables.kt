@@ -1,6 +1,5 @@
 package com.apurebase.kgraphql.request
 
-import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.schema.model.ast.TypeNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
@@ -38,7 +37,7 @@ data class Variables(private val variablesJson: VariablesJson, private val varia
         val invalidNullability = (invalidTypeNullability || invalidElementNullability) && noDefaultProvided
 
         if (invalidName || invalidIsList || invalidNullability) {
-            throw InvalidInputValueException(
+            throw ValidationException(
                 "Invalid variable '$${variable.variable.name.value}' argument type '${variableType.nameNode.value}', expected '${expectedType.typeReference()}'",
                 variable
             )

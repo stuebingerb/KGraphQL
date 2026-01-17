@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaException
 import io.kotest.matchers.shouldBe
@@ -32,7 +33,7 @@ class EnumsSpecificationTest {
 
     @Test
     fun `string literals must not be accepted as an enum input`() {
-        expect<InvalidInputValueException>("Cannot coerce string literal '\"COOL\"' to enum Coolness") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce string literal '\"COOL\"' to enum Coolness") {
             schema.executeBlocking("{cool(cool : \"COOL\")}")
         }
     }

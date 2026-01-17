@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.RequestError
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.request.CachingDocumentParser
@@ -16,6 +17,7 @@ import com.apurebase.kgraphql.schema.structure.LookupSchema
 import com.apurebase.kgraphql.schema.structure.RequestInterpreter
 import com.apurebase.kgraphql.schema.structure.SchemaModel
 import com.apurebase.kgraphql.schema.structure.Type
+import com.fasterxml.jackson.core.JsonProcessingException
 import kotlinx.coroutines.coroutineScope
 import kotlin.reflect.KClass
 
@@ -43,21 +45,29 @@ class DefaultSchema(
         context: Context,
         operationName: String?,
     ): String = coroutineScope {
-        if (!configuration.introspection && Introspection.isIntrospection(request)) {
-            throw ValidationException("GraphQL introspection is not allowed")
+        try {
+            if (!configuration.introspection && Introspection.isIntrospection(request)) {
+                throw ValidationException("GraphQL introspection is not allowed")
+            }
+
+            val parsedVariables = try {
+                variables
+                    ?.let { VariablesJson.Defined(configuration.objectMapper.readTree(variables)) }
+                    ?: VariablesJson.Empty()
+            } catch (e: JsonProcessingException) {
+                throw ValidationException("Malformed JSON in variables: ${e.originalMessage}", originalError = e)
+            }
+
+            val document = requestParser.parseDocument(request)
+
+            requestExecutor.suspendExecute(
+                plan = requestInterpreter.createExecutionPlan(document, operationName, parsedVariables),
+                variables = parsedVariables,
+                context = context
+            )
+        } catch (e: RequestError) {
+            e.serialize()
         }
-
-        val parsedVariables = variables
-            ?.let { VariablesJson.Defined(configuration.objectMapper.readTree(variables)) }
-            ?: VariablesJson.Empty()
-
-        val document = requestParser.parseDocument(request)
-
-        requestExecutor.suspendExecute(
-            plan = requestInterpreter.createExecutionPlan(document, operationName, parsedVariables),
-            variables = parsedVariables,
-            context = context
-        )
     }
 
     override fun printSchema() = SchemaPrinter().print(model)

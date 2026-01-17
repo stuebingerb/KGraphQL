@@ -4,7 +4,6 @@ import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.context
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -40,7 +39,7 @@ class AccessRulesTest {
             property(Player::id) {
                 accessRule(accessRuleBlock)
             }
-            property("item") {
+            property<String?>("item") {
                 accessRule(accessRuleBlock)
                 resolver { "item" }
             }
@@ -58,11 +57,9 @@ class AccessRulesTest {
 
     @Test
     fun `reject when not matching`() {
-        expect<IllegalAccessException>("ILLEGAL ACCESS") {
-            deserialize(
-                schema.executeBlocking("{ black_mamba {id} }", context = context { +"LAKERS" })
-            ).extract<String>("data/black_mamba/id")
-        }
+        schema.executeBlocking("{ black_mamba {id} }", context = context { +"LAKERS" }) shouldBe """
+            {"errors":[{"message":"ILLEGAL ACCESS","locations":[{"line":1,"column":16}],"path":["black_mamba","id"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":null}
+        """.trimIndent()
     }
 
     @Test
@@ -72,9 +69,9 @@ class AccessRulesTest {
 
     @Test
     fun `reject property resolver access rule`() {
-        expect<IllegalAccessException>("ILLEGAL ACCESS") {
-            schema.executeBlocking("{black_mamba {item}}", context = context { +"LAKERS" }).also(::println)
-        }
+        schema.executeBlocking("{black_mamba {item}}", context = context { +"LAKERS" }) shouldBe """
+            {"errors":[{"message":"ILLEGAL ACCESS","locations":[{"line":1,"column":15}],"path":["black_mamba","item"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":{"black_mamba":{"item":null}}}
+        """.trimIndent()
     }
 
     //TODO: MORE TESTS

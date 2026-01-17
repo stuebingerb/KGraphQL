@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -30,7 +30,7 @@ class InterfacesSpecificationTest {
 
     @Test
     fun `When querying for fields on an interface type, only those fields declared on the interface may be queried`() {
-        expect<ValidationException>("Property 'stuff' on 'SimpleInterface' does not exist") {
+        expectRequestError<ValidationException>("Property 'stuff' on 'SimpleInterface' does not exist") {
             schema.executeBlocking("{simple{exe, stuff}}")
         }
     }

@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.executeEqualQueries
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -28,7 +28,7 @@ class SourceTextSpecificationTest {
 
     @Test
     fun `invalid unicode character`() {
-        expect<InvalidSyntaxException>("Syntax Error: Cannot contain the invalid character \"\\u0003\".") {
+        expectRequestError<InvalidSyntaxException>("Syntax Error: Cannot contain the invalid character \"\\u0003\".") {
             schema.executeBlocking("\u0003")
         }
     }
@@ -97,11 +97,11 @@ class SourceTextSpecificationTest {
     @Test
     @Specification("2.1.9 Names")
     fun `names should be case sensitive`() {
-        expect<ValidationException>("Property 'FIZZ' on 'Query' does not exist") {
+        expectRequestError<ValidationException>("Property 'FIZZ' on 'Query' does not exist") {
             schema.executeBlocking("{FIZZ}")
         }
 
-        expect<ValidationException>("Property 'Fizz' on 'Query' does not exist") {
+        expectRequestError<ValidationException>("Property 'Fizz' on 'Query' does not exist") {
             schema.executeBlocking("{Fizz}")
         }
 

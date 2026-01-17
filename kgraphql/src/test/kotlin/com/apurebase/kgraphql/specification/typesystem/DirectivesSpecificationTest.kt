@@ -2,7 +2,7 @@ package com.apurebase.kgraphql.specification.typesystem
 
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.ValidationException
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import io.kotest.matchers.shouldBe
@@ -82,7 +82,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `missing directive should result in an error`() {
-        expect<ValidationException>("Directive 'nonExisting' does not exist") {
+        expectRequestError<ValidationException>("Directive 'nonExisting' does not exist") {
             testedSchema.executeBlocking("{film{title year @nonExisting}}")
         }
     }

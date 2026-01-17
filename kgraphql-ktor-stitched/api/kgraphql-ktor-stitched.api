@@ -1,7 +1,3 @@
-public final class com/apurebase/kgraphql/stitched/RemoteExecutionException : com/apurebase/kgraphql/ExecutionError {
-	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/execution/Execution$Remote;)V
-}
-
 public final class com/apurebase/kgraphql/stitched/StitchedGraphQL {
 	public static final field Feature Lcom/apurebase/kgraphql/stitched/StitchedGraphQL$Feature;
 	public fun <init> (Lcom/apurebase/kgraphql/schema/Schema;)V
