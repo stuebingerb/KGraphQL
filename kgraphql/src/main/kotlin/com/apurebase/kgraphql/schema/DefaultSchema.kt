@@ -17,6 +17,7 @@ import com.apurebase.kgraphql.schema.structure.RequestInterpreter
 import com.apurebase.kgraphql.schema.structure.SchemaModel
 import com.apurebase.kgraphql.schema.structure.Type
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import kotlin.reflect.KClass
 
 class DefaultSchema(
@@ -42,7 +43,7 @@ class DefaultSchema(
         variables: String?,
         context: Context,
         operationName: String?,
-    ): String = coroutineScope {
+    ): String = withContext(configuration.coroutineDispatcher) {
         if (!configuration.introspection && Introspection.isIntrospection(request)) {
             throw ValidationException("GraphQL introspection is not allowed")
         }
