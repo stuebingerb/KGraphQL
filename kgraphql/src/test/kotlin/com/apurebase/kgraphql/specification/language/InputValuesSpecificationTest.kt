@@ -48,13 +48,13 @@ class InputValuesSpecificationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["42.0", "\"foo\"", "bar"])
+    @ValueSource(strings = ["null", "42.0", "\"foo\"", "bar"])
     @Specification("2.9.1 Int Value")
     fun `Invalid Int input value`(value: String) {
         val exception = shouldThrowExactly<InvalidInputValueException> {
-            deserialize(schema.executeBlocking("{ Int(value: $value) }"))
+            schema.executeBlocking("{ Int(value: $value) }")
         }
-        exception shouldHaveMessage "Cannot coerce $value to numeric constant"
+        exception shouldHaveMessage "Cannot coerce '$value' to Int"
         exception.extensions shouldBe mapOf(
             "type" to "BAD_USER_INPUT"
         )
@@ -112,9 +112,9 @@ class InputValuesSpecificationTest {
     @Specification("2.9.3 Boolean Value")
     fun `Invalid Boolean input value`(value: String) {
         val exception = shouldThrowExactly<InvalidInputValueException> {
-            deserialize(schema.executeBlocking("{ Boolean(value: $value) }"))
+            schema.executeBlocking("{ Boolean(value: $value) }")
         }
-        exception shouldHaveMessage "argument '$value' is not valid value of type Boolean"
+        exception shouldHaveMessage "Cannot coerce '$value' to Boolean"
         exception.extensions shouldBe mapOf(
             "type" to "BAD_USER_INPUT"
         )
@@ -143,9 +143,9 @@ class InputValuesSpecificationTest {
     @Specification("2.9.4 String Value")
     fun `Invalid String input value`(value: String) {
         val exception = shouldThrowExactly<InvalidInputValueException> {
-            deserialize(schema.executeBlocking("{ String(value: $value) }"))
+            schema.executeBlocking("{ String(value: $value) }")
         }
-        exception shouldHaveMessage "argument '$value' is not valid value of type String"
+        exception shouldHaveMessage "Cannot coerce '$value' to String"
         exception.extensions shouldBe mapOf(
             "type" to "BAD_USER_INPUT"
         )
@@ -170,7 +170,7 @@ class InputValuesSpecificationTest {
     @Specification("2.9.6 Enum Value")
     fun `Invalid Enum input value`(value: String) {
         val exception = shouldThrowExactly<InvalidInputValueException> {
-            deserialize(schema.executeBlocking("{ Enum(value: $value) }"))
+            schema.executeBlocking("{ Enum(value: $value) }")
         }
         exception shouldHaveMessage "Invalid enum ${FakeEnum::class.simpleName} value. Expected one of [ENUM1, ENUM2]"
         exception.extensions shouldBe mapOf(
@@ -186,13 +186,13 @@ class InputValuesSpecificationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["true", "\"foo\""])
+    @ValueSource(strings = ["null", "true", "\"foo\""])
     @Specification("2.9.7 List Value")
     fun `Invalid List input value`(value: String) {
         val exception = shouldThrowExactly<InvalidInputValueException> {
-            deserialize(schema.executeBlocking("{ List(value: $value) }"))
+            schema.executeBlocking("{ List(value: $value) }")
         }
-        exception shouldHaveMessage "Cannot coerce $value to numeric constant"
+        exception shouldHaveMessage "Cannot coerce '$value' to Int"
         exception.extensions shouldBe mapOf(
             "type" to "BAD_USER_INPUT"
         )
@@ -214,7 +214,7 @@ class InputValuesSpecificationTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             schema.executeBlocking("{ Object(value: { number: 232, description: \"little number\", list: $value }) }")
         }
-        exception shouldHaveMessage "argument '$value' is not valid value of type String"
+        exception shouldHaveMessage "Cannot coerce '$value' to String"
         exception.extensions shouldBe mapOf(
             "type" to "BAD_USER_INPUT"
         )
@@ -226,7 +226,7 @@ class InputValuesSpecificationTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             schema.executeBlocking("{ Object(value: null) }")
         }
-        exception shouldHaveMessage "argument 'null' is not valid value of type FakeData"
+        exception shouldHaveMessage "Cannot coerce 'null' to FakeData"
         exception.extensions shouldBe mapOf(
             "type" to "BAD_USER_INPUT"
         )
@@ -306,7 +306,7 @@ class InputValuesSpecificationTest {
         val exception = shouldThrowExactly<InvalidInputValueException> {
             schema.executeBlocking("query(\$object: FakeDate) { Object(value: \$object) }")
         }
-        exception shouldHaveMessage "Invalid variable \$object argument type FakeDate, expected FakeData!"
+        exception shouldHaveMessage "Invalid variable '\$object' argument type 'FakeDate', expected 'FakeData!'"
         exception.extensions shouldBe mapOf(
             "type" to "BAD_USER_INPUT"
         )

@@ -62,7 +62,7 @@ class ListsSpecificationTest {
             { "list": ["GAGA", null, "DADA", "PADA"] }
         """.trimIndent()
 
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
+        expect<InvalidInputValueException>("Cannot coerce 'null' to String") {
             schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables)
         }
     }

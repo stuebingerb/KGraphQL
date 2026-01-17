@@ -29,7 +29,7 @@ class SourceTextSpecificationTest {
     @Test
     fun `invalid unicode character`() {
         expect<InvalidSyntaxException>("Syntax Error: Cannot contain the invalid character \"\\u0003\".") {
-            deserialize(schema.executeBlocking("\u0003"))
+            schema.executeBlocking("\u0003")
         }
     }
 
@@ -98,11 +98,11 @@ class SourceTextSpecificationTest {
     @Specification("2.1.9 Names")
     fun `names should be case sensitive`() {
         expect<ValidationException>("Property 'FIZZ' on 'Query' does not exist") {
-            deserialize(schema.executeBlocking("{FIZZ}"))
+            schema.executeBlocking("{FIZZ}")
         }
 
         expect<ValidationException>("Property 'Fizz' on 'Query' does not exist") {
-            deserialize(schema.executeBlocking("{Fizz}"))
+            schema.executeBlocking("{Fizz}")
         }
 
         val mapLowerCase = deserialize(schema.executeBlocking("{fizz}"))

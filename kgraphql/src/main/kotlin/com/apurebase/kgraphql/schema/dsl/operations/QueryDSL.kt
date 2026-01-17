@@ -2,9 +2,7 @@ package com.apurebase.kgraphql.schema.dsl.operations
 
 import com.apurebase.kgraphql.schema.model.QueryDef
 
-class QueryDSL(
-    name: String
-) : AbstractOperationDSL(name) {
+class QueryDSL(name: String) : AbstractOperationDSL(name) {
 
     internal fun toKQLQuery(): QueryDef<out Any?> {
         val function = requireNotNull(functionWrapper) {
