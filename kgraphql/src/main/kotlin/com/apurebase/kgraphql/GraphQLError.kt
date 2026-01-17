@@ -188,7 +188,7 @@ class ExecutionException(message: String, node: Execution, cause: Throwable? = n
     extensions = mapOf("type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name)
 )
 
-class InvalidInputValueException(message: String, node: ASTNode?, originalError: Throwable? = null) : RequestError(
+class InvalidInputValueException(message: String, node: Execution, originalError: Throwable? = null) : ExecutionError(
     message = message,
     node = node,
     originalError = originalError,

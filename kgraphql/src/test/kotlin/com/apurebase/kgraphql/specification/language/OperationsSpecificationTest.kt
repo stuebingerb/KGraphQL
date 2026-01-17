@@ -4,13 +4,10 @@ import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.executeEqualQueries
-import com.apurebase.kgraphql.schema.SchemaException
+import com.apurebase.kgraphql.expectExecutionError
 import com.apurebase.kgraphql.schema.dsl.operations.subscribe
 import com.apurebase.kgraphql.schema.dsl.operations.unsubscribe
-import com.apurebase.kgraphql.shouldBeInstanceOf
-import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 
 data class Actor(var name: String? = "", var age: Int? = 0)
@@ -101,11 +98,10 @@ class OperationsSpecificationTest {
     }
 
     @Test
-    fun `Subscription return type must be the same as the publisher's`() {
-        val exception = shouldThrowExactly<ExecutionException> {
+    fun `subscription return type must be the same as the publisher's`() {
+        expectExecutionError<ExecutionException>("Subscription return type must be the same as the publisher's") {
+            // TODO: should fail during schema compilation already - https://github.com/stuebingerb/KGraphQL/issues/492
             newSchema().executeBlocking("subscription {subscriptionActress(subscription : \"mySubscription\"){age}}")
         }
-        exception.originalError shouldBeInstanceOf SchemaException::class
-        exception shouldHaveMessage "Subscription return type must be the same as the publisher's"
     }
 }

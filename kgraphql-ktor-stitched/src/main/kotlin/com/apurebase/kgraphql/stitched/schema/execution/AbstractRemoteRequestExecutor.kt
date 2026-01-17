@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.stitched.schema.execution
 
+import com.apurebase.kgraphql.BuiltInErrorCodes
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionError
 import com.apurebase.kgraphql.ExperimentalAPI
@@ -11,16 +12,33 @@ import com.apurebase.kgraphql.schema.model.ast.SelectionNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.Type
-import com.apurebase.kgraphql.stitched.RemoteExecutionException
 import com.apurebase.kgraphql.stitched.StitchedGraphqlRequest
-import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.IntNode
-import com.fasterxml.jackson.databind.node.LongNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.readValue
+
+/**
+ * Custom remote execution error to be able to provide a [path] via constructor.
+ */
+private class RemoteExecutionError(
+    message: String,
+    extensions: Map<String, Any?>,
+    node: Execution.Remote,
+    override val path: List<Any>
+) : ExecutionError(message, node, extensions = extensions)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+private class ResponseError(
+    val message: String,
+    val path: List<Any>?,
+    // reponse location is not mapped because we want the local location anyway
+    val extensions: Map<String, Any?>?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+private class StitchedGraphQLResponse(val data: ObjectNode?, val errors: List<ResponseError>?)
 
 @ExperimentalAPI
 abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMapper) : RemoteRequestExecutor {
@@ -34,58 +52,35 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
     /**
      * Main entry point called from the local request executor for the given [node] and [ctx].
      */
-    final override suspend fun execute(node: Execution.Remote, ctx: Context): JsonNode? {
+    final override suspend fun execute(node: Execution.Remote, ctx: Context): JsonNode? = runCatching {
         val remoteUrl = node.remoteUrl
         val request = toGraphQLRequest(node, ctx)
-        val response = runCatching {
-            executeRequest(remoteUrl, request, ctx)
-        }.getOrElse {
-            """
-            { "errors": [ { "message": "${it.message}" } ] }
-            """.trimIndent()
-        }
-        val responseJson = objectMapper.readTree(response)
-        responseJson["errors"]?.let { errors ->
-            (errors as? ArrayNode)?.forEach { error ->
-                val objectNode = error as? ObjectNode
-                val message = objectNode?.get("message")?.textValue()?.takeIf { it.isNotBlank() }
-                    ?: "Error(s) during remote execution"
-                val extensionsNode = objectNode?.get("extensions") as? ObjectNode
-                val extensions = mapOf("remoteUrl" to node.remoteUrl, "remoteOperation" to node.remoteOperation) +
-                        extensionsNode?.let {
-                            objectMapper.convertValue(it, object : TypeReference<Map<String, Any?>>() {})
-                        }.orEmpty()
-                // Build a custom node for the remote error that includes the returned path
-                val executionErrorNode = object : Execution.Node(
-                    node.selectionNode,
-                    node.field,
-                    node.children,
-                    node.arguments,
-                    node.directives,
-                    node.variables,
-                    node.arrayIndex,
-                    node
-                ) {
+        val response = objectMapper.readValue<StitchedGraphQLResponse>(executeRequest(remoteUrl, request, ctx))
+        response.errors?.forEach { error ->
+            ctx.raiseError(
+                RemoteExecutionError(
+                    error.message,
+                    node.errorExtensions() + error.extensions.orEmpty(),
+                    node,
                     // The first path segment of the remote error is the executed query. As this is transparent from our
                     // stitched schema, we need to remove that segment for a proper path.
-                    override val fullPath: List<Any> = node.fullPath + ((objectNode?.get("path") as? ArrayNode)?.map {
-                        when (it) {
-                            is IntNode, is LongNode -> it.longValue()
-                            is TextNode -> it.textValue()
-                            else -> it.toString()
-                        }
-                    }?.drop(1) ?: emptyList())
-                }
-                throw ExecutionError(
-                    message = message,
-                    node = executionErrorNode,
-                    extensions = extensions
+                    node.fullPath + error.path?.drop(1).orEmpty()
                 )
-            }
-            throw RemoteExecutionException(message = "Error(s) during remote execution", node = node)
+            )
         }
-        return responseJson["data"]?.get(node.remoteOperation)
+        response.data?.get(node.remoteOperation)
+    }.getOrElse {
+        ctx.raiseError(
+            ExecutionError(it.message ?: it.javaClass.simpleName, node, it, node.errorExtensions())
+        )
+        null
     }
+
+    private fun Execution.Remote.errorExtensions() = mapOf(
+        "remoteUrl" to remoteUrl,
+        "remoteOperation" to remoteOperation,
+        "type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name
+    )
 
     private fun SelectionNode.FieldNode.alias() = alias?.let {
         "${it.value}: "

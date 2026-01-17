@@ -4,12 +4,11 @@ import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 
 @Suppress("unused")
@@ -76,7 +75,7 @@ class InputObjectsSpecificationTest {
             }
         }
 
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Property 'valu1' on 'MyInput' does not exist") {
             schema.executeBlocking(
                 """
                 {
@@ -85,10 +84,6 @@ class InputObjectsSpecificationTest {
                 """
             )
         }
-        exception shouldHaveMessage "Property 'valu1' on 'MyInput' does not exist"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     // Non-data class with a constructor parameter that is not a property

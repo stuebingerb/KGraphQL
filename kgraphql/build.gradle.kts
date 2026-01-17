@@ -43,6 +43,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 
     testFixturesImplementation(libs.kotest)
+    testFixturesImplementation(libs.kotest.json)
 
     benchmarkImplementation(libs.kotlinx.benchmark.runtime)
 }

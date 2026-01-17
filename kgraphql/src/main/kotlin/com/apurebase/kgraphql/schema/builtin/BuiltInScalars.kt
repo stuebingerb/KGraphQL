@@ -2,7 +2,7 @@
 
 package com.apurebase.kgraphql.schema.builtin
 
-import com.apurebase.kgraphql.InvalidInputValueException
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.defaultKQLTypeName
 import com.apurebase.kgraphql.schema.model.TypeDef
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
@@ -66,7 +66,7 @@ object STRING_COERCION : StringScalarCoercion<String> {
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is StringValueNode -> valueNode.value
 
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to String", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to String", valueNode)
     }
 }
 
@@ -77,7 +77,7 @@ object DOUBLE_COERCION : StringScalarCoercion<Double> {
         is DoubleValueNode -> valueNode.value
         is NumberValueNode -> valueNode.value.toDouble()
 
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Float", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to Float", valueNode)
     }
 }
 
@@ -88,7 +88,7 @@ object FLOAT_COERCION : StringScalarCoercion<Float> {
         is DoubleValueNode -> valueNode.value.toFloat()
         is NumberValueNode -> valueNode.value.toFloat()
 
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Float", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to Float", valueNode)
     }
 }
 
@@ -97,12 +97,12 @@ object INT_COERCION : StringScalarCoercion<Int> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> when {
-            valueNode.value > Integer.MAX_VALUE -> throw InvalidInputValueException(
+            valueNode.value > Integer.MAX_VALUE -> throw ValidationException(
                 "Cannot coerce '${valueNode.valueNodeName}' to Int as it is greater than (2^-31)-1",
                 valueNode
             )
 
-            valueNode.value < Integer.MIN_VALUE -> throw InvalidInputValueException(
+            valueNode.value < Integer.MIN_VALUE -> throw ValidationException(
                 "Cannot coerce '${valueNode.valueNodeName}' to Int as it is less than -(2^-31)",
                 valueNode
             )
@@ -110,7 +110,7 @@ object INT_COERCION : StringScalarCoercion<Int> {
             else -> valueNode.value.toInt()
         }
 
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Int", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to Int", valueNode)
     }
 }
 
@@ -119,12 +119,12 @@ object SHORT_COERCION : StringScalarCoercion<Short> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> when {
-            valueNode.value > Short.MAX_VALUE -> throw InvalidInputValueException(
+            valueNode.value > Short.MAX_VALUE -> throw ValidationException(
                 "Cannot coerce '${valueNode.value}' to Short as it is greater than (2^-15)-1",
                 valueNode
             )
 
-            valueNode.value < Short.MIN_VALUE -> throw InvalidInputValueException(
+            valueNode.value < Short.MIN_VALUE -> throw ValidationException(
                 "Cannot coerce '${valueNode.value}' to Short as it is less than -(2^-15)",
                 valueNode
             )
@@ -132,7 +132,7 @@ object SHORT_COERCION : StringScalarCoercion<Short> {
             else -> valueNode.value.toShort()
         }
 
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Short", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to Short", valueNode)
     }
 }
 
@@ -141,7 +141,7 @@ object LONG_COERCION : StringScalarCoercion<Long> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> valueNode.value
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Long", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to Long", valueNode)
     }
 }
 
@@ -154,17 +154,17 @@ object BOOLEAN_COERCION : StringScalarCoercion<Boolean> {
             valueNode.value.equals("true", true) -> true
             valueNode.value.equals("false", true) -> false
 
-            else -> throw IllegalArgumentException("Cannot coerce '${valueNode.value}' to Boolean")
+            else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to Boolean")
         }
 
         is NumberValueNode -> when (valueNode.value) {
             0L, -1L -> false
             1L -> true
 
-            else -> throw IllegalArgumentException("Cannot coerce '${valueNode.value}' to Boolean")
+            else -> throw ValidationException("Cannot coerce '${valueNode.value}' to Boolean")
         }
 
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Boolean", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to Boolean", valueNode)
     }
 }
 
@@ -175,7 +175,7 @@ object ID_COERCION : StringScalarCoercion<ID> {
         is StringValueNode -> ID(valueNode.value)
         is NumberValueNode -> ID(valueNode.value.toString())
 
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to ID", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to ID", valueNode)
     }
 }
 
@@ -188,6 +188,6 @@ object CHAR_COERCION : StringScalarCoercion<Char> {
             valueNode.value.toInt()
         )
 
-        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Char", valueNode)
+        else -> throw ValidationException("Cannot coerce '${valueNode.valueNodeName}' to Char", valueNode)
     }
 }
