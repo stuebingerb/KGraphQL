@@ -40,28 +40,28 @@ class MutationTest : BaseSchemaTest() {
     @Test
     fun `invalid mutation name`() {
         expect<ValidationException>("Property 'createBanana' on 'Mutation' does not exist") {
-            execute("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
+            testedSchema.executeBlocking("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         }
     }
 
     @Test
     fun `invalid argument type`() {
-        expect<InvalidInputValueException>("Cannot coerce \"fwfwf\" to numeric constant") {
-            execute("mutation {createActor(name: \"${testActor.name}\", age: \"fwfwf\"){age}}")
+        expect<InvalidInputValueException>("Cannot coerce '\"fwfwf\"' to Int") {
+            testedSchema.executeBlocking("mutation {createActor(name: \"${testActor.name}\", age: \"fwfwf\"){age}}")
         }
     }
 
     @Test
     fun `invalid arguments number`() {
         expect<ValidationException>("'createActor' does support arguments: [name, age], found: [name, age, bananan]") {
-            execute("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
+            testedSchema.executeBlocking("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 
     @Test
     fun `invalid arguments number with NotIntrospected class`() {
         expect<ValidationException>("'createActorWithContext' does support arguments: [name, age], found: [name, age, bananan]") {
-            execute("mutation {createActorWithContext(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
+            testedSchema.executeBlocking("mutation {createActorWithContext(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 

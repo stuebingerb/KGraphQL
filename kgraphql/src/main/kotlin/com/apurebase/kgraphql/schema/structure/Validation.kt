@@ -10,7 +10,7 @@ import kotlin.reflect.full.isSubclassOf
 
 private val namePattern = Regex("[_a-zA-Z][_a-zA-Z0-9]*")
 
-fun validatePropertyArguments(parentType: Type, field: Field, requestNode: FieldNode) {
+internal fun validatePropertyArguments(parentType: Type, field: Field, requestNode: FieldNode) {
     val argumentValidationExceptions = field.validateArguments(requestNode.arguments, parentType.name)
 
     if (argumentValidationExceptions.isNotEmpty()) {
@@ -20,7 +20,7 @@ fun validatePropertyArguments(parentType: Type, field: Field, requestNode: Field
     }
 }
 
-fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: String?): List<ValidationException> {
+private fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: String?): List<ValidationException> {
     if (!(args.isNotEmpty() || selectionArgs?.isNotEmpty() != true)) {
         return listOf(
             ValidationException(
@@ -48,7 +48,7 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
         if (value == null && arg.type.kind == TypeKind.NON_NULL && arg.defaultValue == null) {
             exceptions.add(
                 ValidationException(
-                    message = "Missing value for non-nullable argument ${arg.name} on the field '$name'"
+                    message = "Missing value for non-nullable argument '${arg.name}' on the field '$name'"
                 )
             )
         } // else is valid
@@ -60,7 +60,7 @@ fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: 
 /**
  * validate that only typed fragments or __typename are present
  */
-fun validateUnionRequest(field: Field.Union<*>, selectionNode: FieldNode) {
+internal fun validateUnionRequest(field: Field.Union<*>, selectionNode: FieldNode) {
     val illegalChildren =
         selectionNode.selectionSet?.selections?.filterIsInstance<FieldNode>()?.filter { it.name.value != "__typename" }
 
@@ -90,7 +90,7 @@ fun validateName(name: String) {
 }
 
 // function before generic, because it is its subset
-fun assertValidObjectType(kClass: KClass<*>) = when {
+internal fun assertValidObjectType(kClass: KClass<*>) = when {
     kClass.isSubclassOf(Function::class) -> throw SchemaException("Cannot handle function class '${kClass.qualifiedName}' as object type")
     kClass.isSubclassOf(Enum::class) -> throw SchemaException("Cannot handle enum class '${kClass.qualifiedName}' as object type")
     else -> Unit

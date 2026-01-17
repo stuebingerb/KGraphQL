@@ -48,7 +48,7 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode): T {
         throw e
     } catch (e: Exception) {
         throw InvalidInputValueException(
-            message = "argument '${value.valueNodeName}' is not valid value of type ${scalar.name}",
+            message = "Cannot coerce '${value.valueNodeName}' to ${scalar.name}",
             node = value,
             originalError = e
         )
@@ -86,5 +86,5 @@ fun <T> serializeScalar(
         jsonNodeFactory.booleanNode((scalar.coercion as BooleanScalarCoercion<T>).serialize(value))
     }
 
-    else -> throw ExecutionException("Unsupported coercion for scalar type ${scalar.name}", executionNode)
+    else -> throw ExecutionException("Unsupported coercion for scalar ${scalar.name}", executionNode)
 }

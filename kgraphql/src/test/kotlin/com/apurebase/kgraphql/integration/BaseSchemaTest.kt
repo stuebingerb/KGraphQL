@@ -39,7 +39,7 @@ abstract class BaseSchemaTest {
     // new actors created via mutations in schema
     val createdActors = mutableListOf<Actor>()
 
-    private val testedSchema = defaultSchema {
+    protected val testedSchema = defaultSchema {
         configure {
             useDefaultPrettyPrinter = true
         }
@@ -314,6 +314,23 @@ abstract class BaseSchemaTest {
                 newActor
             }
         }
+
+        data class Inner(val name: String)
+        data class Outer(val inner1: Inner, val inner2: Inner)
+
+        query("outer") {
+            resolver { ->
+                Outer(Inner("test1"), Inner("test2"))
+            }
+        }
+        type<Inner> {
+            property("testProperty1") {
+                resolver { "${it.name}.testProperty1" }
+            }
+            property("testProperty2") {
+                resolver { "${it.name}.testProperty2" }
+            }
+        }
     }
 
     @AfterEach
@@ -323,7 +340,7 @@ abstract class BaseSchemaTest {
         query: String,
         variables: String? = null,
         context: Context = Context(emptyMap()),
-        operationName: String? = null,
+        operationName: String? = null
     ) = testedSchema
         .executeBlocking(query, variables, context, operationName)
         .deserialize()

@@ -11,9 +11,7 @@ import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.starProjectedType
 
-class SubscriptionDSL(
-    name: String
-) : AbstractOperationDSL(name) {
+class SubscriptionDSL(name: String) : AbstractOperationDSL(name) {
 
     internal fun toKQLSubscription(): SubscriptionDef<out Any?> {
         val function = requireNotNull(functionWrapper) {

@@ -187,7 +187,7 @@ class KtorFeatureTest : KtorTest() {
 
         val server = withServer(errorHandler = errorHandler) {
             query("error") {
-                resolver<String> { -> throw Exception("Error message") }
+                resolver<String> { throw Exception("Error message") }
             }
         }
 
@@ -204,7 +204,7 @@ class KtorFeatureTest : KtorTest() {
     fun `should work without error handler`() {
         val server = withServer {
             query("error") {
-                resolver<String> { -> throw Exception("Error message") }
+                resolver<String> { throw Exception("Error message") }
             }
         }
 
@@ -221,7 +221,7 @@ class KtorFeatureTest : KtorTest() {
     fun `should work without error handler and wrap errors`() {
         val server = withServer(wrapErrors = false) {
             query("error") {
-                resolver<String> { -> throw Exception("Error message") }
+                resolver<String> { throw Exception("Error message") }
             }
         }
 

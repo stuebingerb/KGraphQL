@@ -51,7 +51,7 @@ class NonNullSpecificationTest {
                 resolver { input: String -> input }
             }
         }
-        expect<ValidationException>("Missing value for non-nullable argument input on the field 'nonNull'") {
+        expect<ValidationException>("Missing value for non-nullable argument 'input' on the field 'nonNull'") {
             schema.executeBlocking("{nonNull}")
         }
     }
@@ -64,7 +64,7 @@ class NonNullSpecificationTest {
             }
         }
 
-        expect<InvalidInputValueException>("Invalid variable ${'$'}arg argument type String, expected String!\n") {
+        expect<InvalidInputValueException>("Invalid variable '${'$'}arg' argument type 'String', expected 'String!'\n") {
             schema.executeBlocking("query(\$arg: String){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
         }
     }

@@ -132,7 +132,7 @@ class ScalarsSpecificationTest {
             }
         }
 
-        expect<InvalidInputValueException>("Cannot coerce to type of Int as '${Integer.MAX_VALUE.toLong() + 2L}' is greater than (2^-31)-1") {
+        expect<InvalidInputValueException>("Cannot coerce '${Integer.MAX_VALUE.toLong() + 2L}' to Int as it is greater than (2^-31)-1") {
             schema.executeBlocking("mutation { Int(int: ${Integer.MAX_VALUE.toLong() + 2L}) }")
         }
     }
@@ -156,7 +156,7 @@ class ScalarsSpecificationTest {
         val testedSchema = KGraphQL.schema {
             stringScalar<UUID> {
                 name = "UUID"
-                description = "the unique identifier of object"
+                description = "The unique identifier of object"
                 deserialize = UUID::fromString
                 serialize = UUID::toString
             }
@@ -231,17 +231,17 @@ class ScalarsSpecificationTest {
         """.trimIndent()
 
         // Double (should fail)
-        expect<InvalidInputValueException>("Cannot coerce 4.0 to ID") {
+        expect<InvalidInputValueException>("Cannot coerce '4.0' to ID") {
             testedSchema.executeBlocking("query(\$id: ID! = 4.0) { personById(id: \$id) { id, name } }")
         }
 
         // Boolean (should fail)
-        expect<InvalidInputValueException>("Cannot coerce true to ID") {
+        expect<InvalidInputValueException>("Cannot coerce 'true' to ID") {
             testedSchema.executeBlocking("query(\$id: ID! = true) { personById(id: \$id) { id, name } }")
         }
 
         // List of strings (should fail)
-        expect<InvalidInputValueException>("argument '[\"4\", \"5\"]' is not valid value of type ID") {
+        expect<InvalidInputValueException>("Cannot coerce '[\"4\", \"5\"]' to ID") {
             testedSchema.executeBlocking("query(\$id: ID! = [\"4\", \"5\"]) { personById(id: \$id) { id, name } }")
         }
 
@@ -251,7 +251,7 @@ class ScalarsSpecificationTest {
         }
 
         // Null (should fail)
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type ID") {
+        expect<InvalidInputValueException>("Cannot coerce 'null' to ID") {
             testedSchema.executeBlocking("query(\$id: ID! = null) { personById(id: \$id) { id, name } }")
         }
 
@@ -272,7 +272,7 @@ class ScalarsSpecificationTest {
             }
         }
 
-        expect<InvalidInputValueException>("Cannot coerce \"223\" to numeric constant") {
+        expect<InvalidInputValueException>("Cannot coerce '\"223\"' to Int") {
             schema.executeBlocking("mutation { Int(int: \"223\") }")
         }
     }

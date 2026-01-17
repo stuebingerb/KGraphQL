@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.Director
+import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.Film
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
@@ -10,6 +11,7 @@ import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.helpers.getFields
 import com.apurebase.kgraphql.schema.execution.Execution
@@ -63,7 +65,7 @@ class QueryTest : BaseSchemaTest() {
     @Test
     fun `query with invalid field name`() {
         val exception = shouldThrowExactly<ValidationException> {
-            execute("{film{title, director{name, favDish}}}")
+            testedSchema.executeBlocking("{film{title, director{name, favDish}}}")
         }
         exception shouldHaveMessage "Property 'favDish' on 'Director' does not exist"
         exception.extensions shouldBe mapOf(
@@ -110,7 +112,7 @@ class QueryTest : BaseSchemaTest() {
     @Test
     fun `query with ignored property`() {
         val exception = shouldThrowExactly<ValidationException> {
-            execute("{scenario{author, content}}")
+            testedSchema.executeBlocking("{scenario{author, content}}")
         }
         exception shouldHaveMessage "Property 'author' on 'Scenario' does not exist"
         exception.extensions shouldBe mapOf(
@@ -211,7 +213,7 @@ class QueryTest : BaseSchemaTest() {
     @Test
     fun `query with invalid field arguments`() {
         val exception = shouldThrowExactly<ValidationException> {
-            execute("{scenario{id(uppercase: true), content}}")
+            testedSchema.executeBlocking("{scenario{id(uppercase: true), content}}")
         }
         exception shouldHaveMessage "Property 'id' on type 'Scenario' has no arguments, found: [uppercase]"
         exception.extensions shouldBe mapOf(
@@ -448,7 +450,7 @@ class QueryTest : BaseSchemaTest() {
     @Test
     fun `query with missing fragment type`() {
         val exception = shouldThrowExactly<ValidationException> {
-            execute(
+            testedSchema.executeBlocking(
                 """
                 {
                     film {
@@ -469,7 +471,7 @@ class QueryTest : BaseSchemaTest() {
     @Test
     fun `query with missing named fragment type`() {
         val exception = shouldThrowExactly<ValidationException> {
-            execute(
+            testedSchema.executeBlocking(
                 """
                 {
                     film {
@@ -488,7 +490,7 @@ class QueryTest : BaseSchemaTest() {
     @Test
     fun `query with missing selection set`() {
         val exception = shouldThrowExactly<ValidationException> {
-            execute("{film}")
+            testedSchema.executeBlocking("{film}")
         }
         exception shouldHaveMessage "Missing selection set on property 'film' of type 'Film'"
         exception.extensions shouldBe mapOf(
@@ -601,7 +603,14 @@ class QueryTest : BaseSchemaTest() {
 
         val response = defaultSchema {
             query("me") {
-                resolver { -> Person("John", "Doe", "1.1.1970", Address("12345", "Main Street", "SomeCity", "SomeCountry")) }
+                resolver { ->
+                    Person(
+                        "John",
+                        "Doe",
+                        "1.1.1970",
+                        Address("12345", "Main Street", "SomeCity", "SomeCountry")
+                    )
+                }
             }
         }.executeBlocking(
             """
@@ -820,7 +829,8 @@ class QueryTest : BaseSchemaTest() {
             """.trimIndent()
 
         // Union from sealed class
-        schema.executeBlocking("""
+        schema.executeBlocking(
+            """
             {
               directors {
                 favActors {
@@ -831,7 +841,8 @@ class QueryTest : BaseSchemaTest() {
                 }
               }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {
               "data" : {
                 "directors" : [ {
@@ -866,5 +877,26 @@ class QueryTest : BaseSchemaTest() {
               }
             }
             """.trimIndent()
+    }
+
+    @Test
+    fun `invalid collection values should result in an error`() {
+        val schema = KGraphQL.schema {
+            query("invalidList") {
+                // Schema defines a String property but resolver actually returns a List<String>
+                resolver<List<String>> { listOf("foo", "bar") }.returns<String>()
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type Query {
+              invalidList: String!
+            }
+            
+        """.trimIndent()
+
+        expect<ExecutionException>("Invalid collection value for non-collection property 'invalidList'") {
+            schema.executeBlocking("{ invalidList }")
+        }
     }
 }

@@ -45,8 +45,11 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query with int variable should not allow floating point numbers that are not whole`() {
-        expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
-            execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1.01}")
+        expect<InvalidInputValueException>("Cannot coerce '1.01' to Int") {
+            testedSchema.executeBlocking(
+                request = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}",
+                variables = "{\"rank\": 1.01}"
+            )
         }
     }
 
@@ -62,9 +65,9 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query with custom int scalar variable should not allow floating point numbers that are not whole`() {
-        expect<InvalidInputValueException>("argument '1.01' is not valid value of type Rank") {
-            execute(
-                query = "query(\$rank: Rank!) {filmByCustomRank(rank: \$rank) {title}}",
+        expect<InvalidInputValueException>("Cannot coerce '1.01' to Rank") {
+            testedSchema.executeBlocking(
+                request = "query(\$rank: Rank!) {filmByCustomRank(rank: \$rank) {title}}",
                 variables = "{\"rank\": 1.01}"
             )
         }
@@ -84,9 +87,9 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query with long variable should not allow floating point numbers that are not whole`() {
-        expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
-            execute(
-                query = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}",
+        expect<InvalidInputValueException>("Cannot coerce '1.01' to Long") {
+            testedSchema.executeBlocking(
+                request = "query(\$rank: Long!) {filmByRankLong(rank: \$rank) {title}}",
                 variables = "{\"rank\": 1.01}"
             )
         }
@@ -106,9 +109,9 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query with short variable should not allow floating point numbers that are not whole`() {
-        expect<InvalidInputValueException>("Cannot coerce 1.01 to numeric constant") {
-            execute(
-                query = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}",
+        expect<InvalidInputValueException>("Cannot coerce '1.01' to Short") {
+            testedSchema.executeBlocking(
+                request = "query(\$rank: Short!) {filmByRankShort(rank: \$rank) {title}}",
                 variables = "{\"rank\": 1.01}"
             )
         }
@@ -160,15 +163,21 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query with boolean variable and variable default value but explicit null provided`() {
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type Boolean") {
-            execute(query = "query(\$big: Boolean = true) {number(big: \$big)}", variables = "{\"big\": null}")
+        expect<InvalidInputValueException>("Cannot coerce 'null' to Boolean") {
+            testedSchema.executeBlocking(
+                request = "query(\$big: Boolean = true) {number(big: \$big)}",
+                variables = "{\"big\": null}"
+            )
         }
     }
 
     @Test
     fun `query with boolean variable and location default value but explicit null provided`() {
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type Boolean") {
-            execute(query = "query(\$big: Boolean) {bigNumber(big: \$big)}", variables = "{\"big\": null}")
+        expect<InvalidInputValueException>("Cannot coerce 'null' to Boolean") {
+            testedSchema.executeBlocking(
+                request = "query(\$big: Boolean) {bigNumber(big: \$big)}",
+                variables = "{\"big\": null}"
+            )
         }
     }
 
@@ -188,9 +197,9 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query with list variable and variable default value but explicit null list provided`() {
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
-            execute(
-                query = "query(\$tags: [String] = []) {actorsByTags(tags: \$tags) { name }}",
+        expect<InvalidInputValueException>("Cannot coerce 'null' to String") {
+            testedSchema.executeBlocking(
+                request = "query(\$tags: [String] = []) {actorsByTags(tags: \$tags) { name }}",
                 variables = "{\"tags\": null}"
             )
         }
@@ -198,9 +207,9 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query with list variable and variable default value but explicit null element provided`() {
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
-            execute(
-                query = "query(\$tags: [String] = []) {actorsByTags(tags: \$tags) { name }}",
+        expect<InvalidInputValueException>("Cannot coerce 'null' to String") {
+            testedSchema.executeBlocking(
+                request = "query(\$tags: [String] = []) {actorsByTags(tags: \$tags) { name }}",
                 variables = "{\"tags\": [null]}"
             )
         }
@@ -208,15 +217,15 @@ class VariablesSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query with list variable and location default value but explicit null list provided`() {
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
-            execute(query = "query(\$tags: [String] = null) {actorsByTags(tags: \$tags) { name }}")
+        expect<InvalidInputValueException>("Cannot coerce 'null' to String") {
+            testedSchema.executeBlocking(request = "query(\$tags: [String] = null) {actorsByTags(tags: \$tags) { name }}")
         }
     }
 
     @Test
     fun `query with list variable and location default value but explicit null element provided`() {
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type String") {
-            execute(query = "query(\$tags: [String] = [null]) {actorsByTags(tags: \$tags) { name }}")
+        expect<InvalidInputValueException>("Cannot coerce 'null' to String") {
+            testedSchema.executeBlocking(request = "query(\$tags: [String] = [null]) {actorsByTags(tags: \$tags) { name }}")
         }
     }
 
@@ -247,7 +256,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     fun `fragment with variable`() {
         val result = execute(
             query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!, \$big: Boolean!) {createActor(name: \$name, age: \$age){...Linda}}" +
-                "fragment Linda on Actor {picture(big: \$big)}",
+                    "fragment Linda on Actor {picture(big: \$big)}",
             variables = "{\"age\": 22, \"big\": true}"
         )
         assertNoErrors(result)
@@ -257,9 +266,9 @@ class VariablesSpecificationTest : BaseSchemaTest() {
     @Test
     fun `fragment with missing variable`() {
         expect<ValidationException>("Variable '\$big' was not declared for this operation") {
-            execute(
-                query = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!) {createActor(name: \$name, age: \$age){...Linda}}" +
-                    "fragment Linda on Actor {picture(big: \$big)}",
+            testedSchema.executeBlocking(
+                request = "mutation(\$name: String = \"Boguś Linda\", \$age : Int!) {createActor(name: \$name, age: \$age){...Linda}}" +
+                        "fragment Linda on Actor {picture(big: \$big)}",
                 variables = "{\"age\": 22}"
             )
         }

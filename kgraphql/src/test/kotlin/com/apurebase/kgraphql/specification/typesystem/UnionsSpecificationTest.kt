@@ -64,7 +64,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     @Test
     fun `query union property with invalid selection set`() {
         expect<ValidationException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]") {
-            execute("{actors{name, favourite{ name }}}")
+            testedSchema.executeBlocking("{actors{name, favourite{ name }}}")
         }
     }
 
@@ -117,7 +117,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     @Test
     fun `a union type should require a selection for all potential types`() {
         expect<ValidationException>("Missing selection set for type 'Scenario'") {
-            execute(
+            testedSchema.executeBlocking(
                 """{
                 actors {
                     name
@@ -153,9 +153,9 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `Non nullable union types should fail`() {
-        expect<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was null") {
-            execute(
+    fun `non-nullable union types should fail`() {
+        expect<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was 'null'") {
+            testedSchema.executeBlocking(
                 """{
                     actors(all: true) {
                         name

@@ -62,10 +62,8 @@ object STRING_COERCION : StringScalarCoercion<String> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is StringValueNode -> valueNode.value
-        else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to string constant",
-            valueNode
-        )
+
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to String", valueNode)
     }
 }
 
@@ -75,10 +73,8 @@ object DOUBLE_COERCION : StringScalarCoercion<Double> {
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is DoubleValueNode -> valueNode.value
         is NumberValueNode -> valueNode.value.toDouble()
-        else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
-            valueNode
-        )
+
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Float", valueNode)
     }
 }
 
@@ -86,12 +82,10 @@ object FLOAT_COERCION : StringScalarCoercion<Float> {
     override fun serialize(instance: Float): String = instance.toDouble().toString()
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
-        is DoubleValueNode -> DOUBLE_COERCION.deserialize(raw, valueNode).toFloat()
-        is NumberValueNode -> DOUBLE_COERCION.deserialize(raw, valueNode).toFloat()
-        else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
-            valueNode
-        )
+        is DoubleValueNode -> valueNode.value.toFloat()
+        is NumberValueNode -> valueNode.value.toFloat()
+
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Float", valueNode)
     }
 }
 
@@ -101,22 +95,19 @@ object INT_COERCION : StringScalarCoercion<Int> {
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> when {
             valueNode.value > Integer.MAX_VALUE -> throw InvalidInputValueException(
-                "Cannot coerce to type of Int as '${valueNode.value}' is greater than (2^-31)-1",
+                "Cannot coerce '${valueNode.valueNodeName}' to Int as it is greater than (2^-31)-1",
                 valueNode
             )
 
             valueNode.value < Integer.MIN_VALUE -> throw InvalidInputValueException(
-                "Cannot coerce to type of Int as '${valueNode.value}' is less than -(2^-31)",
+                "Cannot coerce '${valueNode.valueNodeName}' to Int as it is less than -(2^-31)",
                 valueNode
             )
 
             else -> valueNode.value.toInt()
         }
 
-        else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
-            valueNode
-        )
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Int", valueNode)
     }
 }
 
@@ -126,22 +117,19 @@ object SHORT_COERCION : StringScalarCoercion<Short> {
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> when {
             valueNode.value > Short.MAX_VALUE -> throw InvalidInputValueException(
-                "Cannot coerce to type of Int as '${valueNode.value}' is greater than (2^-15)-1",
+                "Cannot coerce '${valueNode.value}' to Short as it is greater than (2^-15)-1",
                 valueNode
             )
 
             valueNode.value < Short.MIN_VALUE -> throw InvalidInputValueException(
-                "Cannot coerce to type of Int as '${valueNode.value}' is less than -(2^-15)",
+                "Cannot coerce '${valueNode.value}' to Short as it is less than -(2^-15)",
                 valueNode
             )
 
             else -> valueNode.value.toShort()
         }
 
-        else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
-            valueNode
-        )
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Short", valueNode)
     }
 }
 
@@ -150,10 +138,7 @@ object LONG_COERCION : StringScalarCoercion<Long> {
 
     override fun deserialize(raw: String, valueNode: ValueNode) = when (valueNode) {
         is NumberValueNode -> valueNode.value
-        else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to numeric constant",
-            valueNode
-        )
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Long", valueNode)
     }
 }
 
@@ -165,19 +150,18 @@ object BOOLEAN_COERCION : StringScalarCoercion<Boolean> {
         is StringValueNode -> when {
             valueNode.value.equals("true", true) -> true
             valueNode.value.equals("false", true) -> false
-            else -> throw IllegalArgumentException("${valueNode.value} does not represent valid Boolean value")
+
+            else -> throw IllegalArgumentException("Cannot coerce '${valueNode.value}' to Boolean")
         }
 
         is NumberValueNode -> when (valueNode.value) {
             0L, -1L -> false
             1L -> true
-            else -> throw IllegalArgumentException("${valueNode.value} does not represent valid Boolean value")
+
+            else -> throw IllegalArgumentException("Cannot coerce '${valueNode.value}' to Boolean")
         }
 
-        else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to boolean constant",
-            valueNode
-        )
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Boolean", valueNode)
     }
 }
 
@@ -188,9 +172,6 @@ object ID_COERCION : StringScalarCoercion<ID> {
         is StringValueNode -> ID(valueNode.value)
         is NumberValueNode -> ID(valueNode.value.toString())
 
-        else -> throw InvalidInputValueException(
-            "Cannot coerce ${valueNode.valueNodeName} to ID",
-            valueNode
-        )
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to ID", valueNode)
     }
 }

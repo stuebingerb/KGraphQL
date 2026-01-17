@@ -101,8 +101,7 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
 
     private fun StringBuilder.addSelectionsForField(node: Execution.Remote) {
         val filteredSelections =
-            (node.selectionNode as? SelectionNode.FieldNode)?.selectionSet?.selections?.filterForType(node.field.returnType)
-                .orEmpty()
+            node.selectionNode.selectionSet?.selections?.filterForType(node.field.returnType).orEmpty()
         if (filteredSelections.isNotEmpty()) {
             append("{")
             filteredSelections.forEach {

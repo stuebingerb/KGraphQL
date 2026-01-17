@@ -418,10 +418,10 @@ class SchemaBuilderTest {
             it.extract<String>("data/definedValue") shouldBe "good!"
         }
         expect<IllegalArgumentException>("Requested value is not defined!") {
-            deserialize(schema.executeBlocking("{undefinedValue}"))
+            schema.executeBlocking("{undefinedValue}")
         }
         expect<IllegalArgumentException>("Requested value is not defined!") {
-            deserialize(schema.executeBlocking("{undefinedValueProp {value}}"))
+            schema.executeBlocking("{undefinedValueProp {value}}")
         }
     }
 

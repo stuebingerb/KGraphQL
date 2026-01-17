@@ -39,7 +39,7 @@ data class Variables(private val variablesJson: VariablesJson, private val varia
 
         if (invalidName || invalidIsList || invalidNullability) {
             throw InvalidInputValueException(
-                "Invalid variable $${variable.variable.name.value} argument type ${variableType.nameNode.value}, expected ${expectedType.typeReference()}",
+                "Invalid variable '$${variable.variable.name.value}' argument type '${variableType.nameNode.value}', expected '${expectedType.typeReference()}'",
                 variable
             )
         }

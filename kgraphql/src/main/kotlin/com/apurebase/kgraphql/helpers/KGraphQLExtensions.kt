@@ -40,7 +40,7 @@ fun Execution.getFields(): List<String> = when (this) {
 /**
  * Collection : Convert to JsonElement
  */
-fun Collection<*>.toJsonElement(): JsonElement {
+private fun Collection<*>.toJsonElement(): JsonElement {
     val list: MutableList<JsonElement> = mutableListOf()
     forEach {
         val value = it ?: return@forEach

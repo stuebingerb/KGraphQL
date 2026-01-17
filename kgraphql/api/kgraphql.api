@@ -97,7 +97,6 @@ public class com/apurebase/kgraphql/configuration/SchemaConfiguration {
 
 public final class com/apurebase/kgraphql/helpers/KGraphQLExtensionsKt {
 	public static final fun getFields (Lcom/apurebase/kgraphql/schema/execution/Execution;)Ljava/util/List;
-	public static final fun toJsonElement (Ljava/util/Collection;)Lkotlinx/serialization/json/JsonElement;
 	public static final fun toJsonElement (Ljava/util/Map;)Lkotlinx/serialization/json/JsonElement;
 	public static final fun toValueNode (Lcom/fasterxml/jackson/databind/JsonNode;Lcom/apurebase/kgraphql/schema/introspection/__Type;)Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;
 }
@@ -2696,11 +2695,7 @@ public class com/apurebase/kgraphql/schema/structure/TypeProxy : com/apurebase/k
 }
 
 public final class com/apurebase/kgraphql/schema/structure/ValidationKt {
-	public static final fun assertValidObjectType (Lkotlin/reflect/KClass;)V
-	public static final fun validateArguments (Lcom/apurebase/kgraphql/schema/structure/Field;Ljava/util/List;Ljava/lang/String;)Ljava/util/List;
 	public static final fun validateName (Ljava/lang/String;)V
-	public static final fun validatePropertyArguments (Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Field;Lcom/apurebase/kgraphql/schema/model/ast/SelectionNode$FieldNode;)V
-	public static final fun validateUnionRequest (Lcom/apurebase/kgraphql/schema/structure/Field$Union;Lcom/apurebase/kgraphql/schema/model/ast/SelectionNode$FieldNode;)V
 }
 
 public abstract class nidomiro/kdataloader/BatchMode {

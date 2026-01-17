@@ -32,7 +32,7 @@ class EnumsSpecificationTest {
 
     @Test
     fun `string literals must not be accepted as an enum input`() {
-        expect<InvalidInputValueException>("String literal '\"COOL\"' is invalid value for enum type Coolness") {
+        expect<InvalidInputValueException>("Cannot coerce string literal '\"COOL\"' to enum Coolness") {
             schema.executeBlocking("{cool(cool : \"COOL\")}")
         }
     }

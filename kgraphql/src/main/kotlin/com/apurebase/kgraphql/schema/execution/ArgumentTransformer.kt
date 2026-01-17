@@ -47,7 +47,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                 value == null && parameter.type.kind != TypeKind.NON_NULL -> parameter.default
                 value == null && parameter.type.kind == TypeKind.NON_NULL -> {
                     parameter.default ?: throw InvalidInputValueException(
-                        "argument '${parameter.name}' of type ${parameter.type.typeReference()} on field '$funName' is not nullable, value cannot be null",
+                        "Argument '${parameter.name}' of type ${parameter.type.typeReference()} on field '$funName' is not nullable, value cannot be null",
                         executionNode.selectionNode
                     )
                 }
@@ -56,7 +56,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                     val transformedValue = transformValue(parameter.type, value!!, variables, true, parameter.default)
                     if (transformedValue == null && parameter.type.isNotNullable()) {
                         throw InvalidInputValueException(
-                            "argument ${parameter.name} is not optional, value cannot be null",
+                            "Argument ${parameter.name} is not optional, value cannot be null",
                             executionNode.selectionNode
                         )
                     }
@@ -94,7 +94,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                     transformToCollection(type.listType(), listOf(value), variables, true)
                 } else {
                     throw InvalidInputValueException(
-                        "argument '${value.valueNodeName}' is not valid value of type List",
+                        "Cannot coerce '${value.valueNodeName}' to List",
                         value
                     )
                 }
@@ -172,7 +172,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
             value is ValueNode.NullValueNode -> {
                 if (type.isNotNullable()) {
                     throw InvalidInputValueException(
-                        "argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}",
+                        "Cannot coerce '${value.valueNodeName}' to ${type.unwrapped().name}",
                         value
                     )
                 } else {
@@ -183,7 +183,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
             value is ValueNode.ListValueNode -> {
                 if (type.isNotList()) {
                     throw InvalidInputValueException(
-                        "argument '${value.valueNodeName}' is not valid value of type ${type.unwrapped().name}",
+                        "Cannot coerce '${value.valueNodeName}' to ${type.unwrapped().name}",
                         value
                     )
                 } else {
@@ -220,14 +220,14 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                 )
             } else {
                 throw InvalidInputValueException(
-                    "String literal '${value.valueNodeName}' is invalid value for enum type ${enumType.name}",
+                    "Cannot coerce string literal '${value.valueNodeName}' to enum ${enumType.name}",
                     value
                 )
             }
         } ?: (type as? Type.Scalar<*>)?.let { scalarType ->
             deserializeScalar(scalarType, value)
         } ?: throw InvalidInputValueException(
-            "Invalid argument value '${value.valueNodeName}' for type ${type.name}",
+            "Cannot coerce '${value.valueNodeName}' to enum ${type.name}",
             value
         )
 }

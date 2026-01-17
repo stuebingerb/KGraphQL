@@ -181,7 +181,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             else -> {
                 validatePropertyArguments(this, field, node)
 
-                return Execution.Node(
+                Execution.Node(
                     selectionNode = node,
                     field = field,
                     children = handleReturnType(ctx, field.returnType, node),
