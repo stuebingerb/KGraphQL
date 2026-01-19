@@ -16,7 +16,13 @@ class AccessRulesTest {
     val schema = defaultSchema {
         query("black_mamba") {
             resolver { -> Player("KOBE") }
-            accessRule { ctx -> if (ctx.get<String>().equals("LAKERS")) null else IllegalAccessException() }
+            accessRule { ctx ->
+                if (ctx.get<String>() == "LAKERS") {
+                    null
+                } else {
+                    IllegalAccessException()
+                }
+            }
         }
 
         query("white_mamba") {
@@ -25,7 +31,11 @@ class AccessRulesTest {
 
         type<Player> {
             val accessRuleBlock = { player: Player, _: Context ->
-                if (player.name != "BONNER") IllegalAccessException("ILLEGAL ACCESS") else null
+                if (player.name != "BONNER") {
+                    IllegalAccessException("ILLEGAL ACCESS")
+                } else {
+                    null
+                }
             }
             property(Player::id) {
                 accessRule(accessRuleBlock)

@@ -19,7 +19,7 @@ import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 @Specification("2.8 Fragments")
-class FragmentsSpecificationTest {
+class FragmentsSpecificationTest : BaseSchemaTest() {
 
     val age = 232
 
@@ -34,8 +34,6 @@ class FragmentsSpecificationTest {
             resolver { -> ActorWrapper(id, Actor(actorName, age)) }
         }
     }
-
-    private val baseTestSchema = object : BaseSchemaTest() {}
 
     @Test
     fun `fragment's fields are added to the query at the same level as the fragment invocation`() {
@@ -88,7 +86,9 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `query with inline fragment with type condition`() {
-        val map = baseTestSchema.execute("{people{name, age, ... on Actor {isOld} ... on Director {favActors{name}}}}")
+        val map =
+            testedSchema.executeBlocking("{people{name, age, ... on Actor {isOld} ... on Director {favActors{name}}}}")
+                .deserialize()
         assertNoErrors(map)
         for (i in map.extract<List<*>>("data/people").indices) {
             val name = map.extract<String>("data/people[$i]/name")
@@ -109,7 +109,8 @@ class FragmentsSpecificationTest {
     @Test
     fun `query with external fragment with type condition`() {
         val map =
-            baseTestSchema.execute("{people{name, age ...act ...dir}} fragment act on Actor {isOld} fragment dir on Director {favActors{name}}")
+            testedSchema.executeBlocking("{people{name, age ...act ...dir}} fragment act on Actor {isOld} fragment dir on Director {favActors{name}}")
+                .deserialize()
         assertNoErrors(map)
         for (i in map.extract<List<*>>("data/people").indices) {
             val name = map.extract<String>("data/people[$i]/name")
@@ -129,7 +130,7 @@ class FragmentsSpecificationTest {
 
     @Test
     fun `multiple nested fragments are handled`() {
-        val map = baseTestSchema.execute(Introspection.query())
+        val map = testedSchema.executeBlocking(Introspection.query()).deserialize()
         val fields = map.extract<List<Map<String, *>>>("data/__schema/types[0]/fields")
 
         fields.forAll { field ->
@@ -140,7 +141,7 @@ class FragmentsSpecificationTest {
     @Test
     fun `queries with recursive fragments are denied`() {
         expect<ValidationException>("Fragment spread circular references are not allowed") {
-            baseTestSchema.execute(
+            testedSchema.executeBlocking(
                 """
             query IntrospectionQuery {
                 __schema {
@@ -166,7 +167,7 @@ class FragmentsSpecificationTest {
     @Test
     fun `queries with duplicated fragments are denied`() {
         expect<ValidationException>("There can be only one fragment named 'film_title'") {
-            baseTestSchema.execute(
+            testedSchema.executeBlocking(
                 """
             {
                 film {
@@ -192,7 +193,7 @@ class FragmentsSpecificationTest {
     @Test
     fun `queries with unused fragments should be denied`() {
         expect<ValidationException>("Found unused fragments: [unused_film_title]") {
-            baseTestSchema.execute(
+            testedSchema.executeBlocking(
                 """
             {
                 film {
@@ -279,25 +280,6 @@ class FragmentsSpecificationTest {
         numberResult.extract<List<Boolean>>("data/unions/booleans") shouldBe listOf(true, false)
     }
 
-    data class Outer(val inner1: Inner, val inner2: Inner)
-    data class Inner(val name: String)
-
-    private val testedSchema = defaultSchema {
-        query("outer") {
-            resolver { ->
-                Outer(Inner("test1"), Inner("test2"))
-            }
-        }
-        type<Inner> {
-            property("testProperty1") {
-                resolver { "${it.name}.testProperty1" }
-            }
-            property("testProperty2") {
-                resolver { "${it.name}.testProperty2" }
-            }
-        }
-    }
-
     // https://github.com/aPureBase/KGraphQL/issues/197
     @Test
     fun `executor should merge fragment declaration and field declaration`() {
@@ -319,22 +301,22 @@ class FragmentsSpecificationTest {
 
         val deserialized = deserialize(response)
         deserialized shouldBe
-            mapOf(
-                "data" to mapOf(
-                    "outer" to mapOf(
-                        "inner1" to mapOf(
-                            "name" to "test1",
-                            "testProperty2" to "test1.testProperty2",
-                            "testProperty1" to "test1.testProperty1",
-                        ),
-                        "inner2" to mapOf(
-                            "name" to "test2",
-                            "testProperty1" to "test2.testProperty1",
-                            "testProperty2" to "test2.testProperty2",
-                        ),
+                mapOf(
+                    "data" to mapOf(
+                        "outer" to mapOf(
+                            "inner1" to mapOf(
+                                "name" to "test1",
+                                "testProperty2" to "test1.testProperty2",
+                                "testProperty1" to "test1.testProperty1",
+                            ),
+                            "inner2" to mapOf(
+                                "name" to "test2",
+                                "testProperty1" to "test2.testProperty1",
+                                "testProperty2" to "test2.testProperty2",
+                            ),
+                        )
                     )
                 )
-            )
     }
 
     // https://github.com/aPureBase/KGraphQL/issues/197
@@ -362,28 +344,28 @@ class FragmentsSpecificationTest {
 
         val deserialized = deserialize(response)
         deserialized shouldBe
-            mapOf(
-                "data" to mapOf(
-                    "outer" to mapOf(
-                        "inner1" to mapOf(
-                            "name" to "test1",
-                            "testProperty2" to "test1.testProperty2",
-                        ),
-                        "inner2" to mapOf(
-                            "name" to "test2",
-                            "testProperty1" to "test2.testProperty1",
-                            "testProperty2" to "test2.testProperty2",
-                        ),
+                mapOf(
+                    "data" to mapOf(
+                        "outer" to mapOf(
+                            "inner1" to mapOf(
+                                "name" to "test1",
+                                "testProperty2" to "test1.testProperty2",
+                            ),
+                            "inner2" to mapOf(
+                                "name" to "test2",
+                                "testProperty1" to "test2.testProperty1",
+                                "testProperty2" to "test2.testProperty2",
+                            ),
+                        )
                     )
                 )
-            )
     }
 
     // https://github.com/aPureBase/KGraphQL/issues/189
     @Test
     fun `queries with missing fragments should return proper error message`() {
         expect<ValidationException>("Fragment 'film_title_misspelled' not found") {
-            baseTestSchema.execute(
+            testedSchema.executeBlocking(
                 """
             {
                 film {

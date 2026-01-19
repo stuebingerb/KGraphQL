@@ -83,7 +83,7 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
     @Test
     fun `missing directive should result in an error`() {
         expect<ValidationException>("Directive 'nonExisting' does not exist") {
-            execute("{film{title year @nonExisting}}")
+            testedSchema.executeBlocking("{film{title year @nonExisting}}")
         }
     }
 }

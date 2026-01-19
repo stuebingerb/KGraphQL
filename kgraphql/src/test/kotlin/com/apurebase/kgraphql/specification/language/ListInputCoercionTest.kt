@@ -42,15 +42,15 @@ class ListInputCoercionTest {
 
     @Test
     fun `a list of mixed types should not be valid for a nullable list of Int`() {
-        expect<InvalidInputValueException>("Cannot coerce \"b\" to numeric constant") {
-            deserialize(schema.executeBlocking("{ NullableList(value: [1, \"b\", true]) }"))
+        expect<InvalidInputValueException>("Cannot coerce '\"b\"' to Int") {
+            schema.executeBlocking("{ NullableList(value: [1, \"b\", true]) }")
         }
     }
 
     @Test
     fun `foo should not be valid for a nullable list of Int`() {
-        expect<InvalidInputValueException>("Cannot coerce \"foo\" to numeric constant") {
-            deserialize(schema.executeBlocking("{ RequiredList(value: \"foo\") }"))
+        expect<InvalidInputValueException>("Cannot coerce '\"foo\"' to Int") {
+            schema.executeBlocking("{ RequiredList(value: \"foo\") }")
         }
     }
 
@@ -74,15 +74,15 @@ class ListInputCoercionTest {
 
     @Test
     fun `a non-nested list should not be valid for a nullable nested list of Int`() {
-        expect<InvalidInputValueException>("argument '1' is not valid value of type List") {
-            deserialize(schema.executeBlocking("{ NullableNestedList(value: [1, 2, 3]) }"))
+        expect<InvalidInputValueException>("Cannot coerce '1' to List") {
+            schema.executeBlocking("{ NullableNestedList(value: [1, 2, 3]) }")
         }
     }
 
     @Test
     fun `null should not be valid for a required list of Int`() {
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type Int") {
-            deserialize(schema.executeBlocking("{ RequiredList(value: null) }"))
+        expect<InvalidInputValueException>("Cannot coerce 'null' to Int") {
+            schema.executeBlocking("{ RequiredList(value: null) }")
         }
     }
 
@@ -118,15 +118,15 @@ class ListInputCoercionTest {
 
     @Test
     fun `a list of mixed types should not be valid for a nullable set of Int`() {
-        expect<InvalidInputValueException>("Cannot coerce \"b\" to numeric constant") {
-            deserialize(schema.executeBlocking("{ NullableSet(value: [1, \"b\", true]) }"))
+        expect<InvalidInputValueException>("Cannot coerce '\"b\"' to Int") {
+            schema.executeBlocking("{ NullableSet(value: [1, \"b\", true]) }")
         }
     }
 
     @Test
     fun `foo should not be valid for a nullable set of Int`() {
-        expect<InvalidInputValueException>("Cannot coerce \"foo\" to numeric constant") {
-            deserialize(schema.executeBlocking("{ RequiredSet(value: \"foo\") }"))
+        expect<InvalidInputValueException>("Cannot coerce '\"foo\"' to Int") {
+            schema.executeBlocking("{ RequiredSet(value: \"foo\") }")
         }
     }
 
@@ -161,15 +161,15 @@ class ListInputCoercionTest {
 
     @Test
     fun `a non-nested list should not be valid for a nullable nested set of Int`() {
-        expect<InvalidInputValueException>("argument '1' is not valid value of type List") {
-            deserialize(schema.executeBlocking("{ NullableNestedSet(value: [1, 2, 3]) }"))
+        expect<InvalidInputValueException>("Cannot coerce '1' to List") {
+            schema.executeBlocking("{ NullableNestedSet(value: [1, 2, 3]) }")
         }
     }
 
     @Test
     fun `null should not be valid for a required set of Int`() {
-        expect<InvalidInputValueException>("argument 'null' is not valid value of type Int") {
-            deserialize(schema.executeBlocking("{ RequiredSet(value: null) }"))
+        expect<InvalidInputValueException>("Cannot coerce 'null' to Int") {
+            schema.executeBlocking("{ RequiredSet(value: null) }")
         }
     }
 

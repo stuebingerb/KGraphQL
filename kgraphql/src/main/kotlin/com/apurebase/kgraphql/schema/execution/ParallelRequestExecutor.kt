@@ -149,7 +149,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         if (returnType == null && unionProperty.returnType.isNotNullable()) {
             val expectedOneOf = possibleTypes.joinToString { it.name.toString() }
             throw ExecutionException(
-                "Unexpected type of union property value, expected one of [$expectedOneOf] but was $operationResult",
+                "Unexpected type of union property value, expected one of [$expectedOneOf] but was '$operationResult'",
                 node
             )
         }
@@ -188,7 +188,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                         array.add(valuesMap[v]?.await())
                     }
                 } else {
-                    throw ExecutionException("Invalid collection value for non-collection property", node)
+                    throw ExecutionException(
+                        "Invalid collection value for non-collection property '${node.aliasOrKey}'",
+                        node
+                    )
                 }
             }
 
@@ -223,14 +226,14 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 jsonNodeFactory.textNode(value.toString())
             }
 
-            else -> throw ExecutionException("Invalid Type: ${unwrapped.name}", node)
+            else -> throw ExecutionException("Invalid type '${unwrapped.name}'", node)
         }
 
     private fun createNullNode(node: Execution.Node, returnType: Type): NullNode {
         if (returnType.kind != TypeKind.NON_NULL) {
             return jsonNodeFactory.nullNode()
         } else {
-            throw ExecutionException("null result for non-nullable operation ${node.field.name}", node)
+            throw ExecutionException("Null result for non-nullable operation '${node.aliasOrKey}'", node)
         }
     }
 
@@ -271,12 +274,15 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             // Union is subclass of Node so check it first
             is Execution.Union -> {
                 val field = checkNotNull(type.unwrapped()[child.key]) {
-                    "Execution unit ${child.key} is not contained by operation return type"
+                    "Execution unit '${child.key}' is not contained by operation return type"
                 }
                 if (field is Field.Union<*>) {
                     return child.aliasOrKey to createUnionOperationNode(ctx, value, child, field as Field.Union<T>)
                 } else {
-                    throw ExecutionException("Unexpected non-union field for union execution node", child)
+                    throw ExecutionException(
+                        "Unexpected non-union field for union execution node '${child.aliasOrKey}'",
+                        child
+                    )
                 }
             }
 
@@ -291,14 +297,12 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
             is Execution.Node -> {
                 val field = checkNotNull(type.unwrapped()[child.key]) {
-                    "Execution unit ${child.key} is not contained by operation return type"
+                    "Execution unit '${child.key}' is not contained by operation return type"
                 }
                 return child.aliasOrKey to (createPropertyNode(ctx, value, child, field) ?: return null)
             }
 
-            else -> {
-                throw UnsupportedOperationException("Handling containers is not implemented yet")
-            }
+            else -> throw UnsupportedOperationException("Handling containers is not implemented yet")
         }
     }
 
@@ -332,7 +336,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     handleFragment(ctx, value, it.withParent(container)).toList()
                 }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
             } else {
-                error("fragments can be specified on object types, interfaces, and unions")
+                error("Fragments can be specified on object types, interfaces, and unions")
             }
         }
         // Not included, or type condition is not matched
@@ -360,15 +364,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                 }
 
                 field is Field.Kotlin<*, *> -> {
-                    val rawValue = try {
-                        (field.kProperty as KProperty1<T, *>).get(parentValue)
-                    } catch (e: IllegalArgumentException) {
-                        throw ExecutionException(
-                            "Couldn't retrieve '${field.kProperty.name}' from class ${parentValue}}",
-                            node,
-                            e
-                        )
-                    }
+                    val rawValue = (field.kProperty as KProperty1<T, *>).get(parentValue)
                     val value: Any? = field.transformation?.invoke(
                         funName = field.name,
                         receiver = rawValue,
@@ -388,7 +384,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     return handleDataProperty(ctx, parentValue, node, field)
                 }
 
-                else -> error("Unexpected field type: $field, should be Field.Kotlin, Field.Function or Field.DataLoader")
+                else -> error("Unexpected field type '$field', should be Field.Kotlin, Field.Function or Field.DataLoader")
             }
         } else {
             return null

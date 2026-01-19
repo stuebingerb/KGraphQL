@@ -9,9 +9,7 @@ import com.apurebase.kgraphql.schema.model.InputValueDef
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 
-abstract class AbstractOperationDSL(
-    val name: String
-) : LimitedAccessItemDSL<Nothing>(),
+abstract class AbstractOperationDSL(val name: String) : LimitedAccessItemDSL<Nothing>(),
     ResolverDSL.Target {
 
     protected val inputValues = mutableListOf<InputValueDef<*>>()

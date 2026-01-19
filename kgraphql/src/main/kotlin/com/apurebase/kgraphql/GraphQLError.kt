@@ -48,7 +48,7 @@ open class GraphQLError(
      * Custom error extensions.
      */
     open val extensions: Map<String, Any?>? = mapOf("type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name)
-) : Exception(message) {
+) : Exception(message, originalError) {
 
     /**
      * An array of { line, column } locations within the source GraphQL document
