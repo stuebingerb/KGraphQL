@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema.execution
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.GraphQLError
+import com.apurebase.kgraphql.mapIndexedParallel
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.request.VariablesJson
 import com.apurebase.kgraphql.schema.DefaultSchema
@@ -13,7 +14,6 @@ import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
-import com.apurebase.kgraphql.toMapAsync
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.NullNode
@@ -79,21 +79,21 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             val data = root.putObject("data")
             val loaders = plan.constructLoaders()
 
-            val resultMap = plan.toMapAsync(dispatcher) {
+            val resultMap = plan.mapIndexedParallel(dispatcher) { _, operation ->
                 coroutineScope {
-                    val ctx = ExecutionContext(this, Variables(variables, it.variables), context, loaders)
-                    if (shouldInclude(ctx, it)) {
-                        writeOperation(
+                    val ctx = ExecutionContext(this, Variables(variables, operation.variables), context, loaders)
+                    if (shouldInclude(ctx, operation)) {
+                        operation to writeOperation(
                             isSubscription = plan.isSubscription,
                             ctx = ctx,
-                            node = it,
-                            operation = it.field as Field.Function<*, *>
+                            node = operation,
+                            operation = operation.field as Field.Function<*, *>
                         )
                     } else {
-                        null
+                        operation to null
                     }
                 }
-            }
+            }.toMap()
 
             for (operation in plan) {
                 // Remove all by skip/include directives
@@ -181,9 +181,10 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     else -> value as Collection<*>
                 }
                 if (returnType.isList()) {
-                    val valuesMap = values.toMapAsync(dispatcher) {
-                        createNode(ctx, it, node.withIndex(values.indexOf(it)), returnType.unwrapList())
-                    }
+                    val unwrappedReturnType = returnType.unwrapList()
+                    val valuesMap = values.mapIndexedParallel(dispatcher) { i, value ->
+                        value to createNode(ctx, value, node.withIndex(i), unwrappedReturnType)
+                    }.toMap()
                     values.fold(jsonNodeFactory.arrayNode(values.size)) { array, v ->
                         array.add(valuesMap[v]?.await())
                     }
