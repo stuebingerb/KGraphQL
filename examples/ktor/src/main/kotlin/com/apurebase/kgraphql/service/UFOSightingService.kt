@@ -5,9 +5,10 @@ import com.apurebase.kgraphql.dao.execAndMap
 import com.apurebase.kgraphql.model.CountrySightings
 import com.apurebase.kgraphql.model.UFOSighting
 import com.apurebase.kgraphql.model.UFOSightings
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 
 class UFOSightingService {
 

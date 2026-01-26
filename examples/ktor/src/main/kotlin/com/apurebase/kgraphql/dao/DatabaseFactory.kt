@@ -5,12 +5,12 @@ import com.apurebase.kgraphql.model.UFOSightings
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.util.IsolationLevel
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils.create
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils.create
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.InputStream
 import java.sql.ResultSet
 import java.time.LocalDate
@@ -59,7 +59,7 @@ object DatabaseFactory {
         return HikariDataSource(config)
     }
 
-    suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction { block() }
+    suspend fun <T> dbQuery(block: suspend () -> T): T = suspendTransaction { block() }
 }
 
 fun <T : Any> String.execAndMap(transform: (ResultSet) -> T): MutableList<T> {
