@@ -17,6 +17,7 @@ import com.apurebase.kgraphql.helpers.getFields
 import com.apurebase.kgraphql.schema.execution.Execution
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContainOnlyOnce
 import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 
@@ -723,6 +724,9 @@ class QueryTest : BaseSchemaTest() {
             query("directors") {
                 resolver { -> listOf(christopherNolan, davidFincher, martinScorsese) }
             }
+            query("actors") {
+                resolver { -> (0..1000).map { Actor(name = "Actor$it", age = it) } }
+            }
         }
 
         // Nested structures with lists and unions from DSL
@@ -877,6 +881,26 @@ class QueryTest : BaseSchemaTest() {
               }
             }
             """.trimIndent()
+
+        // Big list
+        val bigListResponse = schema.executeBlocking(
+            """
+            {
+              actors {
+                age
+                fullPath
+              }
+            }
+        """.trimIndent()
+        )
+        // Every actor has an age according to its list index, and that should match the path
+        (0..1000).forEach {
+            bigListResponse shouldContainOnlyOnce
+"""
+      "age" : $it,
+      "fullPath" : "actors.$it.fullPath"
+"""
+        }
     }
 
     @Test
