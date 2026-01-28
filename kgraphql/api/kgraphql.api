@@ -34,13 +34,6 @@ public final class com/apurebase/kgraphql/ExecutionException : com/apurebase/kgr
 public abstract interface annotation class com/apurebase/kgraphql/ExperimentalAPI : java/lang/annotation/Annotation {
 }
 
-public final class com/apurebase/kgraphql/ExtensionsKt {
-	public static final fun defaultKQLTypeName (Lkotlin/reflect/KClass;)Ljava/lang/String;
-	public static final fun getIterableElementType (Lkotlin/reflect/KType;)Lkotlin/reflect/KType;
-	public static final fun isIterable (Lkotlin/reflect/KClass;)Z
-	public static final fun isIterable (Lkotlin/reflect/KType;)Z
-}
-
 public class com/apurebase/kgraphql/GraphQLError : java/lang/Exception {
 	public fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/util/Map;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
