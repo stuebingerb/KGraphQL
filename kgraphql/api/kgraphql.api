@@ -868,10 +868,9 @@ public final class com/apurebase/kgraphql/schema/execution/ParallelRequestExecut
 }
 
 public final class com/apurebase/kgraphql/schema/execution/ParallelRequestExecutor$ExecutionContext {
-	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/Context;Ljava/util/Map;)V
+	public fun <init> (Lcom/apurebase/kgraphql/request/Variables;Lcom/apurebase/kgraphql/Context;Ljava/util/Map;)V
 	public final fun getLoaders ()Ljava/util/Map;
 	public final fun getRequestContext ()Lcom/apurebase/kgraphql/Context;
-	public final fun getScope ()Lkotlinx/coroutines/CoroutineScope;
 	public final fun getVariables ()Lcom/apurebase/kgraphql/request/Variables;
 }
 
