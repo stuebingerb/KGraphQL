@@ -1,6 +1,6 @@
 services:
   docs:
-    image: python:3.14.2-alpine3.22@sha256:8fc0f176cbd86eaba12e8adc1557a507aefc454cdb7acfd9f8d25b5e20e805d6
+    image: python:3.14.2-alpine3.22@sha256:9509532e9f46143926b7b87ce87dca4ab914adb8eb21dcc225ea09c6912a51f0
     entrypoint: [ ]
     command: sh -c "cd docs && pip install -r requirements.txt && mkdocs serve --dev-addr=0.0.0.0:8000"
     volumes:
