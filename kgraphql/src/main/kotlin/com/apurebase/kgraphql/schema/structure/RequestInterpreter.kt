@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.schema.DefaultSchema.Companion.OPERATION_NAME_PARA
 import com.apurebase.kgraphql.schema.builtin.BuiltInScalars
 import com.apurebase.kgraphql.schema.directive.Directive
 import com.apurebase.kgraphql.schema.execution.Execution
+import com.apurebase.kgraphql.schema.execution.ExecutionMode
 import com.apurebase.kgraphql.schema.execution.ExecutionPlan
 import com.apurebase.kgraphql.schema.execution.TypeCondition
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode
@@ -69,13 +70,13 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
         val operation = document.getOperation(variables, requestedOperationName)
 
-        val root = when (operation.operation) {
-            OperationTypeNode.QUERY -> schemaModel.queryType
-            OperationTypeNode.MUTATION -> schemaModel.mutationType
-                ?: throw ValidationException("Mutations are not supported on this schema")
+        val (root, executionMode) = when (operation.operation) {
+            OperationTypeNode.QUERY -> schemaModel.queryType to ExecutionMode.Normal
+            OperationTypeNode.MUTATION -> (schemaModel.mutationType
+                ?: throw ValidationException("Mutations are not supported on this schema")) to ExecutionMode.Serial
 
-            OperationTypeNode.SUBSCRIPTION -> schemaModel.subscriptionType
-                ?: throw ValidationException("Subscriptions are not supported on this schema")
+            OperationTypeNode.SUBSCRIPTION -> (schemaModel.subscriptionType
+                ?: throw ValidationException("Subscriptions are not supported on this schema")) to ExecutionMode.Normal
         }
 
         val fragmentDefinitionNodes = executables.filterIsInstance<FragmentDefinitionNode>()
@@ -93,12 +94,12 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         val ctx = InterpreterContext(fragmentDefinitions, operation.variableDefinitions)
 
         return ExecutionPlan(
-            operation.selectionSet.selections.map {
+            isSubscription = operation.operation == OperationTypeNode.SUBSCRIPTION,
+            executionMode = executionMode,
+            operations = operation.selectionSet.selections.map {
                 root.handleSelection(it as FieldNode, ctx, operation.variableDefinitions)
             }
         ).also {
-            it.isSubscription = operation.operation == OperationTypeNode.SUBSCRIPTION
-
             val unusedFragments = ctx.fragments.keys.filter { fragment -> fragment !in usedFragments }
             if (unusedFragments.isNotEmpty()) {
                 throw ValidationException("Found unused fragments: $unusedFragments")
