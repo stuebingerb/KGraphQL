@@ -805,8 +805,16 @@ public final class com/apurebase/kgraphql/schema/execution/Execution$Union : com
 	public synthetic fun withParent$kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
 }
 
+public final class com/apurebase/kgraphql/schema/execution/ExecutionMode : java/lang/Enum {
+	public static final field Normal Lcom/apurebase/kgraphql/schema/execution/ExecutionMode;
+	public static final field Serial Lcom/apurebase/kgraphql/schema/execution/ExecutionMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/execution/ExecutionMode;
+	public static fun values ()[Lcom/apurebase/kgraphql/schema/execution/ExecutionMode;
+}
+
 public final class com/apurebase/kgraphql/schema/execution/ExecutionPlan : java/util/List, kotlin/jvm/internal/markers/KMappedMarker {
-	public fun <init> (Ljava/util/List;)V
+	public fun <init> (ZLcom/apurebase/kgraphql/schema/execution/ExecutionMode;Ljava/util/List;)V
 	public fun add (ILcom/apurebase/kgraphql/schema/execution/Execution$Node;)V
 	public synthetic fun add (ILjava/lang/Object;)V
 	public fun add (Lcom/apurebase/kgraphql/schema/execution/Execution$Node;)Z
@@ -819,6 +827,7 @@ public final class com/apurebase/kgraphql/schema/execution/ExecutionPlan : java/
 	public fun containsAll (Ljava/util/Collection;)Z
 	public fun get (I)Lcom/apurebase/kgraphql/schema/execution/Execution$Node;
 	public synthetic fun get (I)Ljava/lang/Object;
+	public final fun getExecutionMode ()Lcom/apurebase/kgraphql/schema/execution/ExecutionMode;
 	public final fun getOperations ()Ljava/util/List;
 	public fun getSize ()I
 	public fun indexOf (Lcom/apurebase/kgraphql/schema/execution/Execution$Node;)I
@@ -838,7 +847,6 @@ public final class com/apurebase/kgraphql/schema/execution/ExecutionPlan : java/
 	public fun retainAll (Ljava/util/Collection;)Z
 	public fun set (ILcom/apurebase/kgraphql/schema/execution/Execution$Node;)Lcom/apurebase/kgraphql/schema/execution/Execution$Node;
 	public synthetic fun set (ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun setSubscription (Z)V
 	public final fun size ()I
 	public fun sort (Ljava/util/Comparator;)V
 	public fun subList (II)Ljava/util/List;

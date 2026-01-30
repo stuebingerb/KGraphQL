@@ -2,8 +2,10 @@ package com.apurebase.kgraphql.integration
 
 import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.InvalidInputValueException
+import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
+import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
@@ -87,5 +89,29 @@ class MutationTest : BaseSchemaTest() {
         )
         assertNoErrors(map)
         map.extract<Map<String, Any>>("data/createActorWithAliasedInputType") shouldBe mapOf<String, Any>("name" to testActor.name)
+    }
+
+    @Test
+    fun `multiple mutations should use serial execution`() {
+        data class Node(val id: Int, val currentCount: Int)
+        var nodeCount = 0
+        val schema = KGraphQL.schema {
+            query("nodeCount") {
+                resolver { -> nodeCount }
+            }
+            mutation("createNode") {
+                resolver { id: Int -> Node(id, ++nodeCount) }
+            }
+        }
+        val request = (1..1_000).joinToString(
+            separator = System.lineSeparator(),
+            prefix = "mutation {",
+            postfix = "}"
+        ) { """createNode$it: createNode(id: $it) { id currentCount }""" }
+
+        val responseMap = schema.executeBlocking(request).deserialize()
+        (1..1_000).forEach {
+            responseMap.extract<Map<String, Any>>("data/createNode$it") shouldBe mapOf("id" to it, "currentCount" to it)
+        }
     }
 }

@@ -79,7 +79,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             val data = root.putObject("data")
             val loaders = plan.constructLoaders()
 
-            val resultMap = plan.mapIndexedParallel(dispatcher) { _, operation ->
+            suspend fun executeOperation(operation: Execution.Node): Pair<Execution.Node, Deferred<JsonNode>?> =
                 coroutineScope {
                     val ctx = ExecutionContext(this, Variables(variables, operation.variables), context, loaders)
                     if (shouldInclude(ctx, operation)) {
@@ -93,7 +93,13 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                         operation to null
                     }
                 }
-            }.toMap()
+
+            // TODO: we might want a SerialRequestExecutor or at least rename *Parallel*RequestExecutor
+            val resultMap = if (plan.executionMode == ExecutionMode.Normal) {
+                plan.mapIndexedParallel { _, operation -> executeOperation(operation) }.toMap()
+            } else {
+                plan.associate { operation -> executeOperation(operation) }
+            }
 
             for (operation in plan) {
                 // Remove all by skip/include directives
