@@ -2,9 +2,7 @@ package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.Schema
 import kotlinx.benchmark.Benchmark
-import kotlinx.benchmark.BenchmarkMode
 import kotlinx.benchmark.Measurement
-import kotlinx.benchmark.Mode
 import kotlinx.benchmark.OutputTimeUnit
 import kotlinx.benchmark.Param
 import kotlinx.benchmark.Scope
@@ -17,7 +15,7 @@ import java.util.concurrent.TimeUnit
 @State(Scope.Benchmark)
 @Warmup(iterations = 3)
 @Measurement(iterations = 3)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.SECONDS)
 open class ParallelExecutionBenchmark {
 
     @Param("true", "false")
@@ -57,7 +55,6 @@ open class ParallelExecutionBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
     fun queryBenchmark(): String =
         schema.executeBlocking(query)
 }
