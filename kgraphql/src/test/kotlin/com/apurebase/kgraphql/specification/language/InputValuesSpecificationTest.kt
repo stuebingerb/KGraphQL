@@ -352,9 +352,88 @@ class InputValuesSpecificationTest {
             mutation {
                 updateDessert(dessert: {id: "id-2", name: "name-2"}) { id name }
             }
-        """.trimIndent()
+            """.trimIndent()
         ) shouldBe """
             {"data":{"updateDessert":{"id":"id-2","name":"name-2"}}}
         """.trimIndent()
+    }
+
+    @Test
+    fun `Char input`() {
+        val schema = KGraphQL.schema {
+            extendedScalars()
+            query("dummy") { resolver { -> "dummy" } }
+            mutation("append") { resolver { a: Char, b: Char -> a.toString() + b.toString() } }
+        }
+
+        schema.executeBlocking(
+            """
+            mutation {
+                append(a: "c", b: "d")
+            } 
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"append":"cd"}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            mutation {
+                append(a: 65, b: "1")
+            } 
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"append":"A1"}}
+        """.trimIndent()
+
+        shouldThrowExactly<InvalidInputValueException> {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: "cd", b: "d")
+                } 
+                """.trimIndent()
+            )
+        } shouldHaveMessage "Cannot coerce '\"cd\"' to Char"
+
+        shouldThrowExactly<InvalidInputValueException> {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: "", b: "d")
+                } 
+                """.trimIndent()
+            )
+        } shouldHaveMessage "Cannot coerce '\"\"' to Char"
+
+        shouldThrowExactly<InvalidInputValueException> {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: true, b: "d")
+                } 
+                """.trimIndent()
+            )
+        } shouldHaveMessage "Cannot coerce 'true' to Char"
+
+        shouldThrowExactly<InvalidInputValueException> {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: -1, b: "d")
+                } 
+                """.trimIndent()
+            )
+        } shouldHaveMessage "Cannot coerce '-1' to Char"
+
+        shouldThrowExactly<InvalidInputValueException> {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: 65536, b: "d")
+                } 
+                """.trimIndent()
+            )
+        } shouldHaveMessage "Cannot coerce '65536' to Char"
     }
 }

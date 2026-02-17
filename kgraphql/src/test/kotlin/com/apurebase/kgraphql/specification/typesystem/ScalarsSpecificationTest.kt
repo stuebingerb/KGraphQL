@@ -67,6 +67,14 @@ class ScalarsSpecificationTest {
                 }
             }
         }
+
+        expect<SchemaException>("Unable to handle 'query(\"char\")': An object type must define one or more fields. Found none on type 'Char'") {
+            KGraphQL.schema {
+                query("char") {
+                    resolver<Char> { Char(65) }
+                }
+            }
+        }
     }
 
     @Test
@@ -79,11 +87,15 @@ class ScalarsSpecificationTest {
             query("short") {
                 resolver<Short> { 2.toShort() }
             }
+            query("char") {
+                resolver<Char> { Char(65) }
+            }
         }
 
-        val response = deserialize(schema.executeBlocking("{ long short }"))
+        val response = deserialize(schema.executeBlocking("{ long short char }"))
         response.extract<Long>("data/long") shouldBe 9223372036854775807L
         response.extract<Int>("data/short") shouldBe 2
+        response.extract<Char>("data/char") shouldBe "A"
     }
 
     data class Person(val uuid: UUID, val name: String)

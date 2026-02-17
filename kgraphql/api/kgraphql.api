@@ -240,6 +240,14 @@ public final class com/apurebase/kgraphql/schema/builtin/BuiltInScalars : java/l
 	public static fun values ()[Lcom/apurebase/kgraphql/schema/builtin/BuiltInScalars;
 }
 
+public final class com/apurebase/kgraphql/schema/builtin/CHAR_COERCION : com/apurebase/kgraphql/schema/scalar/StringScalarCoercion {
+	public static final field INSTANCE Lcom/apurebase/kgraphql/schema/builtin/CHAR_COERCION;
+	public synthetic fun deserialize (Ljava/lang/Object;Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;)Ljava/lang/Object;
+	public fun deserialize (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;)Ljava/lang/Character;
+	public fun serialize (C)Ljava/lang/String;
+	public synthetic fun serialize (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public final class com/apurebase/kgraphql/schema/builtin/DOUBLE_COERCION : com/apurebase/kgraphql/schema/scalar/StringScalarCoercion {
 	public static final field INSTANCE Lcom/apurebase/kgraphql/schema/builtin/DOUBLE_COERCION;
 	public synthetic fun deserialize (Ljava/lang/Object;Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;)Ljava/lang/Object;
@@ -249,6 +257,7 @@ public final class com/apurebase/kgraphql/schema/builtin/DOUBLE_COERCION : com/a
 }
 
 public final class com/apurebase/kgraphql/schema/builtin/ExtendedBuiltInScalars : java/lang/Enum {
+	public static final field CHAR Lcom/apurebase/kgraphql/schema/builtin/ExtendedBuiltInScalars;
 	public static final field LONG Lcom/apurebase/kgraphql/schema/builtin/ExtendedBuiltInScalars;
 	public static final field SHORT Lcom/apurebase/kgraphql/schema/builtin/ExtendedBuiltInScalars;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
