@@ -22,6 +22,8 @@ private const val INT_DESCRIPTION = "The Int scalar type represents a signed 32-
 
 private const val LONG_DESCRIPTION = "The Long scalar type represents a signed 64-bit numeric non-fractional value"
 
+private const val CHAR_DESCRIPTION = "The Char scalar type represents a 16-bit Unicode character"
+
 private const val FLOAT_DESCRIPTION =
     "The Float scalar type represents signed double-precision fractional values as specified by IEEE 754"
 
@@ -54,7 +56,8 @@ enum class BuiltInScalars(val typeDef: TypeDef.Scalar<*>) {
 
 enum class ExtendedBuiltInScalars(val typeDef: TypeDef.Scalar<*>) {
     SHORT(TypeDef.Scalar(Short::class.defaultKQLTypeName(), Short::class, SHORT_COERCION, SHORT_DESCRIPTION)),
-    LONG(TypeDef.Scalar(Long::class.defaultKQLTypeName(), Long::class, LONG_COERCION, LONG_DESCRIPTION))
+    LONG(TypeDef.Scalar(Long::class.defaultKQLTypeName(), Long::class, LONG_COERCION, LONG_DESCRIPTION)),
+    CHAR(TypeDef.Scalar(Char::class.defaultKQLTypeName(), Char::class, CHAR_COERCION, CHAR_DESCRIPTION))
 }
 
 object STRING_COERCION : StringScalarCoercion<String> {
@@ -173,5 +176,18 @@ object ID_COERCION : StringScalarCoercion<ID> {
         is NumberValueNode -> ID(valueNode.value.toString())
 
         else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to ID", valueNode)
+    }
+}
+
+object CHAR_COERCION : StringScalarCoercion<Char> {
+    override fun serialize(instance: Char): String = instance.toString()
+
+    override fun deserialize(raw: String, valueNode: ValueNode) = when {
+        valueNode is StringValueNode && valueNode.value.length == 1 -> valueNode.value[0]
+        valueNode is NumberValueNode && valueNode.value.toInt() >= Char.MIN_VALUE.code && valueNode.value.toInt() <= Char.MAX_VALUE.code -> Char(
+            valueNode.value.toInt()
+        )
+
+        else -> throw InvalidInputValueException("Cannot coerce '${valueNode.valueNodeName}' to Char", valueNode)
     }
 }

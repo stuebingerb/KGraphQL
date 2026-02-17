@@ -611,6 +611,9 @@ class SchemaPrinterTest {
               subscription: Subscription
             }
             
+            "The Char scalar type represents a 16-bit Unicode character"
+            scalar Char
+
             "The Long scalar type represents a signed 64-bit numeric non-fractional value"
             scalar Long
 
