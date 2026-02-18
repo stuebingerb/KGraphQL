@@ -14,6 +14,7 @@ import com.apurebase.kgraphql.schema.scalar.serializeScalar
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.schema.structure.InputValue
 import com.apurebase.kgraphql.schema.structure.Type
+import com.apurebase.kgraphql.typeByPrimitiveArrayClass
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.NullNode
@@ -180,10 +181,17 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
         return when {
             // Check value, not returnType, because this method can be invoked with element value
-            value is Collection<*> || value is Array<*> || value is ArrayNode -> ctx.scope.async {
+            value is Collection<*> || value is Array<*> || value is ArrayNode || value::class in typeByPrimitiveArrayClass.keys -> ctx.scope.async {
                 val values: Collection<*> = when (value) {
                     is Array<*> -> value.toList()
                     is ArrayNode -> value.toList()
+                    is IntArray -> value.toList()
+                    is ShortArray -> value.toList()
+                    is LongArray -> value.toList()
+                    is FloatArray -> value.toList()
+                    is DoubleArray -> value.toList()
+                    is CharArray -> value.toList()
+                    is BooleanArray -> value.toList()
                     else -> value as Collection<*>
                 }
                 if (returnType.isList()) {

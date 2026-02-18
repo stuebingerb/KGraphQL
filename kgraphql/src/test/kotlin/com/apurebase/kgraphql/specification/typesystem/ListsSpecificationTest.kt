@@ -249,4 +249,61 @@ class ListsSpecificationTest {
         response.extract<List<*>>("data/createNestedLists/nested2") shouldBe listOf(listOf(listOf(listOf(listOf("foobar")))))
         response.extract<List<*>>("data/createNestedLists/nested3") shouldBe null
     }
+
+    @Test
+    fun `primitive arrays can be used`() {
+        class Model(
+            val intArray: IntArray,
+            val shortArray: ShortArray,
+            val longArray: LongArray,
+            val floatArray: FloatArray,
+            val doubleArray: DoubleArray,
+            val charArray: CharArray,
+            val booleanArray: BooleanArray
+        )
+
+        val schema = KGraphQL.schema {
+            extendedScalars()
+            query("model") {
+                resolver { ->
+                    Model(
+                        intArrayOf(1, 2, 3),
+                        shortArrayOf(5, 6),
+                        longArrayOf(7, 8),
+                        floatArrayOf(0.0f, 1.0f),
+                        doubleArrayOf(2.0, 3.0),
+                        charArrayOf('a', 'b'),
+                        booleanArrayOf(true, false)
+                    )
+                }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            scalar Char
+
+            scalar Long
+            
+            scalar Short
+            
+            type Model {
+              booleanArray: [Boolean!]!
+              charArray: [Char!]!
+              doubleArray: [Float!]!
+              floatArray: [Float!]!
+              intArray: [Int!]!
+              longArray: [Long!]!
+              shortArray: [Short!]!
+            }
+            
+            type Query {
+              model: Model!
+            }
+
+        """.trimIndent()
+
+        schema.executeBlocking("{ model { intArray shortArray longArray floatArray doubleArray charArray booleanArray } }") shouldBe """
+            {"data":{"model":{"intArray":[1,2,3],"shortArray":[5,6],"longArray":[7,8],"floatArray":[0.0,1.0],"doubleArray":[2.0,3.0],"charArray":["a","b"],"booleanArray":[true,false]}}}
+        """.trimIndent()
+    }
 }
