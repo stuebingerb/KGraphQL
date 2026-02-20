@@ -22,9 +22,9 @@ internal fun String.dropQuotes(): String = if (isLiteral()) {
 
 internal fun String.isLiteral(): Boolean = startsWith('\"') && endsWith('\"')
 
-internal fun KClass<*>.isIterable() = isSubclassOf(Iterable::class) || this in typeByPrimitiveArrayClass.keys
+internal fun KClass<*>.isCollectionType() = isSubclassOf(Collection::class) || this in typeByPrimitiveArrayClass.keys
 
-internal fun KType.isIterable() = jvmErasure.isIterable() || toString().startsWith("kotlin.Array")
+internal fun KType.isCollectionType() = jvmErasure.isCollectionType() || toString().startsWith("kotlin.Array")
 
 internal val typeByPrimitiveArrayClass = mapOf(
     IntArray::class to Int::class.createType(),
@@ -36,9 +36,11 @@ internal val typeByPrimitiveArrayClass = mapOf(
     BooleanArray::class to Boolean::class.createType()
 )
 
-internal fun KType.getIterableElementType(): KType {
-    require(isIterable()) { "KType $this is not collection type" }
-    return typeByPrimitiveArrayClass[jvmErasure] ?: arguments.firstOrNull()?.type ?: throw NoSuchElementException("KType $this has no type arguments")
+internal fun KType.getCollectionElementType(): KType {
+    require(isCollectionType()) { "KType $this is not collection type" }
+    return typeByPrimitiveArrayClass[jvmErasure]
+        ?: arguments.firstOrNull()?.type
+        ?: throw NoSuchElementException("KType $this has no type arguments")
 }
 
 internal suspend fun <T, R> Iterable<T>.mapIndexedParallel(
