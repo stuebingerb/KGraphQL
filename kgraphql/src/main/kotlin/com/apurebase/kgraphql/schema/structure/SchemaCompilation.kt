@@ -5,8 +5,8 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.defaultKQLTypeName
-import com.apurebase.kgraphql.getIterableElementType
-import com.apurebase.kgraphql.isIterable
+import com.apurebase.kgraphql.getCollectionElementType
+import com.apurebase.kgraphql.isCollectionType
 import com.apurebase.kgraphql.request.isIntrospectionType
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.SchemaException
@@ -232,7 +232,7 @@ open class SchemaCompilation(
     }
 
     private suspend fun handlePossiblyWrappedType(kType: KType, typeCategory: TypeCategory): Type = when {
-        kType.isIterable() -> handleCollectionType(kType, typeCategory)
+        kType.isCollectionType() -> handleCollectionType(kType, typeCategory)
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.INPUT -> contextType
         kType.jvmErasure == Execution.Node::class && typeCategory == TypeCategory.INPUT -> executionType
         kType.jvmErasure == Context::class && typeCategory == TypeCategory.QUERY -> throw SchemaException("Context type cannot be part of schema")
@@ -267,7 +267,7 @@ open class SchemaCompilation(
     }
 
     private suspend fun handleCollectionType(kType: KType, typeCategory: TypeCategory): Type {
-        val type = kType.getIterableElementType()
+        val type = kType.getCollectionElementType()
         val nullableListType = Type.AList(handlePossiblyWrappedType(type, typeCategory), kType.jvmErasure)
         return applyNullability(kType.isMarkedNullable, nullableListType)
     }

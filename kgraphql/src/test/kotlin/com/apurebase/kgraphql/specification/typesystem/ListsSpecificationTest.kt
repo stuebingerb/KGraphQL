@@ -18,7 +18,7 @@ class ListsSpecificationTest {
     fun `list arguments are valid`() {
         val schema = KGraphQL.schema {
             query("list") {
-                resolver { list: Iterable<String> -> list }
+                resolver { list: List<String> -> list }
             }
         }
 
@@ -37,7 +37,7 @@ class ListsSpecificationTest {
     fun `lists with nullable entries are valid`() {
         val schema = KGraphQL.schema {
             query("list") {
-                resolver { list: Iterable<String?> -> list }
+                resolver { list: List<String?> -> list }
             }
         }
 
@@ -54,7 +54,7 @@ class ListsSpecificationTest {
     fun `lists with non-nullable entries should not accept list with null element`() {
         val schema = KGraphQL.schema {
             query("list") {
-                resolver { list: Iterable<String> -> list }
+                resolver { list: List<String> -> list }
             }
         }
 
@@ -71,7 +71,7 @@ class ListsSpecificationTest {
     fun `by default coerce single element input as collection`() {
         val schema = KGraphQL.schema {
             query("list") {
-                resolver { list: Iterable<String> -> list }
+                resolver { list: List<String> -> list }
             }
         }
 
@@ -88,7 +88,7 @@ class ListsSpecificationTest {
     fun `null value is not coerced as single element collection`() {
         val schema = KGraphQL.schema {
             query("list") {
-                resolver { list: Iterable<String>? -> list }
+                resolver { list: List<String>? -> list }
             }
         }
 
@@ -105,7 +105,7 @@ class ListsSpecificationTest {
     fun `list argument can be declared non-nullable`() {
         val schema = KGraphQL.schema {
             query("list") {
-                resolver { list: Iterable<String> -> list }
+                resolver { list: List<String> -> list }
             }
         }
 
@@ -119,9 +119,9 @@ class ListsSpecificationTest {
     }
 
     @Test
-    fun `Iterable implementations are treated as list`() {
+    fun `Collection implementations are treated as list`() {
 
-        fun getResult(): Iterable<String> = listOf("POTATO", "BATATO", "ROTATO")
+        fun getResult(): Collection<String> = listOf("POTATO", "BATATO", "ROTATO")
 
         val schema = KGraphQL.schema {
             query("list") {
@@ -130,7 +130,22 @@ class ListsSpecificationTest {
         }
 
         val response = deserialize(schema.executeBlocking("{ list }"))
-        response.extract<Iterable<String>>("data/list") shouldBe getResult()
+        response.extract<Collection<String>>("data/list") shouldBe getResult()
+    }
+
+    @Test
+    fun `Set implementations are treated as list`() {
+
+        fun getResult(): Set<String> = setOf("POTATO", "BATATO", "ROTATO")
+
+        val schema = KGraphQL.schema {
+            query("list") {
+                resolver { -> getResult() }
+            }
+        }
+
+        val response = deserialize(schema.executeBlocking("{ list }"))
+        response.extract<Set<String>>("data/list") shouldBe getResult()
     }
 
     @Test

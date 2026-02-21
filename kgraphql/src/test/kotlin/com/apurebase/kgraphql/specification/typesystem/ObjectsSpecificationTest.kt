@@ -486,4 +486,40 @@ class ObjectsSpecificationTest {
             indexOf("short") shouldBeGreaterThan indexOf("long")
         }
     }
+
+    // https://github.com/stuebingerb/KGraphQL/issues/176
+    @Test
+    fun `IntRange can be used`() {
+        data class Model(val intRange: IntRange)
+
+        val schema = schema {
+            query("model") {
+                resolver { -> Model(1..9) }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type IntRange {
+              endExclusive: Int!
+              endInclusive: Int!
+              first: Int!
+              last: Int!
+              start: Int!
+              step: Int!
+            }
+
+            type Model {
+              intRange: IntRange!
+            }
+
+            type Query {
+              model: Model!
+            }
+
+        """.trimIndent()
+
+        schema.executeBlocking("{ model { intRange { start endInclusive endExclusive first last step } } }") shouldBe """
+           {"data":{"model":{"intRange":{"start":1,"endInclusive":9,"endExclusive":10,"first":1,"last":9,"step":1}}}}
+        """.trimIndent()
+    }
 }
