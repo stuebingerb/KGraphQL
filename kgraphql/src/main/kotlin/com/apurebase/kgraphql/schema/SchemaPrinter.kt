@@ -2,8 +2,9 @@ package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.request.isIntrospectionType
 import com.apurebase.kgraphql.schema.directive.Directive
+import com.apurebase.kgraphql.schema.introspection.Describable
+import com.apurebase.kgraphql.schema.introspection.Named
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.introspection.__Described
 import com.apurebase.kgraphql.schema.introspection.__Directive
 import com.apurebase.kgraphql.schema.introspection.__InputValue
 import com.apurebase.kgraphql.schema.introspection.__Schema
@@ -254,8 +255,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
             ?.joinToString(separator = " & ", prefix = " implements ") ?: ""
 
     private fun Any.description(): String? = when (this) {
-        is __Described -> description?.takeIf { it.isNotBlank() }
-        is __Type -> description?.takeIf { it.isNotBlank() }
+        is Describable -> description?.takeIf { it.isNotBlank() }
         else -> null
     }
 
@@ -309,7 +309,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
     private fun List<__Type>?.sortedByName() =
         orEmpty().sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name.toString() })
 
-    @JvmName("sortedDescribedByName")
-    private fun <T : __Described> List<T>?.sortedByName() =
+    @JvmName("sortedByName")
+    private fun <T : Named> List<T>?.sortedByName() =
         orEmpty().sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 }
