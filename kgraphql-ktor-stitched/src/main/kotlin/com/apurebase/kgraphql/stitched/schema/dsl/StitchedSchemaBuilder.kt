@@ -45,7 +45,8 @@ class StitchedSchemaBuilder {
                 mergeSchemaDefinitions(
                     localSchemaBuilder.schemaDefinition,
                     model.toSchemaDefinition() as StitchedSchemaDefinition
-                )
+                ),
+                localSchemaBuilder.description
             ).perform()
         }
     }

@@ -42,7 +42,8 @@ import kotlin.reflect.jvm.jvmErasure
 @Suppress("UNCHECKED_CAST")
 open class SchemaCompilation(
     open val configuration: SchemaConfiguration,
-    open val definition: SchemaDefinition
+    open val definition: SchemaDefinition,
+    val schemaDescription: String?
 ) {
     protected val queryTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
 
@@ -87,7 +88,8 @@ open class SchemaCompilation(
                 + scalars.values
                 + unions.distinctBy(Type.Union::name),
             directives = definition.directives.map { handlePartialDirective(it) },
-            remoteTypesBySchema = emptyMap()
+            remoteTypesBySchema = emptyMap(),
+            description = schemaDescription
         )
         val schema = DefaultSchema(configuration, model)
         schemaProxy.proxiedSchema = schema

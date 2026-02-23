@@ -26,4 +26,7 @@ class SchemaProxy(
 
     override val directives: List<__Directive>
         get() = getProxied().directives
+
+    override val description: String?
+        get() = getProxied().description
 }

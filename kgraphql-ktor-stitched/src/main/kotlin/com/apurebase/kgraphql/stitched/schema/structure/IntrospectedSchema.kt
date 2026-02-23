@@ -91,6 +91,7 @@ data class IntrospectedSchema(
     override val subscriptionType: IntrospectedRootOperation?,
     override val types: List<IntrospectedType>,
     override val directives: List<IntrospectedDirective>,
+    override val description: String? = null
 ) : __Schema {
     companion object {
         // Decoding the IntrospectionResponse must not fail when there are additional entries in the response, cf.

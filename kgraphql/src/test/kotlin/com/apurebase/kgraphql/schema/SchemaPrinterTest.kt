@@ -557,6 +557,7 @@ class SchemaPrinterTest {
     @Test
     fun `schema with descriptions should be printed as expected if descriptions are included`() {
         val schema = KGraphQL.schema {
+            description = "Description for tested schema"
             extendedScalars()
             type<TestObject> {
                 description = "Description for query object"
@@ -605,6 +606,7 @@ class SchemaPrinterTest {
         ).print(schema)
 
         sdl shouldBe """
+            "Description for tested schema"
             schema {
               query: Query
               mutation: Mutation

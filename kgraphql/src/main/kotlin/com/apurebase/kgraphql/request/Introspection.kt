@@ -141,6 +141,7 @@ object Introspection {
             """
             query IntrospectionQuery {
               __schema {
+                description
                 queryType { name }
                 mutationType { name }
                 subscriptionType { name }

@@ -42,9 +42,11 @@ class SchemaBuilder {
 
     var configuration = SchemaConfigurationDSL()
 
+    var description: String? = null
+
     fun build(): Schema {
         return runBlocking {
-            SchemaCompilation(configuration.build(), schemaDefinition).perform()
+            SchemaCompilation(configuration.build(), schemaDefinition, description).perform()
         }
     }
 

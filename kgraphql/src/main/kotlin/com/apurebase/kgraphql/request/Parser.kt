@@ -607,6 +607,7 @@ internal class Parser {
      */
     private fun parseSchemaDefinition(): DefinitionNode.TypeSystemDefinitionNode.SchemaDefinitionNode {
         val start = lexer.token
+        val description = parseDescription()
         expectKeyword("schema")
         val directives = parseDirectives(true)
         val operationTypes = many(
@@ -617,6 +618,7 @@ internal class Parser {
         return DefinitionNode.TypeSystemDefinitionNode.SchemaDefinitionNode(
             directives = directives,
             operationTypes = operationTypes,
+            description = description,
             loc = loc(start)
         )
     }

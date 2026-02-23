@@ -14,8 +14,9 @@ import com.apurebase.kgraphql.stitched.schema.configuration.StitchedSchemaConfig
 @ExperimentalAPI
 class StitchedSchemaCompilation(
     override val configuration: StitchedSchemaConfiguration,
-    override val definition: StitchedSchemaDefinition
-) : SchemaCompilation(configuration, definition) {
+    override val definition: StitchedSchemaDefinition,
+    val localSchemaDescription: String?
+) : SchemaCompilation(configuration, definition, localSchemaDescription) {
     private val remoteSchemaCompilation = RemoteSchemaCompilation(configuration)
 
     override suspend fun perform(): DefaultSchema {
@@ -105,7 +106,8 @@ class StitchedSchemaCompilation(
             // TODO: we shouldn't need to do a full recompilation again
             remoteTypesBySchema = definition.remoteSchemas.mapValues {
                 RemoteSchemaCompilation(configuration).perform(it.key, it.value)
-            }
+            },
+            description = localSchemaDescription // TODO: schemaDescription
         )
         val schema = DefaultSchema(configuration, model)
         schemaProxy.proxiedSchema = schema

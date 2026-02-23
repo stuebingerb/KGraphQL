@@ -70,6 +70,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
         //   https://spec.graphql.org/draft/#sec-Root-Operation-Types.Default-Root-Operation-Type-Names
         val schemaDefinition = if (includeSchemaDefinition(schema)) {
             buildString {
+                appendDescription(schema)
                 appendLine("schema {")
                 val indentation = "  "
                 // The query root operation type must always be provided

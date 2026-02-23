@@ -42,8 +42,8 @@ class StitchedSchemaTest {
      * Executes the default introspection query against this [Schema] and returns it
      * as parsed [IntrospectedSchema]
      */
-    private fun Schema.introspected(): IntrospectedSchema {
-        val introspectionResponse = executeBlocking(Introspection.query())
+    private fun Schema.introspected(introspectionQuery: String = Introspection.query()): IntrospectedSchema {
+        val introspectionResponse = executeBlocking(introspectionQuery)
         return IntrospectedSchema.fromIntrospectionResponse(introspectionResponse)
     }
 
@@ -1209,5 +1209,59 @@ class StitchedSchemaTest {
             }
             
         """.trimIndent()
+    }
+
+    @Test
+    fun `stitched schema should support local schema description`() {
+        val schema = StitchedKGraphQL.stitchedSchema {
+            configure {
+                remoteExecutor = DummyRemoteRequestExecutor
+            }
+            localSchema {
+                description = "Local Schema"
+                query("localQuery") {
+                    resolver { -> LocalType("foo") }
+                }
+            }
+            remoteSchema("remote") {
+                getRemoteSchema {
+                    description = "Remote Schema (not shown)"
+                    query("remoteQuery") {
+                        description = "Remote Query"
+                        resolver { -> RemoteType(42) }
+                    }
+                }
+            }
+        }
+
+        val expectedSDL = """
+            "Local Schema"
+            schema {
+              query: Query
+            }
+            
+            type LocalType {
+              value: String!
+            }
+            
+            "Query object"
+            type Query {
+              localQuery: LocalType!
+              "Remote Query"
+              remoteQuery: RemoteType!
+            }
+            
+            type RemoteType {
+              bar: Int!
+            }
+
+        """.trimIndent()
+
+        SchemaPrinter(
+            SchemaPrinterConfig(includeDescriptions = true, includeSchemaDefinition = true)
+        ).print(schema) shouldBe expectedSDL
+        SchemaPrinter(SchemaPrinterConfig(includeDescriptions = true, includeSchemaDefinition = true)).print(
+            schema.introspected(Introspection.query(Introspection.SpecLevel.WorkingDraft))
+        ) shouldBe expectedSDL
     }
 }

@@ -37,6 +37,7 @@ sealed class DefinitionNode(override val loc: Location?) : ASTNode() {
         class SchemaDefinitionNode(
             val directives: List<DirectiveNode> = listOf(),
             val operationTypes: List<OperationTypeDefinitionNode>,
+            val description: StringValueNode?,
             loc: Location?
         ) : TypeSystemDefinitionNode(loc)
 
