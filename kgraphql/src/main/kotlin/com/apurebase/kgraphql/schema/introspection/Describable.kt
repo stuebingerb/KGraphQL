@@ -1,7 +1,5 @@
 package com.apurebase.kgraphql.schema.introspection
 
-interface __Described {
-    val name: String
-
+interface Describable {
     val description: String?
 }

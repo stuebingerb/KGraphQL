@@ -4,10 +4,9 @@ package com.apurebase.kgraphql.schema.introspection
  * GraphQL introspection system defines __Type to represent all of TypeKinds
  * If some field does not apply to given type, it returns null
  */
-interface __Type {
+interface __Type : Describable {
     val kind: TypeKind
     val name: String?
-    val description: String?
 
     // OBJECT and INTERFACE only
     val fields: List<__Field>?

@@ -901,6 +901,14 @@ public final class com/apurebase/kgraphql/schema/execution/TypeCondition {
 	public final fun getOnType ()Lcom/apurebase/kgraphql/schema/structure/Type;
 }
 
+public abstract interface class com/apurebase/kgraphql/schema/introspection/Describable {
+	public abstract fun getDescription ()Ljava/lang/String;
+}
+
+public abstract interface class com/apurebase/kgraphql/schema/introspection/Named {
+	public abstract fun getName ()Ljava/lang/String;
+}
+
 public abstract interface annotation class com/apurebase/kgraphql/schema/introspection/NotIntrospected : java/lang/annotation/Annotation {
 }
 
@@ -936,26 +944,21 @@ public final class com/apurebase/kgraphql/schema/introspection/TypeKind : java/l
 	public static fun values ()[Lcom/apurebase/kgraphql/schema/introspection/TypeKind;
 }
 
-public abstract interface class com/apurebase/kgraphql/schema/introspection/__Described {
-	public abstract fun getDescription ()Ljava/lang/String;
-	public abstract fun getName ()Ljava/lang/String;
-}
-
-public abstract interface class com/apurebase/kgraphql/schema/introspection/__Directive : com/apurebase/kgraphql/schema/introspection/__Described {
+public abstract interface class com/apurebase/kgraphql/schema/introspection/__Directive : com/apurebase/kgraphql/schema/introspection/Describable, com/apurebase/kgraphql/schema/introspection/Named {
 	public abstract fun getArgs ()Ljava/util/List;
 	public abstract fun getLocations ()Ljava/util/List;
 	public abstract fun isRepeatable ()Z
 }
 
-public abstract interface class com/apurebase/kgraphql/schema/introspection/__EnumValue : com/apurebase/kgraphql/schema/introspection/__Described, com/apurebase/kgraphql/schema/model/Depreciable {
+public abstract interface class com/apurebase/kgraphql/schema/introspection/__EnumValue : com/apurebase/kgraphql/schema/introspection/Describable, com/apurebase/kgraphql/schema/introspection/Named, com/apurebase/kgraphql/schema/model/Depreciable {
 }
 
-public abstract interface class com/apurebase/kgraphql/schema/introspection/__Field : com/apurebase/kgraphql/schema/introspection/__Described, com/apurebase/kgraphql/schema/model/Depreciable {
+public abstract interface class com/apurebase/kgraphql/schema/introspection/__Field : com/apurebase/kgraphql/schema/introspection/Describable, com/apurebase/kgraphql/schema/introspection/Named, com/apurebase/kgraphql/schema/model/Depreciable {
 	public abstract fun getArgs ()Ljava/util/List;
 	public abstract fun getType ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 }
 
-public abstract interface class com/apurebase/kgraphql/schema/introspection/__InputValue : com/apurebase/kgraphql/schema/introspection/__Described, com/apurebase/kgraphql/schema/model/Depreciable {
+public abstract interface class com/apurebase/kgraphql/schema/introspection/__InputValue : com/apurebase/kgraphql/schema/introspection/Describable, com/apurebase/kgraphql/schema/introspection/Named, com/apurebase/kgraphql/schema/model/Depreciable {
 	public abstract fun getDefaultValue ()Ljava/lang/String;
 	public abstract fun getType ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 }
@@ -968,8 +971,7 @@ public abstract interface class com/apurebase/kgraphql/schema/introspection/__Sc
 	public abstract fun getTypes ()Ljava/util/List;
 }
 
-public abstract interface class com/apurebase/kgraphql/schema/introspection/__Type {
-	public abstract fun getDescription ()Ljava/lang/String;
+public abstract interface class com/apurebase/kgraphql/schema/introspection/__Type : com/apurebase/kgraphql/schema/introspection/Describable {
 	public abstract fun getEnumValues ()Ljava/util/List;
 	public abstract fun getFields ()Ljava/util/List;
 	public abstract fun getInputFields ()Ljava/util/List;

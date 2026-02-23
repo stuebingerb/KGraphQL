@@ -2,7 +2,7 @@ package com.apurebase.kgraphql.schema.introspection
 
 import com.apurebase.kgraphql.schema.directive.DirectiveLocation
 
-interface __Directive : __Described {
+interface __Directive : Describable, Named {
 
     val locations: List<DirectiveLocation>
 
