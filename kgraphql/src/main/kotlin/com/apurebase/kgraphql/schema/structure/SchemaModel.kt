@@ -15,7 +15,8 @@ data class SchemaModel(
     val queryTypes: Map<KClass<*>, Type>,
     val inputTypes: Map<KClass<*>, Type>,
     override val directives: List<Directive>,
-    val remoteTypesBySchema: Map<String, List<Type>>
+    val remoteTypesBySchema: Map<String, List<Type>>,
+    override val description: String?
 ) : __Schema {
 
     val allTypesByName = allTypes.associateBy { it.name }

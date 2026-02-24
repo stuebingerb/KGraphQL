@@ -1,6 +1,6 @@
 package com.apurebase.kgraphql.schema.introspection
 
-interface __Schema {
+interface __Schema : Describable {
     val types: List<__Type>
 
     val queryType: __Type
