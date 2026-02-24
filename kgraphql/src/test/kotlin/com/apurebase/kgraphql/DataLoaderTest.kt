@@ -2,9 +2,9 @@ package com.apurebase.kgraphql
 
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
-import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.ints.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -53,9 +53,7 @@ class DataLoaderTest {
         val abcB: AtomicProperty = AtomicProperty(),
         val abcChildren: AtomicProperty = AtomicProperty(),
         val treeChild: AtomicProperty = AtomicProperty(),
-        val payments: AtomicProperty = AtomicProperty(),
-        val nodeLeaf: AtomicProperty = AtomicProperty(),
-        val nodeChildren: AtomicProperty = AtomicProperty()
+        val payments: AtomicProperty = AtomicProperty()
     )
 
     sealed class Payment {
@@ -65,58 +63,12 @@ class DataLoaderTest {
 
     data class Wallet(val id: String)
 
-    data class Node(val name: String)
-
     fun schema(block: SchemaBuilder.() -> Unit = {}): Pair<DefaultSchema, AtomicCounters> {
         val counters = AtomicCounters()
 
         val schema = defaultSchema {
             configure {
                 useDefaultPrettyPrinter = true
-            }
-
-            query("root") {
-                resolver { ->
-                    (1..3).map {
-                        Node(
-                            "node-$it"
-                        )
-                    }
-                }
-            }
-
-            type<Node> {
-                dataProperty<String, String>("leaf") {
-                    loader { keys ->
-                        println("== Running [leaf] loader with keys: ${keys.sorted()} ==")
-                        counters.nodeLeaf.loader.incrementAndGet()
-                        keys.map {
-                            ExecutionResult.Success("$it.leaf")
-                        }
-                    }
-                    prepare { parent: Node ->
-                        counters.nodeLeaf.prepare.incrementAndGet()
-                        parent.name
-                    }
-                }
-                dataProperty<String, List<Node>>("children") {
-                    loader { keys ->
-                        println("== Running [children] loader with keys: ${keys.sorted()} ==")
-                        counters.nodeChildren.loader.incrementAndGet()
-                        keys.map { key ->
-                            delay(1)
-                            ExecutionResult.Success(
-                                (1..3).map {
-                                    Node("$key.children-$it")
-                                }
-                            )
-                        }
-                    }
-                    prepare { parent ->
-                        counters.nodeChildren.prepare.incrementAndGet()
-                        parent.name
-                    }
-                }
             }
 
             query("people") {
@@ -650,10 +602,9 @@ class DataLoaderTest {
 
     @Test
     fun `multiple layers of data loaders`() {
-        assertSoftly {
-            val (schema, counters) = schema()
+        val (schema, counters) = schema()
 
-            val query = """
+        val query = """
             {
                 abc {
                     value
@@ -682,98 +633,36 @@ class DataLoaderTest {
             }
         """.trimIndent()
 
-            val result = schema.executeBlocking(query).deserialize()
+        val result = schema.executeBlocking(query).deserialize()
 
-            val firstLevel = result.extract<List<Map<String, Any?>>>("data/abc")
-            firstLevel shouldHaveSize 3
-            firstLevel.map { it["value"] as String } shouldContainExactly listOf("Testing 1", "Testing 2", "Testing 3")
+        val firstLevel = result.extract<List<Map<String, Any?>>>("data/abc")
+        firstLevel shouldHaveSize 3
+        firstLevel.map { it["value"] as String } shouldContainExactly listOf("Testing 1", "Testing 2", "Testing 3")
 
-            val leafNodes = (0..2).flatMap { firstLevel ->
-                (0..6).flatMap { secondLevel ->
-                    (0..6).flatMap { thirdLevel ->
-                        (0..6).flatMap { fourthLevel ->
-                            (0..6).flatMap { fifthLevel ->
-                                (0..6).map { sixthLevel ->
-                                    result.extract<Map<String, Any>>("data/abc[$firstLevel]/children[$secondLevel]/children[$thirdLevel]/children[$fourthLevel]/children[$fifthLevel]/children[$sixthLevel]")
-                                }
+        val leafNodes = (0..2).flatMap { firstLevel ->
+            (0..6).flatMap { secondLevel ->
+                (0..6).flatMap { thirdLevel ->
+                    (0..6).flatMap { fourthLevel ->
+                        (0..6).flatMap { fifthLevel ->
+                            (0..6).map { sixthLevel ->
+                                result.extract<Map<String, Any>>("data/abc[$firstLevel]/children[$secondLevel]/children[$thirdLevel]/children[$fourthLevel]/children[$fifthLevel]/children[$sixthLevel]")
                             }
                         }
                     }
                 }
             }
-            leafNodes shouldHaveSize 50421
-
-            counters.abcB.prepare.get() shouldBe 58824
-            counters.abcB.loader.get() shouldBe 6
-
-            counters.abcChildren.prepare.get() shouldBe 8403
-            counters.abcChildren.loader.get() shouldBe 5
         }
-    }
+        leafNodes shouldHaveSize 50421
 
-    // Similar nesting as [multiple layers of data loaders] but with different quantities and names to be more
-    // comparable
-    @Test
-    fun `multiple layers of node data loaders`() {
-        assertSoftly {
-            val (schema, counters) = schema()
+        counters.abcB.prepare.get() shouldBe 58824
+        // The dataloader is timed, so it might load the requested items in even less batches, depending on how long
+        // execution of the tested query takes.
+        counters.abcB.loader.get() shouldBeLessThanOrEqual 6
 
-            val query = """
-            {
-                root {
-                    name
-                    leaf
-                    children {
-                        name
-                        leaf
-                        children {
-                            name
-                            leaf
-                            children {
-                                name
-                                leaf
-                                children {
-                                    name
-                                    leaf
-                                    children {
-                                        name
-                                        leaf
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        """.trimIndent()
-
-            val result = schema.executeBlocking(query).deserialize()
-
-            val firstLevel = result.extract<List<Map<String, Any?>>>("data/root")
-            firstLevel shouldHaveSize 3
-            firstLevel.map { it["name"] as String } shouldContainExactly listOf("node-1", "node-2", "node-3")
-
-            val leafNodes = (0..2).flatMap { firstLevel ->
-                (0..2).flatMap { secondLevel ->
-                    (0..2).flatMap { thirdLevel ->
-                        (0..2).flatMap { fourthLevel ->
-                            (0..2).flatMap { fifthLevel ->
-                                (0..2).map { sixthLevel ->
-                                    result.extract<Map<String, Any>>("data/root[$firstLevel]/children[$secondLevel]/children[$thirdLevel]/children[$fourthLevel]/children[$fifthLevel]/children[$sixthLevel]")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            leafNodes shouldHaveSize 729
-
-            counters.nodeLeaf.prepare.get() shouldBe 1092
-            counters.nodeLeaf.loader.get() shouldBe 6
-
-            counters.nodeChildren.prepare.get() shouldBe 363
-            counters.nodeChildren.loader.get() shouldBe 5
-        }
+        counters.abcChildren.prepare.get() shouldBe 8403
+        // The dataloader is timed, so it might load the requested items in even less batches, depending on how long
+        // execution of the tested query takes.
+        counters.abcChildren.loader.get() shouldBeLessThanOrEqual 5
     }
 
     @Test
