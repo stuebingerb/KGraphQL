@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test
 @Specification("3.11 List", "3.12 Non-Null")
 // See also ListsSpecificationTest
 class ListInputCoercionTest {
+    data class ListWrapper(val innerValue: List<Int>)
+
     private val schema = defaultSchema {
         query("NullableList") { resolver { value: List<Int?>? -> value } }
         query("NullableNestedList") { resolver { value: List<List<Int?>?>? -> value } }
@@ -20,6 +22,7 @@ class ListInputCoercionTest {
         query("NullableNestedSet") { resolver { value: Set<Set<Int?>?>? -> value } }
         query("NullableNestedSetListSet") { resolver { value: Set<List<Set<Int?>?>?>? -> value } }
         query("RequiredSet") { resolver { value: Set<Int?> -> value } }
+        query("RequiredListInObjectInList") { resolver { value: List<ListWrapper> -> value } }
     }
 
     @Test
@@ -183,5 +186,23 @@ class ListInputCoercionTest {
     fun `a list with null value should be valid for a required set of Int`() {
         val response = deserialize(schema.executeBlocking("{ RequiredSet(value: [1, 2, null]) }"))
         response.extract<List<Int?>>("data/RequiredSet") shouldBe listOf(1, 2, null)
+    }
+
+    @Test
+    fun `list argument inside object inside list should accept list value`() {
+        val response = deserialize(schema.executeBlocking("{ RequiredListInObjectInList(value: [{innerValue: [1]}]) { innerValue } }"))
+        response.extract<List<Map<String, List<Int>>>>("data/RequiredListInObjectInList") shouldBe listOf(mapOf("innerValue" to listOf(1)))
+    }
+
+    @Test
+    fun `list argument inside object inside list should coerce single value to list`() {
+        val response = deserialize(schema.executeBlocking("{ RequiredListInObjectInList(value: [{innerValue: 1}]) { innerValue } }"))
+        response.extract<List<Map<String, List<Int>>>>("data/RequiredListInObjectInList") shouldBe listOf(mapOf("innerValue" to listOf(1)))
+    }
+
+    @Test
+    fun `single value and single object should be coerced to list`() {
+        val response = deserialize(schema.executeBlocking("{ RequiredListInObjectInList(value: {innerValue: 1}) { innerValue } }"))
+        response.extract<List<Map<String, List<Int>>>>("data/RequiredListInObjectInList") shouldBe listOf(mapOf("innerValue" to listOf(1)))
     }
 }
