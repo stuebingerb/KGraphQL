@@ -125,7 +125,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                         paramType,
                         valueField.value,
                         variables,
-                        coerceSingleValueAsList,
+                        coerceSingleValueAsList = true,
                         locationDefaultValue
                     )
                 }
