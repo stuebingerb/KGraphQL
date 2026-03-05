@@ -8,7 +8,7 @@ jackson = "2.21.1"
 ktor = "3.4.1"
 junit-jupiter = "6.0.3"
 kotest = "6.1.4"
-ktlint = "14.0.1"
+ktlint = "14.1.0"
 
 [plugins]
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
