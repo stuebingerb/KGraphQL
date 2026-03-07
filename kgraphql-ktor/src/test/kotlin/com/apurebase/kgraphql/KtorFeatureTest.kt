@@ -189,7 +189,7 @@ class KtorFeatureTest : KtorTest() {
         }
         runBlocking {
             response.bodyAsText() shouldBe """
-                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":3,"column":1}],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}]}
+                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":3,"column":1}],"path":["actors",1,"nickname"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}]}
             """.trimIndent()
             response.contentType() shouldBe ContentType.Application.Json
         }
@@ -229,7 +229,7 @@ class KtorFeatureTest : KtorTest() {
         }
         runBlocking {
             response.bodyAsText() shouldBe """
-                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":9,"column":1}],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}]}
+                {"errors":[{"message":"Actors above 30 don't have nicknames","locations":[{"line":9,"column":1}],"path":["persons",1,"favouriteMovie","actors",0,"nickname"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}]}
             """.trimIndent()
             response.contentType() shouldBe ContentType.Application.Json
         }
@@ -290,7 +290,7 @@ class KtorFeatureTest : KtorTest() {
             field("error")
         }
         runBlocking {
-            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[{\"line\":2,\"column\":1}],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
+            response.bodyAsText() shouldBe "{\"errors\":[{\"message\":\"Error message\",\"locations\":[{\"line\":2,\"column\":1}],\"path\":[\"error\"],\"extensions\":{\"type\":\"INTERNAL_SERVER_ERROR\"}}]}"
             response.contentType() shouldBe ContentType.Application.Json
         }
     }
