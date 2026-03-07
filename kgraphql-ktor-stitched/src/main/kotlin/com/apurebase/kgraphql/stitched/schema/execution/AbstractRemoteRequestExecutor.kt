@@ -17,7 +17,10 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.LongNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 
 @ExperimentalAPI
 abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMapper) : RemoteRequestExecutor {
@@ -42,7 +45,6 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
             """.trimIndent()
         }
         val responseJson = objectMapper.readTree(response)
-        // TODO: properly transfer errors from the remote execution
         responseJson["errors"]?.let { errors ->
             (errors as? ArrayNode)?.forEach { error ->
                 val objectNode = error as? ObjectNode
@@ -50,12 +52,33 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
                     ?: "Error(s) during remote execution"
                 val extensionsNode = objectNode?.get("extensions") as? ObjectNode
                 val extensions = mapOf("remoteUrl" to node.remoteUrl, "remoteOperation" to node.remoteOperation) +
-                    extensionsNode?.let {
-                        objectMapper.convertValue(it, object : TypeReference<Map<String, Any?>>() {})
-                    }.orEmpty()
+                        extensionsNode?.let {
+                            objectMapper.convertValue(it, object : TypeReference<Map<String, Any?>>() {})
+                        }.orEmpty()
+                // Build a custom node for the remote error that includes the returned path
+                val executionErrorNode = object : Execution.Node(
+                    node.selectionNode,
+                    node.field,
+                    node.children,
+                    node.arguments,
+                    node.directives,
+                    node.variables,
+                    node.arrayIndex,
+                    node
+                ) {
+                    // The first path segment of the remote error is the executed query. As this is transparent from our
+                    // stitched schema, we need to remove that segment for a proper path.
+                    override val fullPath: List<Any> = node.fullPath + ((objectNode?.get("path") as? ArrayNode)?.map {
+                        when (it) {
+                            is IntNode, is LongNode -> it.longValue()
+                            is TextNode -> it.textValue()
+                            else -> it.toString()
+                        }
+                    }?.drop(1) ?: emptyList())
+                }
                 throw ExecutionError(
                     message = message,
-                    node = node,
+                    node = executionErrorNode,
                     extensions = extensions
                 )
             }

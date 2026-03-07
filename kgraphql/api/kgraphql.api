@@ -27,6 +27,7 @@ public final class com/apurebase/kgraphql/ContextBuilderKt {
 public class com/apurebase/kgraphql/ExecutionError : com/apurebase/kgraphql/GraphQLError {
 	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/execution/Execution;Ljava/lang/Throwable;Ljava/util/Map;)V
 	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/execution/Execution;Ljava/lang/Throwable;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getPath ()Ljava/util/List;
 }
 
 public final class com/apurebase/kgraphql/ExecutionException : com/apurebase/kgraphql/ExecutionError {
@@ -44,6 +45,7 @@ public abstract class com/apurebase/kgraphql/GraphQLError : java/lang/Exception 
 	public fun getMessage ()Ljava/lang/String;
 	public final fun getNode ()Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;
 	public final fun getOriginalError ()Ljava/lang/Throwable;
+	public abstract fun getPath ()Ljava/util/List;
 	public final fun getPositions ()Ljava/util/List;
 	public final fun getSource ()Lcom/apurebase/kgraphql/schema/model/ast/Source;
 	public final fun prettyPrint ()Ljava/lang/String;
@@ -71,6 +73,8 @@ public final class com/apurebase/kgraphql/KGraphQL$Companion {
 public class com/apurebase/kgraphql/RequestError : com/apurebase/kgraphql/GraphQLError {
 	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Ljava/lang/Throwable;Ljava/util/Map;)V
 	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Ljava/lang/Throwable;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getPath ()Ljava/lang/Void;
+	public synthetic fun getPath ()Ljava/util/List;
 }
 
 public final class com/apurebase/kgraphql/ValidationException : com/apurebase/kgraphql/RequestError {
