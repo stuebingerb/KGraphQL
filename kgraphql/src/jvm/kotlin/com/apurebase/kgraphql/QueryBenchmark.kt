@@ -53,6 +53,11 @@ open class QueryBenchmark {
         prefix = "{",
         postfix = "}"
     ) { "nestedObject$it: nestedObject { id name }" }
+    val manyOperationsWithFragment = (1..1_000).joinToString(
+        separator = System.lineSeparator(),
+        prefix = "{",
+        postfix = "} fragment IdName on Node { id name }"
+    ) { "nestedObject$it: nestedObject { ...IdName }" }
 
     val schema = KGraphQL.schema {
         type<Node> {
@@ -74,6 +79,9 @@ open class QueryBenchmark {
         query("manyChildren") {
             resolver { -> manyChildren }
         }
+        query("executionError") {
+            resolver<String> { throw IllegalArgumentException("Execution Error") }
+        }
     }
 
     @Benchmark
@@ -84,6 +92,21 @@ open class QueryBenchmark {
     @Benchmark
     fun largeList(): String {
         return schema.executeBlocking("{largeList{id name children {id name}}}")
+    }
+
+    @Benchmark
+    fun largeListWithFragment(): String {
+        return schema.executeBlocking("""
+            {
+                largeList {
+                    ...NodeSelection
+                }
+            }
+            
+            fragment NodeSelection on Node {
+                id name children { ...on Node { id name } }
+            }
+        """.trimIndent())
     }
 
     @Benchmark
@@ -99,5 +122,15 @@ open class QueryBenchmark {
     @Benchmark
     fun manyOperations(): String {
         return schema.executeBlocking(manyOperations)
+    }
+
+    @Benchmark
+    fun manyOperationsWithFragment(): String {
+        return schema.executeBlocking(manyOperationsWithFragment)
+    }
+
+    @Benchmark
+    fun executionError(): String {
+        return runCatching { schema.executeBlocking("{executionError}") }.getOrElse { it.javaClass.simpleName }
     }
 }
