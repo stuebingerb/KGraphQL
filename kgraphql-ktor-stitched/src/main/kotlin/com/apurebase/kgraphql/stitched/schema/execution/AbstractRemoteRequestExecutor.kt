@@ -1,8 +1,8 @@
 package com.apurebase.kgraphql.stitched.schema.execution
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExecutionError
 import com.apurebase.kgraphql.ExperimentalAPI
-import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.GraphqlRequest
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.execution.Execution
@@ -53,9 +53,9 @@ abstract class AbstractRemoteRequestExecutor(private val objectMapper: ObjectMap
                     extensionsNode?.let {
                         objectMapper.convertValue(it, object : TypeReference<Map<String, Any?>>() {})
                     }.orEmpty()
-                throw GraphQLError(
+                throw ExecutionError(
                     message = message,
-                    nodes = listOf(node.selectionNode),
+                    node = node,
                     extensions = extensions
                 )
             }

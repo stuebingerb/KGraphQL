@@ -14,7 +14,7 @@ data class Variables(private val variablesJson: VariablesJson, private val varia
         if (variable == null) {
             throw ValidationException(
                 "Variable '$${keyNode.name.value}' was not declared for this operation",
-                listOf(keyNode)
+                keyNode
             )
         }
 

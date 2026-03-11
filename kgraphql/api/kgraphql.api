@@ -24,22 +24,25 @@ public final class com/apurebase/kgraphql/ContextBuilderKt {
 	public static final fun context (Lkotlin/jvm/functions/Function1;)Lcom/apurebase/kgraphql/Context;
 }
 
-public final class com/apurebase/kgraphql/ExecutionException : com/apurebase/kgraphql/GraphQLError {
+public class com/apurebase/kgraphql/ExecutionError : com/apurebase/kgraphql/GraphQLError {
+	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/execution/Execution;Ljava/lang/Throwable;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/execution/Execution;Ljava/lang/Throwable;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/apurebase/kgraphql/ExecutionException : com/apurebase/kgraphql/ExecutionError {
 	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/execution/Execution;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/execution/Execution;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Ljava/lang/Throwable;)V
-	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public abstract interface annotation class com/apurebase/kgraphql/ExperimentalAPI : java/lang/annotation/Annotation {
 }
 
-public class com/apurebase/kgraphql/GraphQLError : java/lang/Exception {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/util/Map;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+public abstract class com/apurebase/kgraphql/GraphQLError : java/lang/Exception {
+	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Ljava/lang/Throwable;Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getExtensions ()Ljava/util/Map;
 	public final fun getLocations ()Ljava/util/List;
-	public final fun getNodes ()Ljava/util/List;
+	public fun getMessage ()Ljava/lang/String;
+	public final fun getNode ()Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;
 	public final fun getOriginalError ()Ljava/lang/Throwable;
 	public final fun getPositions ()Ljava/util/List;
 	public final fun getSource ()Lcom/apurebase/kgraphql/schema/model/ast/Source;
@@ -47,12 +50,12 @@ public class com/apurebase/kgraphql/GraphQLError : java/lang/Exception {
 	public fun serialize ()Ljava/lang/String;
 }
 
-public final class com/apurebase/kgraphql/InvalidInputValueException : com/apurebase/kgraphql/GraphQLError {
+public final class com/apurebase/kgraphql/InvalidInputValueException : com/apurebase/kgraphql/RequestError {
 	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class com/apurebase/kgraphql/InvalidSyntaxException : com/apurebase/kgraphql/GraphQLError {
+public final class com/apurebase/kgraphql/InvalidSyntaxException : com/apurebase/kgraphql/RequestError {
 	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;)V
 }
 
@@ -65,10 +68,14 @@ public final class com/apurebase/kgraphql/KGraphQL$Companion {
 	public final fun schema (Lkotlin/jvm/functions/Function1;)Lcom/apurebase/kgraphql/schema/Schema;
 }
 
-public final class com/apurebase/kgraphql/ValidationException : com/apurebase/kgraphql/GraphQLError {
+public class com/apurebase/kgraphql/RequestError : com/apurebase/kgraphql/GraphQLError {
+	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Ljava/lang/Throwable;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/Source;Ljava/util/List;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;Ljava/lang/Throwable;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/apurebase/kgraphql/ValidationException : com/apurebase/kgraphql/RequestError {
 	public fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;)V
-	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/apurebase/kgraphql/schema/model/ast/ASTNode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public abstract interface class com/apurebase/kgraphql/configuration/PluginConfiguration {

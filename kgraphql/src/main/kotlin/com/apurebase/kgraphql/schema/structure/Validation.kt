@@ -3,7 +3,6 @@ package com.apurebase.kgraphql.schema.structure
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.introspection.TypeKind
-import com.apurebase.kgraphql.schema.model.ast.ArgumentNode
 import com.apurebase.kgraphql.schema.model.ast.SelectionNode.FieldNode
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -11,21 +10,22 @@ import kotlin.reflect.full.isSubclassOf
 private val namePattern = Regex("[_a-zA-Z][_a-zA-Z0-9]*")
 
 internal fun validatePropertyArguments(parentType: Type, field: Field, requestNode: FieldNode) {
-    val argumentValidationExceptions = field.validateArguments(requestNode.arguments, parentType.name)
+    val argumentValidationExceptions = field.validateArguments(requestNode, parentType.name)
 
     if (argumentValidationExceptions.isNotEmpty()) {
         throw ValidationException(argumentValidationExceptions.fold("") { sum, exc ->
             "$sum${exc.message}"
-        }, nodes = argumentValidationExceptions.flatMap { it.nodes ?: listOf() })
+        }, node = requestNode)
     }
 }
 
-private fun Field.validateArguments(selectionArgs: List<ArgumentNode>?, parentTypeName: String?): List<ValidationException> {
+private fun Field.validateArguments(requestNode: FieldNode, parentTypeName: String?): List<ValidationException> {
+    val selectionArgs = requestNode.arguments
     if (!(args.isNotEmpty() || selectionArgs?.isNotEmpty() != true)) {
         return listOf(
             ValidationException(
                 message = "Property '$name' on type '$parentTypeName' has no arguments, found: ${selectionArgs.map { it.name.value }}",
-                nodes = selectionArgs
+                node = requestNode
             )
         )
     }
@@ -71,7 +71,7 @@ internal fun validateUnionRequest(field: Field.Union<*>, selectionNode: FieldNod
                     it.aliasOrName.value
                 }
             } on union type property ${field.name} : ${(field.returnType.unwrapped() as Type.Union).possibleTypes.map { it.name }}",
-            nodes = illegalChildren
+            node = selectionNode
         )
     }
 }

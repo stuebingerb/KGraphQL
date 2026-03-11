@@ -107,8 +107,8 @@ but you can override it to map specific exception types to `GraphQLError` or oth
     ```kotlin
     errorHandler { e ->
         when (e) {
-            is ValidationException -> GraphQLError(e.message, extensions = mapOf("type" to "VALIDATION_ERROR"))
-            is DomainException -> GraphQLError(e.message, extensions = mapOf("type" to "DOMAIN_ERROR"))
+            is ValidationException -> RequestError(e.message, extensions = mapOf("type" to "VALIDATION_ERROR"))
+            is DomainException -> RequestError(e.message, extensions = mapOf("type" to "DOMAIN_ERROR"))
             is GraphQLError -> e
             else -> ExecutionException(e.message ?: "Unknown execution error", cause = e)
         }
