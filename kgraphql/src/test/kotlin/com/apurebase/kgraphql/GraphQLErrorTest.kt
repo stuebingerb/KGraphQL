@@ -51,6 +51,9 @@ class GraphQLErrorTest {
             put("errors", buildJsonArray {
                 addJsonObject {
                     put("message", "test")
+                    put("path", buildJsonArray {
+                        add("dummyNode")
+                    })
                     put("extensions", buildJsonObject {
                         put("type", "INTERNAL_SERVER_ERROR")
                     })
@@ -100,6 +103,9 @@ class GraphQLErrorTest {
             put("errors", buildJsonArray {
                 addJsonObject {
                     put("message", "test")
+                    put("path", buildJsonArray {
+                        add("dummyNode")
+                    })
                     put("extensions", buildJsonObject {
                         put("type", "VALIDATION_ERROR")
                         put("listProperty", buildJsonArray {

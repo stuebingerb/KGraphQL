@@ -66,6 +66,9 @@ With `wrapErrors = true` (which is the default), exceptions are wrapped as `Exec
                         "column": 1
                     }
                 ],
+                "path": [
+                    "throwError"
+                ],
                 "extensions": {
                     "type": "INTERNAL_SERVER_ERROR"
                 }

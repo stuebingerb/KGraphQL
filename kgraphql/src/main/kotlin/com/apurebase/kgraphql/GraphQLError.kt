@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.model.ast.ASTNode
 import com.apurebase.kgraphql.schema.model.ast.Location.Companion.getLocation
 import com.apurebase.kgraphql.schema.model.ast.Source
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -70,6 +71,8 @@ sealed class GraphQLError(
         }
     }
 
+    abstract val path: List<Any>?
+
     fun prettyPrint(): String {
         var output = message
 
@@ -95,6 +98,18 @@ sealed class GraphQLError(
                                 put("line", location.line)
                                 put("column", location.column)
                             }
+                        }
+                    })
+                }
+                path?.let { segments ->
+                    put("path", buildJsonArray {
+                        segments.forEach {
+                            val value = when (it) {
+                                is String -> JsonPrimitive(it)
+                                is Number -> JsonPrimitive(it)
+                                else -> JsonPrimitive(it.toString())
+                            }
+                            add(value)
                         }
                     })
                 }
@@ -130,7 +145,11 @@ open class ExecutionError(
     positions = null,
     originalError = originalError,
     extensions = extensions
-)
+) {
+    // https://spec.graphql.org/September2025/#sel-GAPHPHLCAAEDAAR2mH:
+    // "An execution error must occur at a specific response position", so [path] is always present
+    override val path: List<Any> = node.fullPath
+}
 
 /**
  * A request error is an error raised during a request which results in no response data. Typically raised before
@@ -157,7 +176,10 @@ open class RequestError(
     positions = positions,
     originalError = originalError,
     extensions = extensions
-)
+) {
+    // Request errors are raised before execution, so they cannot provide a proper path
+    override val path = null
+}
 
 class ExecutionException(message: String, node: Execution, cause: Throwable? = null) : ExecutionError(
     message = message,
