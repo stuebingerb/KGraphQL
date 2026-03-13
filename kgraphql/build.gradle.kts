@@ -29,10 +29,8 @@ benchmark {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.coroutines.jdk8)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.jackson.core.databind)
     implementation(libs.jackson.module.kotlin)
