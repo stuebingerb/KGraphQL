@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
     api(project(":kgraphql"))
-    implementation(kotlin("stdlib-jdk8"))
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.server.core)
 
