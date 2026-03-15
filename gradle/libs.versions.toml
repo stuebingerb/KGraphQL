@@ -7,7 +7,7 @@ kotlinx-benchmark = "0.4.16"
 jackson = "2.21.1"
 ktor = "3.4.1"
 junit-jupiter = "6.0.3"
-kotest = "6.1.6"
+kotest = "6.1.7"
 ktlint = "14.2.0"
 
 [plugins]
