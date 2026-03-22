@@ -82,6 +82,9 @@ open class QueryBenchmark {
         query("executionError") {
             resolver<String> { throw IllegalArgumentException("Execution Error") }
         }
+        query("uppercase") {
+            resolver { input: String -> input.uppercase() }
+        }
     }
 
     @Benchmark
@@ -120,6 +123,11 @@ open class QueryBenchmark {
     }
 
     @Benchmark
+    fun manyChildrenWithFragment(): String {
+        return schema.executeBlocking("{manyChildren{...IdName children {...IdName parent {...IdName}}}} fragment IdName on Node { id name }")
+    }
+
+    @Benchmark
     fun manyOperations(): String {
         return schema.executeBlocking(manyOperations)
     }
@@ -132,5 +140,15 @@ open class QueryBenchmark {
     @Benchmark
     fun executionError(): String {
         return runCatching { schema.executeBlocking("{executionError}") }.getOrElse { it.javaClass.simpleName }
+    }
+
+    @Benchmark
+    fun inputFromDocument(): String {
+        return schema.executeBlocking("{uppercase(input: \"foobar\")}")
+    }
+
+    @Benchmark
+    fun inputFromVariable(): String {
+        return schema.executeBlocking("query(\$inputVar: String!) {uppercase(input: \$inputVar)}", "{\"inputVar\": \"foobar\"}")
     }
 }
