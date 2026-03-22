@@ -2,6 +2,7 @@ package com.apurebase.kgraphql.schema.dsl
 
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
+import com.apurebase.kgraphql.schema.execution.ErrorHandler
 import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -19,6 +20,7 @@ open class SchemaConfigurationDSL {
     var wrapErrors: Boolean = true
     var introspection: Boolean = true
     var genericTypeResolver: GenericTypeResolver = GenericTypeResolver.DEFAULT
+    var errorHandler: ErrorHandler = ErrorHandler()
 
     fun update(block: SchemaConfigurationDSL.() -> Unit) = block()
     open fun build(): SchemaConfiguration {
@@ -32,7 +34,8 @@ open class SchemaConfigurationDSL {
             wrapErrors = wrapErrors,
             introspection = introspection,
             genericTypeResolver = genericTypeResolver,
-            argumentTransformer = ArgumentTransformer(genericTypeResolver)
+            argumentTransformer = ArgumentTransformer(genericTypeResolver),
+            errorHandler = errorHandler
         )
     }
 }
