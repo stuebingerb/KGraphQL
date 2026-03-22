@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.stitched.schema.configuration
 import com.apurebase.kgraphql.ExperimentalAPI
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
+import com.apurebase.kgraphql.schema.execution.ErrorHandler
 import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import com.apurebase.kgraphql.stitched.schema.execution.RemoteRequestExecutor
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -23,6 +24,7 @@ class StitchedSchemaConfiguration(
     introspection: Boolean = true,
     genericTypeResolver: GenericTypeResolver,
     argumentTransformer: ArgumentTransformer,
+    errorHandler: ErrorHandler,
     val remoteExecutor: RemoteRequestExecutor,
     val localUrl: String?
 ) : SchemaConfiguration(
@@ -34,5 +36,6 @@ class StitchedSchemaConfiguration(
     wrapErrors,
     introspection,
     genericTypeResolver,
-    argumentTransformer
+    argumentTransformer,
+    errorHandler
 )

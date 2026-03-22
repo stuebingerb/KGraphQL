@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.configuration
 
 import com.apurebase.kgraphql.schema.execution.ArgumentTransformer
+import com.apurebase.kgraphql.schema.execution.ErrorHandler
 import com.apurebase.kgraphql.schema.execution.GenericTypeResolver
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.CoroutineDispatcher
@@ -18,5 +19,6 @@ open class SchemaConfiguration(
     // allow schema introspection
     val introspection: Boolean = true,
     val genericTypeResolver: GenericTypeResolver,
-    val argumentTransformer: ArgumentTransformer
+    val argumentTransformer: ArgumentTransformer,
+    val errorHandler: ErrorHandler
 )

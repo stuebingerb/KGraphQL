@@ -221,4 +221,41 @@ Those re-thrown exceptions could then be handled with the [`StatusPages` Ktor pl
     Invalid input: java.lang.IllegalArgumentException: Illegal argument
     ```
 
-Because exceptions are re-thrown, `wrapErrors = false` can never result in partial responses.
+Because exceptions are re-thrown, `wrapErrors = false` can never result in partial responses. `wrapErrors = false` will
+also not invoke a custom error handler. If you want to throw exceptions with custom mapping, use `wrapErrors = true` and
+re-throw mapped exceptions from the error handler. 
+
+## Error Handler
+
+In KGraphQL, the schema can [configure a custom _error handler_](configuration.md) that is called for each exception
+encountered during execution. It can be used to customize default error mapping, and to add additional extensions to
+the response.
+
+The error handler is supposed to return a subclass of `GraphQLError`, which is either a `RequestError` or an `ExecutionError`
+that will be handled according to the schema. When subclassing from the default `ErrorHandler`, mapping can be delegated
+to the standard implementation, completely replaced, or a mixture of both.
+
+=== "Example"
+    ```kotlin
+    val customErrorHandler = object : ErrorHandler() {
+        override suspend fun handleException(ctx: Context, node: Execution.Node, exception: Throwable): GraphQLError {
+            return when (exception) {
+                is IllegalArgumentException -> ExecutionError(
+                    message = exception.message ?: "",
+                    node = node,
+                    extensions = mapOf("type" to "CUSTOM_ERROR_TYPE")
+                )
+
+                is IllegalAccessException -> RequestError(
+                    message = "You shall not pass!",
+                    node = node.selectionNode,
+                    extensions = mapOf("required_role" to "ADMIN", "reason" to "Gandalf")
+                )
+
+                else -> super.handleException(ctx, node, exception)
+            }
+        }
+    }
+    ```
+
+(!) Exceptions from the error handler itself are *not* wrapped, regardless of the `wrapErrors` configuration. 
