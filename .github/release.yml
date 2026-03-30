@@ -1,0 +1,11 @@
+changelog:
+  categories:
+    - title: KGraphQL
+      labels:
+        - '*'
+      exclude:
+        authors:
+          - renovate[bot]
+    - title: Dependencies
+      labels:
+        - '*'
