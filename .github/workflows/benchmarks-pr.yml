@@ -25,7 +25,7 @@ jobs:
         run: |
           ./gradlew benchmark
           echo "result_file=$(find . -type f -name 'jvm.json')" >> $GITHUB_OUTPUT
-      - uses: bencherdev/bencher@bfe52df7819e320becfd60ac9f69381470d53a61 # main
+      - uses: bencherdev/bencher@61bbb86961ac5e0e56231dee81f2db9ebd198fbc # main
       - name: Track benchmark result with Bencher
         run: |
           bencher run \
