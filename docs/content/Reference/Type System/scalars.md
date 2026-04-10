@@ -4,7 +4,7 @@ weight: 1
 ---
 
 As defined by specification, scalar represents a primitive value in GraphQL. In KGraphQL, besides built-in scalar types,
-client code can declare custom scalar type, which can coerce to `String`, `Boolean`, `Int`, `Long` or `Float` (`kotlin.Double`).
+client code can declare custom scalar types, which can coerce to `String`, `Boolean`, `Int`, `Long` or `Float` (`kotlin.Double`).
 
 KGraphQL provides a group of DSL methods to define scalars:
 

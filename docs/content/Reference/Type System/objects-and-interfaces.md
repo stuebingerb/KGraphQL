@@ -322,8 +322,6 @@ First fetch the 10 people. Then loop through each of them and fetch their first 
 While what we would like is to fetch the first 10 people in 1 SQL and then fetch the first 5 friends for all those 10
 people in the second query. That's what the `dataProperty` will solve for you.
 
-### Setting up
-
 === "Example"
     ```kotlin
     data class Person(val id: Int, val name: String)

@@ -1,6 +1,6 @@
 # Access Rule
 
-It's possible to add restriction unto your resolvers by using the `accessRule`.
+It's possible to add restrictions unto your resolvers by using the `accessRule`.
 
 === "Example"
     ```kotlin

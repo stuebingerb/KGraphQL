@@ -5,8 +5,7 @@ weight: 1
 
 [![Maven Central](https://img.shields.io/maven-central/v/de.stuebingerb/kgraphql.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22de.stuebingerb%22%20AND%20a:%22kgraphql%22)
 
-KGraphQL is pushed to MavenCentral repository. It requires kotlin compiler version 1.4.x and require kotlin runtime of
-the same version as a dependency.
+KGraphQL is available from Maven Central.
 
 === "Kotlin Gradle Script"
     Add Maven Central repository:
