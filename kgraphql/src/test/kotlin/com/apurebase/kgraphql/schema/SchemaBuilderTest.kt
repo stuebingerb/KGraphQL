@@ -3,6 +3,7 @@ package com.apurebase.kgraphql.schema
 import com.apurebase.kgraphql.Account
 import com.apurebase.kgraphql.Actor
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.FilmType
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL.Companion.schema
@@ -11,6 +12,7 @@ import com.apurebase.kgraphql.context
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
@@ -417,10 +419,10 @@ class SchemaBuilderTest {
         deserialize(schema.executeBlocking("{definedValue}")).let {
             it.extract<String>("data/definedValue") shouldBe "good!"
         }
-        expect<IllegalArgumentException>("Requested value is not defined!") {
+        expectExecutionError<ExecutionException>("Requested value is not defined!") {
             schema.executeBlocking("{undefinedValue}")
         }
-        expect<IllegalArgumentException>("Requested value is not defined!") {
+        expectExecutionError<ExecutionException>("Requested value is not defined!") {
             schema.executeBlocking("{undefinedValueProp {value}}")
         }
     }

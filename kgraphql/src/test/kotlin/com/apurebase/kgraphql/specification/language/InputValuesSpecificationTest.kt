@@ -3,12 +3,13 @@ package com.apurebase.kgraphql.specification.language
 import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
+import com.apurebase.kgraphql.expectExecutionError
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
-import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.throwable.shouldHaveMessage
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -48,16 +49,12 @@ class InputValuesSpecificationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["null", "42.0", "\"foo\"", "bar"])
+    @ValueSource(strings = ["null", "42.0", "\"foo\"", "bar", "[1, 2]"])
     @Specification("2.9.1 Int Value")
     fun `Invalid Int input value`(value: String) {
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to Int") {
             schema.executeBlocking("{ Int(value: $value) }")
         }
-        exception shouldHaveMessage "Cannot coerce '$value' to Int"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     @Test
@@ -111,13 +108,9 @@ class InputValuesSpecificationTest {
     @ValueSource(strings = ["null", "42", "\"foo\"", "[\"foo\", \"bar\"]"])
     @Specification("2.9.3 Boolean Value")
     fun `Invalid Boolean input value`(value: String) {
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to Boolean") {
             schema.executeBlocking("{ Boolean(value: $value) }")
         }
-        exception shouldHaveMessage "Cannot coerce '$value' to Boolean"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     @Test
@@ -142,13 +135,9 @@ class InputValuesSpecificationTest {
     @ValueSource(strings = ["null", "true", "42", "[\"foo\", \"bar\"]"])
     @Specification("2.9.4 String Value")
     fun `Invalid String input value`(value: String) {
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to String") {
             schema.executeBlocking("{ String(value: $value) }")
         }
-        exception shouldHaveMessage "Cannot coerce '$value' to String"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     @Test
@@ -169,13 +158,9 @@ class InputValuesSpecificationTest {
     @ValueSource(strings = ["ENUM3"])
     @Specification("2.9.6 Enum Value")
     fun `Invalid Enum input value`(value: String) {
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Invalid enum ${FakeEnum::class.simpleName} value. Expected one of [ENUM1, ENUM2]") {
             schema.executeBlocking("{ Enum(value: $value) }")
         }
-        exception shouldHaveMessage "Invalid enum ${FakeEnum::class.simpleName} value. Expected one of [ENUM1, ENUM2]"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     @Test
@@ -189,13 +174,9 @@ class InputValuesSpecificationTest {
     @ValueSource(strings = ["null", "true", "\"foo\""])
     @Specification("2.9.7 List Value")
     fun `Invalid List input value`(value: String) {
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to Int") {
             schema.executeBlocking("{ List(value: $value) }")
         }
-        exception shouldHaveMessage "Cannot coerce '$value' to Int"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     @Test
@@ -211,25 +192,17 @@ class InputValuesSpecificationTest {
     @ValueSource(strings = ["null", "true", "42"])
     @Specification("2.9.8 Object Value")
     fun `Invalid Literal object input value`(value: String) {
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to String") {
             schema.executeBlocking("{ Object(value: { number: 232, description: \"little number\", list: $value }) }")
         }
-        exception shouldHaveMessage "Cannot coerce '$value' to String"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     @Test
     @Specification("2.9.8 Object Value")
     fun `Invalid Literal object input value - null`() {
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce 'null' to FakeData") {
             schema.executeBlocking("{ Object(value: null) }")
         }
-        exception shouldHaveMessage "Cannot coerce 'null' to FakeData"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     @Test
@@ -302,14 +275,10 @@ class InputValuesSpecificationTest {
 
     @Test
     @Specification("2.9.8 Object Value")
-    fun `Unknown object input value type`() {
-        val exception = shouldThrowExactly<InvalidInputValueException> {
+    fun `unknown object input value type`() {
+        expectRequestError<ValidationException>("Invalid variable '\$object' argument type 'FakeDate', expected 'FakeData!'") {
             schema.executeBlocking("query(\$object: FakeDate) { Object(value: \$object) }")
         }
-        exception shouldHaveMessage "Invalid variable '\$object' argument type 'FakeDate', expected 'FakeData!'"
-        exception.extensions shouldBe mapOf(
-            "type" to "BAD_USER_INPUT"
-        )
     }
 
     data class Dessert(
@@ -386,7 +355,7 @@ class InputValuesSpecificationTest {
             {"data":{"append":"A1"}}
         """.trimIndent()
 
-        shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '\"cd\"' to Char") {
             schema.executeBlocking(
                 """
                 mutation {
@@ -394,9 +363,9 @@ class InputValuesSpecificationTest {
                 } 
                 """.trimIndent()
             )
-        } shouldHaveMessage "Cannot coerce '\"cd\"' to Char"
+        }
 
-        shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '\"\"' to Char") {
             schema.executeBlocking(
                 """
                 mutation {
@@ -404,9 +373,9 @@ class InputValuesSpecificationTest {
                 } 
                 """.trimIndent()
             )
-        } shouldHaveMessage "Cannot coerce '\"\"' to Char"
+        }
 
-        shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce 'true' to Char") {
             schema.executeBlocking(
                 """
                 mutation {
@@ -414,9 +383,9 @@ class InputValuesSpecificationTest {
                 } 
                 """.trimIndent()
             )
-        } shouldHaveMessage "Cannot coerce 'true' to Char"
+        }
 
-        shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '-1' to Char") {
             schema.executeBlocking(
                 """
                 mutation {
@@ -424,9 +393,9 @@ class InputValuesSpecificationTest {
                 } 
                 """.trimIndent()
             )
-        } shouldHaveMessage "Cannot coerce '-1' to Char"
+        }
 
-        shouldThrowExactly<InvalidInputValueException> {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '65536' to Char") {
             schema.executeBlocking(
                 """
                 mutation {
@@ -434,6 +403,6 @@ class InputValuesSpecificationTest {
                 } 
                 """.trimIndent()
             )
-        } shouldHaveMessage "Cannot coerce '65536' to Char"
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.apurebase.kgraphql.schema.scalar
 
+import com.apurebase.kgraphql.ExecutionError
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.InvalidInputValueException
@@ -13,7 +14,6 @@ import com.apurebase.kgraphql.schema.builtin.SHORT_COERCION
 import com.apurebase.kgraphql.schema.builtin.STRING_COERCION
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
-import com.apurebase.kgraphql.schema.model.ast.ValueNode.StringValueNode
 import com.apurebase.kgraphql.schema.structure.Type
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
@@ -21,11 +21,11 @@ private typealias JsonValueNode = com.fasterxml.jackson.databind.node.ValueNode
 
 @Suppress("UNCHECKED_CAST")
 // TODO: Re-structure scalars, as it's a bit too complicated now.
-fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode): T {
+fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode, executionNode: Execution): T {
     try {
         return when (scalar.coercion) {
             // built-in scalars
-            STRING_COERCION -> STRING_COERCION.deserialize(value.valueNodeName, value as StringValueNode) as T
+            STRING_COERCION -> STRING_COERCION.deserialize(value.valueNodeName, value) as T
             FLOAT_COERCION -> FLOAT_COERCION.deserialize(value.valueNodeName, value) as T
             DOUBLE_COERCION -> DOUBLE_COERCION.deserialize(value.valueNodeName, value) as T
             SHORT_COERCION -> SHORT_COERCION.deserialize(value.valueNodeName, value) as T
@@ -39,17 +39,15 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode): T {
             is DoubleScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toDouble(), value)
             is BooleanScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toBoolean(), value)
             is LongScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toLong(), value)
-            else -> throw InvalidInputValueException(
-                "Unsupported coercion for scalar type ${scalar.name}",
-                value
+            else -> throw ExecutionError(
+                message = "Unsupported coercion for scalar type ${scalar.name}",
+                node = executionNode
             )
         }
-    } catch (e: GraphQLError) {
-        throw e
     } catch (e: Exception) {
         throw InvalidInputValueException(
-            message = "Cannot coerce '${value.valueNodeName}' to ${scalar.name}",
-            node = value,
+            message = (e as? GraphQLError)?.message ?: "Cannot coerce '${value.valueNodeName}' to ${scalar.name}",
+            node = executionNode,
             originalError = e
         )
     }
@@ -86,5 +84,8 @@ fun <T> serializeScalar(
         jsonNodeFactory.booleanNode((scalar.coercion as BooleanScalarCoercion<T>).serialize(value))
     }
 
-    else -> throw ExecutionException("Unsupported coercion for scalar ${scalar.name}", executionNode)
+    else -> throw ExecutionException(
+        message = "Unsupported coercion for scalar ${scalar.name}",
+        node = executionNode
+    )
 }

@@ -1,6 +1,7 @@
 package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.RequestError
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.configuration.SchemaConfiguration
 import com.apurebase.kgraphql.request.CachingDocumentParser
@@ -43,21 +44,25 @@ class DefaultSchema(
         context: Context,
         operationName: String?,
     ): String = coroutineScope {
-        if (!configuration.introspection && Introspection.isIntrospection(request)) {
-            throw ValidationException("GraphQL introspection is not allowed")
+        try {
+            if (!configuration.introspection && Introspection.isIntrospection(request)) {
+                throw ValidationException("GraphQL introspection is not allowed")
+            }
+
+            val parsedVariables = variables
+                ?.let { VariablesJson.Defined(configuration.objectMapper.readTree(variables)) }
+                ?: VariablesJson.Empty()
+
+            val document = requestParser.parseDocument(request)
+
+            requestExecutor.suspendExecute(
+                plan = requestInterpreter.createExecutionPlan(document, operationName, parsedVariables),
+                variables = parsedVariables,
+                context = context
+            )
+        } catch (e: RequestError) {
+            e.serialize()
         }
-
-        val parsedVariables = variables
-            ?.let { VariablesJson.Defined(configuration.objectMapper.readTree(variables)) }
-            ?: VariablesJson.Empty()
-
-        val document = requestParser.parseDocument(request)
-
-        requestExecutor.suspendExecute(
-            plan = requestInterpreter.createExecutionPlan(document, operationName, parsedVariables),
-            variables = parsedVariables,
-            context = context
-        )
     }
 
     override fun printSchema() = SchemaPrinter().print(model)

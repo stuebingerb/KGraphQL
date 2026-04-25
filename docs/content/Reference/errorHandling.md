@@ -1,83 +1,179 @@
 # Error Handling
 
-Error handling is currently implemented in a basic way only, and does for example not support multiple errors or partial responses.
+When `wrapErrors` is `true` (which is the default), exceptions encountered during execution of a request will be wrapped, and are returned as part of a well-formed response.
 
-## Basics
+## Error Format
 
-When an exception occurs, request execution is aborted and results in an error response depending on the type of exception.
+Every error has an entry with the key `message` that contains a human-readable description of the problem.
 
-Exceptions that extend `GraphQLError` via either `RequestError` or `ExecutionError` will be mapped to a response that contains
-an `errors` key with optional `locations` and `path` keys detailing where it occurred.
-Sub classes can also provide arbitrary `extensions`, by default an error `type` will be added:
+If an error can be associated to a point in the GraphQL document, it will contain an entry with the key `locations` that lists all lines and columns this error is referring to.
+
+If an error can be associated to a particular field, it will contain an entry with the key `path`, containing all segments up to the field where it occurred. This helps clients to distinguish genuine `null` responses from missing values due to errors.
+
+Additionally, every error can contain an entry with the key `extensions` that is a map of server-specific additions outside of the schema. All built-in errors will be mapped with a `type` extension according to their class.
+
+Depending on the type of error, the response may also contain a `data` key and partial response data.
+
+## Request Errors
+
+_Request errors_ are errors that result in no response data. They are typically raised before execution begins, and may be caused by parsing errors in the request document, invalid syntax or invalid input values for variables.
+
+Request errors are typically the fault of the requesting client.
+
+If a request error is raised, the response will only contain an `errors` key with corresponding details.
 
 === "Example"
     ```json
     {
-        "errors": [
-            {
-                "message": "Property 'nonexisting' on 'MyType' does not exist",
-                "locations": [
-                    {
-                        "line": 3,
-                        "column": 1
-                    }
-                ],
-                "extensions": {
-                    "type": "GRAPHQL_VALIDATION_FAILED"
-                }
-            }
-        ]
+      "errors": [
+        {
+          "message": "Missing selection set on property 'film' of type 'Film'",
+          "extensions": {
+            "type": "GRAPHQL_VALIDATION_FAILED"
+          }
+        }
+      ]
     }
     ```
 
-All built-in exceptions extend `GraphQLError`.
+## Execution Errors
 
-## Exceptions From Resolvers
+_Execution errors_ (previously called _field errors_ in the spec) are errors raised during execution of a particular field, and result in partial response data. They may be caused by coercion failures or internal errors during function invocation.
 
-What happens with exceptions from resolvers depends on the [schema configuration](configuration.md).
+Execution errors are typically the fault of the GraphQL server.
 
-### wrapErrors = true
+When an execution error occurs, it is added to the list of errors in the response, and the value of its field is coerced to `null`. If that is a valid value for the field, execution continues with the next sibling. Otherwise, when the field is a non-null type, the error is propagated to the parent field, until a nullable type or the root type is reached.
 
-With `wrapErrors = true` (which is the default), exceptions are wrapped as `ExecutionException`, which is a `GraphQLError`:
+Execution errors can lead to partial responses, where some fields can still return proper data. To make partial responses more easily identifiable, the `errors` key will be serialized as first entry in the response JSON. 
+
+Given the [Star Wars schema](../Tutorials/starwars.md), if fetching one of the friends' names fails in the following operation, the response might contain a friend without a name:
+
+=== "SDL"
+    ```graphql
+    type Hero {
+      friends: [Hero]!
+      id: ID!
+      name: String
+    }
+
+    type Query {
+      hero: Hero!
+    }
+    ```
+=== "Request"
+    ```graphql
+    {
+      hero {
+        name
+        heroFriends: friends {
+          id
+          name
+        }
+      }
+    }
+    ```
+=== "Response"
+    ```json
+    {
+      "errors": [
+        {
+          "message": "Name for character with ID 1002 could not be fetched.",
+          "locations": [{ "line": 6, "column": 7 }],
+          "path": ["hero", "heroFriends", 1, "name"]
+        }
+      ],
+      "data": {
+        "hero": {
+          "name": "R2-D2",
+          "heroFriends": [
+            {
+              "id": "1000",
+              "name": "Luke Skywalker"
+            },
+            {
+              "id": "1002",
+              "name": null
+            },
+            {
+              "id": "1003",
+              "name": "Leia Organa"
+            }
+          ]
+        }
+      }
+    }
+    ```
+
+If the field `name` was declared as non-null, the whole list entry would be missing instead. However, the error itself would still be the same:
+
+=== "SDL"
+    ```graphql
+    type Hero {
+      friends: [Hero]!
+      id: ID!
+      name: String!
+    }
+
+    type Query {
+      hero: Hero!
+    }
+    ```
+=== "Request"
+    ```graphql
+    {
+      hero {
+        name
+        heroFriends: friends {
+          id
+          name
+        }
+      }
+    }
+    ```
+=== "Response"
+    ```json
+    {
+      "errors": [
+        {
+          "message": "Name for character with ID 1002 could not be fetched.",
+          "locations": [{ "line": 6, "column": 7 }],
+          "path": ["hero", "heroFriends", 1, "name"]
+        }
+      ],
+      "data": {
+        "hero": {
+          "name": "R2-D2",
+          "heroFriends": [
+            {
+              "id": "1000",
+              "name": "Luke Skywalker"
+            },
+            null,
+            {
+              "id": "1003",
+              "name": "Leia Organa"
+            }
+          ]
+        }
+      }
+    }
+    ```
+
+## Raising Errors From Resolvers
+
+In addition to returning (partial) data, resolvers can also add execution errors to the response via `Context.raiseError`:
 
 === "Example"
     ```kotlin
-    KGraphQL.schema {
-        configure {
-            wrapErrors = true
-        }
-        query("throwError") {
-            resolver<String> {
-                throw IllegalArgumentException("Illegal argument")
-            }
+    query("items") {
+        resolver { node: Execution.Node, ctx: Context ->
+            ctx.raiseError(MissingItemError("Cannot get item 'missing'", node))
+            listOf(Item("Existing 1"), Item("Existing 2"))
         }
     }
     ```
 
-=== "Response (HTTP 200)"
-    ```json
-    {
-        "errors": [
-            {
-                "message": "Illegal argument",
-                "locations": [
-                    {
-                        "line": 2,
-                        "column": 1
-                    }
-                ],
-                "path": [
-                    "throwError"
-                ],
-                "extensions": {
-                    "type": "INTERNAL_SERVER_ERROR"
-                }
-            }
-        ]
-    }
-    ```
-
-### wrapErrors = false
+## wrapErrors = false
 
 With `wrapErrors = false`, exceptions are re-thrown:
 
@@ -94,7 +190,6 @@ With `wrapErrors = false`, exceptions are re-thrown:
         }
     }
     ```
-
 === "Response (HTTP 500)"
     ```html
     <html>
@@ -121,8 +216,9 @@ Those re-thrown exceptions could then be handled with the [`StatusPages` Ktor pl
         }
     }
     ```
-
 === "Response (HTTP 400)"
     ```text
     Invalid input: java.lang.IllegalArgumentException: Illegal argument
     ```
+
+Because exceptions are re-thrown, `wrapErrors = false` can never result in partial responses.

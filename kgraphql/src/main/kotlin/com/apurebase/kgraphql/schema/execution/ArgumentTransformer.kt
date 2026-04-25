@@ -1,7 +1,9 @@
 package com.apurebase.kgraphql.schema.execution
 
 import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExecutionError
 import com.apurebase.kgraphql.InvalidInputValueException
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.request.Variables
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.model.FunctionWrapper
@@ -31,7 +33,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
         }
 
         if (unsupportedArguments?.isNotEmpty() == true) {
-            throw InvalidInputValueException(
+            throw ValidationException(
                 "'$funName' does support arguments: ${inputValues.map { it.name }}. Found arguments: ${args.keys}",
                 executionNode.selectionNode
             )
@@ -48,16 +50,16 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                 value == null && parameter.type.kind == TypeKind.NON_NULL -> {
                     parameter.default ?: throw InvalidInputValueException(
                         "Argument '${parameter.name}' of type ${parameter.type.typeReference()} on field '$funName' is not nullable, value cannot be null",
-                        executionNode.selectionNode
+                        executionNode
                     )
                 }
 
                 else -> {
-                    val transformedValue = transformValue(parameter.type, value!!, variables, true, parameter.default)
+                    val transformedValue = transformValue(parameter.type, value!!, variables, true, parameter.default, executionNode)
                     if (transformedValue == null && parameter.type.isNotNullable()) {
                         throw InvalidInputValueException(
-                            "Argument ${parameter.name} is not optional, value cannot be null",
-                            executionNode.selectionNode
+                            "Argument '${parameter.name}' is not optional, value cannot be null",
+                            executionNode
                         )
                     }
                     transformedValue
@@ -76,12 +78,13 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
         coerceSingleValueAsList: Boolean,
         // Location default value to allow calling with a nullable variable type, cf.
         // https://spec.graphql.org/September2025/#sec-All-Variable-Usages-Are-Allowed.Allowing-Optional-Variables-When-Default-Values-Exist
-        locationDefaultValue: Any?
+        locationDefaultValue: Any?,
+        executionNode: Execution
     ): Any? {
         return when {
             value is ValueNode.VariableNode -> {
                 variables.get(type, value, locationDefaultValue)
-                    ?.let { transformValue(type, it, variables, coerceSingleValueAsList, locationDefaultValue) }
+                    ?.let { transformValue(type, it, variables, coerceSingleValueAsList, locationDefaultValue, executionNode) }
                     ?: locationDefaultValue
             }
 
@@ -91,11 +94,11 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
             // for the list's item type on the provided value (note this may apply recursively for nested lists).
             type.isList() && value !is ValueNode.ListValueNode && value !is ValueNode.NullValueNode -> {
                 if (coerceSingleValueAsList) {
-                    transformToCollection(type.listType(), listOf(value), variables, true)
+                    transformToCollection(type.listType(), listOf(value), variables, true, executionNode = executionNode)
                 } else {
                     throw InvalidInputValueException(
                         "Cannot coerce '${value.valueNodeName}' to List",
-                        value
+                        executionNode
                     )
                 }
             }
@@ -111,13 +114,13 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                     val inputField = inputFieldsByName[fieldName]
                         ?: throw InvalidInputValueException(
                             "Property '$fieldName' on '${type.unwrapped().name}' does not exist",
-                            value
+                            executionNode
                         )
 
                     val paramType = inputField.type as? Type
-                        ?: throw InvalidInputValueException(
+                        ?: throw ExecutionError(
                             "Something went wrong while searching for the constructor parameter type '$fieldName'",
-                            value
+                            executionNode
                         )
 
                     val parameterName = (inputField as? InputValue<*>)?.parameterName ?: fieldName
@@ -125,8 +128,9 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                         paramType,
                         valueField.value,
                         variables,
-                        coerceSingleValueAsList = true,
-                        locationDefaultValue
+                        true,
+                        locationDefaultValue,
+                        executionNode
                     )
                 }
 
@@ -162,7 +166,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                 if (missingNonOptionalInputs.isNotEmpty()) {
                     throw InvalidInputValueException(
                         "Missing non-optional input fields: ${missingNonOptionalInputs.joinToString()}",
-                        value
+                        executionNode
                     )
                 }
 
@@ -173,7 +177,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                 if (type.isNotNullable()) {
                     throw InvalidInputValueException(
                         "Cannot coerce '${value.valueNodeName}' to ${type.unwrapped().name}",
-                        value
+                        executionNode
                     )
                 } else {
                     null
@@ -184,14 +188,14 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                 if (type.isNotList()) {
                     throw InvalidInputValueException(
                         "Cannot coerce '${value.valueNodeName}' to ${type.unwrapped().name}",
-                        value
+                        executionNode
                     )
                 } else {
-                    transformToCollection(type.listType(), value.values, variables, false)
+                    transformToCollection(type.listType(), value.values, variables, false, executionNode = executionNode)
                 }
             }
 
-            else -> transformString(value, type.unwrapped())
+            else -> transformString(value, type.unwrapped(), executionNode)
         }
     }
 
@@ -200,34 +204,35 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
         values: List<ValueNode>,
         variables: Variables,
         coerceSingleValueAsList: Boolean,
-        defaultValue: Any? = null
+        defaultValue: Any? = null,
+        executionNode: Execution
     ): Collection<*> = if (type.kClass.isSubclassOf(Set::class)) {
         values.mapTo(mutableSetOf()) { valueNode ->
-            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList, defaultValue)
+            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList, defaultValue, executionNode)
         }
     } else {
         values.map { valueNode ->
-            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList, defaultValue)
+            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList, defaultValue, executionNode)
         }
     }
 
-    private fun transformString(value: ValueNode, type: Type): Any =
+    private fun transformString(value: ValueNode, type: Type, executionNode: Execution): Any =
         (type as? Type.Enum<*>)?.let { enumType ->
             if (value is ValueNode.EnumValueNode) {
                 enumType.values.firstOrNull { it.name == value.value }?.value ?: throw InvalidInputValueException(
                     "Invalid enum ${enumType.name} value. Expected one of ${enumType.values.map { it.value }}",
-                    value
+                    executionNode
                 )
             } else {
                 throw InvalidInputValueException(
                     "Cannot coerce string literal '${value.valueNodeName}' to enum ${enumType.name}",
-                    value
+                    executionNode
                 )
             }
         } ?: (type as? Type.Scalar<*>)?.let { scalarType ->
-            deserializeScalar(scalarType, value)
+            deserializeScalar(scalarType, value, executionNode)
         } ?: throw InvalidInputValueException(
             "Cannot coerce '${value.valueNodeName}' to enum ${type.name}",
-            value
+            executionNode
         )
 }

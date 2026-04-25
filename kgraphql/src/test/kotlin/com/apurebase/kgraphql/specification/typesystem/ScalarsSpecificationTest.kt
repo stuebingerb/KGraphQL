@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaException
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
@@ -144,7 +145,7 @@ class ScalarsSpecificationTest {
             }
         }
 
-        expect<InvalidInputValueException>("Cannot coerce '${Integer.MAX_VALUE.toLong() + 2L}' to Int as it is greater than (2^-31)-1") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '${Integer.MAX_VALUE.toLong() + 2L}' to Int as it is greater than (2^-31)-1") {
             schema.executeBlocking("mutation { Int(int: ${Integer.MAX_VALUE.toLong() + 2L}) }")
         }
     }
@@ -243,27 +244,27 @@ class ScalarsSpecificationTest {
         """.trimIndent()
 
         // Double (should fail)
-        expect<InvalidInputValueException>("Cannot coerce '4.0' to ID") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '4.0' to ID") {
             testedSchema.executeBlocking("query(\$id: ID! = 4.0) { personById(id: \$id) { id, name } }")
         }
 
         // Boolean (should fail)
-        expect<InvalidInputValueException>("Cannot coerce 'true' to ID") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce 'true' to ID") {
             testedSchema.executeBlocking("query(\$id: ID! = true) { personById(id: \$id) { id, name } }")
         }
 
         // List of strings (should fail)
-        expect<InvalidInputValueException>("Cannot coerce '[\"4\", \"5\"]' to ID") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '[\"4\", \"5\"]' to ID") {
             testedSchema.executeBlocking("query(\$id: ID! = [\"4\", \"5\"]) { personById(id: \$id) { id, name } }")
         }
 
         // Object (should fail)
-        expect<InvalidInputValueException>("Property 'value' on 'ID' does not exist") {
+        expectExecutionError<InvalidInputValueException>("Property 'value' on 'ID' does not exist") {
             testedSchema.executeBlocking("query(\$id: ID! = {value: \"4\"}) { personById(id: \$id) { id, name } }")
         }
 
         // Null (should fail)
-        expect<InvalidInputValueException>("Cannot coerce 'null' to ID") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce 'null' to ID") {
             testedSchema.executeBlocking("query(\$id: ID! = null) { personById(id: \$id) { id, name } }")
         }
 
@@ -284,7 +285,7 @@ class ScalarsSpecificationTest {
             }
         }
 
-        expect<InvalidInputValueException>("Cannot coerce '\"223\"' to Int") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '\"223\"' to Int") {
             schema.executeBlocking("mutation { Int(int: \"223\") }")
         }
     }
