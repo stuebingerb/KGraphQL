@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.3.21"
-kotlinx-coroutines = "1.10.2"
+kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
 kotlinx-kover = "0.9.8"
 kotlinx-benchmark = "0.4.16"
