@@ -188,7 +188,7 @@ class ExecutionException(message: String, node: Execution, cause: Throwable? = n
     extensions = mapOf("type" to BuiltInErrorCodes.INTERNAL_SERVER_ERROR.name)
 )
 
-class InvalidInputValueException(message: String, node: ASTNode?, originalError: Throwable? = null) : RequestError(
+class InvalidInputValueException(message: String, node: Execution, originalError: Throwable? = null) : ExecutionError(
     message = message,
     node = node,
     originalError = originalError,
@@ -202,8 +202,9 @@ class InvalidSyntaxException(message: String, source: Source, positions: List<In
     extensions = mapOf("type" to BuiltInErrorCodes.GRAPHQL_PARSE_FAILED.name)
 )
 
-class ValidationException(message: String, node: ASTNode? = null) : RequestError(
+class ValidationException(message: String, node: ASTNode? = null, originalError: Throwable? = null) : RequestError(
     message = message,
     node = node,
+    originalError = originalError,
     extensions = mapOf("type" to BuiltInErrorCodes.GRAPHQL_VALIDATION_FAILED.name)
 )

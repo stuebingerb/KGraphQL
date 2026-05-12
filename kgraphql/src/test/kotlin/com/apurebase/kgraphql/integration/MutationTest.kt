@@ -6,7 +6,8 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -41,28 +42,28 @@ class MutationTest : BaseSchemaTest() {
 
     @Test
     fun `invalid mutation name`() {
-        expect<ValidationException>("Property 'createBanana' on 'Mutation' does not exist") {
+        expectRequestError<ValidationException>("Property 'createBanana' on 'Mutation' does not exist") {
             testedSchema.executeBlocking("mutation {createBanana(name: \"${testActor.name}\", age: ${testActor.age}){age}}")
         }
     }
 
     @Test
     fun `invalid argument type`() {
-        expect<InvalidInputValueException>("Cannot coerce '\"fwfwf\"' to Int") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '\"fwfwf\"' to Int") {
             testedSchema.executeBlocking("mutation {createActor(name: \"${testActor.name}\", age: \"fwfwf\"){age}}")
         }
     }
 
     @Test
     fun `invalid arguments number`() {
-        expect<ValidationException>("'createActor' does support arguments: [name, age], found: [name, age, bananan]") {
+        expectRequestError<ValidationException>("'createActor' does support arguments: [name, age], found: [name, age, bananan]") {
             testedSchema.executeBlocking("mutation {createActor(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
 
     @Test
     fun `invalid arguments number with NotIntrospected class`() {
-        expect<ValidationException>("'createActorWithContext' does support arguments: [name, age], found: [name, age, bananan]") {
+        expectRequestError<ValidationException>("'createActorWithContext' does support arguments: [name, age], found: [name, age, bananan]") {
             testedSchema.executeBlocking("mutation {createActorWithContext(name: \"${testActor.name}\", age: ${testActor.age}, bananan: \"fwfwf\"){age}}")
         }
     }
@@ -94,6 +95,7 @@ class MutationTest : BaseSchemaTest() {
     @Test
     fun `multiple mutations should use serial execution`() {
         data class Node(val id: Int, val currentCount: Int)
+
         var nodeCount = 0
         val schema = KGraphQL.schema {
             query("nodeCount") {

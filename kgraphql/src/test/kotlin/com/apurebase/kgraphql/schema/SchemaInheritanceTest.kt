@@ -2,7 +2,7 @@ package com.apurebase.kgraphql.schema
 
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.ValidationException
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectRequestError
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -30,11 +30,11 @@ class SchemaInheritanceTest {
             query("c") { resolver { -> C(name, age) } }
         }
 
-        expect<ValidationException>("Property 'id' on 'B' does not exist") {
+        expectRequestError<ValidationException>("Property 'id' on 'B' does not exist") {
             schema.executeBlocking("{b{id, name, age}}")
         }
 
-        expect<ValidationException>("Property 'id' on 'C' does not exist") {
+        expectRequestError<ValidationException>("Property 'id' on 'C' does not exist") {
             schema.executeBlocking("{c{id, name, age}}")
         }
     }

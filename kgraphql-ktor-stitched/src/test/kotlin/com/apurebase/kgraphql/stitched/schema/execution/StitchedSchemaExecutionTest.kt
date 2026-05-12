@@ -3047,7 +3047,7 @@ class StitchedSchemaExecutionTest {
                 }
             }
             query("failRemoteObject") {
-                resolver { localName: String ->
+                resolver<List<RemoteType?>, String> { localName: String ->
                     listOf(
                         RemoteType(localName, "remoteObject1"),
                         RemoteType(localName, "remoteObject2")
@@ -3055,10 +3055,10 @@ class StitchedSchemaExecutionTest {
                 }
             }
             type<RemoteType> {
-                property("problematic") {
+                property<String?>("problematic") {
                     resolver { parent: RemoteType ->
                         if (parent.localName == "local1" && parent.name == "remoteObject2") {
-                            throw Exception()
+                            throw Exception("I fail")
                         } else {
                             "unproblematic"
                         }
@@ -3080,7 +3080,7 @@ class StitchedSchemaExecutionTest {
                 }
                 localSchema {
                     query("failLocal") {
-                        resolver<String, Execution.Node> { node: Execution.Node ->
+                        resolver<String?, Execution.Node> { node: Execution.Node ->
                             throw ExecutionError(
                                 message = "don't call me local!",
                                 node = node,
@@ -3119,33 +3119,32 @@ class StitchedSchemaExecutionTest {
         """.trimIndent()
 
         // Query that failed during execution
-        // TODO: should IMHO contain a data key according to https://spec.graphql.org/draft/#sec-Response-Format
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failLocal }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"don't call me local!","locations":[{"line":1,"column":3}],"path":["failLocal"],"extensions":{"type":"INTERNAL_SERVER_ERROR","detail":{"localErrorKey":"localErrorValue"}}}]}
+            {"errors":[{"message":"don't call me local!","locations":[{"line":1,"column":3}],"path":["failLocal"],"extensions":{"type":"INTERNAL_SERVER_ERROR","detail":{"localErrorKey":"localErrorValue"}}}],"data":{"failLocal":null}}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failRemote }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"don't call me remote!","locations":[{"line":1,"column":3}],"path":["failRemote"],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote","type":"BAD_USER_INPUT","remoteErrorKey":["remoteErrorValue1","remoteErrorValue2"]}}]}
+            {"errors":[{"message":"don't call me remote!","locations":[{"line":1,"column":3}],"path":["failRemote"],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote","type":"BAD_USER_INPUT","remoteErrorKey":["remoteErrorValue1","remoteErrorValue2"]}},{"message":"Null result for non-nullable operation 'failRemote'","locations":[{"line":1,"column":3}],"path":["failRemote"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":null}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ failRemote2 }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":3}],"path":["failRemote2"],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote2","type":"INTERNAL_SERVER_ERROR"}}]}
+            {"errors":[{"message":"IllegalStateException","locations":[{"line":1,"column":3}],"path":["failRemote2"],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemote2","type":"INTERNAL_SERVER_ERROR"}},{"message":"Null result for non-nullable operation 'failRemote2'","locations":[{"line":1,"column":3}],"path":["failRemote2"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":null}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ localTypes { name stitchedProperty { name localName problematic } } }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Error(s) during remote execution","locations":[{"line":1,"column":21}],"path":["localTypes",0,"stitchedProperty",1,"problematic"],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemoteObject","type":"INTERNAL_SERVER_ERROR"}}]}
+            {"errors":[{"message":"I fail","locations":[{"line":1,"column":21}],"path":["localTypes",0,"stitchedProperty",1,"problematic"],"extensions":{"remoteUrl":"remote","remoteOperation":"failRemoteObject","type":"INTERNAL_SERVER_ERROR"}}],"data":{"localTypes":[{"name":"local1","stitchedProperty":[{"name":"remoteObject1","localName":"local1","problematic":"unproblematic"},{"name":"remoteObject2","localName":"local1","problematic":null}]},{"name":"local2","stitchedProperty":[{"name":"remoteObject1","localName":"local2","problematic":"unproblematic"},{"name":"remoteObject2","localName":"local2","problematic":"unproblematic"}]}]}}
         """.trimIndent()
     }
 
@@ -3195,14 +3194,14 @@ class StitchedSchemaExecutionTest {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ remoteString }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Connection timed out","locations":[{"line":1,"column":3}],"path":["remoteString"],"extensions":{"remoteUrl":"remote","remoteOperation":"remoteString"}}]}
+            {"errors":[{"message":"Connection timed out","locations":[{"line":1,"column":3}],"path":["remoteString"],"extensions":{"remoteUrl":"remote","remoteOperation":"remoteString","type":"INTERNAL_SERVER_ERROR"}}],"data":{"remoteString":null}}
         """.trimIndent()
 
         client.post("local") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             setBody(graphqlRequest("{ localTypes { name stitchedProperty } }"))
         }.bodyAsText() shouldBe """
-            {"errors":[{"message":"Connection timed out","locations":[{"line":1,"column":21}],"path":["localTypes",0,"stitchedProperty"],"extensions":{"remoteUrl":"remote","remoteOperation":"remoteString"}}]}
+            {"errors":[{"message":"Connection timed out","locations":[{"line":1,"column":21}],"path":["localTypes",0,"stitchedProperty"],"extensions":{"remoteUrl":"remote","remoteOperation":"remoteString","type":"INTERNAL_SERVER_ERROR"}}],"data":{"localTypes":[{"name":"local1","stitchedProperty":null}]}}
         """.trimIndent()
     }
 

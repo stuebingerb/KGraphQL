@@ -1,12 +1,14 @@
 package com.apurebase.kgraphql.helpers
 
-import com.apurebase.kgraphql.InvalidInputValueException
+import com.apurebase.kgraphql.ExecutionError
+import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.introspection.__Type
 import com.apurebase.kgraphql.schema.model.ast.NameNode
 import com.apurebase.kgraphql.schema.model.ast.ValueNode
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.DoubleNode
@@ -111,9 +113,8 @@ fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
                 "Expected INPUT_OBJECT for ${expectedType.unwrapped().name} but got ${expectedType.kind}"
             }
             val expectedPropType = inputFields.firstOrNull { it.name == prop.key }?.type
-                ?: throw InvalidInputValueException(
-                    "Property '${prop.key}' on '${expectedType.unwrapped().name}' does not exist",
-                    null
+                ?: throw ValidationException(
+                    "Property '${prop.key}' on '${expectedType.unwrapped().name}' does not exist"
                 )
             ValueNode.ObjectValueNode.ObjectFieldNode(
                 null,
@@ -129,3 +130,21 @@ fun JsonNode?.toValueNode(expectedType: __Type): ValueNode = when (this) {
 }
 
 internal fun Double.isWholeNumber() = this % 1.0 == 0.0
+
+internal fun List<ExecutionError>.toJsonNode(objectMapper: ObjectMapper): ArrayNode =
+    objectMapper.createArrayNode().apply {
+        addAll(
+            this@toJsonNode.map { error ->
+                objectMapper.createObjectNode().apply {
+                    put("message", error.message)
+                    error.locations?.let {
+                        set<JsonNode>("locations", objectMapper.valueToTree(it))
+                    }
+                    set<JsonNode>("path", objectMapper.valueToTree(error.path))
+                    error.extensions?.let {
+                        set<JsonNode>("extensions", objectMapper.valueToTree(it))
+                    }
+                }
+            }
+        )
+    }

@@ -6,12 +6,12 @@ import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
-import com.apurebase.kgraphql.shouldBeInstanceOf
-import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import kotlin.reflect.typeOf
 
 @Specification("3.1.8 Non-null")
 class NonNullSpecificationTest {
@@ -20,13 +20,27 @@ class NonNullSpecificationTest {
     fun `if the result of non-null type is null, error should be raised`() {
         val schema = KGraphQL.schema {
             query("nonNull") {
-                resolver { string: String? -> string!! }
+                resolver<String?> { null }
+                setReturnType(typeOf<String>())
+            }
+            query("nonNullList") {
+                resolver<List<String>?> { null }
+                setReturnType(typeOf<List<String>>())
+            }
+            query("nonNullListElement") {
+                resolver<List<String?>?> { listOf(null) }
+                setReturnType(typeOf<List<String>?>())
             }
         }
-        val exception = shouldThrowExactly<ExecutionException> {
+        expectExecutionError<ExecutionException>("Null result for non-nullable operation 'nonNull'") {
             schema.executeBlocking("{nonNull}")
         }
-        exception.originalError shouldBeInstanceOf java.lang.NullPointerException::class
+        expectExecutionError<ExecutionException>("Null result for non-nullable operation 'nonNullList'") {
+            schema.executeBlocking("{nonNullList}")
+        }
+        expectExecutionError<ExecutionException>("Null result for non-nullable operation 'nonNullListElement'") {
+            schema.executeBlocking("{nonNullListElement}")
+        }
     }
 
     @Test
@@ -51,7 +65,7 @@ class NonNullSpecificationTest {
                 resolver { input: String -> input }
             }
         }
-        expect<ValidationException>("Missing value for non-nullable argument 'input' on the field 'nonNull'") {
+        expectRequestError<ValidationException>("Missing value for non-nullable argument 'input' on the field 'nonNull'") {
             schema.executeBlocking("{nonNull}")
         }
     }
@@ -64,7 +78,7 @@ class NonNullSpecificationTest {
             }
         }
 
-        expect<InvalidInputValueException>("Invalid variable '${'$'}arg' argument type 'String', expected 'String!'\n") {
+        expectRequestError<ValidationException>("Invalid variable '${'$'}arg' argument type 'String', expected 'String!'") {
             schema.executeBlocking("query(\$arg: String){nonNull(input: \$arg)}", "{\"arg\":\"SAD\"}")
         }
     }
@@ -137,7 +151,7 @@ class NonNullSpecificationTest {
             }
         }
 
-        expect<InvalidInputValueException>("Missing non-optional input fields: valueOne, value3") {
+        expectExecutionError<InvalidInputValueException>("Missing non-optional input fields: valueOne, value3") {
             schema.executeBlocking(
                 """
                 {

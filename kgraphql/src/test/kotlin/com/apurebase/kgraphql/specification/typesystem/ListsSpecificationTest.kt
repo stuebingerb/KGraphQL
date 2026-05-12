@@ -4,7 +4,7 @@ import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.Specification
 import com.apurebase.kgraphql.deserialize
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectExecutionError
 import com.apurebase.kgraphql.extract
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -62,7 +62,7 @@ class ListsSpecificationTest {
             { "list": ["GAGA", null, "DADA", "PADA"] }
         """.trimIndent()
 
-        expect<InvalidInputValueException>("Cannot coerce 'null' to String") {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce 'null' to String") {
             schema.executeBlocking("query(\$list: [String!]!) { list(list: \$list) }", variables)
         }
     }

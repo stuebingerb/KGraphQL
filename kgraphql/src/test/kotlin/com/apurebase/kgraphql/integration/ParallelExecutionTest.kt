@@ -1,8 +1,13 @@
 package com.apurebase.kgraphql.integration
 
+import com.apurebase.kgraphql.Context
+import com.apurebase.kgraphql.ExecutionError
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.schema.execution.Execution
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
@@ -52,6 +57,18 @@ class ParallelExecutionTest {
         }
     }
 
+    private val errorsSchema = KGraphQL.schema {
+        repeat(1000) {
+            query("automated_$it") {
+                resolver { node: Execution.Node, ctx: Context ->
+                    delay(3)
+                    ctx.raiseError(ExecutionError("Error $it", node))
+                    "$it"
+                }
+            }
+        }
+    }
+
     private val query = "{\n" + (0..999).joinToString("") { "automated_${it}\n" } + " }"
 
     @Test
@@ -96,5 +113,15 @@ class ParallelExecutionTest {
         // syncResolversSchema has 1000 resolvers, each waiting for 3ms. Usually, execution
         // takes about 300ms so if it takes 3s, we apparently ran sequentially.
         duration shouldBeLessThan 3000
+    }
+
+    @Test
+    fun `parallel execution errors should not get lost`() {
+        val map = deserialize(errorsSchema.executeBlocking(query))
+        val errorPaths = (0..999).flatMap {
+            map.extract<List<Map<String, String>>>("errors[$it]/path")
+        }
+        errorPaths shouldHaveSize 1000
+        errorPaths shouldContainExactlyInAnyOrder (0..999).map { "automated_$it" }
     }
 }

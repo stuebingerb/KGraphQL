@@ -8,7 +8,7 @@ import com.apurebase.kgraphql.assertNoErrors
 import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.executeEqualQueries
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.integration.BaseSchemaTest
 import com.apurebase.kgraphql.request.Introspection
@@ -140,7 +140,7 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `queries with recursive fragments are denied`() {
-        expect<ValidationException>("Fragment spread circular references are not allowed") {
+        expectRequestError<ValidationException>("Fragment spread circular references are not allowed") {
             testedSchema.executeBlocking(
                 """
             query IntrospectionQuery {
@@ -166,7 +166,7 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `queries with duplicated fragments are denied`() {
-        expect<ValidationException>("There can be only one fragment named 'film_title'") {
+        expectRequestError<ValidationException>("There can be only one fragment named 'film_title'") {
             testedSchema.executeBlocking(
                 """
             {
@@ -192,7 +192,7 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `queries with unused fragments should be denied`() {
-        expect<ValidationException>("Found unused fragments: [unused_film_title]") {
+        expectRequestError<ValidationException>("Found unused fragments: [unused_film_title]") {
             testedSchema.executeBlocking(
                 """
             {
@@ -364,7 +364,7 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
     // https://github.com/aPureBase/KGraphQL/issues/189
     @Test
     fun `queries with missing fragments should return proper error message`() {
-        expect<ValidationException>("Fragment 'film_title_misspelled' not found") {
+        expectRequestError<ValidationException>("Fragment 'film_title_misspelled' not found") {
             testedSchema.executeBlocking(
                 """
             {

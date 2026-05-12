@@ -3,7 +3,7 @@ package com.apurebase.kgraphql.configuration
 import com.apurebase.kgraphql.KGraphQL.Companion.schema
 import com.apurebase.kgraphql.ValidationException
 import com.apurebase.kgraphql.defaultSchema
-import com.apurebase.kgraphql.expect
+import com.apurebase.kgraphql.expectRequestError
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -72,7 +72,7 @@ class SchemaConfigurationTest {
                 {"data":{"__schema":{"queryType":{"name":"Query"}}}}
             """.trimIndent()
         } else {
-            expect<ValidationException>("GraphQL introspection is not allowed") {
+            expectRequestError<ValidationException>("GraphQL introspection is not allowed") {
                 schema.executeBlocking("{ __schema { queryType { name } } }")
             }
         }
