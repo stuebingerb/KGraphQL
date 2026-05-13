@@ -280,7 +280,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
     private fun <T> createSimpleValueNode(returnType: Type, value: T, node: Execution.Node): JsonNode =
         when (val unwrapped = returnType.unwrapped()) {
             is Type.Scalar<*> -> {
-                serializeScalar(jsonNodeFactory, unwrapped, value, node)
+                serializeScalar(jsonNodeFactory, unwrapped, value)
             }
 
             is Type.Enum<*> -> {

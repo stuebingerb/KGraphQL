@@ -1,7 +1,5 @@
 package com.apurebase.kgraphql.schema.scalar
 
-import com.apurebase.kgraphql.ExecutionError
-import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.InvalidInputValueException
 import com.apurebase.kgraphql.dropQuotes
@@ -21,9 +19,9 @@ private typealias JsonValueNode = com.fasterxml.jackson.databind.node.ValueNode
 
 @Suppress("UNCHECKED_CAST")
 // TODO: Re-structure scalars, as it's a bit too complicated now.
-fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode, executionNode: Execution): T {
+internal fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode, executionNode: Execution): T =
     try {
-        return when (scalar.coercion) {
+        when (scalar.coercion) {
             // built-in scalars
             STRING_COERCION -> STRING_COERCION.deserialize(value.valueNodeName, value) as T
             FLOAT_COERCION -> FLOAT_COERCION.deserialize(value.valueNodeName, value) as T
@@ -39,10 +37,6 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode, execut
             is DoubleScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toDouble(), value)
             is BooleanScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toBoolean(), value)
             is LongScalarCoercion<T> -> scalar.coercion.deserialize(value.valueNodeName.toLong(), value)
-            else -> throw ExecutionError(
-                message = "Unsupported coercion for scalar type ${scalar.name}",
-                node = executionNode
-            )
         }
     } catch (e: Exception) {
         throw InvalidInputValueException(
@@ -51,41 +45,31 @@ fun <T : Any> deserializeScalar(scalar: Type.Scalar<T>, value: ValueNode, execut
             originalError = e
         )
     }
-}
 
 @Suppress("UNCHECKED_CAST")
-fun <T> serializeScalar(
-    jsonNodeFactory: JsonNodeFactory,
-    scalar: Type.Scalar<*>,
-    value: T,
-    executionNode: Execution
-): JsonValueNode = when (scalar.coercion) {
-    is StringScalarCoercion<*> -> {
-        jsonNodeFactory.textNode((scalar.coercion as StringScalarCoercion<T>).serialize(value))
-    }
+internal fun <T> serializeScalar(jsonNodeFactory: JsonNodeFactory, scalar: Type.Scalar<*>, value: T): JsonValueNode =
+    when (scalar.coercion) {
+        is StringScalarCoercion<*> -> {
+            jsonNodeFactory.textNode((scalar.coercion as StringScalarCoercion<T>).serialize(value))
+        }
 
-    is ShortScalarCoercion<*> -> {
-        jsonNodeFactory.numberNode((scalar.coercion as ShortScalarCoercion<T>).serialize(value))
-    }
+        is ShortScalarCoercion<*> -> {
+            jsonNodeFactory.numberNode((scalar.coercion as ShortScalarCoercion<T>).serialize(value))
+        }
 
-    is IntScalarCoercion<*> -> {
-        jsonNodeFactory.numberNode((scalar.coercion as IntScalarCoercion<T>).serialize(value))
-    }
+        is IntScalarCoercion<*> -> {
+            jsonNodeFactory.numberNode((scalar.coercion as IntScalarCoercion<T>).serialize(value))
+        }
 
-    is DoubleScalarCoercion<*> -> {
-        jsonNodeFactory.numberNode((scalar.coercion as DoubleScalarCoercion<T>).serialize(value))
-    }
+        is DoubleScalarCoercion<*> -> {
+            jsonNodeFactory.numberNode((scalar.coercion as DoubleScalarCoercion<T>).serialize(value))
+        }
 
-    is LongScalarCoercion<*> -> {
-        jsonNodeFactory.numberNode((scalar.coercion as LongScalarCoercion<T>).serialize(value))
-    }
+        is LongScalarCoercion<*> -> {
+            jsonNodeFactory.numberNode((scalar.coercion as LongScalarCoercion<T>).serialize(value))
+        }
 
-    is BooleanScalarCoercion<*> -> {
-        jsonNodeFactory.booleanNode((scalar.coercion as BooleanScalarCoercion<T>).serialize(value))
+        is BooleanScalarCoercion<*> -> {
+            jsonNodeFactory.booleanNode((scalar.coercion as BooleanScalarCoercion<T>).serialize(value))
+        }
     }
-
-    else -> throw ExecutionException(
-        message = "Unsupported coercion for scalar ${scalar.name}",
-        node = executionNode
-    )
-}
