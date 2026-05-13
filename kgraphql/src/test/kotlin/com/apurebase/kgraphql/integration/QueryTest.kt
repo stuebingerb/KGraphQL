@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.Director
 import com.apurebase.kgraphql.ExecutionError
 import com.apurebase.kgraphql.ExecutionException
 import com.apurebase.kgraphql.Film
+import com.apurebase.kgraphql.GraphQLError
 import com.apurebase.kgraphql.Id
 import com.apurebase.kgraphql.KGraphQL
 import com.apurebase.kgraphql.RequestError
@@ -18,6 +19,7 @@ import com.apurebase.kgraphql.expectExecutionError
 import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.helpers.getFields
+import com.apurebase.kgraphql.schema.execution.ErrorHandler
 import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.scalar.ID
 import io.kotest.matchers.shouldBe
@@ -1186,6 +1188,49 @@ class QueryTest : BaseSchemaTest() {
         }
         schema.executeBlocking("{ items { data }}") shouldBe """
             {"errors":[{"message":"Cannot get item 'missing'","locations":[{"line":1,"column":3}],"path":["items"],"extensions":{"type":"NOT_FOUND","reason":"Item is missing"}}],"data":{"items":[{"data":"Existing 1"},{"data":"Existing 2"}]}}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should work with custom error handler`() {
+        val customErrorHandler = object : ErrorHandler() {
+            override suspend fun handleException(ctx: Context, node: Execution.Node, exception: Throwable): GraphQLError {
+                return when (exception) {
+                    is IllegalArgumentException -> ExecutionError(
+                        message = exception.message ?: "",
+                        node = node,
+                        extensions = mapOf("type" to "CUSTOM_ERROR_TYPE")
+                    )
+
+                    is IllegalAccessException -> RequestError(
+                        message = "You shall not pass!",
+                        node = node.selectionNode,
+                        extensions = mapOf("required_role" to "ADMIN", "reason" to "Gandalf")
+                    )
+
+                    else -> super.handleException(ctx, node, exception)
+                }
+            }
+        }
+
+        val schema = KGraphQL.schema {
+            configure {
+                errorHandler = customErrorHandler
+            }
+            query("executionError") {
+                resolver<String?> { throw IllegalArgumentException("Illegal argument") }
+            }
+            query("requestError") {
+                resolver<String?> { throw IllegalAccessException() }
+            }
+        }
+
+        schema.executeBlocking("{ executionError }") shouldBe """
+            {"errors":[{"message":"Illegal argument","locations":[{"line":1,"column":3}],"path":["executionError"],"extensions":{"type":"CUSTOM_ERROR_TYPE"}}],"data":{"executionError":null}}
+        """.trimIndent()
+
+        schema.executeBlocking("{ requestError }") shouldBe """
+            {"errors":[{"message":"You shall not pass!","locations":[{"line":1,"column":3}],"extensions":{"required_role":"ADMIN","reason":"Gandalf"}}]}
         """.trimIndent()
     }
 }

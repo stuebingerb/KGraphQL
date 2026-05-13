@@ -468,26 +468,27 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         return createNode(ctx, value, node, field.returnType)
     }
 
-    private fun handleException(
+    private suspend fun handleException(
         ctx: ExecutionContext,
         node: Execution.Node,
         returnType: Type,
         exception: Throwable
     ): CompletableDeferred<NullNode> {
-        if (!schema.configuration.wrapErrors || exception is RequestError || exception is CancellationException) {
+        if (!schema.configuration.wrapErrors || exception is CancellationException) {
             throw exception
         }
-        val error = exception as? ExecutionError ?: ExecutionError(
-            exception.message ?: exception::class.simpleName ?: "Error during execution",
-            node,
-            exception
-        )
-        if (returnType.isNullable()) {
-            ctx.requestContext.raiseError(error)
-            return CompletableDeferred(createNullNode(node, returnType))
-        } else {
-            // Propagate error to parent
-            throw error
+
+        when (val handledError = schema.configuration.errorHandler.handleException(ctx.requestContext, node, exception)) {
+            is RequestError -> throw handledError
+            is ExecutionError -> {
+                if (returnType.isNullable()) {
+                    ctx.requestContext.raiseError(handledError)
+                    return CompletableDeferred(createNullNode(node, returnType))
+                } else {
+                    // Propagate error to parent
+                    throw handledError
+                }
+            }
         }
     }
 

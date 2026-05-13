@@ -45,13 +45,8 @@ class GraphQL(val schema: Schema) {
             wrapWith = block
         }
 
-        fun errorHandler(block: (e: Throwable) -> Throwable) {
-            errorHandler = block
-        }
-
         internal var contextSetup: (ContextBuilder.(ApplicationCall) -> Unit)? = null
         internal var wrapWith: (Route.(next: Route.() -> Unit) -> Unit)? = null
-        internal var errorHandler: ((Throwable) -> Throwable) = { e -> e }
         internal var schemaBlock: (SchemaBuilder.() -> Unit)? = null
     }
 
@@ -121,14 +116,9 @@ class GraphQL(val schema: Schema) {
                     coroutineScope {
                         proceed()
                     }
-                } catch (e: Throwable) {
-                    val error = config.errorHandler(e)
-                    if (error !is GraphQLError) {
-                        throw e
-                    }
-
+                } catch (e: GraphQLError) {
                     context.respondText(
-                        error.serialize(),
+                        e.serialize(),
                         ContentType.Application.Json,
                         HttpStatusCode.OK
                     )
