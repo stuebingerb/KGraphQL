@@ -2020,11 +2020,6 @@ public final class com/apurebase/kgraphql/schema/model/ast/VariableDefinitionNod
 public abstract interface class com/apurebase/kgraphql/schema/scalar/BooleanScalarCoercion : com/apurebase/kgraphql/schema/scalar/ScalarCoercion {
 }
 
-public final class com/apurebase/kgraphql/schema/scalar/CoercionKt {
-	public static final fun deserializeScalar (Lcom/apurebase/kgraphql/schema/structure/Type$Scalar;Lcom/apurebase/kgraphql/schema/model/ast/ValueNode;Lcom/apurebase/kgraphql/schema/execution/Execution;)Ljava/lang/Object;
-	public static final fun serializeScalar (Lcom/fasterxml/jackson/databind/node/JsonNodeFactory;Lcom/apurebase/kgraphql/schema/structure/Type$Scalar;Ljava/lang/Object;Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/fasterxml/jackson/databind/node/ValueNode;
-}
-
 public abstract interface class com/apurebase/kgraphql/schema/scalar/DoubleScalarCoercion : com/apurebase/kgraphql/schema/scalar/ScalarCoercion {
 }
 

@@ -6,7 +6,7 @@ import com.apurebase.kgraphql.schema.model.ast.ValueNode
  * Scalar resolves to a single scalar object, and can't have sub-selections in the request.
  * ScalarSupport defines strategy of handling supported scalar type.
  */
-interface ScalarCoercion<Scalar, Raw> {
+sealed interface ScalarCoercion<Scalar, Raw> {
 
     /**
      * strategy for scalar serialization
