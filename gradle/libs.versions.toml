@@ -6,7 +6,7 @@ kotlinx-kover = "0.9.8"
 kotlinx-benchmark = "0.4.17"
 jackson = "2.21.3"
 ktor = "3.5.0"
-junit-jupiter = "6.0.3"
+junit-jupiter = "6.1.0"
 kotest = "6.1.11"
 ktlint = "14.2.0"
 
