@@ -2,6 +2,8 @@
 title: Operations
 ---
 
+import { Badge } from '@astrojs/starlight/components';
+
 There are three types of operations that GraphQL models:
 
 * [Query](#query) – a read‐only fetch.
@@ -18,10 +20,8 @@ In KGraphQL, operation is declared in `SchemaBuilder` block. Every operation has
 | resolver | [Resolver](resolver.md) |
 
 Selection set is automatically created based on resolver return type. By default, the selection set for a specific class
-contains all of its member properties (without extension properties), but it can be customized (cf. [Objects and Interfaces](Type%20System/objects-and-interfaces.md)).
-Operations can be [deprecated](/reference/deprecation/)
-
-Subscriptions are not supported yet.
+contains all of its member properties (without extension properties), but it can be customized (cf. [Objects and Interfaces](/reference/type-system/objects-and-interfaces/)).
+Operations can be [deprecated](/reference/deprecation/).
 
 ## Query
 
@@ -43,16 +43,15 @@ for name or age, example query: `{hero{name, age}}`
 
 `mutation` allows to create a resolver for a mutation operation.
 
-=== "Example"
-    ```kotlin
-    mutation("createHero") {
-        description = "Creates hero with specified name"
-        resolver { name: String -> name } 
-    }
-    ```
+```kotlin
+mutation("createHero") {
+    description = "Creates hero with specified name"
+    resolver { name: String -> name } 
+}
+```
 
 This example adds mutation with name `createHero`, which returns passed name.
 
-## Subscription
+## Subscription <Badge text="unsupported" variant="danger" />
 
 `subscription` operations are not supported yet.
