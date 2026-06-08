@@ -2,9 +2,18 @@
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
         "config:best-practices",
-        ":prHourlyLimitNone"
+        ":prHourlyLimitNone",
+        ":label(dependencies)"
     ],
     "ignorePresets": [
         ":ignoreModulesAndTests"
+    ],
+    "packageRules": [
+        {
+            "matchManagers": [
+                "github-actions"
+            ],
+            "semanticCommitType": "ci"
+        }
     ]
 }
