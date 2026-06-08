@@ -3,7 +3,7 @@ changelog:
     - title: Breaking Changes
       labels:
         - 'breaking'
-    - title: KGraphQL
+    - title: Changes
       labels:
         - '*'
       exclude:
