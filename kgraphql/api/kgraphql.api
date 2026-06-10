@@ -799,7 +799,7 @@ public final class com/apurebase/kgraphql/schema/execution/Execution$Fragment : 
 	public fun getParent ()Lcom/apurebase/kgraphql/schema/execution/Execution;
 	public fun getSelectionNode ()Lcom/apurebase/kgraphql/schema/model/ast/SelectionNode$FragmentNode;
 	public synthetic fun getSelectionNode ()Lcom/apurebase/kgraphql/schema/model/ast/SelectionNode;
-	public synthetic fun withParent$kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
+	public synthetic fun withParent$de_stuebingerb_kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
 }
 
 public class com/apurebase/kgraphql/schema/execution/Execution$Node : com/apurebase/kgraphql/schema/execution/Execution {
@@ -816,7 +816,7 @@ public class com/apurebase/kgraphql/schema/execution/Execution$Node : com/apureb
 	public fun getSelectionNode ()Lcom/apurebase/kgraphql/schema/model/ast/SelectionNode$FieldNode;
 	public synthetic fun getSelectionNode ()Lcom/apurebase/kgraphql/schema/model/ast/SelectionNode;
 	public final fun getVariables ()Ljava/util/List;
-	public synthetic fun withParent$kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
+	public synthetic fun withParent$de_stuebingerb_kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
 }
 
 public final class com/apurebase/kgraphql/schema/execution/Execution$Remote : com/apurebase/kgraphql/schema/execution/Execution$Node {
@@ -825,8 +825,8 @@ public final class com/apurebase/kgraphql/schema/execution/Execution$Remote : co
 	public final fun getOperationType ()Lcom/apurebase/kgraphql/schema/model/ast/OperationTypeNode;
 	public final fun getRemoteOperation ()Ljava/lang/String;
 	public final fun getRemoteUrl ()Ljava/lang/String;
-	public synthetic fun withParent$kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution$Node;
-	public synthetic fun withParent$kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
+	public synthetic fun withParent$de_stuebingerb_kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution$Node;
+	public synthetic fun withParent$de_stuebingerb_kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
 }
 
 public final class com/apurebase/kgraphql/schema/execution/Execution$Union : com/apurebase/kgraphql/schema/execution/Execution$Node {
@@ -834,8 +834,8 @@ public final class com/apurebase/kgraphql/schema/execution/Execution$Union : com
 	public final fun getMemberChildren ()Ljava/util/Map;
 	public final fun getUnionField ()Lcom/apurebase/kgraphql/schema/structure/Field$Union;
 	public final fun memberExecution (Lcom/apurebase/kgraphql/schema/structure/Type;)Lcom/apurebase/kgraphql/schema/execution/Execution$Node;
-	public synthetic fun withParent$kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution$Node;
-	public synthetic fun withParent$kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
+	public synthetic fun withParent$de_stuebingerb_kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution$Node;
+	public synthetic fun withParent$de_stuebingerb_kgraphql (Lcom/apurebase/kgraphql/schema/execution/Execution;)Lcom/apurebase/kgraphql/schema/execution/Execution;
 }
 
 public final class com/apurebase/kgraphql/schema/execution/ExecutionMode : java/lang/Enum {
