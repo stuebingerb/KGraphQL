@@ -19,9 +19,7 @@ kotlin {
         languageVersion = KotlinVersion.KOTLIN_2_1
     }
     @OptIn(ExperimentalAbiValidation::class)
-    abiValidation {
-        enabled = true
-    }
+    abiValidation()
 }
 
 dokka {
