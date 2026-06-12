@@ -331,6 +331,14 @@ abstract class BaseSchemaTest {
                 resolver { "${it.name}.testProperty2" }
             }
         }
+
+        query("exception") {
+            resolver<String> { -> throw Exception() }
+        }
+
+        query("nullableException") {
+            resolver<String?> { -> throw Exception() }
+        }
     }
 
     @AfterEach

@@ -86,4 +86,39 @@ class DirectivesSpecificationTest : BaseSchemaTest() {
             testedSchema.executeBlocking("{film{title year @nonExisting}}")
         }
     }
+
+    @Test
+    fun `query with different @include and @skip directives on root level`() {
+        // https://spec.graphql.org/September2025/#note-f3059
+        // "Neither @skip nor @include has precedence over the other. In the case that both the @skip and @include
+        // directives are provided on the same field or fragment, it must be queried only if the @skip condition is
+        // false and the @include condition is true. Stated conversely, the field or fragment must not be queried if
+        // either the @skip condition is true or the @include condition is false."
+        val result = testedSchema.executeBlocking("""
+            {
+                number1: number(big: true)
+                number2: number(big: true) @include(if: false)
+                number3: number(big: true) @include(if: true)
+                number4: number(big: true)
+                number5: number(big: true) @skip(if: true)
+                number6: number(big: true) @skip(if: false)
+                number7: number(big: true) @skip(if: false) @include(if: true)
+                number8: number(big: true) @skip(if: true) @include(if: true)
+                number9: number(big: true) @skip(if: true) @include(if: false)
+                number10: number(big: true) @skip(if: false) @include(if: false)
+            }
+        """.trimIndent())
+
+        result shouldBe """
+            {
+              "data" : {
+                "number1" : 10000,
+                "number3" : 10000,
+                "number4" : 10000,
+                "number6" : 10000,
+                "number7" : 10000
+              }
+            }
+        """.trimIndent()
+    }
 }
