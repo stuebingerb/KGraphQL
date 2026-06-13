@@ -79,7 +79,6 @@ class OperationsSpecificationTest {
 
         subscriptionResult = ""
         schema.executeBlocking("mutation {createActor(name : \"Kurt Russel\"){name}}")
-
         subscriptionResult shouldBe "{\"data\":{\"name\":\"Kurt Russel\"}}"
 
         subscriptionResult = ""

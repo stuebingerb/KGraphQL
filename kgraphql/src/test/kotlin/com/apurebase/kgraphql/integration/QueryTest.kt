@@ -1095,6 +1095,29 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `errors during operation execution should not stop other operations`() {
+        val response = testedSchema.executeBlocking(
+            """
+            {
+              number1: number(big: true)
+              exception1: exception
+              nullableException1: nullableException
+              number2: number(big: true)
+              exception2: exception
+              nullableException2: nullableException
+            }
+        """.trimIndent()
+        )
+
+        response.deserialize()["data"] shouldBe mapOf(
+            "number1" to 10000,
+            "nullableException1" to null,
+            "number2" to 10000,
+            "nullableException2" to null
+        )
+    }
+
+    @Test
     fun `errors during object field execution should not stop other fields`() {
         data class HighlanderMovie(val highlander1: String?)
         data class Person(val firstName: String, val lastName: String)
@@ -1223,6 +1246,12 @@ class QueryTest : BaseSchemaTest() {
             query("requestError") {
                 resolver<String?> { throw IllegalAccessException() }
             }
+            query("unmappedError") {
+                resolver<String?> { throw Exception("Regular exception") }
+            }
+            query("nonNullExecutionError") {
+                resolver<String> { throw IllegalArgumentException("Illegal argument") }
+            }
         }
 
         schema.executeBlocking("{ executionError }") shouldBe """
@@ -1231,6 +1260,14 @@ class QueryTest : BaseSchemaTest() {
 
         schema.executeBlocking("{ requestError }") shouldBe """
             {"errors":[{"message":"You shall not pass!","locations":[{"line":1,"column":3}],"extensions":{"required_role":"ADMIN","reason":"Gandalf"}}]}
+        """.trimIndent()
+
+        schema.executeBlocking("{ unmappedError }") shouldBe """
+            {"errors":[{"message":"Regular exception","locations":[{"line":1,"column":3}],"path":["unmappedError"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":{"unmappedError":null}}
+        """.trimIndent()
+
+        schema.executeBlocking("{ nonNullExecutionError }") shouldBe """
+            {"errors":[{"message":"Illegal argument","locations":[{"line":1,"column":3}],"path":["nonNullExecutionError"],"extensions":{"type":"CUSTOM_ERROR_TYPE"}}],"data":null}
         """.trimIndent()
     }
 }
