@@ -13,18 +13,15 @@ import com.apurebase.kgraphql.schema.execution.ParallelRequestExecutor
 import com.apurebase.kgraphql.schema.execution.RequestExecutor
 import com.apurebase.kgraphql.schema.introspection.__Schema
 import com.apurebase.kgraphql.schema.model.ast.NameNode
-import com.apurebase.kgraphql.schema.structure.LookupSchema
 import com.apurebase.kgraphql.schema.structure.RequestInterpreter
 import com.apurebase.kgraphql.schema.structure.SchemaModel
-import com.apurebase.kgraphql.schema.structure.Type
 import com.fasterxml.jackson.core.JsonProcessingException
 import kotlinx.coroutines.coroutineScope
-import kotlin.reflect.KClass
 
 class DefaultSchema(
     override val configuration: SchemaConfiguration,
     internal val model: SchemaModel
-) : Schema, __Schema by model, LookupSchema {
+) : Schema, __Schema by model {
 
     companion object {
         val OPERATION_NAME_PARAM = NameNode("operationName", null)
@@ -71,10 +68,4 @@ class DefaultSchema(
     }
 
     override fun printSchema() = SchemaPrinter().print(model)
-
-    override fun typeByKClass(kClass: KClass<*>): Type? = model.queryTypes[kClass]
-
-    override fun inputTypeByKClass(kClass: KClass<*>): Type? = model.inputTypes[kClass]
-
-    override fun findTypeByName(name: String): Type? = model.allTypesByName[name]
 }

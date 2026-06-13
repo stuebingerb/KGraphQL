@@ -223,6 +223,57 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
         }
     }
 
+    @Test
+    fun `fragments on enum types should be denied`() {
+        val response = testedSchema.executeBlocking("""
+            {
+                film {
+                    ... on FilmType {
+                        __typename
+                    }
+                }
+            }
+        """.trimIndent())
+
+        response shouldBe """
+            {"errors":[{"message":"Unknown type 'FilmType' in type condition on fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `fragments on scalar types should be denied`() {
+        val response = testedSchema.executeBlocking("""
+            {
+                film {
+                    ... on Int {
+                        __typename
+                    }
+                }
+            }
+        """.trimIndent())
+
+        response shouldBe """
+            {"errors":[{"message":"Unknown type 'Int' in type condition on fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `fragments on input types should be denied`() {
+        val response = testedSchema.executeBlocking("""
+            {
+                film {
+                    ... on ActorExplicitInput {
+                        __typename
+                    }
+                }
+            }
+        """.trimIndent())
+
+        response shouldBe """
+            {"errors":[{"message":"Unknown type 'ActorExplicitInput' in type condition on fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
+        """.trimIndent()
+    }
+
     sealed class TopUnion(val field: String) {
         class Union1(val names: List<String>) : TopUnion("union1")
         class Union2(val numbers: List<Int>, val booleans: List<Boolean>) : TopUnion("union2")

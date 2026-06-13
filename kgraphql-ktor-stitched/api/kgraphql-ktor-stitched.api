@@ -321,6 +321,8 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun hashCode ()I
+	public fun isInputType ()Z
+	public fun isOutputType ()Z
 	public fun setFields (Ljava/util/List;)V
 	public fun toString ()Ljava/lang/String;
 	public fun typeReference ()Ljava/lang/String;
@@ -413,6 +415,8 @@ public final class com/apurebase/kgraphql/stitched/schema/structure/Introspected
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun hashCode ()I
+	public fun isInputType ()Z
+	public fun isOutputType ()Z
 	public fun setFields (Ljava/util/List;)V
 	public fun toString ()Ljava/lang/String;
 	public fun typeReference ()Ljava/lang/String;

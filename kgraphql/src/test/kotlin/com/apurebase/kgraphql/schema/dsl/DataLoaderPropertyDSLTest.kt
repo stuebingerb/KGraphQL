@@ -5,6 +5,7 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.extract
 import com.apurebase.kgraphql.schema.SchemaBuilderTest
+import com.apurebase.kgraphql.typeByKClass
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import nidomiro.kdataloader.ExecutionResult

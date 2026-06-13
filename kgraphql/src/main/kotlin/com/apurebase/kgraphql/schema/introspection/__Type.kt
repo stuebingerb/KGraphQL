@@ -39,4 +39,18 @@ interface __Type : Describable {
         TypeKind.NON_NULL, TypeKind.LIST -> (ofType as __Type).unwrapped()
         else -> this
     }
+
+    // https://spec.graphql.org/September2025/#IsInputType()
+    fun isInputType(): Boolean = when (kind) {
+        TypeKind.NON_NULL, TypeKind.LIST -> unwrapped().isInputType()
+        TypeKind.SCALAR, TypeKind.ENUM, TypeKind.INPUT_OBJECT -> true
+        else -> false
+    }
+
+    // https://spec.graphql.org/September2025/#IsOutputType()
+    fun isOutputType(): Boolean = when (kind) {
+        TypeKind.NON_NULL, TypeKind.LIST -> unwrapped().isOutputType()
+        TypeKind.SCALAR, TypeKind.OBJECT, TypeKind.INTERFACE, TypeKind.UNION, TypeKind.ENUM -> true
+        else -> false
+    }
 }

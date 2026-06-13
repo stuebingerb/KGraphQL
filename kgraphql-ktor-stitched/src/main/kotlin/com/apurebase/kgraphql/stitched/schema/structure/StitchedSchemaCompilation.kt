@@ -87,21 +87,18 @@ class StitchedSchemaCompilation(
             }
         }
 
+        // Overwrite query, mutation, and subscription type with the stitched ones
+        typesByName[queryType.name] = queryType
+        mutationType?.let { typesByName[it.name] = it }
+        subscriptionType?.let { typesByName[it.name] = it }
+
         val model = SchemaModel(
             query = queryType,
             mutation = mutationType,
             subscription = subscriptionType,
-            queryTypes = queryTypeProxies + enums + scalars,
-            inputTypes = inputTypeProxies + enums + scalars,
             // Query, mutation, and subscription type are added for introspection (only) in SchemaModel; filter them
             // out here to prevent duplicates when remote schemas have references to any
-            allTypes = typesByName.values.filter {
-                it.name !in setOfNotNull(
-                    queryType.name,
-                    mutationType?.name,
-                    subscriptionType?.name
-                )
-            },
+            allTypes = typesByName.values.toList(),
             directives = definition.directives.map { handlePartialDirective(it) },
             // TODO: we shouldn't need to do a full recompilation again
             remoteTypesBySchema = definition.remoteSchemas.mapValues {

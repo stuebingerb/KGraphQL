@@ -151,12 +151,11 @@ public final class com/apurebase/kgraphql/request/VariablesJson$Empty : com/apur
 	public fun getRaw ()Lcom/fasterxml/jackson/databind/JsonNode;
 }
 
-public final class com/apurebase/kgraphql/schema/DefaultSchema : com/apurebase/kgraphql/schema/Schema, com/apurebase/kgraphql/schema/introspection/__Schema, com/apurebase/kgraphql/schema/structure/LookupSchema {
+public final class com/apurebase/kgraphql/schema/DefaultSchema : com/apurebase/kgraphql/schema/Schema, com/apurebase/kgraphql/schema/introspection/__Schema {
 	public static final field Companion Lcom/apurebase/kgraphql/schema/DefaultSchema$Companion;
 	public fun <init> (Lcom/apurebase/kgraphql/configuration/SchemaConfiguration;Lcom/apurebase/kgraphql/schema/structure/SchemaModel;)V
 	public fun execute (Ljava/lang/String;Ljava/lang/String;Lcom/apurebase/kgraphql/Context;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeBlocking (Ljava/lang/String;Ljava/lang/String;Lcom/apurebase/kgraphql/Context;Ljava/lang/String;)Ljava/lang/String;
-	public fun findTypeByName (Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/structure/Type;
 	public fun getConfiguration ()Lcom/apurebase/kgraphql/configuration/SchemaConfiguration;
 	public fun getDescription ()Ljava/lang/String;
 	public fun getDirectives ()Ljava/util/List;
@@ -164,9 +163,7 @@ public final class com/apurebase/kgraphql/schema/DefaultSchema : com/apurebase/k
 	public fun getQueryType ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 	public fun getSubscriptionType ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 	public fun getTypes ()Ljava/util/List;
-	public fun inputTypeByKClass (Lkotlin/reflect/KClass;)Lcom/apurebase/kgraphql/schema/structure/Type;
 	public fun printSchema ()Ljava/lang/String;
-	public fun typeByKClass (Lkotlin/reflect/KClass;)Lcom/apurebase/kgraphql/schema/structure/Type;
 }
 
 public final class com/apurebase/kgraphql/schema/DefaultSchema$Companion {
@@ -1005,11 +1002,15 @@ public abstract interface class com/apurebase/kgraphql/schema/introspection/__Ty
 	public abstract fun getOfType ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 	public abstract fun getPossibleTypes ()Ljava/util/List;
 	public abstract fun getSpecifiedByURL ()Ljava/lang/String;
+	public abstract fun isInputType ()Z
+	public abstract fun isOutputType ()Z
 	public abstract fun typeReference ()Ljava/lang/String;
 	public abstract fun unwrapped ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 }
 
 public final class com/apurebase/kgraphql/schema/introspection/__Type$DefaultImpls {
+	public static fun isInputType (Lcom/apurebase/kgraphql/schema/introspection/__Type;)Z
+	public static fun isOutputType (Lcom/apurebase/kgraphql/schema/introspection/__Type;)Z
 	public static fun typeReference (Lcom/apurebase/kgraphql/schema/introspection/__Type;)Ljava/lang/String;
 	public static fun unwrapped (Lcom/apurebase/kgraphql/schema/introspection/__Type;)Lcom/apurebase/kgraphql/schema/introspection/__Type;
 }
@@ -2181,16 +2182,6 @@ public final class com/apurebase/kgraphql/schema/structure/InputValue : com/apur
 	public fun isDeprecated ()Z
 }
 
-public abstract interface class com/apurebase/kgraphql/schema/structure/LookupSchema : com/apurebase/kgraphql/schema/Schema {
-	public abstract fun findTypeByName (Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/structure/Type;
-	public abstract fun inputTypeByKClass (Lkotlin/reflect/KClass;)Lcom/apurebase/kgraphql/schema/structure/Type;
-	public abstract fun typeByKClass (Lkotlin/reflect/KClass;)Lcom/apurebase/kgraphql/schema/structure/Type;
-}
-
-public final class com/apurebase/kgraphql/schema/structure/LookupSchema$DefaultImpls {
-	public static fun executeBlocking (Lcom/apurebase/kgraphql/schema/structure/LookupSchema;Ljava/lang/String;Ljava/lang/String;Lcom/apurebase/kgraphql/Context;Ljava/lang/String;)Ljava/lang/String;
-}
-
 public final class com/apurebase/kgraphql/schema/structure/RequestInterpreter {
 	public fun <init> (Lcom/apurebase/kgraphql/schema/structure/SchemaModel;)V
 	public final fun createExecutionPlan (Lcom/apurebase/kgraphql/schema/model/ast/DocumentNode;Ljava/lang/String;Lcom/apurebase/kgraphql/request/VariablesJson;)Lcom/apurebase/kgraphql/schema/execution/ExecutionPlan;
@@ -2221,26 +2212,22 @@ public class com/apurebase/kgraphql/schema/structure/SchemaCompilation {
 }
 
 public final class com/apurebase/kgraphql/schema/structure/SchemaModel : com/apurebase/kgraphql/schema/introspection/__Schema {
-	public fun <init> (Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;Ljava/lang/String;)V
+	public fun <init> (Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/lang/String;)V
 	public final fun component4 ()Ljava/util/List;
-	public final fun component5 ()Ljava/util/Map;
+	public final fun component5 ()Ljava/util/List;
 	public final fun component6 ()Ljava/util/Map;
-	public final fun component7 ()Ljava/util/List;
-	public final fun component8 ()Ljava/util/Map;
-	public final fun component9 ()Ljava/lang/String;
-	public final fun copy (Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/structure/SchemaModel;
-	public static synthetic fun copy$default (Lcom/apurebase/kgraphql/schema/structure/SchemaModel;Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lcom/apurebase/kgraphql/schema/structure/SchemaModel;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/structure/SchemaModel;
+	public static synthetic fun copy$default (Lcom/apurebase/kgraphql/schema/structure/SchemaModel;Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Lcom/apurebase/kgraphql/schema/structure/Type;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lcom/apurebase/kgraphql/schema/structure/SchemaModel;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAllTypes ()Ljava/util/List;
 	public final fun getAllTypesByName ()Ljava/util/Map;
 	public fun getDescription ()Ljava/lang/String;
 	public fun getDirectives ()Ljava/util/List;
-	public final fun getInputTypes ()Ljava/util/Map;
 	public synthetic fun getMutationType ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 	public fun getMutationType ()Lcom/apurebase/kgraphql/schema/structure/Type;
 	public synthetic fun getQueryType ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
 	public fun getQueryType ()Lcom/apurebase/kgraphql/schema/structure/Type;
-	public final fun getQueryTypes ()Ljava/util/Map;
 	public final fun getQueryTypesByName ()Ljava/util/Map;
 	public final fun getRemoteTypesBySchema ()Ljava/util/Map;
 	public synthetic fun getSubscriptionType ()Lcom/apurebase/kgraphql/schema/introspection/__Type;
@@ -2285,11 +2272,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$AList : com/apur
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2305,11 +2294,13 @@ public abstract class com/apurebase/kgraphql/schema/structure/Type$ComplexType :
 	public fun getFields ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2321,11 +2312,13 @@ public abstract class com/apurebase/kgraphql/schema/structure/Type$ComplexType :
 public final class com/apurebase/kgraphql/schema/structure/Type$DefaultImpls {
 	public static fun get (Lcom/apurebase/kgraphql/schema/structure/Type;Ljava/lang/String;)Lcom/apurebase/kgraphql/schema/structure/Field;
 	public static fun isElementNullable (Lcom/apurebase/kgraphql/schema/structure/Type;)Z
+	public static fun isInputType (Lcom/apurebase/kgraphql/schema/structure/Type;)Z
 	public static fun isInstance (Lcom/apurebase/kgraphql/schema/structure/Type;Ljava/lang/Object;)Z
 	public static fun isList (Lcom/apurebase/kgraphql/schema/structure/Type;)Z
 	public static fun isNotList (Lcom/apurebase/kgraphql/schema/structure/Type;)Z
 	public static fun isNotNullable (Lcom/apurebase/kgraphql/schema/structure/Type;)Z
 	public static fun isNullable (Lcom/apurebase/kgraphql/schema/structure/Type;)Z
+	public static fun isOutputType (Lcom/apurebase/kgraphql/schema/structure/Type;)Z
 	public static fun listType (Lcom/apurebase/kgraphql/schema/structure/Type;)Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public static fun typeReference (Lcom/apurebase/kgraphql/schema/structure/Type;)Ljava/lang/String;
 	public static fun unwrapList (Lcom/apurebase/kgraphql/schema/structure/Type;)Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2350,11 +2343,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$Enum : com/apure
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public final fun getValues ()Ljava/util/List;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2380,11 +2375,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$Input : com/apur
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2426,11 +2423,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$NonNull : com/ap
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2487,11 +2486,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$RemoteEnum : com
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2518,11 +2519,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$RemoteInputObjec
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2581,11 +2584,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$RemoteScalar : c
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2611,11 +2616,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$Scalar : com/apu
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2656,11 +2663,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$_Context : com/a
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2685,11 +2694,13 @@ public final class com/apurebase/kgraphql/schema/structure/Type$_ExecutionNode :
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
 	public fun unwrapList ()Lcom/apurebase/kgraphql/schema/structure/Type;
@@ -2715,11 +2726,13 @@ public class com/apurebase/kgraphql/schema/structure/TypeProxy : com/apurebase/k
 	public final fun getProxied ()Lcom/apurebase/kgraphql/schema/structure/Type;
 	public fun getSpecifiedByURL ()Ljava/lang/String;
 	public fun isElementNullable ()Z
+	public fun isInputType ()Z
 	public fun isInstance (Ljava/lang/Object;)Z
 	public fun isList ()Z
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOutputType ()Z
 	public fun listType ()Lcom/apurebase/kgraphql/schema/structure/Type$AList;
 	public final fun setProxied (Lcom/apurebase/kgraphql/schema/structure/Type;)V
 	public fun typeReference ()Ljava/lang/String;

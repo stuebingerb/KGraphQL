@@ -80,13 +80,13 @@ open class SchemaCompilation(
             query = queryType,
             mutation = mutationType,
             subscription = subscriptionType,
-            queryTypes = queryTypeProxies + enums + scalars,
-            inputTypes = inputTypeProxies + enums + scalars,
             allTypes = queryTypeProxies.values
                 + inputTypeProxies.values
                 + enums.values
                 + scalars.values
-                + unions.distinctBy(Type.Union::name),
+                + unions.distinctBy(Type.Union::name)
+                + queryType
+                + listOfNotNull(mutationType, subscriptionType),
             directives = definition.directives.map { handlePartialDirective(it) },
             remoteTypesBySchema = emptyMap(),
             description = schemaDescription
