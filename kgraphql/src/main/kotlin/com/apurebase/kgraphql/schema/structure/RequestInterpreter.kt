@@ -9,6 +9,7 @@ import com.apurebase.kgraphql.schema.execution.Execution
 import com.apurebase.kgraphql.schema.execution.ExecutionMode
 import com.apurebase.kgraphql.schema.execution.ExecutionPlan
 import com.apurebase.kgraphql.schema.execution.TypeCondition
+import com.apurebase.kgraphql.schema.model.ast.ASTNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode
 import com.apurebase.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
@@ -81,7 +82,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
 
         val fragmentDefinitionNodes = executables.filterIsInstance<FragmentDefinitionNode>()
         val fragmentDefinitions = fragmentDefinitionNodes.associate { fragmentDef ->
-            val type = schemaModel.allTypesByName.getValue(fragmentDef.typeCondition.name.value)
+            val type = schemaModel.allTypesByName[fragmentDef.typeCondition.name.value].validateForFragment(fragmentDef)
             val name = fragmentDef.name.value
 
             if (fragmentDefinitionNodes.count { it.name.value == name } > 1) {
@@ -137,17 +138,18 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         enclosingType: Type
     ): Execution.Fragment = when (fragment) {
         is FragmentSpreadNode -> {
-            ctx.get(fragment) ?: throw unknownFragmentTypeException(fragment)
+            ctx.get(fragment) ?: throw ValidationException(
+                message = "Fragment '${fragment.name.value}' not found",
+                node = fragment
+            )
         }
 
         is InlineFragmentNode -> {
-            val type = if (fragment.directives?.isNotEmpty() == true) {
-                enclosingType
+            val type = if (fragment.typeCondition != null) {
+                schemaModel.allTypesByName[fragment.typeCondition.name.value]
             } else {
-                schemaModel.queryTypesByName[fragment.typeCondition?.name?.value] ?: throw unknownFragmentTypeException(
-                    fragment
-                )
-            }
+                enclosingType
+            }.validateForFragment(fragment)
             Execution.Fragment(
                 selectionNode = fragment,
                 condition = TypeCondition(type),
@@ -297,16 +299,24 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         )
     }
 
-    private fun unknownFragmentTypeException(fragment: FragmentNode) = when (fragment) {
-        is FragmentSpreadNode -> ValidationException(
-            message = "Fragment '${fragment.name.value}' not found",
-            node = fragment
-        )
-
-        is InlineFragmentNode -> ValidationException(
-            message = "Unknown type '${fragment.typeCondition?.name?.value}' in type condition on fragment",
-            node = fragment
-        )
+    private fun Type?.validateForFragment(fragment: ASTNode): Type {
+        val (typeName, fragmentName) = when (fragment) {
+            is InlineFragmentNode -> fragment.typeCondition?.name?.value to "inline fragment"
+            is FragmentDefinitionNode -> fragment.typeCondition.name.value to "fragment '${fragment.name.value}'"
+            else -> error("Unsupported fragment type: $fragment")
+        }
+        if (this == null) {
+            throw ValidationException(
+                message = "Unknown type '$typeName' in type condition on $fragmentName",
+                node = fragment
+            )
+        } else if (isInputType()) {
+            throw ValidationException(
+                message = "Fragments can only be specified on object types, interfaces, and unions but '$name' is $kind on $fragmentName",
+                node = fragment
+            )
+        }
+        return this
     }
 
     private fun List<DirectiveNode>.lookup() = associate { findDirective(it) to it.arguments?.toArguments() }

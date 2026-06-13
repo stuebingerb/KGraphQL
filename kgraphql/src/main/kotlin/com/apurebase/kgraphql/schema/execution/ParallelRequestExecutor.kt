@@ -391,7 +391,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
                     handleFragment(ctx, value, it.withParent(container)).toList()
                 }.fold(mutableMapOf()) { map, entry -> map.merge(entry.first, entry.second) }
             } else {
-                error("Fragments can be specified on object types, interfaces, and unions")
+                error("Fragments can only be specified on object types, interfaces, and unions")
             }
         }
         // Not included, or type condition is not matched

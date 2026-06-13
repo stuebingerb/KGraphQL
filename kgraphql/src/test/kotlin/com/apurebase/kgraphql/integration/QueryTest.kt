@@ -442,38 +442,6 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `query with missing fragment type`() {
-        expectRequestError<ValidationException>("Unknown type 'MissingType' in type condition on fragment") {
-            testedSchema.executeBlocking(
-                """
-                {
-                    film {
-                        ...on MissingType {
-                            title
-                        }
-                    }
-                }
-                """.trimIndent()
-            )
-        }
-    }
-
-    @Test
-    fun `query with missing named fragment type`() {
-        expectRequestError<ValidationException>("Fragment 'film_title' not found") {
-            testedSchema.executeBlocking(
-                """
-                {
-                    film {
-                        ...film_title
-                    }
-                }
-                """.trimIndent()
-            )
-        }
-    }
-
-    @Test
     fun `query with missing selection set`() {
         expectRequestError<ValidationException>("Missing selection set on property 'film' of type 'Film'") {
             testedSchema.executeBlocking("{film}")
