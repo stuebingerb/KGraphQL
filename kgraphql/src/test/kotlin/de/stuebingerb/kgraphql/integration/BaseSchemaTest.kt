@@ -330,6 +330,9 @@ abstract class BaseSchemaTest {
             property("testProperty2") {
                 resolver { "${it.name}.testProperty2" }
             }
+            property("testProperty3") {
+                resolver { "${it.name}.testProperty3" }
+            }
         }
 
         query("exception") {

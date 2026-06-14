@@ -1063,15 +1063,13 @@ class QueryTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `errors during operation execution should not stop other operations`() {
+    fun `errors during nullable operation execution should not stop other operations`() {
         val response = testedSchema.executeBlocking(
             """
             {
               number1: number(big: true)
-              exception1: exception
               nullableException1: nullableException
               number2: number(big: true)
-              exception2: exception
               nullableException2: nullableException
             }
         """.trimIndent()
@@ -1083,6 +1081,22 @@ class QueryTest : BaseSchemaTest() {
             "number2" to 10000,
             "nullableException2" to null
         )
+    }
+
+    @Test
+    fun `errors during non-nullable operation execution should stop other operations`() {
+        val response = testedSchema.executeBlocking(
+            """
+            {
+              number1: number(big: true)
+              exception1: exception
+              number2: number(big: true)
+              exception2: exception
+            }
+        """.trimIndent()
+        )
+
+        response.deserialize()["data"] shouldBe null
     }
 
     @Test

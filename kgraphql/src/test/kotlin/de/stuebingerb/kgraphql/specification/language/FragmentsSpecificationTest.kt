@@ -12,6 +12,8 @@ import de.stuebingerb.kgraphql.expectRequestError
 import de.stuebingerb.kgraphql.extract
 import de.stuebingerb.kgraphql.integration.BaseSchemaTest
 import de.stuebingerb.kgraphql.request.Introspection
+import de.stuebingerb.kgraphql.schema.dsl.operations.subscribe
+import de.stuebingerb.kgraphql.schema.dsl.operations.unsubscribe
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.shouldBe
@@ -528,22 +530,22 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
 
         val deserialized = deserialize(response)
         deserialized shouldBe
-                mapOf(
-                    "data" to mapOf(
-                        "outer" to mapOf(
-                            "inner1" to mapOf(
-                                "name" to "test1",
-                                "testProperty2" to "test1.testProperty2",
-                                "testProperty1" to "test1.testProperty1",
-                            ),
-                            "inner2" to mapOf(
-                                "name" to "test2",
-                                "testProperty1" to "test2.testProperty1",
-                                "testProperty2" to "test2.testProperty2",
-                            ),
-                        )
+            mapOf(
+                "data" to mapOf(
+                    "outer" to mapOf(
+                        "inner1" to mapOf(
+                            "name" to "test1",
+                            "testProperty2" to "test1.testProperty2",
+                            "testProperty1" to "test1.testProperty1",
+                        ),
+                        "inner2" to mapOf(
+                            "name" to "test2",
+                            "testProperty1" to "test2.testProperty1",
+                            "testProperty2" to "test2.testProperty2",
+                        ),
                     )
                 )
+            )
     }
 
     // https://github.com/aPureBase/KGraphQL/issues/197
@@ -557,6 +559,14 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     ...TestFragment2
                     inner2 {
                         testProperty2
+                        ... @include(if: false) {
+                            testProperty3
+                        }
+                    }
+                    ... @include(if: true) {
+                        inner1 {
+                            testProperty3
+                        }
                     }
                 } 
             } 
@@ -571,21 +581,199 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
 
         val deserialized = deserialize(response)
         deserialized shouldBe
-                mapOf(
-                    "data" to mapOf(
-                        "outer" to mapOf(
-                            "inner1" to mapOf(
-                                "name" to "test1",
-                                "testProperty2" to "test1.testProperty2",
-                            ),
-                            "inner2" to mapOf(
-                                "name" to "test2",
-                                "testProperty1" to "test2.testProperty1",
-                                "testProperty2" to "test2.testProperty2",
-                            ),
+            mapOf(
+                "data" to mapOf(
+                    "outer" to mapOf(
+                        "inner1" to mapOf(
+                            "name" to "test1",
+                            "testProperty2" to "test1.testProperty2",
+                            "testProperty3" to "test1.testProperty3",
+                        ),
+                        "inner2" to mapOf(
+                            "name" to "test2",
+                            "testProperty1" to "test2.testProperty1",
+                            "testProperty2" to "test2.testProperty2",
+                        ),
+                    )
+                )
+            )
+    }
+
+    // See https://spec.graphql.org/September2025/#example-fdbb7
+    @Test
+    fun `fragments should work on query level`() {
+        val response = testedSchema.executeBlocking(
+            """
+            {
+                film {
+                    id
+                }
+                ...film_title
+            }
+
+            fragment film_title on Query {
+                film {
+                    title
+                }
+            }
+        """
+        )
+
+        val deserialized = deserialize(response)
+        deserialized shouldBe
+            mapOf(
+                "data" to mapOf(
+                    "film" to mapOf(
+                        "id" to "Prestige:2006",
+                        "title" to "Prestige"
+                    )
+                )
+            )
+    }
+
+    @Test
+    fun `fragments should work on mutation level`() {
+        val response = testedSchema.executeBlocking(
+            """
+            mutation {
+                ...CreateActor
+            }
+
+            fragment CreateActor on Mutation {
+                createActor(name: "John", age: 42) {
+                    name
+                }
+            }
+        """
+        )
+
+        val deserialized = deserialize(response)
+        deserialized shouldBe
+            mapOf(
+                "data" to mapOf(
+                    "createActor" to mapOf(
+                        "name" to "John"
+                    )
+                )
+            )
+    }
+
+    // https://spec.graphql.org/September2025/#example-13061
+    @Test
+    fun `fragments should work on subscription level`() {
+        val schema = KGraphQL.schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
+
+            val publisher = mutation("createSubscriptionActor") {
+                resolver { name: String, age: Int -> Actor(name, age) }
+            }
+
+            subscription("subscriptionActor") {
+                resolver { subscription: String ->
+                    subscribe(subscription, publisher, Actor("John", 42)) {
+                        // Noop
+                    }
+                }
+            }
+
+            subscription("unsubscriptionActor") {
+                resolver { subscription: String ->
+                    unsubscribe(subscription, publisher, Actor("John", 42))
+                }
+            }
+        }
+
+        val response = schema.executeBlocking(
+            """
+            subscription {
+                ...ActorSubscription
+            }
+
+            fragment ActorSubscription on Subscription {
+                subscriptionActor(subscription: "my-subscription") {
+                    ...ActorName
+                }
+            }
+            
+            fragment ActorName on Actor {
+                name
+            }
+        """
+        )
+
+        val deserialized = deserialize(response)
+        deserialized shouldBe
+            mapOf(
+                "data" to mapOf(
+                    "subscriptionActor" to mapOf(
+                        "name" to "John"
+                    )
+                )
+            )
+
+        schema.executeBlocking("""
+            subscription {
+                unsubscriptionActor(subscription: "my-subscription") {
+                    name
+                }
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `executor should merge several fragment declarations and field declaration on query level`() {
+        val response = testedSchema.executeBlocking(
+            """
+            {
+                film {
+                    id
+                }
+                ...film_title
+                ...film_director_name @include(if: true)
+            }
+            
+            fragment film_director_name on Query {
+                film {
+                    director {
+                        name
+                    }
+                }
+            }
+
+            fragment film_title on Query {
+                film {
+                    title
+                    year
+                    type
+                }
+                film {
+                    title
+                    director {
+                        age
+                    }
+                }
+            }
+        """
+        )
+
+        val deserialized = deserialize(response)
+        deserialized shouldBe
+            mapOf(
+                "data" to mapOf(
+                    "film" to mapOf(
+                        "id" to "Prestige:2006",
+                        "title" to "Prestige",
+                        "year" to 2006,
+                        "type" to "FULL_LENGTH",
+                        "director" to mapOf(
+                            "name" to "Christopher Nolan",
+                            "age" to 43
                         )
                     )
                 )
+            )
     }
 
     // https://github.com/aPureBase/KGraphQL/issues/189

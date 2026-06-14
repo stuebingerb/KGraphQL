@@ -30,7 +30,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KProperty1
 
 @Suppress("UNCHECKED_CAST") // For valid structure there is no risk of ClassCastException
-class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
+internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
     class ExecutionContext(
         val variables: Variables,
@@ -76,51 +76,13 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
     override suspend fun suspendExecute(plan: ExecutionPlan, variables: VariablesJson, context: Context): String {
         val root = jsonNodeFactory.objectNode()
-        val loaders = plan.constructLoaders()
+        val ctx = ExecutionContext(
+            Variables(variables, plan.declaredVariables),
+            context,
+            plan.constructLoaders()
+        )
 
-        suspend fun executeOperation(operation: Execution.Node): Pair<Execution.Node, Deferred<JsonNode>?> =
-            coroutineScope {
-                val ctx = ExecutionContext(Variables(variables, operation.variables), context, loaders)
-                if (shouldInclude(ctx, operation)) {
-                    try {
-                        operation to writeOperation(
-                            isSubscription = plan.isSubscription,
-                            ctx = ctx,
-                            node = operation,
-                            operation = operation.field as Field.Function<*, *>
-                        )
-                    } catch (e: ExecutionError) {
-                        context.raiseError(e)
-                        if (operation.field.returnType.isNullable()) {
-                            operation to CompletableDeferred(jsonNodeFactory.nullNode())
-                        } else {
-                            operation to null
-                        }
-                    }
-                } else {
-                    operation to null
-                }
-            }
-
-        // TODO: we might want a SerialRequestExecutor or at least rename *Parallel*RequestExecutor
-        val resultMap = if (plan.executionMode == ExecutionMode.Normal) {
-            plan.mapIndexedParallel(dispatcher) { _, operation -> executeOperation(operation) }.toMap()
-        } else {
-            plan.associate { operation -> executeOperation(operation) }
-        }
-
-        val data = if (resultMap.values.any { it != null }) {
-            jsonNodeFactory.objectNode()
-        } else {
-            jsonNodeFactory.nullNode()
-        }
-
-        for (operation in plan) {
-            // Remove all by skip/include directives
-            if (resultMap[operation] != null) {
-                (data as ObjectNode).merge(operation.aliasOrKey, resultMap[operation]!!.await())
-            }
-        }
+        val data = executePlan(ctx, plan)
 
         // https://spec.graphql.org/September2025/#note-19ca4
         // "When "errors" is present in an execution result, it may be helpful for it to appear first when serialized to make it more apparent that errors are present."
@@ -133,33 +95,34 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         return objectWriter.writeValueAsString(root)
     }
 
-    private suspend fun <T> writeOperation(
-        isSubscription: Boolean,
-        ctx: ExecutionContext,
-        node: Execution.Node,
-        operation: FunctionWrapper<T>
-    ): Deferred<JsonNode> {
-        try {
-            node.field.checkAccess(null, ctx.requestContext)
-        } catch (e: Throwable) {
-            return handleException(ctx, node, node.field.returnType, e)
+    private suspend fun executePlan(ctx: ExecutionContext, plan: ExecutionPlan): JsonNode = try {
+        suspend fun executeOperation(operation: Execution) =
+            when (operation) {
+                is Execution.Fragment -> handleFragment(ctx, plan.root, operation)
+                is Execution.Node -> handleProperty(ctx, plan.root, operation, plan.root)?.let { mapOf(it) }
+                    ?: emptyMap()
+            }
+
+        val objectNode = jsonNodeFactory.objectNode()
+        val deferreds = if (plan.executionMode == ExecutionMode.Normal) {
+            plan.mapIndexedParallel(dispatcher) { _, child ->
+                executeOperation(child)
+            }
+        } else {
+            plan.map { child ->
+                executeOperation(child)
+            }
         }
 
-        try {
-            val operationResult = operation.invoke(
-                isSubscription = isSubscription,
-                children = node.children,
-                funName = node.field.name,
-                receiver = null,
-                inputValues = node.field.arguments,
-                args = node.arguments,
-                executionNode = node,
-                ctx = ctx
-            )
-            return createNode(ctx, operationResult, node, node.field.returnType)
-        } catch (e: Throwable) {
-            return handleException(ctx, node, node.field.returnType, e)
+        deferreds.forEach {
+            it.forEach { (key, value) ->
+                objectNode.merge(key, value.await())
+            }
         }
+        objectNode
+    } catch (e: ExecutionError) {
+        ctx.requestContext.raiseError(e)
+        jsonNodeFactory.nullNode()
     }
 
     private suspend fun <T> createUnionOperationNode(
@@ -330,7 +293,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             // Union is subclass of Node so check it first
             is Execution.Union -> {
                 val field = checkNotNull(type.unwrapped()[child.key]) {
-                    "Execution unit '${child.key}' is not contained by operation return type"
+                    "Execution unit '${child.key}' is not contained by operation return type '${type.unwrapped().name}'"
                 }
                 if (field is Field.Union<*>) {
                     return child.aliasOrKey to createUnionOperationNode(ctx, value, child, field as Field.Union<T>)
@@ -353,7 +316,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
 
             is Execution.Node -> {
                 val field = checkNotNull(type.unwrapped()[child.key]) {
-                    "Execution unit '${child.key}' is not contained by operation return type"
+                    "Execution unit '${child.key}' is not contained by operation return type '${type.unwrapped().name}'"
                 }
                 return child.aliasOrKey to (createPropertyNode(ctx, value, child, field) ?: return null)
             }
@@ -372,7 +335,7 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             val expectedType = container.condition.onType
             if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
                 // TODO: for remote objects we now rely on the presence of the __typename. So maybe we should/need to automatically add it if not present already? Can this break something?
-                if (expectedType.isInstance(value) || (value is JsonNode && value["__typename"].textValue() == expectedType.name)) {
+                if (expectedType == value || expectedType.isInstance(value) || (value is JsonNode && value["__typename"]?.textValue() == expectedType.name)) {
                     val childElements = container.elements.flatMap { child ->
                         when (child) {
                             is Execution.Fragment -> handleFragment(ctx, value, child.withParent(container)).toList()
@@ -407,7 +370,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
         val include = shouldInclude(ctx, node)
         if (include) {
             try {
-                node.field.checkAccess(parentValue, ctx.requestContext)
+                // checkAccess (only) on operation DSL level does not expect a parentValue
+                node.field.checkAccess(parentValue.takeUnless { it is Type.OperationObject }, ctx.requestContext)
             } catch (e: Throwable) {
                 return handleException(ctx, node, node.field.returnType, e)
             }
@@ -478,7 +442,8 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             throw exception
         }
 
-        when (val handledError = schema.configuration.errorHandler.handleException(ctx.requestContext, node, exception)) {
+        when (val handledError =
+            schema.configuration.errorHandler.handleException(ctx.requestContext, node, exception)) {
             is RequestError -> throw handledError
             is ExecutionError -> {
                 if (returnType.isNullable()) {
@@ -531,8 +496,6 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
     }
 
     internal suspend fun <T> FunctionWrapper<T>.invoke(
-        isSubscription: Boolean = false,
-        children: Collection<Execution> = emptyList(),
         funName: String,
         receiver: Any?,
         inputValues: List<InputValue<*>>,
@@ -551,11 +514,18 @@ class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecutor {
             this@invoke
         ) ?: return CompletableDeferred(value = null)
 
+        val isSubscription = receiver != null && receiver == schema.model.subscriptionType
         return when {
             hasReceiver -> CompletableDeferred(invoke(receiver, *transformedArgs.toTypedArray()))
             isSubscription -> {
-                val subscriptionArgs = children.map { (it as Execution.Node).aliasOrKey }
-                CompletableDeferred(invoke(transformedArgs, subscriptionArgs, objectWriter))
+                fun Execution.getSubscriptionArgs(): List<String> = when {
+                    this is Execution.Node && children.isEmpty() -> listOf(aliasOrKey)
+                    this is Execution.Node -> children.flatMap { it.getSubscriptionArgs() }
+                    this is Execution.Fragment -> elements.flatMap { it.getSubscriptionArgs() }
+                    else -> error("Unexpected type of node: $this")
+                }
+
+                CompletableDeferred(invoke(transformedArgs, executionNode.getSubscriptionArgs(), objectWriter))
             }
 
             else -> CompletableDeferred(invoke(*transformedArgs.toTypedArray()))

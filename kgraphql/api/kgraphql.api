@@ -843,47 +843,6 @@ public final class de/stuebingerb/kgraphql/schema/execution/ExecutionMode : java
 	public static fun values ()[Lde/stuebingerb/kgraphql/schema/execution/ExecutionMode;
 }
 
-public final class de/stuebingerb/kgraphql/schema/execution/ExecutionPlan : java/util/List, kotlin/jvm/internal/markers/KMappedMarker {
-	public fun <init> (ZLde/stuebingerb/kgraphql/schema/execution/ExecutionMode;Ljava/util/List;)V
-	public fun add (ILde/stuebingerb/kgraphql/schema/execution/Execution$Node;)V
-	public synthetic fun add (ILjava/lang/Object;)V
-	public fun add (Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;)Z
-	public synthetic fun add (Ljava/lang/Object;)Z
-	public fun addAll (ILjava/util/Collection;)Z
-	public fun addAll (Ljava/util/Collection;)Z
-	public fun clear ()V
-	public fun contains (Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;)Z
-	public final fun contains (Ljava/lang/Object;)Z
-	public fun containsAll (Ljava/util/Collection;)Z
-	public fun get (I)Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;
-	public synthetic fun get (I)Ljava/lang/Object;
-	public final fun getExecutionMode ()Lde/stuebingerb/kgraphql/schema/execution/ExecutionMode;
-	public final fun getOperations ()Ljava/util/List;
-	public fun getSize ()I
-	public fun indexOf (Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;)I
-	public final fun indexOf (Ljava/lang/Object;)I
-	public fun isEmpty ()Z
-	public final fun isSubscription ()Z
-	public fun iterator ()Ljava/util/Iterator;
-	public fun lastIndexOf (Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;)I
-	public final fun lastIndexOf (Ljava/lang/Object;)I
-	public fun listIterator ()Ljava/util/ListIterator;
-	public fun listIterator (I)Ljava/util/ListIterator;
-	public fun remove (I)Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;
-	public synthetic fun remove (I)Ljava/lang/Object;
-	public fun remove (Ljava/lang/Object;)Z
-	public fun removeAll (Ljava/util/Collection;)Z
-	public fun replaceAll (Ljava/util/function/UnaryOperator;)V
-	public fun retainAll (Ljava/util/Collection;)Z
-	public fun set (ILde/stuebingerb/kgraphql/schema/execution/Execution$Node;)Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;
-	public synthetic fun set (ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun size ()I
-	public fun sort (Ljava/util/Comparator;)V
-	public fun subList (II)Ljava/util/List;
-	public fun toArray ()[Ljava/lang/Object;
-	public fun toArray ([Ljava/lang/Object;)[Ljava/lang/Object;
-}
-
 public abstract interface class de/stuebingerb/kgraphql/schema/execution/GenericTypeResolver {
 	public static final field Companion Lde/stuebingerb/kgraphql/schema/execution/GenericTypeResolver$Companion;
 	public abstract fun box (Ljava/lang/Object;Lkotlin/reflect/KType;)Ljava/lang/Object;
@@ -897,23 +856,6 @@ public final class de/stuebingerb/kgraphql/schema/execution/GenericTypeResolver$
 
 public final class de/stuebingerb/kgraphql/schema/execution/GenericTypeResolver$DefaultImpls {
 	public static fun box (Lde/stuebingerb/kgraphql/schema/execution/GenericTypeResolver;Ljava/lang/Object;Lkotlin/reflect/KType;)Ljava/lang/Object;
-}
-
-public final class de/stuebingerb/kgraphql/schema/execution/ParallelRequestExecutor : de/stuebingerb/kgraphql/schema/execution/RequestExecutor {
-	public fun <init> (Lde/stuebingerb/kgraphql/schema/DefaultSchema;)V
-	public final fun getSchema ()Lde/stuebingerb/kgraphql/schema/DefaultSchema;
-	public fun suspendExecute (Lde/stuebingerb/kgraphql/schema/execution/ExecutionPlan;Lde/stuebingerb/kgraphql/request/VariablesJson;Lde/stuebingerb/kgraphql/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public final class de/stuebingerb/kgraphql/schema/execution/ParallelRequestExecutor$ExecutionContext {
-	public fun <init> (Lde/stuebingerb/kgraphql/request/Variables;Lde/stuebingerb/kgraphql/Context;Ljava/util/Map;)V
-	public final fun getLoaders ()Ljava/util/Map;
-	public final fun getRequestContext ()Lde/stuebingerb/kgraphql/Context;
-	public final fun getVariables ()Lde/stuebingerb/kgraphql/request/Variables;
-}
-
-public abstract interface class de/stuebingerb/kgraphql/schema/execution/RequestExecutor {
-	public abstract fun suspendExecute (Lde/stuebingerb/kgraphql/schema/execution/ExecutionPlan;Lde/stuebingerb/kgraphql/request/VariablesJson;Lde/stuebingerb/kgraphql/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class de/stuebingerb/kgraphql/schema/execution/TypeCondition {
@@ -2180,11 +2122,6 @@ public final class de/stuebingerb/kgraphql/schema/structure/InputValue : de/stue
 	public synthetic fun getType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public fun getType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public fun isDeprecated ()Z
-}
-
-public final class de/stuebingerb/kgraphql/schema/structure/RequestInterpreter {
-	public fun <init> (Lde/stuebingerb/kgraphql/schema/structure/SchemaModel;)V
-	public final fun createExecutionPlan (Lde/stuebingerb/kgraphql/schema/model/ast/DocumentNode;Ljava/lang/String;Lde/stuebingerb/kgraphql/request/VariablesJson;)Lde/stuebingerb/kgraphql/schema/execution/ExecutionPlan;
 }
 
 public class de/stuebingerb/kgraphql/schema/structure/SchemaCompilation {
