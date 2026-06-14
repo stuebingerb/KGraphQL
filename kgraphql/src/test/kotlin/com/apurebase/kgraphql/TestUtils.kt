@@ -3,11 +3,13 @@ package com.apurebase.kgraphql
 import com.apurebase.kgraphql.schema.DefaultSchema
 import com.apurebase.kgraphql.schema.Schema
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
+import com.apurebase.kgraphql.schema.structure.Type
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.shouldBe
 import java.io.File
 import java.io.FileNotFoundException
+import kotlin.reflect.KClass
 
 val objectMapper = jacksonObjectMapper()
 
@@ -61,3 +63,11 @@ fun Any.getResourceAsFile(name: String): File =
 object ResourceFiles {
     val kitchenSinkQuery = getResourceAsFile("kitchen-sink.graphql").readText()
 }
+
+fun DefaultSchema.typeByKClass(kClass: KClass<*>): Type? =
+    model.allTypes.firstOrNull { it.isOutputType() && it.kClass == kClass }
+
+fun DefaultSchema.inputTypeByKClass(kClass: KClass<*>): Type? =
+    model.allTypes.firstOrNull { it.isInputType() && it.kClass == kClass }
+
+fun DefaultSchema.findTypeByName(name: String): Type? = model.allTypesByName[name]

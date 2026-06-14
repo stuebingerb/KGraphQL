@@ -14,12 +14,14 @@ import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expect
 import com.apurebase.kgraphql.expectExecutionError
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.inputTypeByKClass
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 import com.apurebase.kgraphql.schema.dsl.types.TypeDSL
 import com.apurebase.kgraphql.schema.execution.DefaultGenericTypeResolver
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import com.apurebase.kgraphql.schema.structure.Field
 import com.apurebase.kgraphql.shouldBeInstanceOf
+import com.apurebase.kgraphql.typeByKClass
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -51,7 +53,7 @@ class SchemaBuilderTest {
             }
         }
 
-        val scenarioType = testedSchema.model.queryTypes[Scenario::class]
+        val scenarioType = testedSchema.typeByKClass(Scenario::class)
             ?: throw Exception("Scenario type should be present in schema")
         scenarioType["author"] shouldBe null
         scenarioType["content"] shouldNotBe null
@@ -65,17 +67,17 @@ class SchemaBuilderTest {
             }
         }
 
-        val scenarioType = testedSchema.model.queryTypes[Account::class]
+        val accountType = testedSchema.typeByKClass(Account::class)
             ?: throw Exception("Account type should be present in schema")
 
         // id should exist because it is public
-        scenarioType["id"] shouldNotBe null
+        accountType["id"] shouldNotBe null
 
         // username should exist because it is public
-        scenarioType["username"] shouldNotBe null
+        accountType["username"] shouldNotBe null
 
         // password shouldn't exist because it's private
-        scenarioType["password"] shouldBe null
+        accountType["password"] shouldBe null
     }
 
     @Test
@@ -94,7 +96,7 @@ class SchemaBuilderTest {
                 }
             }
         }
-        val scenarioType = testedSchema.model.queryTypes[Scenario::class]
+        val scenarioType = testedSchema.typeByKClass(Scenario::class)
             ?: throw Exception("Scenario type should be present in schema")
         scenarioType.kind shouldBe TypeKind.OBJECT
         scenarioType["content"] shouldNotBe null
@@ -162,7 +164,7 @@ class SchemaBuilderTest {
             }
         }
 
-        val scenarioType = testedSchema.model.queryTypes[Scenario::class]
+        val scenarioType = testedSchema.typeByKClass(Scenario::class)
             ?: throw Exception("Scenario type should be present in schema")
 
         scenarioType.kind shouldBe TypeKind.OBJECT
@@ -171,7 +173,7 @@ class SchemaBuilderTest {
 
     @Test
     fun `union type DSL`() {
-        val tested = defaultSchema {
+        val testedSchema = defaultSchema {
             query("scenario") {
                 resolver { -> Scenario(Id("GKalus", 234234), "Gamil Kalus", "TOO LONG") }
             }
@@ -196,7 +198,7 @@ class SchemaBuilderTest {
             }
         }
 
-        val scenarioType = tested.model.queryTypes[Scenario::class]
+        val scenarioType = testedSchema.typeByKClass(Scenario::class)
             ?: throw Exception("Scenario type should be present in schema")
 
         val unionField = scenarioType["pdf"]
@@ -206,7 +208,7 @@ class SchemaBuilderTest {
 
     @Test
     fun `circular dependency extension property`() {
-        val tested = defaultSchema {
+        val testedSchema = defaultSchema {
             query("actor") {
                 resolver { -> Actor("Little John", 44) }
             }
@@ -218,7 +220,7 @@ class SchemaBuilderTest {
             }
         }
 
-        val actorType = tested.model.queryTypes[Actor::class]
+        val actorType = testedSchema.typeByKClass(Actor::class)
             ?: throw Exception("Actor type should be present in schema")
         actorType.kind shouldBe TypeKind.OBJECT
         val property = actorType["linked"] ?: throw Exception("Actor should have ext property 'linked'")
@@ -236,7 +238,7 @@ class SchemaBuilderTest {
             }
         }
 
-        val tested = defaultSchema {
+        val testedSchema = defaultSchema {
             query("mainActor") {
                 actorService::getMainActor.toResolver()
             }
@@ -252,15 +254,15 @@ class SchemaBuilderTest {
             }
         }
 
-        val actorType = tested.model.queryTypes[Actor::class]
+        val actorType = testedSchema.typeByKClass(Actor::class)
             ?: throw Exception("Actor type should be present in schema")
         actorType.kind shouldBe TypeKind.OBJECT
         val property = actorType["linked"] ?: throw Exception("Actor should have ext property 'linked'")
         property shouldNotBe null
         property.returnType.unwrapped().name shouldBe "Actor"
 
-        deserialize(tested.executeBlocking("{mainActor{name}}"))
-        deserialize(tested.executeBlocking("{actorById(id: 1){name}}"))
+        deserialize(testedSchema.executeBlocking("{mainActor{name}}"))
+        deserialize(testedSchema.executeBlocking("{actorById(id: 1){name}}"))
     }
 
     @Test

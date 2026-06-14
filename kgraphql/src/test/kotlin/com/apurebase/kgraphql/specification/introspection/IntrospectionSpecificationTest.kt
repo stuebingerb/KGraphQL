@@ -6,6 +6,7 @@ import com.apurebase.kgraphql.defaultSchema
 import com.apurebase.kgraphql.deserialize
 import com.apurebase.kgraphql.expectRequestError
 import com.apurebase.kgraphql.extract
+import com.apurebase.kgraphql.findTypeByName
 import com.apurebase.kgraphql.request.Introspection
 import com.apurebase.kgraphql.schema.introspection.TypeKind
 import io.kotest.inspectors.forAll

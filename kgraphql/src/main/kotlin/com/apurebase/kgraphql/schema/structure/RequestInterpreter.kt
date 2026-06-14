@@ -224,7 +224,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         // TODO: should be more obvious and maybe we need a "typesBySchema", not only for remotes
         val typesFromSameSchema =
             (schemaModel.remoteTypesBySchema[field.remoteUrl]
-                ?: schemaModel.queryTypes.values).mapNotNullTo(HashSet()) { it.name }
+                ?: schemaModel.allTypes).mapNotNullTo(HashSet()) { it.name }
 
         val nodeArgs = node.arguments?.toArguments()
         val usedVariableNames = nodeArgs.orEmpty().values
