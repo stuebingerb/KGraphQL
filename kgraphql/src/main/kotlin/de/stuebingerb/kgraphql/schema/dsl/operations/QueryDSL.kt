@@ -1,0 +1,23 @@
+package de.stuebingerb.kgraphql.schema.dsl.operations
+
+import de.stuebingerb.kgraphql.schema.model.QueryDef
+
+class QueryDSL(name: String) : AbstractOperationDSL(name) {
+
+    internal fun toKQLQuery(): QueryDef<out Any?> {
+        val function = requireNotNull(functionWrapper) {
+            "resolver has to be specified for query [$name]"
+        }
+
+        return QueryDef(
+            name = name,
+            resolver = function,
+            description = description,
+            isDeprecated = isDeprecated,
+            deprecationReason = deprecationReason,
+            inputValues = inputValues,
+            accessRule = accessRuleBlock,
+            explicitReturnType = explicitReturnType
+        )
+    }
+}

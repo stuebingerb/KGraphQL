@@ -18,7 +18,7 @@ KGraphQL provides a group of DSL methods to define scalars:
 They differ only by the Kotlin primitive type they coerce to.
 
 Every scalar has to define its coercion functions `deserialize` and `serialize`, or a coercion object that implements the
-correct subtype of `com.apurebase.kgraphql.schema.scalar.ScalarCoercion`:
+correct subtype of `de.stuebingerb.kgraphql.schema.scalar.ScalarCoercion`:
 
 === "Example (direct coercion function)"
     ```kotlin

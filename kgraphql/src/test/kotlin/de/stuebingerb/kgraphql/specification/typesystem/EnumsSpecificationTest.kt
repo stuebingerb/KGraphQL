@@ -1,0 +1,92 @@
+package de.stuebingerb.kgraphql.specification.typesystem
+
+import de.stuebingerb.kgraphql.InvalidInputValueException
+import de.stuebingerb.kgraphql.KGraphQL
+import de.stuebingerb.kgraphql.Specification
+import de.stuebingerb.kgraphql.deserialize
+import de.stuebingerb.kgraphql.expect
+import de.stuebingerb.kgraphql.expectExecutionError
+import de.stuebingerb.kgraphql.extract
+import de.stuebingerb.kgraphql.schema.SchemaException
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
+
+@Specification("3.1.5 Enums")
+class EnumsSpecificationTest {
+
+    enum class Coolness {
+        NOT_COOL, COOL, TOTALLY_COOL
+    }
+
+    val schema = KGraphQL.schema {
+        enum<Coolness> {
+            description = "State of coolness"
+            value(Coolness.COOL) {
+                description = "really cool"
+            }
+        }
+
+        query("cool") {
+            resolver { cool: Coolness -> cool.toString() }
+        }
+    }
+
+    @Test
+    fun `string literals must not be accepted as an enum input`() {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce string literal '\"COOL\"' to enum Coolness") {
+            schema.executeBlocking("{cool(cool : \"COOL\")}")
+        }
+    }
+
+    @Test
+    fun `string constants are accepted as an enum input`() {
+        val response = deserialize(schema.executeBlocking("{cool(cool : COOL)}"))
+        response.extract<String>("data/cool") shouldBe "COOL"
+    }
+
+    enum class Empty
+
+    @Test
+    fun `enums must have at least one value`() {
+        expect<SchemaException>("Enum 'Empty' must have at least one value") {
+            KGraphQL.schema {
+                enum<Empty>()
+                query("test") {
+                    resolver { -> "test" }
+                }
+            }
+        }
+
+        expect<SchemaException>("Enum 'EmptyCoolness' must have at least one value") {
+            KGraphQL.schema {
+                enum(Coolness::class, emptyArray()) {
+                    name = "EmptyCoolness"
+                }
+                query("test") {
+                    resolver { -> "test" }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `enums should allow to limit their values`() {
+        val schema = KGraphQL.schema {
+            enum(Coolness::class, arrayOf(Coolness.TOTALLY_COOL))
+            query("test") {
+                resolver { -> "test" }
+            }
+        }
+
+        schema.printSchema() shouldBe """
+            type Query {
+              test: String!
+            }
+            
+            enum Coolness {
+              TOTALLY_COOL
+            }
+            
+        """.trimIndent()
+    }
+}

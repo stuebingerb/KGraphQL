@@ -1,0 +1,271 @@
+package de.stuebingerb.kgraphql.stitched.schema.structure
+
+import com.fasterxml.jackson.databind.JsonNode
+import de.stuebingerb.kgraphql.Context
+import de.stuebingerb.kgraphql.ExperimentalAPI
+import de.stuebingerb.kgraphql.schema.builtin.BuiltInScalars
+import de.stuebingerb.kgraphql.schema.execution.Execution
+import de.stuebingerb.kgraphql.schema.introspection.TypeKind
+import de.stuebingerb.kgraphql.schema.introspection.__Field
+import de.stuebingerb.kgraphql.schema.introspection.__InputValue
+import de.stuebingerb.kgraphql.schema.introspection.__Schema
+import de.stuebingerb.kgraphql.schema.introspection.__Type
+import de.stuebingerb.kgraphql.schema.model.FunctionWrapper
+import de.stuebingerb.kgraphql.schema.model.InputValueDef
+import de.stuebingerb.kgraphql.schema.model.PropertyDef
+import de.stuebingerb.kgraphql.schema.model.TypeDef
+import de.stuebingerb.kgraphql.schema.model.ast.SelectionNode
+import de.stuebingerb.kgraphql.schema.structure.Field
+import de.stuebingerb.kgraphql.schema.structure.InputValue
+import de.stuebingerb.kgraphql.schema.structure.Type
+import de.stuebingerb.kgraphql.schema.structure.TypeProxy
+import de.stuebingerb.kgraphql.stitched.schema.configuration.StitchedSchemaConfiguration
+
+@ExperimentalAPI
+class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfiguration) {
+    val remoteQueryTypeProxies = mutableMapOf<String, TypeProxy>()
+    val remoteInputTypeProxies = mutableMapOf<String, TypeProxy>()
+    val remoteQueries = mutableListOf<Field>()
+    val remoteMutations = mutableListOf<Field>()
+
+    fun perform(url: String, schema: __Schema): List<TypeProxy> {
+        schema.types.forEach { type ->
+            when (type.kind) {
+                TypeKind.OBJECT -> {
+                    when (type.name) {
+                        schema.queryType.name ?: "Query" -> handleRemoteQueries(type, url)
+                        schema.mutationType?.name ?: "Mutation" -> handleRemoteMutations(type, url)
+                        schema.subscriptionType?.name ?: "Subscription" -> TODO("remote subscriptions are not supported")
+
+                        else -> handleRemoteObjectType(type)
+                    }
+                }
+
+                TypeKind.UNION -> handleRemoteUnionType(type)
+                TypeKind.ENUM -> handleRemoteEnumType(type)
+                TypeKind.INPUT_OBJECT -> handleRemoteInputType(type)
+                TypeKind.INTERFACE -> handleRemoteInterface(type)
+                TypeKind.SCALAR -> handleRemoteScalar(type)
+                TypeKind.LIST -> {} // NOOP
+                TypeKind.NON_NULL -> {} // NOOP
+            }
+        }
+        // Replace any custom root operation type names with KGraphQL's default names, because there can only be one
+        // queryType/mutationType/subscriptionType for a schema.
+        val queryTypeName = schema.queryType.name
+        if (queryTypeName != "Query") {
+            remoteQueryTypeProxies[queryTypeName]?.let {
+                val standardizedQueryType = Type.RemoteObject(
+                    name = "Query",
+                    description = it.description,
+                    fields = it.fields.orEmpty() + typenameField(),
+                    interfaces = it.interfaces
+                )
+                it.proxied = standardizedQueryType
+                remoteQueryTypeProxies["Query"] = it
+                remoteQueryTypeProxies.remove(queryTypeName)
+            }
+        }
+        val mutationTypeName = schema.mutationType?.name
+        if (mutationTypeName != null && mutationTypeName != "Mutation") {
+            remoteQueryTypeProxies[mutationTypeName]?.let {
+                val standardizedMutationType = Type.RemoteObject(
+                    name = "Mutation",
+                    description = it.description,
+                    fields = it.fields.orEmpty() + typenameField(),
+                    interfaces = it.interfaces
+                )
+                it.proxied = standardizedMutationType
+                remoteQueryTypeProxies["Mutation"] = it
+                remoteQueryTypeProxies.remove(mutationTypeName)
+            }
+        }
+
+        return (remoteQueryTypeProxies.values + remoteInputTypeProxies.values).toList()
+    }
+
+    private fun handleRemoteQueries(type: __Type, url: String) {
+        remoteQueries.addAll(type.fields.orEmpty().map {
+            remoteRootOperation(it, url)
+        })
+    }
+
+    private fun handleRemoteMutations(type: __Type, url: String) {
+        remoteMutations.addAll(type.fields.orEmpty().map {
+            remoteRootOperation(it, url)
+        })
+    }
+
+    fun remoteRootOperation(
+        field: __Field,
+        url: String,
+        queryName: String = field.name
+    ): Field.RemoteOperation<Nothing, JsonNode?> {
+        val kql = PropertyDef.Function<Nothing, JsonNode?>(
+            name = field.name,
+            resolver = FunctionWrapper.ArityTwo(
+                implementation = { node: Execution.Remote, ctx: Context ->
+                    // Skip remote execution if we have a selection of only stitched fields
+                    // TODO: ideally we would filter this out in RequestInterpreter already
+                    // TODO: test for interfaces, unions, etc.
+                    val returnType = node.field.returnType.unwrapped()
+                    val availableFieldNames: Set<String> = returnType.fields
+                        ?.filterNot { it is Field.RemoteOperation<*, *> }
+                        ?.mapTo(mutableSetOf()) { it.name }
+                        .orEmpty() + "__typename"
+                    val filteredSelections = node.selectionNode.selectionSet?.selections
+                        ?.filter { it !is SelectionNode.FieldNode || it.name.value in availableFieldNames }
+                        .orEmpty()
+                    if (filteredSelections.isEmpty() && returnType.fields != null) {
+                        return@ArityTwo configuration.objectMapper.createObjectNode()
+                    }
+
+                    configuration.remoteExecutor.execute(node, ctx)
+                },
+                hasReceiver = false
+            )
+        )
+        return Field.RemoteOperation(
+            kql = kql,
+            field = handleRemoteField(field),
+            remoteUrl = url,
+            remoteQuery = queryName,
+            arguments = listOf(
+                InputValue(
+                    InputValueDef(Execution.Remote::class, "executionNode"),
+                    Type._ExecutionNode()
+                ),
+                InputValue(
+                    InputValueDef(Context::class, "ctx"),
+                    Type._Context()
+                )
+            ),
+            args = field.args
+        )
+    }
+
+    private fun handleRemoteScalar(type: __Type): Type {
+        val typeName = checkNotNull(type.name) {
+            "Cannot handle remote type $type without name"
+        }
+        val typeProxy = TypeProxy(Type.RemoteScalar(typeName, type.description, type.specifiedByURL))
+        remoteQueryTypeProxies[typeName] = typeProxy
+        return typeProxy
+    }
+
+    // TODO: we should probably only search within the *same* schema?
+    private fun handleRemoteType(type: __Type): Type {
+        return when (type.kind) {
+            TypeKind.LIST -> Type.AList(handleRemoteType(type.ofType!!), List::class)
+            TypeKind.NON_NULL -> Type.NonNull(handleRemoteType(type.ofType!!))
+            TypeKind.OBJECT -> remoteQueryTypeProxies[type.name] ?: handleRemoteObjectType(type)
+            TypeKind.ENUM -> remoteQueryTypeProxies[type.name] ?: handleRemoteEnumType(type)
+            TypeKind.INTERFACE -> remoteQueryTypeProxies[type.name] ?: handleRemoteInterface(type)
+            TypeKind.INPUT_OBJECT -> remoteInputTypeProxies[type.name] ?: handleRemoteInputType(type)
+            TypeKind.UNION -> remoteQueryTypeProxies[type.name] ?: handleRemoteUnionType(type)
+            TypeKind.SCALAR -> remoteQueryTypeProxies[type.name] ?: handleRemoteScalar(type)
+        }
+    }
+
+    private fun handleRemoteInterface(type: __Type): Type.RemoteInterface {
+        val typeName = checkNotNull(type.name) {
+            "Cannot handle remote type $type without name"
+        }
+        val fields = type.fields.orEmpty().map {
+            handleRemoteField(it)
+        }
+        val interfaces = type.interfaces?.map {
+            handleRemoteType(it)
+        }
+
+        val objectType = Type.RemoteInterface(typeName, type.description, fields + typenameField(), interfaces)
+        val typeProxy = TypeProxy(objectType)
+        remoteQueryTypeProxies[typeName] = typeProxy
+        return objectType
+    }
+
+    private fun handleRemoteField(field: __Field) = Field.Delegated(
+        name = field.name,
+        description = field.description,
+        isDeprecated = field.isDeprecated,
+        deprecationReason = field.deprecationReason,
+        args = field.args,
+        returnType = handleRemoteType(field.type),
+        // TODO: only remote operations actually support fields from parent
+        argsFromParent = (field as? Field.Delegated)?.argsFromParent.orEmpty()
+            .mapKeys { handleRemoteInputValue(it.key) }
+    )
+
+    private fun handleRemoteInputValue(inputValue: __InputValue) = RemoteInputValue(
+        name = inputValue.name,
+        type = handleRemoteType(inputValue.type),
+        defaultValue = inputValue.defaultValue,
+        isDeprecated = inputValue.isDeprecated,
+        deprecationReason = inputValue.deprecationReason,
+        description = inputValue.description
+    )
+
+    private fun handleRemoteObjectType(type: __Type): TypeProxy {
+        val typeName = checkNotNull(type.name) {
+            "Cannot handle remote type $type without name"
+        }
+        val fields = type.fields.orEmpty().map {
+            handleRemoteField(it)
+        }
+        val interfaces = type.interfaces?.map {
+            handleRemoteType(it)
+        }
+
+        val objectType = Type.RemoteObject(typeName, type.description, fields + typenameField(), interfaces)
+        val typeProxy = remoteQueryTypeProxies[typeName] ?: TypeProxy(objectType)
+        typeProxy.proxied = objectType
+        remoteQueryTypeProxies[typeName] = typeProxy
+        return typeProxy
+    }
+
+    private fun handleRemoteEnumType(type: __Type): Type {
+        val typeName = checkNotNull(type.name) {
+            "Cannot handle remote type $type without name"
+        }
+
+        val enumType = Type.RemoteEnum(typeName, type.description, type.enumValues.orEmpty())
+        val typeProxy = TypeProxy(enumType)
+        remoteQueryTypeProxies[typeName] = typeProxy
+        return enumType
+    }
+
+    private fun handleRemoteUnionType(type: __Type): Type.Union {
+        val possibleTypes = type.possibleTypes.orEmpty().map {
+            handleRemoteType(it)
+        }
+
+        val typeName = checkNotNull(type.name) {
+            "Cannot handle remote type $type without name"
+        }
+
+        val objectDef = TypeDef.Union(typeName, emptySet(), type.description)
+        val objectType = Type.Union(objectDef, typenameField(), possibleTypes)
+        val typeProxy = TypeProxy(objectType)
+        remoteQueryTypeProxies[typeName] = typeProxy
+        return objectType
+    }
+
+    private fun handleRemoteInputType(type: __Type): Type {
+        val typeName = checkNotNull(type.name) {
+            "Cannot handle remote type $type without name"
+        }
+        val objectType = Type.RemoteInputObject(typeName, type.description, type.inputFields.orEmpty())
+        val typeProxy = TypeProxy(objectType)
+        remoteInputTypeProxies[typeName] = typeProxy
+        return objectType
+    }
+
+    private fun typenameField() = Field.Function(
+        kql = PropertyDef.Function<Nothing, String>(
+            name = "__typename",
+            resolver = FunctionWrapper.on({ node: JsonNode -> node["__typename"].textValue() }, true)
+        ),
+        returnType = BuiltInScalars.STRING.typeDef.toScalarType(),
+        arguments = emptyList()
+    )
+}
