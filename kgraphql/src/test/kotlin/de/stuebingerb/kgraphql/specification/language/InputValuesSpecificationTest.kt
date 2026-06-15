@@ -1,0 +1,408 @@
+package de.stuebingerb.kgraphql.specification.language
+
+import de.stuebingerb.kgraphql.InvalidInputValueException
+import de.stuebingerb.kgraphql.KGraphQL
+import de.stuebingerb.kgraphql.Specification
+import de.stuebingerb.kgraphql.ValidationException
+import de.stuebingerb.kgraphql.defaultSchema
+import de.stuebingerb.kgraphql.deserialize
+import de.stuebingerb.kgraphql.expectExecutionError
+import de.stuebingerb.kgraphql.expectRequestError
+import de.stuebingerb.kgraphql.extract
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
+
+@Specification("2.9 Input Values")
+class InputValuesSpecificationTest {
+
+    @Suppress("unused")
+    enum class FakeEnum {
+        ENUM1, ENUM2
+    }
+
+    data class FakeData(val number: Int = 0, val description: String = "", val list: List<String> = emptyList())
+
+    val schema = defaultSchema {
+        inputType<FakeData>()
+
+        query("Int") { resolver { value: Int -> value } }
+        query("Float") { resolver { value: Float -> value } }
+        query("Double") { resolver { value: Double -> value } }
+        query("String") { resolver { value: String -> value } }
+        query("Boolean") { resolver { value: Boolean -> value } }
+        query("Null") { resolver { value: Int? -> value } }
+        query("Enum") { resolver { value: FakeEnum -> value } }
+        query("List") { resolver { value: List<Int> -> value } }
+        query("Object") { resolver { value: FakeData -> value.number } }
+        query("ObjectList") { resolver { value: FakeData -> value.list } }
+    }
+
+    @Test
+    @Specification("2.9.1 Int Value")
+    fun `Int input value`() {
+        val input = 4356
+        val response = deserialize(schema.executeBlocking("{ Int(value: $input) }"))
+        response.extract<Int>("data/Int") shouldBe input
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["null", "42.0", "\"foo\"", "bar", "[1, 2]"])
+    @Specification("2.9.1 Int Value")
+    fun `Invalid Int input value`(value: String) {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to Int") {
+            schema.executeBlocking("{ Int(value: $value) }")
+        }
+    }
+
+    @Test
+    @Specification("2.9.2 Float Value")
+    fun `Float input value`() {
+        val input = 4356.34
+        val response = deserialize(schema.executeBlocking("{ Float(value: $input) }"))
+        response.extract<Double>("data/Float") shouldBe input
+    }
+
+    @Test
+    @Specification("2.9.2 Float Value")
+    fun `Double input value`() {
+        // GraphQL Float is Kotlin Double
+        val input = 4356.34
+        val response = deserialize(schema.executeBlocking("{ Double(value: $input) }"))
+        response.extract<Double>("data/Double") shouldBe input
+    }
+
+    @Test
+    @Specification("2.9.2 Float Value")
+    fun `Double with exponential input value`() {
+        val input = 4356.34e2
+        val response = deserialize(schema.executeBlocking("{ Double(value: $input) }"))
+        response.extract<Double>("data/Double") shouldBe input
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        value = [
+            "true, true",
+            "false, false",
+            "\"true\", true",
+            "\"false\", false",
+            "\"TRUE\", true",
+            "\"FALSE\", false",
+            "\"tRuE\", true",
+            "\"faLSe\", false",
+            "1, true",
+            "0, false",
+            "-1, false"
+        ]
+    )
+    @Specification("2.9.3 Boolean Value")
+    fun `Boolean input value`(input: String, expected: Boolean) {
+        val response = deserialize(schema.executeBlocking("{ Boolean(value: $input) }"))
+        response.extract<Boolean>("data/Boolean") shouldBe expected
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["null", "42", "\"foo\"", "[\"foo\", \"bar\"]"])
+    @Specification("2.9.3 Boolean Value")
+    fun `Invalid Boolean input value`(value: String) {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to Boolean") {
+            schema.executeBlocking("{ Boolean(value: $value) }")
+        }
+    }
+
+    @Test
+    @Specification("2.9.4 String Value")
+    fun `String input value`() {
+        val input = "\\\\Ala ma kota \\n\\\\kot ma Alę"
+        val expected = "\\Ala ma kota \n\\kot ma Alę"
+        val response = deserialize(schema.executeBlocking("{ String(value: \"$input\") }"))
+        response.extract<String>("data/String") shouldBe expected
+    }
+
+    @Test
+    @Specification("2.9.4 String Value")
+    fun `String block input value`() {
+        val input = "\\Ala ma kota \n\\kot ma Alę"
+        val expected = "\\Ala ma kota \n\\kot ma Alę"
+        val response = deserialize(schema.executeBlocking("{ String(value: \"\"\"$input\"\"\") }"))
+        response.extract<String>("data/String") shouldBe expected
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["null", "true", "42", "[\"foo\", \"bar\"]"])
+    @Specification("2.9.4 String Value")
+    fun `Invalid String input value`(value: String) {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to String") {
+            schema.executeBlocking("{ String(value: $value) }")
+        }
+    }
+
+    @Test
+    @Specification("2.9.5 Null Value")
+    fun `Null input value`() {
+        val response = deserialize(schema.executeBlocking("{ Null(value: null) }"))
+        response.extract<Nothing?>("data/Null") shouldBe null
+    }
+
+    @Test
+    @Specification("2.9.6 Enum Value")
+    fun `Enum input value`() {
+        val response = deserialize(schema.executeBlocking("{ Enum(value: ENUM1) }"))
+        response.extract<String>("data/Enum") shouldBe FakeEnum.ENUM1.toString()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["ENUM3"])
+    @Specification("2.9.6 Enum Value")
+    fun `Invalid Enum input value`(value: String) {
+        expectExecutionError<InvalidInputValueException>("Invalid enum ${FakeEnum::class.simpleName} value. Expected one of [ENUM1, ENUM2]") {
+            schema.executeBlocking("{ Enum(value: $value) }")
+        }
+    }
+
+    @Test
+    @Specification("2.9.7 List Value")
+    fun `List input value`() {
+        val response = deserialize(schema.executeBlocking("{ List(value: [23, 3, 23]) }"))
+        response.extract<List<Int>>("data/List") shouldBe listOf(23, 3, 23)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["null", "true", "\"foo\""])
+    @Specification("2.9.7 List Value")
+    fun `Invalid List input value`(value: String) {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to Int") {
+            schema.executeBlocking("{ List(value: $value) }")
+        }
+    }
+
+    @Test
+    @Specification("2.9.8 Object Value")
+    fun `Literal object input value`() {
+        val response = deserialize(
+            schema.executeBlocking("{ Object(value: { number: 232, description: \"little number\" }) }")
+        )
+        response.extract<Int>("data/Object") shouldBe 232
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["null", "true", "42"])
+    @Specification("2.9.8 Object Value")
+    fun `Invalid Literal object input value`(value: String) {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '$value' to String") {
+            schema.executeBlocking("{ Object(value: { number: 232, description: \"little number\", list: $value }) }")
+        }
+    }
+
+    @Test
+    @Specification("2.9.8 Object Value")
+    fun `Invalid Literal object input value - null`() {
+        expectExecutionError<InvalidInputValueException>("Cannot coerce 'null' to FakeData") {
+            schema.executeBlocking("{ Object(value: null) }")
+        }
+    }
+
+    @Test
+    @Specification("2.9.8 Object Value")
+    fun `Literal object input value with list field`() {
+        val response = deserialize(
+            schema.executeBlocking(
+                """
+                {
+                    ObjectList(
+                        value: {
+                            number: 232,
+                            description: "little number",
+                            list: ["number", "description", "little number"]
+                        }
+                    )
+                }
+                """.trimIndent()
+            )
+        )
+        response.extract<List<String>>("data/ObjectList") shouldBe listOf("number", "description", "little number")
+    }
+
+    @Test
+    @Specification("2.9.8 Object Value")
+    fun `Object input value`() {
+        val response = deserialize(
+            schema.executeBlocking(
+                request = "query(\$object: FakeData!) { Object(value: \$object) }",
+                variables = "{ \"object\": { \"number\": 232, \"description\": \"little number\" } }"
+            )
+        )
+        response.extract<Int>("data/Object") shouldBe 232
+    }
+
+    @Test
+    @Specification("2.9.8 Object Value")
+    fun `Object input value with list field`() {
+        val response = deserialize(
+            schema.executeBlocking(
+                request = "query(\$object: FakeData!){ ObjectList(value: \$object) }",
+                variables = "{ \"object\": { \"number\": 232, \"description\": \"little number\", \"list\": [\"number\", \"description\", \"little number\"] } }"
+            )
+        )
+        response.extract<List<String>>("data/ObjectList") shouldBe listOf("number", "description", "little number")
+    }
+
+    @Test
+    @Specification("2.9.8 Object Value")
+    fun `Input object value mixed with variables`() {
+        val response = schema.executeBlocking(
+            """
+            query ObjectVariablesMixed(${'$'}description: String!, ${'$'}number: Int! = 25) {
+                ObjectList(value: {
+                    number: ${'$'}number,
+                    description: ${'$'}description,
+                    list: ["number", ${'$'}description, "little number"]
+                })
+            }
+            """.trimIndent(),
+            """{ "description": "Custom description" }"""
+        ).deserialize()
+
+        response.extract<List<String>>("data/ObjectList") shouldBe listOf(
+            "number",
+            "Custom description",
+            "little number"
+        )
+    }
+
+    @Test
+    @Specification("2.9.8 Object Value")
+    fun `unknown object input value type`() {
+        expectRequestError<ValidationException>("Invalid variable '\$object' argument type 'FakeDate', expected 'FakeData!'") {
+            schema.executeBlocking("query(\$object: FakeDate) { Object(value: \$object) }")
+        }
+    }
+
+    data class Dessert(
+        override val id: String,
+        var name: String
+    ) : Model
+
+    interface Model {
+        val id: String
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/199
+    @Test
+    fun `input object value with interface`() {
+        val schema = KGraphQL.schema {
+            inputType<Dessert> {
+                name = "DessertInput"
+                description = "Dessert object to be updated"
+            }
+            query("dessert") {
+                resolver { -> Dessert("id-1", "name-1") }
+            }
+            mutation("updateDessert") {
+                resolver { dessert: Dessert -> dessert }
+            }
+        }
+
+        schema.executeBlocking(
+            """
+            query {
+                dessert { id name }
+            }
+        """.trimIndent()
+        ) shouldBe """
+            {"data":{"dessert":{"id":"id-1","name":"name-1"}}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            mutation {
+                updateDessert(dessert: {id: "id-2", name: "name-2"}) { id name }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"updateDessert":{"id":"id-2","name":"name-2"}}}
+        """.trimIndent()
+    }
+
+    @Test
+    fun `Char input`() {
+        val schema = KGraphQL.schema {
+            extendedScalars()
+            query("dummy") { resolver { -> "dummy" } }
+            mutation("append") { resolver { a: Char, b: Char -> a.toString() + b.toString() } }
+        }
+
+        schema.executeBlocking(
+            """
+            mutation {
+                append(a: "c", b: "d")
+            } 
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"append":"cd"}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            mutation {
+                append(a: 65, b: "1")
+            } 
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"append":"A1"}}
+        """.trimIndent()
+
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '\"cd\"' to Char") {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: "cd", b: "d")
+                } 
+                """.trimIndent()
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '\"\"' to Char") {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: "", b: "d")
+                } 
+                """.trimIndent()
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("Cannot coerce 'true' to Char") {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: true, b: "d")
+                } 
+                """.trimIndent()
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '-1' to Char") {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: -1, b: "d")
+                } 
+                """.trimIndent()
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("Cannot coerce '65536' to Char") {
+            schema.executeBlocking(
+                """
+                mutation {
+                    append(a: 65536, b: "d")
+                } 
+                """.trimIndent()
+            )
+        }
+    }
+}
