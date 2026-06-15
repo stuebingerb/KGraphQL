@@ -1,10 +1,10 @@
 package de.stuebingerb.kgraphql.dao
 
-import de.stuebingerb.kgraphql.dao.CSVDataImporter.importFromCsv
-import de.stuebingerb.kgraphql.model.UFOSightings
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.util.IsolationLevel
+import de.stuebingerb.kgraphql.dao.CSVDataImporter.importFromCsv
+import de.stuebingerb.kgraphql.model.UFOSightings
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils.create
 import org.jetbrains.exposed.v1.jdbc.insert
