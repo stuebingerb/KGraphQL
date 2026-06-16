@@ -28,7 +28,7 @@ import de.stuebingerb.kgraphql.schema.model.ast.VariableDefinitionNode
 import de.stuebingerb.kgraphql.schema.model.ast.toArguments
 import java.util.Stack
 
-class RequestInterpreter(private val schemaModel: SchemaModel) {
+internal class RequestInterpreter(private val schemaModel: SchemaModel) {
 
     private val directivesByName = schemaModel.directives.associateBy { it.name }
     private val usedFragments: MutableSet<String> = mutableSetOf()
@@ -95,11 +95,12 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
         val ctx = InterpreterContext(fragmentDefinitions, operation.variableDefinitions)
 
         return ExecutionPlan(
-            isSubscription = operation.operation == OperationTypeNode.SUBSCRIPTION,
             executionMode = executionMode,
             operations = operation.selectionSet.selections.map {
-                root.handleSelection(it as FieldNode, ctx, operation.variableDefinitions)
-            }
+                root.handleSelectionFieldOrFragment(it, ctx)
+            },
+            root = root,
+            declaredVariables = operation.variableDefinitions
         ).also {
             val unusedFragments = ctx.fragments.keys.filter { fragment -> fragment !in usedFragments }
             if (unusedFragments.isNotEmpty()) {
@@ -166,11 +167,7 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
             is FieldNode -> handleSelection(node, ctx)
         }
 
-    private fun Type.handleSelection(
-        node: FieldNode,
-        ctx: InterpreterContext,
-        variables: List<VariableDefinitionNode>? = null
-    ): Execution.Node {
+    private fun Type.handleSelection(node: FieldNode, ctx: InterpreterContext): Execution.Node {
         return when (val field = this[node.name.value]) {
             null -> throw ValidationException(
                 "Property '${node.name.value}' on '$name' does not exist",
@@ -190,9 +187,8 @@ class RequestInterpreter(private val schemaModel: SchemaModel) {
                     children = handleReturnType(ctx, field.returnType, node),
                     arguments = node.arguments?.toArguments(),
                     directives = node.directives?.lookup(),
-                    // TODO: can we use ctx.declaredVariables here? currently, variables are only assigned to root
-                    //  and remote operation nodes, not field nodes and others
-                    variables = variables,
+                    // TODO: can we remove variables from Execution.Node? variables are only used with Execution.Remote
+                    variables = null,
                     arrayIndex = null,
                     parent = null
                 )

@@ -1,5 +1,8 @@
 package de.stuebingerb.kgraphql.schema.execution
 
+import de.stuebingerb.kgraphql.schema.model.ast.VariableDefinitionNode
+import de.stuebingerb.kgraphql.schema.structure.Type
+
 /**
  * Execution mode to use when executing the plan. "Normal" mode is in fact parallel mode but we
  * stick to the name used in the spec.
@@ -10,8 +13,9 @@ enum class ExecutionMode {
     Normal, Serial
 }
 
-class ExecutionPlan(
-    val isSubscription: Boolean,
+internal class ExecutionPlan(
     val executionMode: ExecutionMode,
-    val operations: List<Execution.Node>
-) : List<Execution.Node> by operations
+    val operations: List<Execution>,
+    val root: Type,
+    val declaredVariables: List<VariableDefinitionNode>?
+) : List<Execution> by operations
