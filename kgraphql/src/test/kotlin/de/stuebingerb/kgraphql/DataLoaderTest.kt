@@ -712,4 +712,54 @@ class DataLoaderTest {
         counters.payments.prepare.get() shouldBe 3
         counters.payments.loader.get() shouldBe 1
     }
+
+    data class Author(val id: String, val name: String)
+    data class Novel(val authorId: String)
+    data class NonFiction(val topic: String)
+    data class BookShelf(val id: String)
+
+    @Test
+    fun `data loader fields nested inside union properties should work`() {
+        val schema = KGraphQL.schema {
+            val item = unionType("Item") {
+                type<Novel>()
+                type<NonFiction>()
+            }
+            type<Novel> {
+                dataProperty<String, Author>("author") {
+                    prepare { it.authorId }
+                    loader { ids -> ids.map { ExecutionResult.Success(Author(it, "name-$it")) } }
+                }
+            }
+            type<BookShelf> {
+                unionProperty("items") {
+                    returnType = item
+                    resolver { shelf ->
+                        if (shelf.id == "1") {
+                            Novel("a1")
+                        } else {
+                            NonFiction("GraphQL")
+                        }
+                    }
+                }
+            }
+            query("root") {
+                resolver { -> listOf(BookShelf("1"), BookShelf("2")) }
+            }
+        }
+
+        val result = schema.executeBlocking("""
+            {
+              root {
+                items {
+                    ... on Novel { author { name } }
+                    ... on NonFiction { topic } }
+              }
+            }
+        """.trimIndent())
+
+        result shouldBe """
+            {"data":{"root":[{"items":{"author":{"name":"name-a1"}}},{"items":{"topic":"GraphQL"}}]}}
+        """.trimIndent()
+    }
 }
