@@ -46,6 +46,7 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
                 forEach { execution ->
                     when (execution) {
                         is Execution.Fragment -> execution.elements.inspect()
+                        is Execution.Union -> execution.memberChildren.values.flatten().inspect()
                         is Execution.Node -> {
                             execution.children.inspect()
                             if (execution.field is Field.DataLoader<*, *, *>) {
@@ -428,7 +429,10 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
             ctx = ctx
         ).await()
 
-        val value = ctx.loaders[field]!!.loadAsync(preparedValue)
+        val loader = checkNotNull(ctx.loaders[field]) {
+            "Missing data loader for field '${field.name}'"
+        }
+        val value = loader.loadAsync(preparedValue)
         return createNode(ctx, value, node, field.returnType)
     }
 
