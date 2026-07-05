@@ -311,7 +311,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             query("returnUnion") {
                 resolver { node: Execution.Node ->
                     WithFields.Value1(1, node.getFields())
-                }
+                }.returns<WithFields>()
             }
         }.executeBlocking(
             """
@@ -385,7 +385,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             }
             unionType<ContactStatus>()
             query("contactStatus") {
-                resolver { -> ContactStatus.Onboarded(userId = "someUserId") }
+                resolver { -> ContactStatus.Onboarded(userId = "someUserId") }.returns<ContactStatus>()
             }
         }
         val results = schema.executeBlocking(

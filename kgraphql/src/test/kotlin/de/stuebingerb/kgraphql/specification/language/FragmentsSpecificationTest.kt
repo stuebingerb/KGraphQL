@@ -23,19 +23,28 @@ import org.junit.jupiter.api.Test
 @Specification("2.8 Fragments")
 class FragmentsSpecificationTest : BaseSchemaTest() {
 
-    val age = 232
-
+    private val age = 232
     private val actorName = "Boguś Linda"
+    private val id = "BLinda"
 
-    val id = "BLinda"
-
-    data class ActorWrapper(val id: String, val actualActor: Actor)
-
-    val schema = defaultSchema {
+    private val schema = defaultSchema {
         query("actor") {
             resolver { -> ActorWrapper(id, Actor(actorName, age)) }
         }
     }
+
+    interface Interface {
+        val name: String
+    }
+
+    interface Interface2 : Interface {
+        val id: Int
+    }
+
+    data class Implementation1(override val name: String) : Interface
+    data class Implementation2(override val name: String, override val id: Int) : Interface2
+
+    data class ActorWrapper(val id: String, val actualActor: Actor)
 
     @Test
     fun `fragment's fields are added to the query at the same level as the fragment invocation`() {
@@ -437,6 +446,58 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
         """.trimIndent()
     }
 
+    @Test
+    fun `fragments on incorrect types should be denied`() {
+        // Fragment on `Actor` is invalid because we know that `Film` is returned
+        expectRequestError<ValidationException>("Invalid type 'Actor' in type condition on inline fragment of type 'Film'; must be one of '[Film]'") {
+            testedSchema.executeBlocking(
+                """
+                {
+                    film {
+                        ... on Actor {
+                            __typename
+                        }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Actor' in type condition on fragment 'actorFragment' of type 'Film'; must be one of '[Film]'") {
+            testedSchema.executeBlocking(
+                """
+                {
+                    film {
+                        ...actorFragment
+                    }
+                }
+                
+                fragment actorFragment on Actor {
+                    name
+                }
+                """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Actor' in type condition on inline fragment of type 'Film'; must be one of '[Film]'") {
+            testedSchema.executeBlocking(
+                """
+                {
+                    film {
+                      ...actorInFilmFragment
+                    }
+                }
+                
+                fragment actorInFilmFragment on Film {
+                  ... on Actor {
+                    name
+                  }
+                }
+                """.trimIndent()
+            )
+        }
+    }
+
     sealed class TopUnion(val field: String) {
         class Union1(val names: List<String>) : TopUnion("union1")
         class Union2(val numbers: List<Int>, val booleans: List<Boolean>) : TopUnion("union2")
@@ -492,6 +553,283 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
         ).deserialize()
         numberResult.extract<List<Int>>("data/unions/numbers") shouldBe listOf(1, 2)
         numberResult.extract<List<Boolean>>("data/unions/booleans") shouldBe listOf(true, false)
+    }
+
+    @Test
+    fun `fragments on impossible union types should be denied`() {
+        val schema = KGraphQL.schema {
+            unionType<TopUnion>()
+            type<Actor>()
+
+            query("unions") {
+                resolver { isOne: Boolean ->
+                    if (isOne) {
+                        TopUnion.Union1(listOf("name1", "name2"))
+                    } else {
+                        TopUnion.Union2(listOf(1, 2), listOf(true, false))
+                    }
+                }
+            }
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Actor' in type condition on inline fragment of type 'TopUnion'; must be one of '[Union1, Union2]'") {
+            schema.executeBlocking(
+                """
+                {
+                    unions(isOne: false) {
+                        ...abc
+                    }
+                }
+                fragment abc on TopUnion {
+                    ... on Union1 { names }
+                    ... on Actor { name }
+                }
+                """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Actor' in type condition on inline fragment of type 'TopUnion'; must be one of '[Union1, Union2]'") {
+            schema.executeBlocking(
+                """
+                {
+                    unions(isOne: false) {
+                        ... on Union1 { names }
+                        ... on Actor { name }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
+    fun `fragments on impossible interface types should be denied`() {
+        val schema = KGraphQL.schema {
+            type<Actor>()
+            type<Implementation1>()
+            type<Implementation2>()
+
+            query("interfaces") {
+                resolver { isOne: Boolean ->
+                    if (isOne) {
+                        Implementation1("impl1")
+                    } else {
+                        Implementation2("impl2", 42)
+                    }
+                }
+            }
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Actor' in type condition on inline fragment of type 'Interface'; must be one of '[Implementation1, Implementation2]'") {
+            schema.executeBlocking(
+                """
+                {
+                    interfaces(isOne: false) {
+                        ...abc
+                    }
+                }
+                fragment abc on Interface {
+                    ... on Implementation1 { name }
+                    ... on Actor { name }
+                }
+                """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Actor' in type condition on inline fragment of type 'Interface'; must be one of '[Implementation1, Implementation2]'") {
+            schema.executeBlocking(
+                """
+                {
+                    interfaces(isOne: false) {
+                        ... on Implementation1 { name }
+                        ... on Actor { name }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+    }
+
+    interface Animal {
+        val name: String
+    }
+
+    interface Mammal : Animal {
+        val order: String
+    }
+
+    sealed class SeaAnimal : Animal {
+        class Dolphin(override val name: String, override val order: String) : SeaAnimal(), Mammal
+        class Fish(override val name: String) : SeaAnimal()
+    }
+
+    sealed class LandAnimal : Animal {
+        class Bear(override val name: String, override val order: String) : LandAnimal(), Mammal
+        class Ant(override val name: String) : LandAnimal()
+    }
+
+    @Test
+    fun `fragments on impossible intersection of types should be denied`() {
+        val schema = KGraphQL.schema {
+            unionType<LandAnimal>()
+            unionType<SeaAnimal>()
+            type<Mammal>()
+            type<Animal>()
+
+            query("animals") {
+                resolver { ->
+                    listOf(
+                        SeaAnimal.Dolphin("dolphin", "order1"),
+                        SeaAnimal.Fish("fish"),
+                        LandAnimal.Bear("bear", "order2"),
+                        LandAnimal.Ant("ant")
+                    )
+                }
+            }
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Fish' in type condition on inline fragment of type 'Mammal'; must be one of '[Bear, Dolphin]'") {
+            schema.executeBlocking(
+            """
+                {
+                    animals {
+                        ... on Mammal {
+                            order
+                            ... on Fish { name }
+                        }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Bear' in type condition on inline fragment of type 'SeaAnimal'; must be one of '[Dolphin, Fish]'") {
+            schema.executeBlocking(
+                """
+                {
+                    animals {
+                        ... on SeaAnimal {
+                            ... on Bear { name }
+                        }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
+    fun `fragments on possible intersection of types should work`() {
+        val schema = KGraphQL.schema {
+            unionType<LandAnimal>()
+            unionType<SeaAnimal>()
+            type<Mammal>()
+            type<Animal>()
+
+            query("animals") {
+                resolver { ->
+                    listOf(
+                        SeaAnimal.Dolphin("dolphin", "order1"),
+                        SeaAnimal.Fish("fish"),
+                        LandAnimal.Bear("bear", "order2"),
+                        LandAnimal.Ant("ant")
+                    )
+                }
+            }
+        }
+
+        schema.executeBlocking(
+            """
+            {
+                animals {
+                    ... on Dolphin { name order }
+                    ... on Fish { name }
+                    ... on Bear { name order }
+                    ... on Ant { name }
+                }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"animals":[{"name":"dolphin","order":"order1"},{"name":"fish"},{"name":"bear","order":"order2"},{"name":"ant"}]}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                animals {
+                    ... on Animal { name }
+                    ... on Mammal { order }
+                }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"animals":[{"name":"dolphin","order":"order1"},{"name":"fish"},{"name":"bear","order":"order2"},{"name":"ant"}]}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                animals {
+                    ... on Animal {
+                        name
+                        ... on Mammal { order }
+                    }
+                }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"animals":[{"name":"dolphin","order":"order1"},{"name":"fish"},{"name":"bear","order":"order2"},{"name":"ant"}]}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                animals {
+                    ... on LandAnimal {
+                        ... on Bear { name order }
+                    }
+                }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"animals":[{},{},{"name":"bear","order":"order2"},{}]}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                animals {
+                    ... on Mammal {
+                        order
+                        ... on Animal { name }
+                    }
+                }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"animals":[{"order":"order1","name":"dolphin"},{},{"order":"order2","name":"bear"},{}]}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+                animals {
+                    ...animalName
+                    ...mammalOrder
+                }
+            }
+            
+            fragment animalName on Animal {
+                name
+            }
+            
+            fragment mammalOrder on Mammal {
+                order
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"animals":[{"name":"dolphin","order":"order1"},{"name":"fish"},{"name":"bear","order":"order2"},{"name":"ant"}]}}
+        """.trimIndent()
     }
 
     @Test
