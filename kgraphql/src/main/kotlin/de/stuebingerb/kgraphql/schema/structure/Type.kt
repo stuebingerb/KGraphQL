@@ -404,6 +404,7 @@ interface Type : __Type {
         override val name: String,
         override val description: String?,
         fields: List<Field>,
+        override val possibleTypes: List<Type>,
         override val interfaces: List<Type>? = emptyList()
     ) : ComplexType(fields) {
 
@@ -416,8 +417,6 @@ interface Type : __Type {
         override val inputFields: List<__InputValue>? = null
 
         override val ofType: Type? = null
-
-        override val possibleTypes: List<Type>? = null
     }
 
     class RemoteInputObject(

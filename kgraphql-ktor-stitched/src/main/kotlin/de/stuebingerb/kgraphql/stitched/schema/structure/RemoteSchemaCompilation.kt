@@ -23,12 +23,27 @@ import de.stuebingerb.kgraphql.stitched.schema.configuration.StitchedSchemaConfi
 
 @ExperimentalAPI
 class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfiguration) {
+    private val currentTypesByName = mutableMapOf<String, __Type>()
+
     val remoteQueryTypeProxies = mutableMapOf<String, TypeProxy>()
     val remoteInputTypeProxies = mutableMapOf<String, TypeProxy>()
     val remoteQueries = mutableListOf<Field>()
     val remoteMutations = mutableListOf<Field>()
 
+    private fun collectCurrentTypes(schema: __Schema) {
+        // Collect current types into a lookup map from their actual type definition to avoid missing
+        // possibleTypes later on when we have only limited information from the introspection response
+        currentTypesByName.clear()
+        schema.types.forEach { type ->
+            type.name?.let { name ->
+                currentTypesByName[name] = type
+            }
+        }
+    }
+
     fun perform(url: String, schema: __Schema): List<TypeProxy> {
+        collectCurrentTypes(schema)
+
         schema.types.forEach { type ->
             when (type.kind) {
                 TypeKind.OBJECT -> {
@@ -171,14 +186,21 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
         val typeName = checkNotNull(type.name) {
             "Cannot handle remote type $type without name"
         }
+        // Lookup the actual type because the one we received may not have possibleTypes set
+        val type = currentTypesByName[type.name] ?: type
         val fields = type.fields.orEmpty().map {
             handleRemoteField(it)
         }
         val interfaces = type.interfaces?.map {
             handleRemoteType(it)
         }
+        val possibleTypes = checkNotNull(type.possibleTypes) {
+            "Cannot handle remote interface '$typeName' without possibleTypes"
+        }.map {
+            handleRemoteType(it)
+        }
 
-        val objectType = Type.RemoteInterface(typeName, type.description, fields + typenameField(), interfaces)
+        val objectType = Type.RemoteInterface(typeName, type.description, fields + typenameField(), possibleTypes, interfaces)
         val typeProxy = TypeProxy(objectType)
         remoteQueryTypeProxies[typeName] = typeProxy
         return objectType
@@ -235,12 +257,15 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
     }
 
     private fun handleRemoteUnionType(type: __Type): Type.Union {
-        val possibleTypes = type.possibleTypes.orEmpty().map {
-            handleRemoteType(it)
-        }
-
         val typeName = checkNotNull(type.name) {
             "Cannot handle remote type $type without name"
+        }
+        // Lookup the actual type because the one we received may not have possibleTypes set
+        val type = currentTypesByName[type.name] ?: type
+        val possibleTypes = checkNotNull(type.possibleTypes) {
+            "Cannot handle remote union '$typeName' without possibleTypes"
+        }.map {
+            handleRemoteType(it)
         }
 
         val objectDef = TypeDef.Union(typeName, emptySet(), type.description)

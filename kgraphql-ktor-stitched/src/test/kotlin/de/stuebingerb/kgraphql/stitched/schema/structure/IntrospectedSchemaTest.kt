@@ -4,11 +4,28 @@ import de.stuebingerb.kgraphql.KGraphQL
 import de.stuebingerb.kgraphql.request.Introspection
 import de.stuebingerb.kgraphql.schema.SchemaPrinter
 import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class IntrospectedSchemaTest {
+    sealed class Union
+    data class SubType1(val name: String) : Union()
+    data class SubType2(val id: Int) : Union()
+
+    interface Interface {
+        val id: Int
+    }
+
+    interface AnotherInterface : Interface {
+        val id2: Int
+    }
+
+    data class Implementation1(override val id: Int, val name: String) : Interface
+    data class Implementation2(override val id: Int, override val id2: Int) : AnotherInterface
+
     data class TestObject(val name: String)
 
     @Suppress("unused")
@@ -36,6 +53,10 @@ class IntrospectedSchemaTest {
                 serialize = UUID::toString
                 specifiedByURL = "https://tools.ietf.org/html/rfc4122"
             }
+            unionType<Union>()
+            type<Interface>()
+            type<Implementation1>()
+            type<Implementation2>()
         }
 
         val schemaFromIntrospection = IntrospectedSchema.fromIntrospectionResponse(
@@ -78,5 +99,45 @@ class IntrospectedSchemaTest {
         shouldNotThrowAny {
             IntrospectedSchema.fromIntrospectionResponse(response = introspectionResponse)
         }
+    }
+
+    @Test
+    fun `introspected schema should have proper possibleTypes`() {
+        val schema = KGraphQL.schema {
+            query("getUnion") {
+                resolver { type: Int ->
+                    if (type == 1) {
+                        SubType1("st1")
+                    } else {
+                        SubType2(2)
+                    }
+                }.returns<Union>()
+            }
+            query("getInterface") {
+                resolver { -> Implementation1(1, "impl1") }.returns<Interface>()
+            }
+            type<Implementation1>()
+            type<Implementation2>()
+            type<AnotherInterface>()
+        }
+
+        val schemaFromIntrospection = IntrospectedSchema.fromIntrospectionResponse(
+            schema.executeBlocking(Introspection.query(Introspection.SpecLevel.WorkingDraft))
+        )
+
+        val unionType = schemaFromIntrospection.types.find { it.name == "Union" }
+        unionType shouldNotBe null
+        unionType?.possibleTypes?.map { it.name } shouldContainExactlyInAnyOrder listOf("SubType1", "SubType2")
+
+        val interfaceType = schemaFromIntrospection.types.find { it.name == "Interface" }
+        interfaceType shouldNotBe null
+        interfaceType?.possibleTypes?.map { it.name } shouldContainExactlyInAnyOrder listOf(
+            "Implementation1",
+            "Implementation2"
+        )
+
+        val anotherInterfaceType = schemaFromIntrospection.types.find { it.name == "AnotherInterface" }
+        anotherInterfaceType shouldNotBe null
+        anotherInterfaceType?.possibleTypes?.map { it.name } shouldContainExactlyInAnyOrder listOf("Implementation2")
     }
 }
