@@ -2472,8 +2472,8 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteInputObje
 }
 
 public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteInterface : de/stuebingerb/kgraphql/schema/structure/Type$ComplexType {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getDescription ()Ljava/lang/String;
 	public fun getEnumValues ()Ljava/util/List;
 	public fun getInputFields ()Ljava/util/List;
