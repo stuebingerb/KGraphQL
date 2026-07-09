@@ -116,11 +116,14 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         result.extract<String>("data/actors[4]/favourite/__typename") shouldBe "Actor"
     }
 
+    // https://github.com/stuebingerb/KGraphQL/issues/682
     @Test
-    fun `a union type should require a selection for all potential types`() {
-        expectRequestError<ValidationException>("Missing selection set for type 'Scenario'") {
-            testedSchema.executeBlocking(
-                """{
+    fun `a union type should not require a selection for all potential types`() {
+        // There is no fragment for the Scenario type, so the response for "Morgan Freeman" should be an empty
+        // object. This is expected from the spec, cf. https://github.com/graphql/graphql-spec/issues/1080
+        testedSchema.executeBlocking(
+            """
+                {
                 actors {
                     name
                     favourite {
@@ -128,9 +131,39 @@ class UnionsSpecificationTest : BaseSchemaTest() {
                         ... on Director { name, age }
                     }
                 }
-            }""".trimIndent()
-            )
-        }
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {
+              "data" : {
+                "actors" : [ {
+                  "name" : "Brad Pitt",
+                  "favourite" : {
+                    "__typename" : "Actor"
+                  }
+                }, {
+                  "name" : "Morgan Freeman",
+                  "favourite" : { }
+                }, {
+                  "name" : "Kevin Spacey",
+                  "favourite" : {
+                    "__typename" : "Actor"
+                  }
+                }, {
+                  "name" : "Tom Hardy",
+                  "favourite" : {
+                    "name" : "Christopher Nolan",
+                    "age" : 43
+                  }
+                }, {
+                  "name" : "Christian Bale",
+                  "favourite" : {
+                    "__typename" : "Actor"
+                  }
+                } ]
+              }
+            }
+        """.trimIndent()
     }
 
     @Test
