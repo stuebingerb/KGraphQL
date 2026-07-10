@@ -282,7 +282,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
                 if (!mergedSelectionsForType.isNullOrEmpty()) {
                     handleReturnType(ctx, possibleType, SelectionSetNode(null, mergedSelectionsForType))
                 } else {
-                    throw ValidationException("Missing selection set for type '${possibleType.name}'", selectionNode)
+                    emptyList()
                 }
             }
 
