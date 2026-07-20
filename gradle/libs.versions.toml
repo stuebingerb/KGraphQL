@@ -2,7 +2,7 @@
 kotlin = "2.4.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
-kotlinx-kover = "0.9.8"
+kotlinx-kover = "0.9.9"
 kotlinx-benchmark = "0.4.17"
 jackson = "2.22.1"
 ktor = "3.5.1"
