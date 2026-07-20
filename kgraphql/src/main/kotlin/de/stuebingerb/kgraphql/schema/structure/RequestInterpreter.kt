@@ -9,6 +9,7 @@ import de.stuebingerb.kgraphql.schema.execution.Execution
 import de.stuebingerb.kgraphql.schema.execution.ExecutionMode
 import de.stuebingerb.kgraphql.schema.execution.ExecutionPlan
 import de.stuebingerb.kgraphql.schema.execution.TypeCondition
+import de.stuebingerb.kgraphql.schema.introspection.TypeKind
 import de.stuebingerb.kgraphql.schema.model.ast.ASTNode
 import de.stuebingerb.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode
 import de.stuebingerb.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.FragmentDefinitionNode
@@ -136,13 +137,14 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
     private fun findFragmentType(
         fragment: FragmentNode,
         ctx: InterpreterContext,
-        enclosingType: Type
+        enclosingType: Type?
     ): Execution.Fragment = when (fragment) {
         is FragmentSpreadNode -> {
-            ctx.get(fragment) ?: throw ValidationException(
-                message = "Fragment '${fragment.name.value}' not found",
-                node = fragment
-            )
+            ctx.get(fragment)?.also { it.condition.onType.validateForFragment(it.selectionNode, enclosingType) }
+                ?: throw ValidationException(
+                    message = "Fragment '${fragment.name.value}' not found",
+                    node = fragment
+                )
         }
 
         is InlineFragmentNode -> {
@@ -150,7 +152,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
                 schemaModel.allTypesByName[fragment.typeCondition.name.value]
             } else {
                 enclosingType
-            }.validateForFragment(fragment)
+            }.validateForFragment(fragment, enclosingType)
             Execution.Fragment(
                 selectionNode = fragment,
                 condition = TypeCondition(type),
@@ -204,7 +206,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
         fun List<SelectionNode>.namedFragments(): List<Execution.Fragment> = flatMap { selectionNode ->
             when (selectionNode) {
                 is FragmentSpreadNode -> {
-                    val fragment = findFragmentType(selectionNode, ctx, this@handleRemoteOperation)
+                    val fragment = findFragmentType(selectionNode, ctx, null)
                     fragment.elements.map { it.selectionNode }.namedFragments() + fragment
                 }
 
@@ -295,9 +297,10 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
         )
     }
 
-    private fun Type?.validateForFragment(fragment: ASTNode): Type {
+    private fun Type?.validateForFragment(fragment: ASTNode, enclosingType: Type? = null): Type {
         val (typeName, fragmentName) = when (fragment) {
             is InlineFragmentNode -> fragment.typeCondition?.name?.value to "inline fragment"
+            is FragmentSpreadNode -> this?.name to "fragment '${fragment.name.value}'"
             is FragmentDefinitionNode -> fragment.typeCondition.name.value to "fragment '${fragment.name.value}'"
             else -> error("Unsupported fragment type: $fragment")
         }
@@ -311,6 +314,27 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
                 message = "Fragments can only be specified on object types, interfaces, and unions but '$name' is $kind on $fragmentName",
                 node = fragment
             )
+        } else if (enclosingType != null) {
+            // https://spec.graphql.org/September2025/#GetPossibleTypes()
+            fun getPossibleTypes(type: Type): List<Type> {
+                return when (type.kind) {
+                    TypeKind.OBJECT -> listOf(type)
+                    TypeKind.INTERFACE -> checkNotNull(type.possibleTypes)
+                    TypeKind.UNION -> checkNotNull(type.possibleTypes)
+                    else -> emptyList()
+                }
+            }
+
+            // https://spec.graphql.org/September2025/#sec-Fragment-Spread-Is-Possible
+            val possibleTypeNamesFromEnclosingType = getPossibleTypes(enclosingType).map { it.name }
+            val possibleTypeNamesFromThisType = getPossibleTypes(this).map { it.name }
+            val applicableTypeNames = possibleTypeNamesFromEnclosingType.intersect(possibleTypeNamesFromThisType.toSet())
+            if (applicableTypeNames.isEmpty()) {
+                throw ValidationException(
+                    message = "Invalid type '$typeName' in type condition on $fragmentName of type '${enclosingType.name}'; must be one of '$possibleTypeNamesFromEnclosingType'",
+                    node = fragment
+                )
+            }
         }
         return this
     }

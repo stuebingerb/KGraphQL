@@ -300,8 +300,6 @@ class ObjectsSpecificationTest {
         val active: Boolean = false
     )
 
-    data class FewFields(val name: String = "Boguś", val surname: String = "Linda")
-
     @Test
     fun `fields are conceptually ordered in the same order in which they were encountered during query execution`() {
         val schema = schema {
@@ -340,26 +338,6 @@ class ObjectsSpecificationTest {
 
         val result =
             schema.executeBlocking("{many{active, ...Fields , smooth, id}} fragment Fields on ManyFields { id2, value }")
-        with(result) {
-            indexOf("\"id\"") shouldBeGreaterThan indexOf("\"smooth\"")
-            indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"value\"")
-            indexOf("\"value\"") shouldBeGreaterThan indexOf("\"id2\"")
-            indexOf("\"id2\"") shouldBeGreaterThan indexOf("\"active\"")
-        }
-    }
-
-    @Test
-    fun `fragments for which the type does not apply does not affect ordering`() {
-        val schema = schema {
-            query("many") { resolver { -> ManyFields() } }
-            type<FewFields>()
-        }
-
-        val result = schema.executeBlocking(
-            "{many{active, ...Fields, ...Few , smooth, id}} " +
-                "fragment Fields on ManyFields { id2, value }" +
-                "fragment Few on FewFields { name } "
-        )
         with(result) {
             indexOf("\"id\"") shouldBeGreaterThan indexOf("\"smooth\"")
             indexOf("\"smooth\"") shouldBeGreaterThan indexOf("\"value\"")
