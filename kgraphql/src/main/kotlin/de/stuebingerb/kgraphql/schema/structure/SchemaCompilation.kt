@@ -230,7 +230,7 @@ open class SchemaCompilation(
     private suspend fun handleUnionProperty(unionProperty: PropertyDef.Union<*>): Field {
         val inputValues = handleInputValues(unionProperty, unionProperty.inputValues)
         val type = applyNullability(unionProperty.nullable, handleUnionType(unionProperty.union))
-        return Field.Union(unionProperty, type, inputValues)
+        return Field.Function(unionProperty, type, inputValues)
     }
 
     private suspend fun handlePossiblyWrappedType(kType: KType, typeCategory: TypeCategory): Type = when {

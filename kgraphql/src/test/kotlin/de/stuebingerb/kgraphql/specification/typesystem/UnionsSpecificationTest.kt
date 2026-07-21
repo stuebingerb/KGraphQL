@@ -65,7 +65,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query union property with invalid selection set`() {
-        expectRequestError<ValidationException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]") {
+        expectRequestError<ValidationException>("Property 'name' on 'Favourite' does not exist") {
             testedSchema.executeBlocking("{actors{name, favourite{ name }}}")
         }
     }
@@ -189,7 +189,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `non-nullable union types should fail`() {
-        expectExecutionError<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was 'null'") {
+        expectExecutionError<ExecutionException>("Null result for non-nullable operation 'favourite'") {
             testedSchema.executeBlocking(
                 """{
                     actors(all: true) {

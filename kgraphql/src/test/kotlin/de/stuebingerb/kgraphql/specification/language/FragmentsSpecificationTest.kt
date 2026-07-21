@@ -1,6 +1,8 @@
 package de.stuebingerb.kgraphql.specification.language
 
 import de.stuebingerb.kgraphql.Actor
+import de.stuebingerb.kgraphql.Film
+import de.stuebingerb.kgraphql.FilmType
 import de.stuebingerb.kgraphql.KGraphQL
 import de.stuebingerb.kgraphql.Specification
 import de.stuebingerb.kgraphql.ValidationException
@@ -595,6 +597,103 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     unions(isOne: false) {
                         ... on Union1 { names }
                         ... on Actor { name }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
+    fun `fragments on impossible union properties should be denied`() {
+        val schema = KGraphQL.schema {
+            val movieUnion = unionType("MovieUnion") {
+                type<Actor>()
+                type<Film>()
+            }
+
+            enum<FilmType>()
+
+            type<Actor> {
+                unionProperty("favourite") {
+                    returnType = movieUnion
+                    resolver { actor ->
+                        actor
+                    }
+                }
+            }
+
+            query("actors") {
+                resolver { ->
+                    listOf(Actor("John Smith", 42), Actor("Foo Bar", 24))
+                }
+            }
+        }
+
+        expectRequestError<ValidationException>("Invalid type 'Director' in type condition on fragment 'directorFragment' of type 'MovieUnion'; must be one of '[Actor, Film]'") {
+            schema.executeBlocking(
+                """
+                {
+                    actors {
+                        name
+                        favourite {
+                            ...actorFragment
+                            ...directorFragment
+                        }
+                    }
+                }
+                fragment actorFragment on Actor {
+                    name
+                }
+                fragment directorFragment on Director {
+                    name
+                }
+                """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Fragments can only be specified on object types, interfaces, and unions but 'FilmType' is ENUM on inline fragment") {
+            schema.executeBlocking(
+                """
+                {
+                    actors {
+                        name
+                        favourite {
+                            ... on Actor { name }
+                            ... on FilmType { illegal }
+                        }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Fragments can only be specified on object types, interfaces, and unions but 'String' is SCALAR on inline fragment") {
+            schema.executeBlocking(
+                """
+                {
+                    actors {
+                        name
+                        favourite {
+                            ... on Actor { name }
+                            ... on String { illegal }
+                        }
+                    }
+                }
+                """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Unknown type 'MissingType' in type condition on inline fragment") {
+            schema.executeBlocking(
+                """
+                {
+                    actors {
+                        name
+                        favourite {
+                            ... on Actor { name }
+                            ... on MissingType { illegal }
+                        }
                     }
                 }
                 """.trimIndent()

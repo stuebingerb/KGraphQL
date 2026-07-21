@@ -43,9 +43,6 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
 
-        fun getFragment(name: String) =
-            checkNotNull(fragments[name]) { "Fragment '$name' not found" }.also { usedFragments.add(name) }
-
         fun get(node: FragmentSpreadNode): Execution.Fragment? {
             if (fragmentsStack.contains(node.name.value)) {
                 throw ValidationException("Fragment spread circular references are not allowed", node)
@@ -176,8 +173,6 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
                 node
             )
 
-            is Field.Union<*> -> handleUnion(field, node, ctx)
-
             is Field.RemoteOperation<*, *> -> handleRemoteOperation(field, node, ctx)
 
             else -> {
@@ -247,52 +242,6 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
                 this == schemaModel.subscriptionType -> OperationTypeNode.SUBSCRIPTION
                 else -> OperationTypeNode.QUERY
             },
-            parent = null
-        )
-    }
-
-    private fun <T> handleUnion(
-        field: Field.Union<T>,
-        selectionNode: FieldNode,
-        ctx: InterpreterContext
-    ): Execution.Union {
-        validateUnionRequest(field, selectionNode)
-
-        // https://spec.graphql.org/October2021/#sec-Unions
-        //  "With interfaces and objects, only those fields defined on the type can be queried directly; to query
-        //  other fields on an interface, typed fragments must be used. This is the same as for unions, but unions
-        //  do not define any fields, so *no* fields may be queried on this type without the use of type refining
-        //  fragments or inline fragments (with the exception of the meta-field `__typename`)."
-        val unionMembersChildren: Map<Type, List<Execution>> =
-            (field.returnType.unwrapped() as Type.Union).possibleTypes.associateWith { possibleType ->
-                val mergedSelectionsForType = selectionNode.selectionSet?.selections?.flatMap {
-                    when {
-                        // Only __typename is allowed as field selection
-                        it is FieldNode && it.name.value == "__typename"
-                            -> listOf(it)
-
-                        it is FragmentSpreadNode && ctx.getFragment(it.name.value).first.name == possibleType.name
-                            -> ctx.getFragment(it.name.value).second.selections
-
-                        it is InlineFragmentNode && possibleType.name == it.typeCondition?.name?.value
-                            -> it.selectionSet.selections
-
-                        else -> emptyList()
-                    }
-                }
-
-                if (!mergedSelectionsForType.isNullOrEmpty()) {
-                    handleReturnType(ctx, possibleType, SelectionSetNode(null, mergedSelectionsForType))
-                } else {
-                    emptyList()
-                }
-            }
-
-        return Execution.Union(
-            node = selectionNode,
-            unionField = field,
-            memberChildren = unionMembersChildren,
-            directives = selectionNode.directives?.lookup(),
             parent = null
         )
     }
