@@ -84,25 +84,6 @@ sealed class Field : __Field {
         }
     }
 
-    class Union<T>(
-        private val kql: PropertyDef.Union<T>,
-        override val returnType: Type,
-        override val arguments: List<InputValue<*>>
-    ) : Field(), FunctionWrapper<Any?> by kql {
-
-        override val name: String = kql.name
-
-        override val description: String? = kql.description
-
-        override val isDeprecated: Boolean = kql.isDeprecated
-
-        override val deprecationReason: String? = kql.deprecationReason
-
-        override fun checkAccess(parent: Any?, ctx: Context) {
-            kql.accessRule?.invoke(parent as T?, ctx)?.let { throw it }
-        }
-    }
-
     class RemoteOperation<T, R>(
         private val kql: BaseOperationDef<T, R>,
         val field: Delegated,

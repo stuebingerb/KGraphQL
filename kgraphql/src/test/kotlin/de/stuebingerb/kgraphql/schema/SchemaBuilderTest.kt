@@ -203,7 +203,7 @@ class SchemaBuilderTest {
 
         val unionField = scenarioType["pdf"]
         unionField shouldNotBe null
-        unionField shouldBeInstanceOf Field.Union::class
+        unionField shouldBeInstanceOf Field.Function::class
     }
 
     @Test
