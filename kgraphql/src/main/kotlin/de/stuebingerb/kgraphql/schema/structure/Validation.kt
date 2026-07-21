@@ -57,25 +57,6 @@ private fun Field.validateArguments(requestNode: FieldNode, parentTypeName: Stri
     return exceptions
 }
 
-/**
- * validate that only typed fragments or __typename are present
- */
-internal fun validateUnionRequest(field: Field.Union<*>, selectionNode: FieldNode) {
-    val illegalChildren =
-        selectionNode.selectionSet?.selections?.filterIsInstance<FieldNode>()?.filter { it.name.value != "__typename" }
-
-    if (!illegalChildren.isNullOrEmpty()) {
-        throw ValidationException(
-            message = "Invalid selection set with properties: ${
-                illegalChildren.joinToString(prefix = "[", postfix = "]") {
-                    it.aliasOrName.value
-                }
-            } on union type property ${field.name} : ${(field.returnType.unwrapped() as Type.Union).possibleTypes.map { it.name }}",
-            node = selectionNode
-        )
-    }
-}
-
 fun validateName(name: String) {
     if (name.startsWith("__")) {
         throw SchemaException(

@@ -34,6 +34,14 @@ class VariablesSpecificationTest : BaseSchemaTest() {
         result.extract<String>("data/filmByRank/title") shouldBe "Prestige"
     }
 
+    @Test
+    fun `query with int variable should allow exponential notation`() {
+        val result =
+            execute(query = "query(\$rank: Int!) {filmByRank(rank: \$rank) {title}}", variables = "{\"rank\": 1e+0}")
+        assertNoErrors(result)
+        result.extract<String>("data/filmByRank/title") shouldBe "Prestige"
+    }
+
     // Json only has one number type, so "1" and "1.0" are the same, and input coercion should be able to handle
     // the value accordingly
     @Test

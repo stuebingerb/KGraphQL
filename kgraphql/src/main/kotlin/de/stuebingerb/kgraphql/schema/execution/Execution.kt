@@ -7,7 +7,6 @@ import de.stuebingerb.kgraphql.schema.model.ast.OperationTypeNode
 import de.stuebingerb.kgraphql.schema.model.ast.SelectionNode
 import de.stuebingerb.kgraphql.schema.model.ast.VariableDefinitionNode
 import de.stuebingerb.kgraphql.schema.structure.Field
-import de.stuebingerb.kgraphql.schema.structure.Type
 
 sealed class Execution {
     abstract val selectionNode: SelectionNode
@@ -69,44 +68,6 @@ sealed class Execution {
             selectionNode,
             condition,
             elements,
-            directives,
-            parent
-        )
-    }
-
-    class Union(
-        node: SelectionNode.FieldNode,
-        val unionField: Field.Union<*>,
-        val memberChildren: Map<Type, Collection<Execution>>,
-        directives: Map<Directive, ArgumentNodes?>?,
-        parent: Execution?
-    ) : Node(
-        selectionNode = node,
-        field = unionField,
-        children = emptyList(),
-        arguments = null,
-        directives = directives,
-        variables = null,
-        arrayIndex = null,
-        parent = parent
-    ) {
-        fun memberExecution(type: Type): Node = Node(
-            selectionNode = selectionNode,
-            field = field,
-            children = requireNotNull(memberChildren[type]) {
-                "Union ${unionField.name} has no member $type"
-            },
-            arguments = arguments,
-            directives = directives,
-            variables = variables,
-            arrayIndex = arrayIndex,
-            parent = parent
-        )
-
-        override fun withParent(parent: Execution): Union = Union(
-            selectionNode,
-            unionField,
-            memberChildren,
             directives,
             parent
         )

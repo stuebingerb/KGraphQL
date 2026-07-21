@@ -46,7 +46,6 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
                 forEach { execution ->
                     when (execution) {
                         is Execution.Fragment -> execution.elements.inspect()
-                        is Execution.Union -> execution.memberChildren.values.flatten().inspect()
                         is Execution.Node -> {
                             execution.children.inspect()
                             if (execution.field is Field.DataLoader<*, *, *>) {
@@ -126,40 +125,6 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
         jsonNodeFactory.nullNode()
     }
 
-    private suspend fun <T> createUnionOperationNode(
-        ctx: ExecutionContext,
-        parent: T,
-        node: Execution.Union,
-        unionProperty: Field.Union<T>
-    ): Deferred<JsonNode> {
-        try {
-            node.field.checkAccess(parent, ctx.requestContext)
-        } catch (e: Throwable) {
-            return handleException(ctx, node, node.field.returnType, e)
-        }
-        val operationResult: Any? = unionProperty.invoke(
-            funName = unionProperty.name,
-            receiver = parent,
-            inputValues = node.field.arguments,
-            args = node.arguments,
-            executionNode = node,
-            ctx = ctx
-        ).await()
-
-        val possibleTypes = (unionProperty.returnType.unwrapped() as Type.Union).possibleTypes
-        val returnType = possibleTypes.find { it.isInstance(operationResult) }
-
-        if (returnType == null && unionProperty.returnType.isNotNullable()) {
-            val expectedOneOf = possibleTypes.joinToString { it.name.toString() }
-            throw ExecutionException(
-                "Unexpected type of union property value, expected one of [$expectedOneOf] but was '$operationResult'",
-                node
-            )
-        }
-
-        return createNode(ctx, operationResult, node, returnType ?: unionProperty.returnType)
-    }
-
     private suspend fun <T> createNode(
         ctx: ExecutionContext,
         value: T?,
@@ -212,6 +177,10 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
                     }
                 }
 
+                value is Deferred<*> -> createNode(ctx, value.await(), node, returnType)
+
+                node.children.isNotEmpty() -> createObjectNode(ctx, value, node, returnType)
+
                 value is String -> CompletableDeferred(jsonNodeFactory.textNode(value))
                 value is Int -> CompletableDeferred(jsonNodeFactory.numberNode(value))
                 value is Float -> CompletableDeferred(jsonNodeFactory.numberNode(value))
@@ -219,17 +188,6 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
                 value is Boolean -> CompletableDeferred(jsonNodeFactory.booleanNode(value))
                 value is Long -> CompletableDeferred(jsonNodeFactory.numberNode(value))
                 value is Short -> CompletableDeferred(jsonNodeFactory.numberNode(value))
-
-                value is Deferred<*> -> createNode(ctx, value.await(), node, returnType)
-
-                node.children.isNotEmpty() -> createObjectNode(ctx, value, node, returnType)
-
-                node is Execution.Union -> createObjectNode(
-                    ctx,
-                    value,
-                    node.memberExecution(returnType),
-                    returnType
-                )
 
                 // TODO: do we have to consider more? more validation e.g.?
                 value is JsonNode -> CompletableDeferred(value)
@@ -268,6 +226,16 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
         node: Execution.Node,
         type: Type
     ): Deferred<ObjectNode> {
+        val unwrappedType = type.unwrapped()
+        if (unwrappedType.kind == TypeKind.UNION || unwrappedType.kind == TypeKind.INTERFACE) {
+            if (unwrappedType.possibleTypes?.none { isExpectedType(value, it) } == true) {
+                throw ExecutionError(
+                    "Unexpected value type; expected one of ${unwrappedType.possibleTypes?.map { it.name }} but was '${value?.javaClass?.simpleName}'",
+                    node
+                )
+            }
+        }
+
         val objectNode = jsonNodeFactory.objectNode()
         val deferreds = node.children.mapIndexedParallel(dispatcher) { _, child ->
             when (child) {
@@ -291,21 +259,6 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
         type: Type
     ): Pair<String, Deferred<JsonNode>>? {
         when (child) {
-            // Union is subclass of Node so check it first
-            is Execution.Union -> {
-                val field = checkNotNull(type.unwrapped()[child.key]) {
-                    "Execution unit '${child.key}' is not contained by operation return type '${type.unwrapped().name}'"
-                }
-                if (field is Field.Union<*>) {
-                    return child.aliasOrKey to createUnionOperationNode(ctx, value, child, field as Field.Union<T>)
-                } else {
-                    throw ExecutionException(
-                        "Unexpected non-union field for union execution node '${child.aliasOrKey}'",
-                        child
-                    )
-                }
-            }
-
             is Execution.Remote -> {
                 return child.aliasOrKey to handleFunctionProperty(
                     ctx,
@@ -326,6 +279,11 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
         }
     }
 
+    private fun <T> isExpectedType(value: T, expectedType: Type): Boolean {
+        // TODO: for remote objects we rely on the presence of the __typename. So maybe we should/need to automatically add it if not present already? Can this break something?
+        return expectedType == value || expectedType.isInstance(value) || (value is JsonNode && value["__typename"]?.textValue() == expectedType.name)
+    }
+
     private suspend fun <T> handleFragment(
         ctx: ExecutionContext,
         value: T,
@@ -335,8 +293,7 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
         if (include) {
             val expectedType = container.condition.onType
             if (expectedType.kind == TypeKind.OBJECT || expectedType.kind == TypeKind.INTERFACE) {
-                // TODO: for remote objects we now rely on the presence of the __typename. So maybe we should/need to automatically add it if not present already? Can this break something?
-                if (expectedType == value || expectedType.isInstance(value) || (value is JsonNode && value["__typename"]?.textValue() == expectedType.name)) {
+                if (isExpectedType(value, expectedType)) {
                     val childElements = container.elements.flatMap { child ->
                         when (child) {
                             is Execution.Fragment -> handleFragment(ctx, value, child.withParent(container)).toList()
@@ -407,7 +364,7 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
                     return handleDataProperty(ctx, parentValue, node, field)
                 }
 
-                else -> error("Unexpected field type '$field', should be Field.Kotlin, Field.Function or Field.DataLoader")
+                else -> error("Unexpected field type '$field', should be Field.Kotlin, Field.Function, or Field.DataLoader")
             }
         } else {
             return null
@@ -483,10 +440,7 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
     }
 
     private suspend fun shouldInclude(ctx: ExecutionContext, executionNode: Execution): Boolean {
-        if (executionNode.directives?.isEmpty() == true) {
-            return true
-        }
-        return executionNode.directives?.map { (directive, arguments) ->
+        return executionNode.directives?.isEmpty() == true || executionNode.directives?.map { (directive, arguments) ->
             directive.execution.invoke(
                 funName = directive.name,
                 inputValues = directive.arguments,
