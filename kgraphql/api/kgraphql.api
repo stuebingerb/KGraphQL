@@ -826,15 +826,6 @@ public final class de/stuebingerb/kgraphql/schema/execution/Execution$Remote : d
 	public synthetic fun withParent$de_stuebingerb_kgraphql (Lde/stuebingerb/kgraphql/schema/execution/Execution;)Lde/stuebingerb/kgraphql/schema/execution/Execution;
 }
 
-public final class de/stuebingerb/kgraphql/schema/execution/Execution$Union : de/stuebingerb/kgraphql/schema/execution/Execution$Node {
-	public fun <init> (Lde/stuebingerb/kgraphql/schema/model/ast/SelectionNode$FieldNode;Lde/stuebingerb/kgraphql/schema/structure/Field$Union;Ljava/util/Map;Ljava/util/Map;Lde/stuebingerb/kgraphql/schema/execution/Execution;)V
-	public final fun getMemberChildren ()Ljava/util/Map;
-	public final fun getUnionField ()Lde/stuebingerb/kgraphql/schema/structure/Field$Union;
-	public final fun memberExecution (Lde/stuebingerb/kgraphql/schema/structure/Type;)Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;
-	public synthetic fun withParent$de_stuebingerb_kgraphql (Lde/stuebingerb/kgraphql/schema/execution/Execution;)Lde/stuebingerb/kgraphql/schema/execution/Execution$Node;
-	public synthetic fun withParent$de_stuebingerb_kgraphql (Lde/stuebingerb/kgraphql/schema/execution/Execution;)Lde/stuebingerb/kgraphql/schema/execution/Execution;
-}
-
 public final class de/stuebingerb/kgraphql/schema/execution/ExecutionMode : java/lang/Enum {
 	public static final field Normal Lde/stuebingerb/kgraphql/schema/execution/ExecutionMode;
 	public static final field Serial Lde/stuebingerb/kgraphql/schema/execution/ExecutionMode;
@@ -2087,27 +2078,6 @@ public final class de/stuebingerb/kgraphql/schema/structure/Field$RemoteOperatio
 	public final fun getRemoteQuery ()Ljava/lang/String;
 	public final fun getRemoteUrl ()Ljava/lang/String;
 	public fun isDeprecated ()Z
-}
-
-public final class de/stuebingerb/kgraphql/schema/structure/Field$Union : de/stuebingerb/kgraphql/schema/structure/Field, de/stuebingerb/kgraphql/schema/model/FunctionWrapper {
-	public fun <init> (Lde/stuebingerb/kgraphql/schema/model/PropertyDef$Union;Lde/stuebingerb/kgraphql/schema/structure/Type;Ljava/util/List;)V
-	public fun arity ()I
-	public fun checkAccess (Ljava/lang/Object;Lde/stuebingerb/kgraphql/Context;)V
-	public fun getArguments ()Ljava/util/List;
-	public fun getArgumentsDescriptor ()Ljava/util/Map;
-	public fun getDeprecationReason ()Ljava/lang/String;
-	public fun getDescription ()Ljava/lang/String;
-	public fun getHasReceiver ()Z
-	public fun getKFunction ()Lkotlin/reflect/KFunction;
-	public fun getName ()Ljava/lang/String;
-	public fun getReturnType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
-	public fun hasReturnType ()Z
-	public fun invoke (Ljava/util/List;Ljava/util/List;Lcom/fasterxml/jackson/databind/ObjectWriter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun invoke ([Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun isDeprecated ()Z
-	public fun subscribe (Ljava/lang/String;Lde/stuebingerb/kgraphql/schema/Subscriber;)V
-	public fun unsubscribe (Ljava/lang/String;)V
-	public fun valueParameters ()Ljava/util/List;
 }
 
 public final class de/stuebingerb/kgraphql/schema/structure/InputValue : de/stuebingerb/kgraphql/schema/introspection/__InputValue {

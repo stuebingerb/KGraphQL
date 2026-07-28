@@ -65,7 +65,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `query union property with invalid selection set`() {
-        expectRequestError<ValidationException>("Invalid selection set with properties: [name] on union type property favourite : [Actor, Scenario, Director]") {
+        expectRequestError<ValidationException>("Property 'name' on 'Favourite' does not exist") {
             testedSchema.executeBlocking("{actors{name, favourite{ name }}}")
         }
     }
@@ -189,7 +189,7 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `non-nullable union types should fail`() {
-        expectExecutionError<ExecutionException>("Unexpected type of union property value, expected one of [Actor, Scenario, Director] but was 'null'") {
+        expectExecutionError<ExecutionException>("Null result for non-nullable operation 'favourite'") {
             testedSchema.executeBlocking(
                 """{
                     actors(all: true) {
@@ -505,5 +505,73 @@ class UnionsSpecificationTest : BaseSchemaTest() {
             it["fields"] shouldBe listOf(mapOf("name" to "id", "type" to mapOf("name" to null)))
             it["possibleTypes"] shouldBe null
         }
+    }
+
+    data class Novel(val authorId: String)
+    data class NonFiction(val topic: String)
+    data class BookShelf(val id: String)
+    data class Other(val name: String)
+
+    @Test
+    fun `union property must only return valid types`() {
+        val schema = KGraphQL.schema {
+            val item = unionType("Item") {
+                type<Novel>()
+                type<NonFiction>()
+            }
+            type<Other>()
+            type<BookShelf> {
+                unionProperty("items") {
+                    returnType = item
+                    resolver { shelf ->
+                        if (shelf.id == "1") {
+                            // `Other` is not part of the defined unionType
+                            Other("a1")
+                        } else if (shelf.id == "3") {
+                            "Invalid scalar"
+                        } else {
+                            NonFiction("GraphQL")
+                        }
+                    }
+                }
+            }
+            query("root") {
+                resolver { ids: List<String> ->
+                    ids.map {
+                        BookShelf(it)
+                    }
+                }.withArgs {
+                    arg<List<String>> { name = "ids"; defaultValue = listOf("1", "2") }
+                }
+            }
+        }
+
+        schema.executeBlocking(
+            """
+            {
+              root {
+                items {
+                    ... on Novel { authorId }
+                    ... on NonFiction { topic } }
+              }
+            }
+        """.trimIndent()
+        ) shouldBe """
+            {"errors":[{"message":"Unexpected value type; expected one of [Novel, NonFiction] but was 'Other'","locations":[{"line":3,"column":5}],"path":["root",0,"items"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":null}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            {
+              root(ids: ["3"]) {
+                items {
+                    ... on Novel { authorId }
+                    ... on NonFiction { topic } }
+              }
+            }
+        """.trimIndent()
+        ) shouldBe """
+            {"errors":[{"message":"Unexpected value type; expected one of [Novel, NonFiction] but was 'String'","locations":[{"line":3,"column":5}],"path":["root",0,"items"],"extensions":{"type":"INTERNAL_SERVER_ERROR"}}],"data":null}
+        """.trimIndent()
     }
 }
