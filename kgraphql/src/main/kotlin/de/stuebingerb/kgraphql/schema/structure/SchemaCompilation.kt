@@ -241,7 +241,7 @@ open class SchemaCompilation(
         kType.arguments.isNotEmpty() -> configuration.genericTypeResolver.resolveMonad(kType)
             .let { handlePossiblyWrappedType(it, typeCategory) }
 
-        kType.jvmErasure.isSealed -> TypeDef.Union(
+        kType.jvmErasure.isSealed && typeCategory == TypeCategory.QUERY -> TypeDef.Union(
             name = kType.jvmErasure.simpleName!!,
             members = kType.jvmErasure.sealedSubclasses.toSet(),
             description = null
@@ -288,11 +288,6 @@ open class SchemaCompilation(
     }
 
     private suspend fun handleRawType(kClass: KClass<*>, typeCategory: TypeCategory): Type {
-        when (val type = unions.find { it.name == kClass.simpleName }) {
-            null -> Unit
-            else -> return type
-        }
-
         val cachedInstances = when (typeCategory) {
             TypeCategory.QUERY -> queryTypeProxies
             TypeCategory.INPUT -> inputTypeProxies
@@ -426,6 +421,14 @@ open class SchemaCompilation(
 
     private suspend fun handleInputType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
+
+        if (kClass.java.isInterface) {
+            throw SchemaException("Interface '${kClass.simpleName}' is not allowed as input type")
+        } else if (kClass.isSealed) {
+            throw SchemaException("Sealed class '${kClass.simpleName}' is not allowed as input type")
+        } else if (kClass.isAbstract) {
+            throw SchemaException("Abstract class '${kClass.simpleName}' is not allowed as input type")
+        }
 
         val primaryConstructor = kClass.primaryConstructor
             ?: throw SchemaException("Java class '${kClass.simpleName}' as input type is not supported")

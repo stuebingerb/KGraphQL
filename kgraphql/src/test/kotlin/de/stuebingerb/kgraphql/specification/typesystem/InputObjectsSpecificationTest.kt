@@ -154,5 +154,251 @@ class InputObjectsSpecificationTest {
                 }
             }
         }
+        expect<SchemaException>("Unable to handle input type 'ClassWithEmptyConstructor': An input type must define one or more fields. Found none on type 'ClassWithEmptyConstructor'") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<ClassWithEmptyConstructor>()
+            }
+        }
+    }
+
+    interface InputInterface {
+        val hello: String
+    }
+
+    sealed interface InputSealedInterface {
+        val world: String
+    }
+
+    @Test
+    fun `input objects must not be interfaces`() {
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Interface 'InputInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputInterface -> input.hello }
+                }
+            }
+        }
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Interface 'InputInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputInterface -> input.hello }
+                }
+                type<InputInterface>()
+            }
+        }
+
+        expect<SchemaException>("Unable to handle input type 'InputInterface': Interface 'InputInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<InputInterface>()
+            }
+        }
+
+        // Sealed interfaces should be reported as interfaces, not as sealed classes
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Interface 'InputSealedInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputSealedInterface -> input.world }
+                }
+            }
+        }
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Interface 'InputSealedInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputSealedInterface -> input.world }
+                }
+                type<InputSealedInterface>()
+            }
+        }
+
+        expect<SchemaException>("Unable to handle input type 'InputSealedInterface': Interface 'InputSealedInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<InputSealedInterface>()
+            }
+        }
+    }
+
+    @Test
+    fun `input objects must not contain interfaces`() {
+        data class InputType(val hello: InputInterface)
+        data class InputTypeSealed(val world: List<InputSealedInterface>)
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Interface 'InputInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputType -> input.hello }
+                }
+            }
+        }
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Interface 'InputInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputType -> input.hello }
+                }
+                type<InputType>()
+            }
+        }
+
+        expect<SchemaException>("Unable to handle input type 'InputType': Interface 'InputInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<InputType>()
+            }
+        }
+
+        // Sealed interfaces should be reported as interfaces, not as sealed classes
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Interface 'InputSealedInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputTypeSealed -> input.world }
+                }
+            }
+        }
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Interface 'InputSealedInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputTypeSealed -> input.world }
+                }
+                type<InputTypeSealed>()
+            }
+        }
+
+        expect<SchemaException>("Unable to handle input type 'InputTypeSealed': Interface 'InputSealedInterface' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<InputTypeSealed>()
+            }
+        }
+    }
+
+    sealed class InputSealed(val foo: String)
+    data class InputSealedSub(val bar: String) : InputSealed("foo")
+
+    @Test
+    fun `input objects must not be sealed classes`() {
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Sealed class 'InputSealed' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputSealed? -> input?.foo }
+                }
+            }
+        }
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Sealed class 'InputSealed' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputSealed? -> input?.foo }
+                }
+                unionType<InputSealed>()
+            }
+        }
+
+        expect<SchemaException>("Unable to handle input type 'InputSealed': Sealed class 'InputSealed' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<InputSealed>()
+            }
+        }
+    }
+
+    @Test
+    fun `input objects must not contain sealed classes`() {
+        data class InputType(val sealed: InputSealed?)
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Sealed class 'InputSealed' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: InputType? -> input?.sealed?.foo }
+                }
+            }
+        }
+
+        expect<SchemaException>("Unable to handle input type 'InputType': Sealed class 'InputSealed' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<InputType>()
+            }
+        }
+    }
+
+    abstract class InputAbstract(val foo: String)
+
+    @Test
+    fun `input objects must not be abstract classes`() {
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Abstract class 'InputAbstract' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { inputs: List<InputAbstract> -> inputs.firstOrNull()?.foo }
+                }
+            }
+        }
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Abstract class 'InputAbstract' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { inputs: List<InputAbstract> -> inputs.firstOrNull()?.foo }
+                }
+                type<InputAbstract>()
+            }
+        }
+
+        expect<SchemaException>("Unable to handle input type 'InputAbstract': Abstract class 'InputAbstract' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<InputAbstract>()
+            }
+        }
+    }
+
+    @Test
+    fun `input objects must not contain abstract classes`() {
+        data class InputType(val abstracts: List<InputAbstract>)
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Abstract class 'InputAbstract' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { inputs: List<InputType> -> inputs.firstOrNull()?.abstracts }
+                }
+            }
+        }
+
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Abstract class 'InputAbstract' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { inputs: List<InputType> -> inputs.firstOrNull()?.abstracts }
+                }
+                type<InputType>()
+            }
+        }
+
+        expect<SchemaException>("Unable to handle input type 'InputType': Abstract class 'InputAbstract' is not allowed as input type") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: String -> input }
+                }
+                inputType<InputType>()
+            }
+        }
     }
 }
