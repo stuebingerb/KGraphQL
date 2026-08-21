@@ -29,6 +29,9 @@ interface __Type : Describable {
     // SCALAR only
     val specifiedByURL: String?
 
+    // INPUT_OBJECT only
+    val isOneOf: Boolean?
+
     fun typeReference(): String = when (kind) {
         TypeKind.NON_NULL -> "${ofType?.typeReference()}!"
         TypeKind.LIST -> "[${ofType?.typeReference()}]"

@@ -440,7 +440,7 @@ open class SchemaCompilation(
                 } else {
                     "${it}Input"
                 }
-            }, kClass)
+            }, kClass, isOneOf = false)
 
         validateName(inputObjectDef.name)
         if ((enums.values + scalars.values + queryTypeProxies.values + unions).any { it.name == inputObjectDef.name }) {
