@@ -1,8 +1,8 @@
 # Schema Stitching
 
-*This feature is still in experimental state.*
+!!! warning ""
 
-## Overview
+    This feature is still in experimental state.
 
 Schema stitching is a method to take multiple GraphQL schemas and combine them into a single, unified schema. This can
 be useful when implementing an integration layer for a frontend that orchestrates multiple backend APIs to provide your
@@ -10,6 +10,31 @@ UI with all the required data in a single request, without having to think about
 
 By linking properties to remote queries, one can also enhance individual schemas by e.g. automatically resolving
 identifiers.
+
+## Installation
+
+Schema stitching requires adding the kgraphql-ktor-stitched package to your dependencies:
+
+=== "Kotlin Gradle Script"
+    ```kotlin
+    implementation("de.stuebingerb:kgraphql-ktor-stitched:${KGraphQLVersion}")
+    ```
+=== "Gradle"
+    ```groovy
+    implementation 'de.stuebingerb:kgraphql-ktor-stitched:${KGraphQLVersion}'
+    ```
+=== "Maven"
+    ```xml
+    <dependency>
+        <groupId>de.stuebingerb</groupId>
+        <artifactId>kgraphql-ktor-stitched</artifactId>
+        <version>${KGraphQLVersion}</version>
+    </dependency>
+    ```
+
+Because remote schemas require executing HTTP requests, schema stitching is (currently) only supported in combination with kgraphql-ktor.
+
+## Schema
 
 In KGraphQL, schema stitching is configured via the `stitchedSchema` DSL. Each stitched schema has 1-n *remote* schemas,
 and up to one *local* schema.
@@ -34,7 +59,7 @@ and up to one *local* schema.
     }
     ```
 
-### Remote Schema Fetching
+## Remote Schema Fetching
 
 Remote schemas are usually fetched via introspection query.
 
@@ -55,13 +80,13 @@ Remote schemas are usually fetched via introspection query.
     }
     ```
 
-### Duplicate Types
+## Duplicate Types
 
 Currently, if multiple schemas define types with the same name, the local type wins. For identical types from remote
 schemas there is no guaranteed order of precedence. Future versions may provide better tools to deal with such
 situations.
 
-### Remote Execution
+## Remote Execution
 
 To execute remote queries, consumers need to provide a `RemoteRequestExecutor` that receives an `Execution.Remote` node
 and the current `Context`, and has to return the result as `JsonNode?`:
@@ -76,7 +101,7 @@ interface RemoteRequestExecutor {
 To simplify implementation, consumers can extend the `AbstractRemoteRequestExecutor` and only provide the implementation
 for actually executing the HTTP request itself.
 
-### Fragments
+## Fragments
 
 Fragments based on remote types work but cannot use Kotlin's type system to determine the correct condition type.
 Therefore, queries including fragments must also request the `__typename`. Future implementation might automatically
@@ -97,7 +122,7 @@ include this.
     }
     ```
 
-### Local "Remote" Execution
+## Local "Remote" Execution
 
 Due to current implementation details, properties stitched to a *local* query will also be handled by the
 `RemoteRequestExecutor`, and therefore the schema has to provide a `localUrl`. Future implementation will likely support
@@ -112,7 +137,7 @@ actual local execution.
     }
     ```
 
-### Linking Properties
+## Linking Properties
 
 All (local and remote) types of a schema can be extended via stitched properties that are translated into remote query
 calls during execution. The following example adds two fields to the `Type1` type:
@@ -138,5 +163,8 @@ calls during execution. The following example adds two fields to the `Type1` typ
 
 Stitched properties are nullable by default, and if a parent property is `null`, the remote execution is skipped and
 results in a value of `null` for the stitched property itself.
+
+If a stitched property uses a `parentFieldName`, then this field must also be requested by the initial query. Future
+implementation might automatically include this.
 
 See `StitchedSchemaExecutionTest.kt` for an extensive list of different examples.

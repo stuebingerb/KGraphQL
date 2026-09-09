@@ -1,6 +1,8 @@
+# Examples
+
 Here you can find some example projects using this library:
 
-1. Basic example using the ktor
+1. Basic example using the Ktor
    plugin: [Official Example](https://github.com/stuebingerb/KGraphQL/tree/main/examples/ktor)
 1. Todo app that allows for nested todos and different scopes: [Todo Tree](https://github.com/MattLangsenkamp/TodoTree)
 1. An article about pairing Kotlin and GraphQL together using

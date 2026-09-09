@@ -1,11 +1,12 @@
-# Overview
+# Objects and Interfaces
 
 GraphQL Objects and Interfaces represent a list of named fields, each of which yield a value of a specific type.
 KGraphQL inspects defined operations to create type system, but schema creator is able to explicitly declare and
 customize types. Besides, only member properties are inspected.
 
-**type { }**
-`type` method is entry point to Type DSL.
+## Schema
+
+The `type` method is the entry point to the Type DSL.
 See [Extension Properties](#extension-properties), [Kotlin Properties](#kotlin-properties), [Union Properties](#union-properties).
 
 === "Example"
@@ -70,7 +71,7 @@ and [deprecation](../deprecation.md) of kotlin properties as well as renaming or
     }
     ```
 
-**KProperty1<T, R>.ignore**
+## Ignoring Properties
 
 The extension function `ignore()` makes KGraphQL ignore its receiver property.
 
@@ -98,9 +99,11 @@ The extension function `ignore()` makes KGraphQL ignore its receiver property.
     }
     ```
 
-**transformation(KProperty1<T, R>) {}**
+## Property Transformation
 
 The `transformation` function allows to attach data transformation on any existing Kotlin property.
+
+### Transforming Returned Data
 
 === "Example"
     ```kotlin
@@ -141,6 +144,8 @@ The `transformation` function allows to attach data transformation on any existi
       }
     }
     ```
+
+### Changing Nullability
 
 Transformations can also be used to change the return type of a property, for example to make nullable
 properties non-nullable:
@@ -189,6 +194,8 @@ properties non-nullable:
       person: Person!
     }
     ```
+
+### Different Return Type
 
 Transformations can even change the type to a completely different class:
 
@@ -246,8 +253,6 @@ Transformations can even change the type to a completely different class:
 Extension properties allow schema creator to easily attach additional field to any type. It is separately evaluated
 after main entity is resolved.
 
-## property { }
-
 `property` method accepts [resolver](../resolver.md) and can be subject of [deprecation](../deprecation.md).
 
 === "Example"
@@ -296,7 +301,9 @@ members of union type will fail in runtime.
 
 ## Data Loaded Properties
 
-*This feature is still in experimental state.*
+!!! warning ""
+
+    This feature is still in experimental state.
 
 One issue that you could easily encounter when doing a GraphQL API is the N+1 Problem. You can read more about this
 problem and solution in depth

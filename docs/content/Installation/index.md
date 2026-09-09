@@ -1,7 +1,4 @@
----
-title: Getting Started
-weight: 1
----
+# Installation
 
 [![Maven Central](https://img.shields.io/maven-central/v/de.stuebingerb/kgraphql.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22de.stuebingerb%22%20AND%20a:%22kgraphql%22)
 
@@ -19,7 +16,7 @@ KGraphQL is available from Maven Central.
     Add dependencies:
     
     ```kotlin
-    implementation("de.stuebingerb:kgraphql:$KGraphQLVersion")
+    implementation("de.stuebingerb:kgraphql:${KGraphQLVersion}")
     ```
 === "Gradle"
     Add Maven Central repository:
@@ -30,7 +27,7 @@ KGraphQL is available from Maven Central.
     }
     ```
 
-    Add dependencies (you can also add other modules that you need):
+    Add dependencies:
 
     ```groovy
     implementation 'de.stuebingerb:kgraphql:${KGraphQLVersion}'
@@ -57,3 +54,7 @@ KGraphQL is available from Maven Central.
       <version>${KGraphQLVersion}</version>
     </dependency>
     ```
+You can also add other artifacts if you need them:
+
+* kgraphql-ktor
+* kgraphql-ktor-stitched

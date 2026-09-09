@@ -9,7 +9,7 @@ KGraphQL is able to inspect operations and partially infer schema type system, s
 explicitly declare every type (but may if needed). Union types and Scalars require explicit definition in Schema DSL.
 Inferred classes are interpreted as GraphQL Object or Interface type.
 
-## Object or Interface?
+## Objects and Interfaces
 
 KGraphQL maps found types (implicit and explicit) to GraphQL simple inheritance model, where every type with fields is
 either Object or Interface. Rules are following:

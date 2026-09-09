@@ -1,7 +1,10 @@
 # Enums
 
-GraphQL Enums are a variant on the Scalar type, which represents one of a finite set of possible values. They directly
-map to Kotlin enums:
+GraphQL Enums are a variant on the Scalar type, which represents one of a finite set of possible values.
+
+## Schema
+
+Enums in KGraphQL directly map to Kotlin enums:
 
 === "Example"
     ```kotlin
@@ -36,6 +39,8 @@ map to Kotlin enums:
       TOTALLY_COOL
     }
     ```
+
+## Deprecation
 
 Enum values can be [deprecated](../deprecation.md):
 

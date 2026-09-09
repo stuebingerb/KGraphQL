@@ -1,10 +1,9 @@
----
-title: Scalars
-weight: 1
----
+# Scalars
 
 As defined by specification, scalar represents a primitive value in GraphQL. In KGraphQL, besides built-in scalar types,
 client code can declare custom scalar types, which can coerce to `String`, `Boolean`, `Int`, `Long`, `Short` or `Float` (`kotlin.Double`).
+
+## Schema
 
 KGraphQL provides a group of DSL methods to define scalars:
 
@@ -36,6 +35,7 @@ correct subtype of `de.stuebingerb.kgraphql.schema.scalar.ScalarCoercion`:
       }
     }
     ```
+## Extended Scalars
 
 In addition to the built-in scalars, KGraphQL provides support for `Long`, `Short`, and `Char` which can be added to
 a schema using `extendedScalars()`.

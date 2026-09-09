@@ -1,7 +1,4 @@
----
-title: Input Objects
-weight: 4
----
+# Input Objects
 
 A GraphQL Input Object defines a set of input fields; the input fields are either scalars, enums, or other input
 objects. Like Object and Interface types, Input Object types are inferred from defined operations, but can be explicitly
@@ -145,7 +142,7 @@ This behavior applies recursively to nested types as well. The nested `ChildType
 Input Objects are instantiated via their primary constructor. Kotlin default values are used unless a different value
 is provided explicitly. Due to a limitation in Kotlin, default values are not visible in the generated schema, though.
 
-## inputType {}
+## Configuration
 
 Input types can be configured via the `inputType` DSL.
 
