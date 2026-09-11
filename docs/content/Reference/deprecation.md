@@ -1,6 +1,4 @@
----
-title: Deprecation
----
+# Deprecation
 
 Schema creators are able to deprecate fields, operations, enum values, and input values. DSL builders for those schema
 elements expose method `deprecate(reason: String)`. Deprecation is visible in schema introspection system with fields

@@ -259,4 +259,6 @@ to the standard implementation, completely replaced, or a mixture of both.
     }
     ```
 
-(!) Exceptions from the error handler itself are *not* wrapped, regardless of the `wrapErrors` configuration. 
+!!! note
+
+    Exceptions from the error handler itself are *not* wrapped, regardless of the `wrapErrors` configuration. 

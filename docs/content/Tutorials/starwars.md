@@ -1,10 +1,10 @@
----
-title: Star Wars Tutorial
-weight: 1
----
+# Star Wars Tutorial
 
-As example, let's partially reproduce part of Star Wars schema from official GraphQL tutorial. First, we need to define
-our domain model, by plain kotlin classes:
+As example, let's partially reproduce part of Star Wars schema from official GraphQL tutorial.
+
+## Domain Model
+
+First, we need to define our domain model as plain kotlin classes:
 
 === "Example"
     ```kotlin
@@ -37,7 +37,9 @@ our domain model, by plain kotlin classes:
     ) : Character
     ```
 
-Next, we define our data
+## Data
+
+Next, we define our data:
 
 === "Example"
     ```kotlin
@@ -45,6 +47,8 @@ Next, we define our data
     
     val r2d2 = Droid("2001", "R2-D2", emptyList(), Episode.values().toSet(), "Astromech")
     ```
+
+## Schema
 
 Then, we can create the schema:
 
@@ -80,6 +84,8 @@ Then, we can create the schema:
       type<Human>()
     }
     ```
+
+## Queries
 
 Now, we can query our schema:
 

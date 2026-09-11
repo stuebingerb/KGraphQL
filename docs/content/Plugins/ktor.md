@@ -1,13 +1,15 @@
-# Ktor
+# Ktor Plugin
 
-If you are running a ktor server, there is a separate package that makes it easy to set up a fully functional GraphQL
+If you are running a Ktor server, there is a separate package that makes it easy to set up a fully functional GraphQL
 server.
 
-You first need to add the KGraphQL-ktor package to your dependency
+## Installation
+
+You first need to add the kgraphql-ktor package to your dependencies:
 
 === "Kotlin Gradle Script"
     ```kotlin
-    implementation("de.stuebingerb:kgraphql-ktor:$KGraphQLVersion")
+    implementation("de.stuebingerb:kgraphql-ktor:${KGraphQLVersion}")
     ```
 === "Gradle"
     ```groovy
@@ -22,10 +24,9 @@ You first need to add the KGraphQL-ktor package to your dependency
     </dependency>
     ```
 
-## Initial setup
+## Initial Setup
 
-To set up KGraphQL you'll need to install the GraphQL feature like you would any
-other [ktor feature](https://ktor.io/servers/features.html).
+To set up KGraphQL you'll need to install the GraphQL feature like you would any other [Ktor feature](https://ktor.io/servers/features.html).
 
 === "Example"
     ```kotlin
@@ -42,15 +43,14 @@ other [ktor feature](https://ktor.io/servers/features.html).
     ```
 
 Now you have a fully working GraphQL server. We have also set `playground = true`, so when running this you will be able
-to open [http://localhost:8080/graphql](http://localhost:8080/graphql) _(your port number may vary)_ in your browser and
-test it out directly within the browser.
+to open [http://localhost:8080/graphql](http://localhost:8080/graphql) _(your port number may vary)_ in your browser and test it out directly within the browser.
 
-## Configuration options
+## Configuration Options
 
 The GraphQL feature is extending the standard [KGraphQL configuration](../Reference/configuration.md) and providing its own
 set of configuration as described in the table below.
 
-| Property     | Description                                                                                                                                                                    | Default value  |
+| Property     | Description                                                                                                                                                                    | Default Value  |
 |--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
 | endpoint     | This specifies what route will be delivering the GraphQL endpoint. When `playground` is enabled, it will use this endpoint also.                                               | `/graphql`     |
 | context      | Allows to add call-specific information to the GraphQL context, see example below.                                                                                             |                |
@@ -129,5 +129,5 @@ representation of a GraphQL schema.
     }
     ```
 
-If schema introspection is enabled, the ktor feature will expose the current schema in Schema Definition
+If schema introspection is enabled, the Ktor feature will expose the current schema in Schema Definition
 Language under [http://localhost:8080/graphql?schema](http://localhost:8080/graphql?schema).

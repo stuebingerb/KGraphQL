@@ -41,6 +41,7 @@ extra_css:
 extra_javascript:
   - assets/hljs/highlight.min.js # Download from https://highlightjs.org/download/
   - assets/hljs/init.js
+  - assets/replace_maven_version.js
 
 plugins:
   - search
@@ -49,6 +50,7 @@ plugins:
         - "**/include-*.md"
 
 markdown_extensions:
+  - admonition
   - pymdownx.smartsymbols
   - pymdownx.superfences
   - pymdownx.highlight:
@@ -62,26 +64,25 @@ extra:
       link: https://github.com/stuebingerb/KGraphQL
 
 nav:
-  - 'Overview': 'index.md'
-  - 'Installation': 'Installation/index.md'
-  - 'Examples': 'Examples/index.md'
-  - 'Plugins':
-      - 'Ktor': 'Plugins/ktor.md'
+  - 'index.md'
+  - 'Installation/index.md'
+  - 'Examples/index.md'
+  - 'Plugins/ktor.md'
   - 'Tutorials':
-      - 'Star Wars Tutorial': 'Tutorials/starwars.md'
-      - 'Ktor Tutorial': 'Tutorials/ktor.md'
+      - 'Tutorials/ktor.md'
+      - 'Tutorials/starwars.md'
   - 'Reference':
-      - 'Operations': 'Reference/operations.md'
-      - 'Configuration': 'Reference/configuration.md'
-      - 'Resolver': 'Reference/resolver.md'
-      - 'Error Handling': 'Reference/errorHandling.md'
-      - 'Deprecation': 'Reference/deprecation.md'
-      - 'Access Rule': 'Reference/accessRule.md'
+      - 'Reference/operations.md'
+      - 'Reference/configuration.md'
+      - 'Reference/resolver.md'
+      - 'Reference/errorHandling.md'
+      - 'Reference/deprecation.md'
+      - 'Reference/accessRule.md'
       - 'Type System':
-          - 'Overview': 'Reference/Type System/overview.md'
-          - 'Scalars': 'Reference/Type System/scalars.md'
-          - 'Enums': 'Reference/Type System/enums.md'
-          - 'Unions': 'Reference/Type System/unions.md'
-          - 'Input Objects': 'Reference/Type System/input-objects.md'
-          - 'Objects and Interfaces': 'Reference/Type System/objects-and-interfaces.md'
-      - 'Stitching': 'Reference/stitching.md'
+          - 'Reference/Type System/overview.md'
+          - 'Reference/Type System/scalars.md'
+          - 'Reference/Type System/enums.md'
+          - 'Reference/Type System/unions.md'
+          - 'Reference/Type System/input-objects.md'
+          - 'Reference/Type System/objects-and-interfaces.md'
+      - 'Reference/stitching.md'

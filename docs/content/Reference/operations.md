@@ -1,7 +1,5 @@
 # Operations
 
-## Overview
-
 There are three types of operations that GraphQL models:
 
 * [Query](#query) – a read‐only fetch.
@@ -10,9 +8,11 @@ There are three types of operations that GraphQL models:
 
 Each operation is represented by an operation name and a selection set.
 
+## Schema
+
 In KGraphQL, operation is declared in `SchemaBuilder` block. Every operation has 2 properties:
 
-| name     | description             |
+| Name     | Description             |
 |----------|-------------------------|
 | name     | name of operation       |
 | resolver | [Resolver](resolver.md) |
@@ -23,7 +23,7 @@ Operations can be [deprecated](deprecation.md)
 
 Subscriptions are not supported yet.
 
-### Query
+## Query
 
 `query` allows to create a resolver for a query operation.
 
@@ -40,7 +40,7 @@ Subscriptions are not supported yet.
 This example adds query with name hero, which returns new instance of R2-D2 Hero. It can be queried with selection set
 for name or age, example query: `{hero{name, age}}`
 
-### Mutation
+## Mutation
 
 `mutation` allows to create a resolver for a mutation operation.
 
@@ -54,6 +54,6 @@ for name or age, example query: `{hero{name, age}}`
 
 This example adds mutation with name `createHero`, which returns passed name.
 
-### Subscription
+## Subscription
 
 `subscription` operations are not supported yet.
