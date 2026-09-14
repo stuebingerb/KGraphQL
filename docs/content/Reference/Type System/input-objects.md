@@ -137,11 +137,6 @@ This behavior applies recursively to nested types as well. The nested `ChildType
     }
     ```
 
-## Runtime
-
-Input Objects are instantiated via their primary constructor. Kotlin default values are used unless a different value
-is provided explicitly. Due to a limitation in Kotlin, default values are not visible in the generated schema, though.
-
 ## Configuration
 
 Input types can be configured via the `inputType` DSL.
@@ -223,6 +218,80 @@ Here, both `InputType` and `ParentType` are explicitly configured, and therefore
       parentName: String!
     }
     ```
+
+## OneOf Input Objects
+
+Input Objects specified with `oneOf = true` result in a [OneOf Input Object](https://spec.graphql.org/September2025/#sec-OneOf-Input-Objects).
+
+OneOf Input Objects are a special variant of an Input Object where exactly one field must be set and non-null, all others being omitted.
+This is useful for representing situations where an input may be one of many different options.
+
+### Simplified Entrypoints
+
+For example, you might find a user by their ID, email address, or username. Traditionally, that meant multiple root-level fields:
+
+=== "Example"
+    ```graphql
+    type Query {
+      user(id: ID!): User
+      userByEmail(email: String!): User
+      userByUsername(username: String!): User
+    }
+    ```
+
+With oneOf this can now be represented in a more concise and user-friendly way:
+
+=== "Example"
+    ```graphql
+    input UserBy @oneOf {
+      id: ID
+      email: String
+      username: String
+    }
+
+    type Query {
+      user(by: UserBy!): User
+    }
+    ```
+
+### Polymorph Inputs
+
+Imagine a blogging website with posts that consist of different types of content, such as paragraphs, images, and quotes.
+OneOf Input Objects allow you to define a mutation that accepts a type-safe list of such elements:
+
+=== "Example"
+    ```graphql
+    type Mutation {
+      createPost(elements: [PostElementInput]): Post
+    }
+    
+    input PostElementInput @oneOf {
+      paragraph: ParagraphInput
+      blockquote: BlockQuoteInput
+      gallery: GalleryInput
+    }
+    
+    input ParagraphInput {
+      text: String!
+    }
+    
+    input BlockQuoteInput {
+      text: String!
+      attribution: String
+      attributionUrl: String
+    }
+    
+    input GalleryInput {
+      imageUrls: [String!]!
+      caption: String
+      attribution: String
+    }
+    ```
+
+## Runtime
+
+Input Objects are instantiated via their primary constructor. Kotlin default values are used unless a different value
+is provided explicitly. Due to a limitation in Kotlin, such default values are not visible in the generated schema, though.
 
 ## Limitations
 
