@@ -297,6 +297,44 @@ class UnionsSpecificationTest : BaseSchemaTest() {
         }
     }
 
+    sealed interface SealedInterface {
+        data class BBB(val i: Int) : SealedInterface
+        class CCC(val s: String) : SealedInterface
+    }
+
+    @Test
+    fun `automatic unions out of sealed interfaces`() {
+        defaultSchema {
+            unionType<SealedInterface>()
+
+            query("returnUnion") {
+                resolver { isB: Boolean ->
+                    if (isB) {
+                        SealedInterface.BBB(1)
+                    } else {
+                        SealedInterface.CCC("String")
+                    }
+                }
+            }
+        }.executeBlocking(
+            """
+            {
+                f: returnUnion(isB: false) {
+                    ... on BBB { i }
+                    ... on CCC { s }
+                }
+                t: returnUnion(isB: true) {
+                    ... on BBB { i }
+                    ... on CCC { s }                
+                }
+            }
+            """.trimIndent()
+        ).deserialize().run {
+            extract<String>("data/f/s") shouldBe "String"
+            extract<Int>("data/t/i") shouldBe 1
+        }
+    }
+
     @Suppress("unused")
     sealed class WithFields {
         data class Value1(val i: Int, val fields: List<String>) : WithFields()
