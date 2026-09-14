@@ -401,4 +401,20 @@ class InputObjectsSpecificationTest {
             }
         }
     }
+
+    @Test
+    fun `oneOf input objects must only have nullable fields`() {
+        class OneOfInputWithRequiredFields(val a: String, val b: Int?, val c: List<String>)
+
+        expect<SchemaException>("Unable to handle input type 'OneOfInputWithRequiredFields': OneOf input types must only have nullable fields. Fields [a, c] are non-nullable on type 'OneOfInputWithRequiredFields'") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: OneOfInputWithRequiredFields -> input }
+                }
+                inputType<OneOfInputWithRequiredFields> {
+                    isOneOf = true
+                }
+            }
+        }
+    }
 }
