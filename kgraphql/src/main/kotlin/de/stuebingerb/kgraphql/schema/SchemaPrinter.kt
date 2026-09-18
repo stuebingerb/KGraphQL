@@ -170,7 +170,7 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
                     appendLine()
                 }
                 appendDescription(type)
-                appendLine("input ${type.name}${type.implements()} {")
+                appendLine("input ${type.name}${type.implements()}${type.oneOf()} {")
                 val indentation = "  "
                 type.inputFields.sortedByName().forEach { field ->
                     appendDescription(field, indentation)
@@ -243,7 +243,8 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
             Directive.DEPRECATED.name,
             Directive.INCLUDE.name,
             Directive.SKIP.name,
-            Directive.SPECIFIED_BY.name
+            Directive.SPECIFIED_BY.name,
+            Directive.ONE_OF.name
         )
 
     private fun __Type.isBuiltInScalar(): Boolean = name in builtInScalarNames
@@ -254,6 +255,12 @@ class SchemaPrinter(private val config: SchemaPrinterConfig = SchemaPrinterConfi
             .mapNotNull { it.name }
             .takeIf { it.isNotEmpty() }
             ?.joinToString(separator = " & ", prefix = " implements ") ?: ""
+
+    private fun __Type.oneOf(): String = if (isOneOf == true) {
+        " @oneOf"
+    } else {
+        ""
+    }
 
     private fun Any.description(): String? = when (this) {
         is Describable -> description?.takeIf { it.isNotBlank() }

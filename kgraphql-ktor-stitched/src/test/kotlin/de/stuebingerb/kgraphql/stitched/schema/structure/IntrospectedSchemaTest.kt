@@ -28,6 +28,8 @@ class IntrospectedSchemaTest {
 
     data class TestObject(val name: String)
 
+    data class OneOfInput(val a: Int?, val b: String?)
+
     @Suppress("unused")
     enum class TestEnum {
         TYPE1, TYPE2
@@ -57,6 +59,9 @@ class IntrospectedSchemaTest {
             type<Interface>()
             type<Implementation1>()
             type<Implementation2>()
+            inputType<OneOfInput> {
+                isOneOf = true
+            }
         }
 
         val schemaFromIntrospection = IntrospectedSchema.fromIntrospectionResponse(

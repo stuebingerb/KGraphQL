@@ -1,5 +1,6 @@
 package de.stuebingerb.kgraphql.request
 
+import de.stuebingerb.kgraphql.schema.directive.Directive
 import de.stuebingerb.kgraphql.schema.directive.DirectiveLocation
 import de.stuebingerb.kgraphql.schema.model.ast.ArgumentNode
 import de.stuebingerb.kgraphql.schema.model.ast.DefinitionNode
@@ -901,7 +902,8 @@ internal class Parser {
             name = name,
             directives = directives,
             fields = fields,
-            loc = loc(start)
+            loc = loc(start),
+            isOneOf = directives.any { it.name.value == Directive.ONE_OF.name }
         )
     }
 

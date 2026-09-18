@@ -1,8 +1,13 @@
 package de.stuebingerb.kgraphql.integration
 
+import de.stuebingerb.kgraphql.InvalidInputValueException
 import de.stuebingerb.kgraphql.KGraphQL
+import de.stuebingerb.kgraphql.ValidationException
 import de.stuebingerb.kgraphql.expect
+import de.stuebingerb.kgraphql.expectExecutionError
+import de.stuebingerb.kgraphql.expectRequestError
 import de.stuebingerb.kgraphql.schema.SchemaException
+import de.stuebingerb.kgraphql.schema.scalar.ID
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -172,5 +177,258 @@ class InputObjectTest {
                 }
             }
         }
+    }
+
+    // https://spec.graphql.org/September2025/#sec-OneOf-Input-Objects.Input-Coercion
+    @Test
+    fun `oneOf input objects should be coerced according to the spec`() {
+        data class ExampleOneOfInputObject(val a: String?, val b: Int?)
+
+        val schema = KGraphQL.schema {
+            inputType<ExampleOneOfInputObject> {
+                isOneOf = true
+            }
+
+            query("example") {
+                resolver { input: ExampleOneOfInputObject -> input.toString() }
+            }
+        }
+
+        schema.executeBlocking(
+            """
+            query {
+              example(input: {a: "abc"}) 
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"example":"ExampleOneOfInputObject(a=abc, b=null)"}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            query {
+              example(input: {b: 123}) 
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"example":"ExampleOneOfInputObject(a=null, b=123)"}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
+            query(${'$'}var: ExampleOneOfInputObject!) {
+                example(input: ${'$'}var)
+            }
+            """.trimIndent(),
+            variables = """{ "var": { "a": "abc" } }"""
+        ) shouldBe """
+            {"data":{"example":"ExampleOneOfInputObject(a=abc, b=null)"}}
+        """.trimIndent()
+
+        expectRequestError<ValidationException>("Value for member field 'a' must be non-null") {
+            schema.executeBlocking(
+                """
+            query {
+              example(input: {a: null}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("Value for member field 'a' must be non-null") {
+            schema.executeBlocking(
+                """
+            query(${'$'}var: ExampleOneOfInputObject!) {
+                example(input: ${'$'}var)
+            }
+            """.trimIndent(),
+                variables = """{ "var": { "a": null } }"""
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("Value for member field 'a' must be non-null") {
+            schema.executeBlocking(
+                """
+            query(${'$'}a: String!) {
+                example(input: { a: ${'$'}a })
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query {
+              example(input: {a: "abc", b: 123}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query {
+              example(input: {a: 456, b: "xyz"}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query(${'$'}var: ExampleOneOfInputObject!) {
+                example(input: ${'$'}var)
+            }
+            """.trimIndent(),
+                variables = """{ "var": { "a": "abc", "b": 123 } }"""
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query {
+              example(input: {a: "abc", b: null}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query(${'$'}b: Int!) {
+              example(input: {a: "abc", b: ${'$'}b}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query(${'$'}a: String!, ${'$'}b: Int!) {
+              example(input: {a: ${'$'}a, b: ${'$'}b}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 0 were provided") {
+            schema.executeBlocking(
+                """
+            query {
+              example(input: {}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 0 were provided") {
+            schema.executeBlocking(
+                """
+            query(${'$'}var: ExampleOneOfInputObject!) {
+                example(input: ${'$'}var)
+            }
+            """.trimIndent(),
+                variables = """{ "var": {} }"""
+            )
+        }
+    }
+
+    sealed interface PostElement
+    data class Paragraph(val text: String): PostElement
+    data class BlockQuote(val text: String, val attribution: String?, val attributionUrl: String?): PostElement
+    data class Gallery(val imageUrls: List<String>, val caption: String?, val attribution: String?): PostElement
+    data class PostElementInput(val paragraph: Paragraph?, val blockquote: BlockQuote?, val gallery: Gallery?)
+    data class Post(val id: ID, val elements: List<PostElement>)
+
+    @Test
+    fun `input polymorphism with oneOf input objects`() {
+        val posts = mutableListOf<Post>()
+        val schema = KGraphQL.schema {
+            configure {
+                useDefaultPrettyPrinter = true
+            }
+
+            unionType<PostElement>()
+            inputType<PostElementInput> {
+                isOneOf = true
+            }
+            query("post") {
+                resolver { id: ID -> posts.find { it.id == id } }
+            }
+            mutation("createPost") {
+                resolver { elements: List<PostElementInput> ->
+                    val postElements = elements.map {
+                        it.paragraph ?: it.blockquote ?: it.gallery ?: throw IllegalArgumentException("Invalid PostElementInput")
+                    }
+                    val post = Post(id = ID((posts.size + 1).toString()), elements = postElements)
+                    posts.add(post)
+                    post
+                }
+            }
+        }
+
+        schema.executeBlocking("""
+            mutation {
+                createPost(elements: [
+                    { paragraph: { text: "First Paragraph" } },
+                    { blockquote: { text: "This is a great post!", attribution: "Me", attributionUrl: "https://example.com" } }
+                    { paragraph: { text: "Second Paragraph" } },
+                    { gallery: { imageUrls: ["https://example.com/image1.jpg", "https://example.com/image2.jpg"], caption: "My Gallery", attribution: "Me Again" } }
+                ]) { id }
+            }
+        """.trimIndent()) shouldBe """
+            {
+              "data" : {
+                "createPost" : {
+                  "id" : "1"
+                }
+              }
+            }
+        """.trimIndent()
+
+        schema.executeBlocking("""
+            query {
+                post(id: "1") {
+                    id
+                    elements {
+                        __typename
+                        ... on Paragraph { text }
+                        ... on BlockQuote { text attribution attributionUrl }
+                        ... on Gallery { imageUrls caption attribution }
+                    }
+                }
+            }
+        """.trimIndent()) shouldBe """
+            {
+              "data" : {
+                "post" : {
+                  "id" : "1",
+                  "elements" : [ {
+                    "__typename" : "Paragraph",
+                    "text" : "First Paragraph"
+                  }, {
+                    "__typename" : "BlockQuote",
+                    "text" : "This is a great post!",
+                    "attribution" : "Me",
+                    "attributionUrl" : "https://example.com"
+                  }, {
+                    "__typename" : "Paragraph",
+                    "text" : "Second Paragraph"
+                  }, {
+                    "__typename" : "Gallery",
+                    "imageUrls" : [ "https://example.com/image1.jpg", "https://example.com/image2.jpg" ],
+                    "caption" : "My Gallery",
+                    "attribution" : "Me Again"
+                  } ]
+                }
+              }
+            }
+        """.trimIndent()
     }
 }

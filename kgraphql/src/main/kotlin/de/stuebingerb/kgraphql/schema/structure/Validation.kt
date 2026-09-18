@@ -4,6 +4,7 @@ import de.stuebingerb.kgraphql.ValidationException
 import de.stuebingerb.kgraphql.schema.SchemaException
 import de.stuebingerb.kgraphql.schema.introspection.TypeKind
 import de.stuebingerb.kgraphql.schema.model.ast.SelectionNode.FieldNode
+import de.stuebingerb.kgraphql.schema.model.ast.ValueNode
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -51,7 +52,28 @@ private fun Field.validateArguments(requestNode: FieldNode, parentTypeName: Stri
                     message = "Missing value for non-nullable argument '${arg.name}' on the field '$name'"
                 )
             )
-        } // else is valid
+        } else if (arg.type.unwrapped().isOneOf == true) {
+            // Validate oneOf input object rules:
+            //  - must have exactly one field set, and
+            //  - the value for that field must be non-null
+            // cf. https://spec.graphql.org/September2025/#sec-OneOf-Input-Objects.Input-Coercion
+            if (value?.value is ValueNode.ObjectValueNode) {
+                val providedFields = value.value.fields
+                if (providedFields.size != 1) {
+                    throw ValidationException(
+                        "OneOf input object '${arg.type.unwrapped().name}' must have exactly one field set, but ${providedFields.size} were provided",
+                        value
+                    )
+                }
+                val singleField = providedFields.first()
+                if (singleField.value is ValueNode.NullValueNode) {
+                    throw ValidationException(
+                        "Value for member field '${singleField.name.value}' must be non-null",
+                        value
+                    )
+                }
+            }
+        }
     }
 
     return exceptions

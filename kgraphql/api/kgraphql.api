@@ -352,6 +352,7 @@ public final class de/stuebingerb/kgraphql/schema/directive/Directive : de/stueb
 public final class de/stuebingerb/kgraphql/schema/directive/Directive$Companion {
 	public final fun getDEPRECATED ()Lde/stuebingerb/kgraphql/schema/directive/Directive$Partial;
 	public final fun getINCLUDE ()Lde/stuebingerb/kgraphql/schema/directive/Directive$Partial;
+	public final fun getONE_OF ()Lde/stuebingerb/kgraphql/schema/directive/Directive$Partial;
 	public final fun getSKIP ()Lde/stuebingerb/kgraphql/schema/directive/Directive$Partial;
 	public final fun getSPECIFIED_BY ()Lde/stuebingerb/kgraphql/schema/directive/Directive$Partial;
 }
@@ -672,8 +673,10 @@ public final class de/stuebingerb/kgraphql/schema/dsl/types/InputTypeDSL : de/st
 	public final fun configure (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function1;)V
 	public final fun getKClass ()Lkotlin/reflect/KClass;
 	public final fun getName ()Ljava/lang/String;
+	public final fun isOneOf ()Z
 	public final fun property (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function1;)V
 	public final fun setName (Ljava/lang/String;)V
+	public final fun setOneOf (Z)V
 }
 
 public final class de/stuebingerb/kgraphql/schema/dsl/types/InputValueDSL : de/stuebingerb/kgraphql/schema/dsl/DepreciableItemDSL {
@@ -936,6 +939,7 @@ public abstract interface class de/stuebingerb/kgraphql/schema/introspection/__T
 	public abstract fun getPossibleTypes ()Ljava/util/List;
 	public abstract fun getSpecifiedByURL ()Ljava/lang/String;
 	public abstract fun isInputType ()Z
+	public abstract fun isOneOf ()Ljava/lang/Boolean;
 	public abstract fun isOutputType ()Z
 	public abstract fun typeReference ()Ljava/lang/String;
 	public abstract fun unwrapped ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
@@ -1385,10 +1389,11 @@ public final class de/stuebingerb/kgraphql/schema/model/TypeDef$Enumeration : de
 }
 
 public final class de/stuebingerb/kgraphql/schema/model/TypeDef$Input : de/stuebingerb/kgraphql/schema/model/TypeDef$BaseKQLType, de/stuebingerb/kgraphql/schema/model/TypeDef$Kotlin {
-	public fun <init> (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getKClass ()Lkotlin/reflect/KClass;
 	public final fun getKotlinProperties ()Ljava/util/Map;
+	public final fun isOneOf ()Z
 }
 
 public abstract interface class de/stuebingerb/kgraphql/schema/model/TypeDef$Kotlin : de/stuebingerb/kgraphql/schema/model/TypeDef {
@@ -1532,8 +1537,9 @@ public final class de/stuebingerb/kgraphql/schema/model/ast/DefinitionNode$TypeS
 }
 
 public final class de/stuebingerb/kgraphql/schema/model/ast/DefinitionNode$TypeSystemDefinitionNode$TypeDefinitionNode$InputObjectTypeDefinitionNode : de/stuebingerb/kgraphql/schema/model/ast/DefinitionNode$TypeSystemDefinitionNode$TypeDefinitionNode {
-	public fun <init> (Lde/stuebingerb/kgraphql/schema/model/ast/Location;Lde/stuebingerb/kgraphql/schema/model/ast/NameNode;Lde/stuebingerb/kgraphql/schema/model/ast/ValueNode$StringValueNode;Ljava/util/List;Ljava/util/List;)V
+	public fun <init> (Lde/stuebingerb/kgraphql/schema/model/ast/Location;Lde/stuebingerb/kgraphql/schema/model/ast/NameNode;Lde/stuebingerb/kgraphql/schema/model/ast/ValueNode$StringValueNode;Ljava/util/List;Ljava/util/List;Z)V
 	public final fun getFields ()Ljava/util/List;
+	public final fun isOneOf ()Z
 }
 
 public final class de/stuebingerb/kgraphql/schema/model/ast/DefinitionNode$TypeSystemDefinitionNode$TypeDefinitionNode$InterfaceTypeDefinitionNode : de/stuebingerb/kgraphql/schema/model/ast/DefinitionNode$TypeSystemDefinitionNode$TypeDefinitionNode {
@@ -2185,6 +2191,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$AList : de/stue
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2256,6 +2263,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$Enum : de/stueb
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2288,6 +2296,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$Input : de/stue
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2310,6 +2319,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$Interface : de/
 	public synthetic fun getOfType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public fun getOfType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public fun getPossibleTypes ()Ljava/util/List;
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public final fun withInterfaces (Ljava/util/List;)Lde/stuebingerb/kgraphql/schema/structure/Type$Interface;
 	public final fun withPossibleTypes (Ljava/util/List;)Lde/stuebingerb/kgraphql/schema/structure/Type$Interface;
 }
@@ -2336,6 +2346,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$NonNull : de/st
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2358,6 +2369,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$Object : de/stu
 	public synthetic fun getOfType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public fun getOfType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public fun getPossibleTypes ()Ljava/util/List;
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public final fun withInterfaces (Ljava/util/List;)Lde/stuebingerb/kgraphql/schema/structure/Type$Object;
 	public final fun withStitchedFields (Ljava/util/List;)Lde/stuebingerb/kgraphql/schema/structure/Type$RemoteObject;
 }
@@ -2375,6 +2387,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$OperationObject
 	public fun getOfType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun isInstance (Ljava/lang/Object;)Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 }
 
 public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteEnum : de/stuebingerb/kgraphql/schema/structure/Type {
@@ -2399,6 +2412,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteEnum : de
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2409,8 +2423,8 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteEnum : de
 }
 
 public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteInputObject : de/stuebingerb/kgraphql/schema/structure/Type {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun get (Ljava/lang/String;)Lde/stuebingerb/kgraphql/schema/structure/Field;
 	public fun getDescription ()Ljava/lang/String;
 	public fun getEnumValues ()Ljava/util/List;
@@ -2432,6 +2446,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteInputObje
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2455,6 +2470,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteInterface
 	public synthetic fun getOfType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public fun getOfType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public fun getPossibleTypes ()Ljava/util/List;
+	public fun isOneOf ()Ljava/lang/Boolean;
 }
 
 public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteObject : de/stuebingerb/kgraphql/schema/structure/Type$ComplexType {
@@ -2471,6 +2487,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteObject : 
 	public synthetic fun getOfType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public fun getOfType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public fun getPossibleTypes ()Ljava/util/List;
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public final fun withStitchedFields (Ljava/util/List;)Lde/stuebingerb/kgraphql/schema/structure/Type$RemoteObject;
 }
 
@@ -2497,6 +2514,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$RemoteScalar : 
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2529,6 +2547,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$Scalar : de/stu
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2552,6 +2571,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$Union : de/stue
 	public fun getOfType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public fun getPossibleTypes ()Ljava/util/List;
 	public fun isInstance (Ljava/lang/Object;)Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 }
 
 public final class de/stuebingerb/kgraphql/schema/structure/Type$_Context : de/stuebingerb/kgraphql/schema/structure/Type {
@@ -2576,6 +2596,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$_Context : de/s
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2607,6 +2628,7 @@ public final class de/stuebingerb/kgraphql/schema/structure/Type$_ExecutionNode 
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public fun typeReference ()Ljava/lang/String;
@@ -2639,6 +2661,7 @@ public class de/stuebingerb/kgraphql/schema/structure/TypeProxy : de/stuebingerb
 	public fun isNotList ()Z
 	public fun isNotNullable ()Z
 	public fun isNullable ()Z
+	public fun isOneOf ()Ljava/lang/Boolean;
 	public fun isOutputType ()Z
 	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
 	public final fun setProxied (Lde/stuebingerb/kgraphql/schema/structure/Type;)V

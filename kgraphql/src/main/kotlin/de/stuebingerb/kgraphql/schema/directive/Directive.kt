@@ -98,5 +98,18 @@ data class Directive(
             // DirectiveExecution is a no-op, since it cannot be used during execution.
             DirectiveExecution(FunctionWrapper.on { url: String -> DirectiveResult(true) })
         )
+
+        /**
+         * https://spec.graphql.org/September2025/#sec--oneOf
+         *
+         * The `@oneOf` built-in directive is used within the type system definition language to indicate an Input
+         * Object is a OneOf Input Object.
+         */
+        val ONE_OF = Partial(
+            "oneOf",
+            listOf(DirectiveLocation.INPUT_OBJECT),
+            // DirectiveExecution is a no-op, since it cannot be used during execution.
+            DirectiveExecution(FunctionWrapper.on { -> DirectiveResult(true) })
+        )
     }
 }

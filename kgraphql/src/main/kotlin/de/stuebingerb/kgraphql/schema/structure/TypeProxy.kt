@@ -42,5 +42,8 @@ open class TypeProxy(var proxied: Type) : Type {
     override val specifiedByURL: String?
         get() = proxied.specifiedByURL
 
+    override val isOneOf: Boolean?
+        get() = proxied.isOneOf
+
     override fun get(name: String) = proxied[name]
 }
