@@ -55,7 +55,8 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                 }
 
                 else -> {
-                    val transformedValue = transformValue(parameter.type, value!!, variables, true, parameter.default, executionNode)
+                    val transformedValue =
+                        transformValue(parameter.type, value!!, variables, true, parameter.default, executionNode)
                     if (transformedValue == null && parameter.type.isNotNullable()) {
                         throw InvalidInputValueException(
                             "Argument '${parameter.name}' is not optional, value cannot be null",
@@ -84,7 +85,16 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
         return when {
             value is ValueNode.VariableNode -> {
                 variables.get(type, value, locationDefaultValue)
-                    ?.let { transformValue(type, it, variables, coerceSingleValueAsList, locationDefaultValue, executionNode) }
+                    ?.let {
+                        transformValue(
+                            type,
+                            it,
+                            variables,
+                            coerceSingleValueAsList,
+                            locationDefaultValue,
+                            executionNode
+                        )
+                    }
                     ?: locationDefaultValue
             }
 
@@ -94,7 +104,13 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
             // for the list's item type on the provided value (note this may apply recursively for nested lists).
             type.isList() && value !is ValueNode.ListValueNode && value !is ValueNode.NullValueNode -> {
                 if (coerceSingleValueAsList) {
-                    transformToCollection(type.listType(), listOf(value), variables, true, executionNode = executionNode)
+                    transformToCollection(
+                        type.listType(),
+                        listOf(value),
+                        variables,
+                        true,
+                        executionNode = executionNode
+                    )
                 } else {
                     throw InvalidInputValueException(
                         "Cannot coerce '${value.valueNodeName}' to List",
@@ -104,16 +120,17 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
             }
 
             value is ObjectValueNode -> {
+                val inputType = type.unwrapped()
                 // SchemaCompilation ensures that input types have a primaryConstructor
-                val constructor = checkNotNull(type.unwrapped().kClass?.primaryConstructor)
+                val constructor = checkNotNull(inputType.kClass?.primaryConstructor)
                 val constructorParametersByName = constructor.parameters.associateBy { it.name }
-                val inputFieldsByName = type.unwrapped().inputFields.orEmpty().associateBy { it.name }
+                val inputFieldsByName = inputType.inputFields.orEmpty().associateBy { it.name }
 
                 val providedValuesByKParameter = value.fields.associate { valueField ->
                     val fieldName = valueField.name.value
                     val inputField = inputFieldsByName[fieldName]
                         ?: throw InvalidInputValueException(
-                            "Property '$fieldName' on '${type.unwrapped().name}' does not exist",
+                            "Property '$fieldName' on '${inputType.name}' does not exist",
                             executionNode
                         )
 
@@ -132,6 +149,25 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                         locationDefaultValue,
                         executionNode
                     )
+                }
+
+                // OneOf input types must have *exactly* one field set, and that field must be non-null, cf. https://spec.graphql.org/September2025/#sel-GAHhBZLFDBAACDAjsY
+                if (inputType.isOneOf == true) {
+                    if (providedValuesByKParameter.size != 1) {
+                        throw InvalidInputValueException(
+                            "OneOf input object '${inputType.name}' must have exactly one field set, but ${providedValuesByKParameter.size} were provided",
+                            executionNode
+                        )
+                    }
+                    val (parameter, value) = providedValuesByKParameter.entries.first()
+                    if (value == null) {
+                        val inputField =
+                            inputType.inputFields?.firstOrNull { (it as? InputValue<*>)?.parameterName == parameter?.name }
+                        throw InvalidInputValueException(
+                            "Value for member field '${inputField?.name ?: parameter?.name}' must be non-null",
+                            executionNode
+                        )
+                    }
                 }
 
                 // Constructor parameters that are neither provided explicitly nor have a Kotlin default value
@@ -157,7 +193,7 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                     } else {
                         // Value was not provided and parameter is required: error
                         val inputField =
-                            type.unwrapped().inputFields?.firstOrNull { (it as? InputValue<*>)?.parameterName == name }
+                            inputType.inputFields?.firstOrNull { (it as? InputValue<*>)?.parameterName == name }
                         missingNonOptionalInputs.add(inputField?.name ?: name ?: "Parameter #${parameter.index}")
                         null
                     }
@@ -191,7 +227,13 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
                         executionNode
                     )
                 } else {
-                    transformToCollection(type.listType(), value.values, variables, false, executionNode = executionNode)
+                    transformToCollection(
+                        type.listType(),
+                        value.values,
+                        variables,
+                        false,
+                        executionNode = executionNode
+                    )
                 }
             }
 
@@ -208,11 +250,25 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
         executionNode: Execution
     ): Collection<*> = if (type.kClass.isSubclassOf(Set::class)) {
         values.mapTo(mutableSetOf()) { valueNode ->
-            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList, defaultValue, executionNode)
+            transformValue(
+                type.unwrapList(),
+                valueNode,
+                variables,
+                coerceSingleValueAsList,
+                defaultValue,
+                executionNode
+            )
         }
     } else {
         values.map { valueNode ->
-            transformValue(type.unwrapList(), valueNode, variables, coerceSingleValueAsList, defaultValue, executionNode)
+            transformValue(
+                type.unwrapList(),
+                valueNode,
+                variables,
+                coerceSingleValueAsList,
+                defaultValue,
+                executionNode
+            )
         }
     }
 

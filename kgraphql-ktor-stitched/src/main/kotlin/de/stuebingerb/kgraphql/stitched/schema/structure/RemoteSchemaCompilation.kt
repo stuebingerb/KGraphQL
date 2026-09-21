@@ -279,7 +279,7 @@ class RemoteSchemaCompilation(private val configuration: StitchedSchemaConfigura
         val typeName = checkNotNull(type.name) {
             "Cannot handle remote type $type without name"
         }
-        val objectType = Type.RemoteInputObject(typeName, type.description, type.inputFields.orEmpty())
+        val objectType = Type.RemoteInputObject(typeName, type.description, type.inputFields.orEmpty(), type.isOneOf ?: false)
         val typeProxy = TypeProxy(objectType)
         remoteInputTypeProxies[typeName] = typeProxy
         return objectType

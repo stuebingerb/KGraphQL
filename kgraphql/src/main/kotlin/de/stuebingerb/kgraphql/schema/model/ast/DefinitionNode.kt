@@ -61,7 +61,8 @@ sealed class DefinitionNode(override val loc: Location?) : ASTNode() {
                 name: NameNode,
                 description: StringValueNode?,
                 directives: List<DirectiveNode>?,
-                val fields: List<InputValueDefinitionNode>?
+                val fields: List<InputValueDefinitionNode>?,
+                val isOneOf: Boolean
             ) : TypeDefinitionNode(loc, name, description, directives)
 
             class InterfaceTypeDefinitionNode(
