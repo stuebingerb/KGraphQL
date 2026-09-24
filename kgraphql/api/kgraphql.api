@@ -177,7 +177,9 @@ public abstract interface class de/stuebingerb/kgraphql/schema/Publisher {
 
 public abstract interface class de/stuebingerb/kgraphql/schema/Schema : de/stuebingerb/kgraphql/schema/introspection/__Schema {
 	public abstract fun execute (Ljava/lang/String;Ljava/lang/String;Lde/stuebingerb/kgraphql/Context;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun executeBlocking (Ljava/lang/String;Ljava/lang/String;Lde/stuebingerb/kgraphql/Context;Ljava/lang/String;)Ljava/lang/String;
+	public static synthetic fun execute$default (Lde/stuebingerb/kgraphql/schema/Schema;Ljava/lang/String;Ljava/lang/String;Lde/stuebingerb/kgraphql/Context;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun executeBlocking (Ljava/lang/String;Ljava/lang/String;Lde/stuebingerb/kgraphql/Context;Ljava/lang/String;)Ljava/lang/String;
+	public static synthetic fun executeBlocking$default (Lde/stuebingerb/kgraphql/schema/Schema;Ljava/lang/String;Ljava/lang/String;Lde/stuebingerb/kgraphql/Context;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
 	public abstract fun getConfiguration ()Lde/stuebingerb/kgraphql/configuration/SchemaConfiguration;
 	public abstract fun printSchema ()Ljava/lang/String;
 }
@@ -839,7 +841,7 @@ public final class de/stuebingerb/kgraphql/schema/execution/ExecutionMode : java
 
 public abstract interface class de/stuebingerb/kgraphql/schema/execution/GenericTypeResolver {
 	public static final field Companion Lde/stuebingerb/kgraphql/schema/execution/GenericTypeResolver$Companion;
-	public abstract fun box (Ljava/lang/Object;Lkotlin/reflect/KType;)Ljava/lang/Object;
+	public fun box (Ljava/lang/Object;Lkotlin/reflect/KType;)Ljava/lang/Object;
 	public abstract fun resolveMonad (Lkotlin/reflect/KType;)Lkotlin/reflect/KType;
 	public abstract fun unbox (Ljava/lang/Object;)Ljava/lang/Object;
 }
@@ -938,11 +940,11 @@ public abstract interface class de/stuebingerb/kgraphql/schema/introspection/__T
 	public abstract fun getOfType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public abstract fun getPossibleTypes ()Ljava/util/List;
 	public abstract fun getSpecifiedByURL ()Ljava/lang/String;
-	public abstract fun isInputType ()Z
+	public fun isInputType ()Z
 	public abstract fun isOneOf ()Ljava/lang/Boolean;
-	public abstract fun isOutputType ()Z
-	public abstract fun typeReference ()Ljava/lang/String;
-	public abstract fun unwrapped ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
+	public fun isOutputType ()Z
+	public fun typeReference ()Ljava/lang/String;
+	public fun unwrapped ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 }
 
 public final class de/stuebingerb/kgraphql/schema/introspection/__Type$DefaultImpls {
@@ -1038,10 +1040,10 @@ public abstract interface class de/stuebingerb/kgraphql/schema/model/FunctionWra
 	public abstract fun getArgumentsDescriptor ()Ljava/util/Map;
 	public abstract fun getHasReceiver ()Z
 	public abstract fun getKFunction ()Lkotlin/reflect/KFunction;
-	public abstract fun hasReturnType ()Z
+	public fun hasReturnType ()Z
 	public abstract fun invoke (Ljava/util/List;Ljava/util/List;Lcom/fasterxml/jackson/databind/ObjectWriter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun invoke ([Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun valueParameters ()Ljava/util/List;
+	public fun valueParameters ()Ljava/util/List;
 }
 
 public final class de/stuebingerb/kgraphql/schema/model/FunctionWrapper$ArityEight : de/stuebingerb/kgraphql/schema/model/FunctionWrapper$Base {
@@ -2151,22 +2153,23 @@ public final class de/stuebingerb/kgraphql/schema/structure/SchemaModel : de/stu
 }
 
 public abstract interface class de/stuebingerb/kgraphql/schema/structure/Type : de/stuebingerb/kgraphql/schema/introspection/__Type {
-	public abstract fun get (Ljava/lang/String;)Lde/stuebingerb/kgraphql/schema/structure/Field;
+	public fun get (Ljava/lang/String;)Lde/stuebingerb/kgraphql/schema/structure/Field;
 	public abstract fun getFields ()Ljava/util/List;
 	public abstract fun getInterfaces ()Ljava/util/List;
 	public abstract fun getKClass ()Lkotlin/reflect/KClass;
 	public abstract fun getOfType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public abstract fun getPossibleTypes ()Ljava/util/List;
-	public abstract fun isElementNullable ()Z
-	public abstract fun isInstance (Ljava/lang/Object;)Z
-	public abstract fun isList ()Z
-	public abstract fun isNotList ()Z
-	public abstract fun isNotNullable ()Z
-	public abstract fun isNullable ()Z
-	public abstract fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
-	public abstract fun unwrapList ()Lde/stuebingerb/kgraphql/schema/structure/Type;
-	public abstract fun unwrapNonNull ()Lde/stuebingerb/kgraphql/schema/structure/Type;
-	public abstract fun unwrapped ()Lde/stuebingerb/kgraphql/schema/structure/Type;
+	public fun isElementNullable ()Z
+	public fun isInstance (Ljava/lang/Object;)Z
+	public fun isList ()Z
+	public fun isNotList ()Z
+	public fun isNotNullable ()Z
+	public fun isNullable ()Z
+	public fun listType ()Lde/stuebingerb/kgraphql/schema/structure/Type$AList;
+	public fun unwrapList ()Lde/stuebingerb/kgraphql/schema/structure/Type;
+	public fun unwrapNonNull ()Lde/stuebingerb/kgraphql/schema/structure/Type;
+	public synthetic fun unwrapped ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
+	public fun unwrapped ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 }
 
 public final class de/stuebingerb/kgraphql/schema/structure/Type$AList : de/stuebingerb/kgraphql/schema/structure/Type {
@@ -2899,6 +2902,7 @@ public abstract interface class nidomiro/kdataloader/statistics/StatisticsCollec
 	public abstract fun incLoadAsyncMethodCalledAsync (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun incLoadManyAsyncMethodCalledAsync (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun incObjectsRequestedAsync (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun incObjectsRequestedAsync$default (Lnidomiro/kdataloader/statistics/StatisticsCollector;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun incPrimeMethodCalledAsync (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
