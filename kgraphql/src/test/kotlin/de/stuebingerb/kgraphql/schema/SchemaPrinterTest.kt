@@ -252,6 +252,9 @@ class SchemaPrinterTest {
 
     @Test
     fun `schema with input types should be printed as expected`() {
+        data class OneOfSubInput(val b: String)
+        data class OneOfInput(val a: Int?, val b: OneOfSubInput?)
+
         val schema = KGraphQL.schema {
             query("dummy") {
                 resolver { -> "dummy" }
@@ -259,9 +262,14 @@ class SchemaPrinterTest {
             mutation("add") {
                 resolver { input: TestObject -> input }
             }
+            inputType<OneOfInput> {
+                isOneOf = true
+            }
         }
 
-        SchemaPrinter().print(schema) shouldBe """
+        val sdl = SchemaPrinter().print(schema)
+
+        sdl shouldBe """
             type Mutation {
               add(input: TestObjectInput!): TestObject!
             }
@@ -274,11 +282,25 @@ class SchemaPrinterTest {
               name: String!
             }
             
+            input OneOfInput @oneOf {
+              a: Int
+              b: OneOfSubInput
+            }
+            
+            input OneOfSubInput {
+              b: String!
+            }
+            
             input TestObjectInput {
               name: String!
             }
             
         """.trimIndent()
+
+        // SDL should also be valid according to our own parser (i.e. not throw an exception)
+        shouldNotThrowAny {
+            Parser(sdl).parseDocument()
+        }
     }
 
     @Test
@@ -830,6 +852,8 @@ class SchemaPrinterTest {
 
             directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 
+            directive @oneOf on INPUT_OBJECT
+            
             directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
             
             directive @specifiedBy(url: String!) on SCALAR

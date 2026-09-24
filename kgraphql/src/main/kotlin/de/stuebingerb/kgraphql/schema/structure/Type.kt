@@ -90,6 +90,8 @@ interface Type : __Type {
         override val interfaces: List<Interface<*>> = emptyList()
 
         override fun isInstance(value: Any?): Boolean = false
+
+        override val isOneOf: Boolean? = null
     }
 
     class Object<T : Any>(
@@ -113,6 +115,8 @@ interface Type : __Type {
         override val ofType: Type? = null
 
         override val possibleTypes: List<Type>? = null
+
+        override val isOneOf: Boolean? = null
 
         fun withInterfaces(interfaces: List<Type>) = Object(definition, allFields, interfaces)
 
@@ -140,6 +144,8 @@ interface Type : __Type {
         override val inputFields: List<__InputValue>? = null
 
         override val ofType: Type? = null
+
+        override val isOneOf: Boolean? = null
 
         fun withPossibleTypes(possibleTypes: List<Type>) = Interface(definition, allFields, possibleTypes)
 
@@ -172,6 +178,8 @@ interface Type : __Type {
 
         override val specifiedByURL: String? = kqlType.specifiedByURL
 
+        override val isOneOf: Boolean? = null
+
         val coercion = kqlType.coercion
     }
 
@@ -202,6 +210,8 @@ interface Type : __Type {
         override val possibleTypes: List<Type>? = null
 
         override val specifiedByURL: String? = null
+
+        override val isOneOf: Boolean? = null
     }
 
     class Input<T : Any>(
@@ -228,6 +238,8 @@ interface Type : __Type {
         override val possibleTypes: List<Type>? = null
 
         override val specifiedByURL: String? = null
+
+        override val isOneOf: Boolean = kqlType.isOneOf
     }
 
     class Union(
@@ -252,6 +264,8 @@ interface Type : __Type {
         override val interfaces: List<Type>? = null
 
         override val fields: List<Field>? = null
+
+        override val isOneOf: Boolean? = null
 
         override fun isInstance(value: Any?): Boolean = false
     }
@@ -278,6 +292,8 @@ interface Type : __Type {
         override val possibleTypes: List<Type>? = null
 
         override val specifiedByURL: String? = null
+
+        override val isOneOf: Boolean? = null
     }
 
     class _ExecutionNode : Type {
@@ -302,6 +318,8 @@ interface Type : __Type {
         override val possibleTypes: List<Type>? = null
 
         override val specifiedByURL: String? = null
+
+        override val isOneOf: Boolean? = null
     }
 
     class NonNull(override val ofType: Type) : Type {
@@ -325,6 +343,8 @@ interface Type : __Type {
         override val inputFields: List<__InputValue>? = null
 
         override val specifiedByURL: String? = null
+
+        override val isOneOf: Boolean? = null
 
         override fun isInstance(value: Any?): Boolean = false
     }
@@ -351,6 +371,8 @@ interface Type : __Type {
 
         override val specifiedByURL: String? = null
 
+        override val isOneOf: Boolean? = null
+
         override fun isInstance(value: Any?): Boolean = false
     }
 
@@ -375,6 +397,8 @@ interface Type : __Type {
         override val ofType: Type? = null
 
         override val specifiedByURL: String? = null
+
+        override val isOneOf: Boolean? = null
     }
 
     class RemoteObject(
@@ -395,6 +419,8 @@ interface Type : __Type {
         override val ofType: Type? = null
 
         override val possibleTypes: List<Type>? = null
+
+        override val isOneOf: Boolean? = null
 
         fun withStitchedFields(stitchedFields: List<Field>): RemoteObject =
             RemoteObject(name, description, allFields + stitchedFields, interfaces)
@@ -417,12 +443,15 @@ interface Type : __Type {
         override val inputFields: List<__InputValue>? = null
 
         override val ofType: Type? = null
+
+        override val isOneOf: Boolean? = null
     }
 
     class RemoteInputObject(
         override val name: String,
         override val description: String?,
-        override val inputFields: List<__InputValue> = emptyList()
+        override val inputFields: List<__InputValue> = emptyList(),
+        override val isOneOf: Boolean = false
     ) : Type {
 
         override val kClass = null
@@ -459,5 +488,7 @@ interface Type : __Type {
         override val fields: List<Field>? = null
 
         override val possibleTypes: List<Type>? = null
+
+        override val isOneOf: Boolean? = null
     }
 }

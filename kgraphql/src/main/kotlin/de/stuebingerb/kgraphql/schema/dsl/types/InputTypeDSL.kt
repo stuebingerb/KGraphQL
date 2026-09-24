@@ -12,6 +12,8 @@ class InputTypeDSL<T : Any>(val kClass: KClass<T>) : ItemDSL() {
 
     var name = kClass.defaultKQLTypeName()
 
+    var isOneOf = false
+
     private val kotlinProperties = mutableMapOf<KProperty1<T, *>, PropertyDef.Kotlin<T, *>>()
 
     fun <R> property(kProperty: KProperty1<T, R>, block: KotlinPropertyDSL<T, R>.() -> Unit) {
@@ -28,7 +30,8 @@ class InputTypeDSL<T : Any>(val kClass: KClass<T>) : ItemDSL() {
             name = name,
             kClass = kClass,
             kotlinProperties = kotlinProperties.toMap(),
-            description = description
+            description = description,
+            isOneOf = isOneOf
         )
     }
 }

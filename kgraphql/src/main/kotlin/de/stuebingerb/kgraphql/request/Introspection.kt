@@ -192,6 +192,7 @@ object Introspection {
                 ...TypeRef
               }
               specifiedByURL
+              isOneOf
             }
             
             fragment InputValue on __InputValue {

@@ -1,11 +1,11 @@
 package de.stuebingerb.kgraphql.specification.typesystem
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import de.stuebingerb.kgraphql.InvalidInputValueException
 import de.stuebingerb.kgraphql.KGraphQL
+import de.stuebingerb.kgraphql.ValidationException
 import de.stuebingerb.kgraphql.deserialize
 import de.stuebingerb.kgraphql.expect
-import de.stuebingerb.kgraphql.expectExecutionError
+import de.stuebingerb.kgraphql.expectRequestError
 import de.stuebingerb.kgraphql.extract
 import de.stuebingerb.kgraphql.schema.SchemaException
 import io.kotest.matchers.shouldBe
@@ -75,7 +75,7 @@ class InputObjectsSpecificationTest {
             }
         }
 
-        expectExecutionError<InvalidInputValueException>("Property 'valu1' on 'MyInput' does not exist") {
+        expectRequestError<ValidationException>("Property 'valu1' on 'MyInput' does not exist") {
             schema.executeBlocking(
                 """
                 {
@@ -398,6 +398,22 @@ class InputObjectsSpecificationTest {
                     resolver { input: String -> input }
                 }
                 inputType<InputType>()
+            }
+        }
+    }
+
+    @Test
+    fun `oneOf input objects must only have nullable fields`() {
+        class OneOfInputWithRequiredFields(val a: String, val b: Int?, val c: List<String>)
+
+        expect<SchemaException>("Unable to handle input type 'OneOfInputWithRequiredFields': OneOf input types must only have nullable fields. Fields [a, c] are non-nullable on type 'OneOfInputWithRequiredFields'") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: OneOfInputWithRequiredFields -> input }
+                }
+                inputType<OneOfInputWithRequiredFields> {
+                    isOneOf = true
+                }
             }
         }
     }

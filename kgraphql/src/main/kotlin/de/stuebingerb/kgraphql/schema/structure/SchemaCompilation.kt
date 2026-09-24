@@ -440,7 +440,7 @@ open class SchemaCompilation(
                 } else {
                     "${it}Input"
                 }
-            }, kClass)
+            }, kClass, isOneOf = false)
 
         validateName(inputObjectDef.name)
         if ((enums.values + scalars.values + queryTypeProxies.values + unions).any { it.name == inputObjectDef.name }) {
@@ -486,6 +486,11 @@ open class SchemaCompilation(
 
         if (fields.isEmpty()) {
             throw SchemaException("An input type must define one or more fields. Found none on type '${inputObjectDef.name}'")
+        }
+        val notNullableFields = fields.filter { it.type.isNotNullable() }
+        if (inputObjectDef.isOneOf && notNullableFields.isNotEmpty()) {
+            // OneOf input types require that exactly one field is set, which means that all others must be nullable
+            throw SchemaException("OneOf input types must only have nullable fields. Fields ${notNullableFields.map { it.name }} are non-nullable on type '${inputObjectDef.name}'")
         }
 
         fields.forEach { validateName(it.name) }

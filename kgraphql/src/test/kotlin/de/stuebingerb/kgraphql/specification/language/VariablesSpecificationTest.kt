@@ -440,7 +440,7 @@ class VariablesSpecificationTest : BaseSchemaTest() {
             
         """.trimIndent()
 
-        expectExecutionError<InvalidInputValueException>("Property 'readonlyExtension' on 'SampleObjectInput' does not exist") {
+        expectRequestError<ValidationException>("Property 'readonlyExtension' on 'SampleObjectInput' does not exist") {
             schema.executeBlocking(
                 """
                 {

@@ -176,7 +176,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
             is Field.RemoteOperation<*, *> -> handleRemoteOperation(field, node, ctx)
 
             else -> {
-                validatePropertyArguments(this, field, node)
+                field.validateArguments(node, name)
 
                 Execution.Node(
                     selectionNode = node,
