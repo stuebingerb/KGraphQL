@@ -15,8 +15,8 @@ version = "0.43.0"
 kotlin {
     jvmToolchain(17)
     compilerOptions {
-        apiVersion = KotlinVersion.KOTLIN_2_1
-        languageVersion = KotlinVersion.KOTLIN_2_1
+        apiVersion = KotlinVersion.KOTLIN_2_2
+        languageVersion = KotlinVersion.KOTLIN_2_2
     }
     @OptIn(ExperimentalAbiValidation::class)
     abiValidation()
