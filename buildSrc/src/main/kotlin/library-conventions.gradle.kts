@@ -5,7 +5,7 @@ plugins {
     id("kotlin-conventions")
     id("org.jetbrains.dokka")
     id("com.vanniktech.maven.publish")
-    id("io.gitlab.arturbosch.detekt")
+    id("dev.detekt")
     id("org.jlleitschuh.gradle.ktlint")
 }
 
