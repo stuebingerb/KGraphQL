@@ -12,8 +12,6 @@ style:
     active: false
   ThrowsCount:
     active: false
-  UnusedImports:
-    active: true
   UnusedPrivateProperty:
     allowedNames: 'i'
     excludes: &testFolders

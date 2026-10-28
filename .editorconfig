@@ -40,6 +40,7 @@ ktlint_standard_no-line-break-after-else = enabled
 ktlint_standard_no-line-break-before-assignment = enabled
 ktlint_standard_no-semi = enabled
 ktlint_standard_no-trailing-spaces = enabled
+ktlint_standard_no-unused-imports = enabled
 ktlint_standard_comma-spacing = enabled
 ktlint_standard_curly-spacing = enabled
 ktlint_standard_double-colon-spacing = enabled
