@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: bencherdev/bencher@58a33f76185c1187f3df355817d2ac7285ac77f0 # v0.6.14
+      - uses: bencherdev/bencher@24c333d7030390d2f3e130569386f4f1f8577113 # v0.6.15
       - name: Archive closed PR branch with Bencher
         run: |
           bencher archive \
