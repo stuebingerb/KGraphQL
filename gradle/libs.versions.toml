@@ -17,7 +17,7 @@ kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kov
 
 [libraries]
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-dokka-gradle = { module = "org.jetbrains.dokka:org.jetbrains.dokka.gradle.plugin", version = "2.2.0" }
+dokka-gradle = { module = "org.jetbrains.dokka:org.jetbrains.dokka.gradle.plugin", version = "2.3.0" }
 mavenPublish-gradle = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version = "0.37.0" }
 detekt-gradle = { module = "dev.detekt:dev.detekt.gradle.plugin", version = "2.0.0-alpha.6" }
 ktlint-gradle = { module = "org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint" }
