@@ -218,16 +218,13 @@ class UnionsSpecificationTest : BaseSchemaTest() {
 
     @Test
     fun `a union type must define one or more unique member types`() {
-        expect<SchemaException>("The union type 'invalid' has no possible types defined, requires at least one. Please refer to https://stuebingerb.github.io/KGraphQL/Reference/Type%20System/unions/") {
+        expect<SchemaException>("The union type 'invalid' has no possible types defined, requires at least one") {
             KGraphQL.schema {
                 unionType("invalid") {}
             }
         }
     }
 
-    /**
-     * Kotlin is non-nullable by default (T!), so test covers only case for collections
-     */
     @Test
     fun `List may not be member type of a union`() {
         expect<SchemaException>("Collection may not be member type of a union 'Invalid'") {

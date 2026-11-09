@@ -20,6 +20,15 @@ interface PropertyDef<T> : Depreciable, DescribedDef {
         explicitReturnType: KType? = null
     ) : BaseOperationDef<T, R>(name, resolver, inputValues, accessRule, explicitReturnType), PropertyDef<T>
 
+    open class OneOfProperty<T, R>(
+        override val name: String,
+        override val description: String? = null,
+        override val isDeprecated: Boolean = false,
+        override val deprecationReason: String? = null,
+        override val accessRule: ((T?, Context) -> Exception?)? = null,
+        val isIgnored: Boolean = false
+        ) : PropertyDef<T>
+
     /**
      * [T] -> The Parent Type
      * [K] -> The Key that'll be passed to the dataLoader

@@ -11,8 +11,11 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmErasure
+import kotlin.reflect.jvm.jvmName
 
-internal fun <T : Any> KClass<T>.defaultKQLTypeName() = this.simpleName!!
+internal fun <T : Any> KClass<T>.defaultKQLTypeName() = simpleName ?: jvmName
+
+internal fun <T : Any> KClass<T>.defaultOneOfPropertyName() = defaultKQLTypeName().lowercase()
 
 internal fun String.dropQuotes(): String = if (isLiteral()) {
     drop(1).dropLast(1)

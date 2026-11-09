@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
+import de.stuebingerb.kgraphql.defaultKQLTypeName
 import de.stuebingerb.kgraphql.schema.Publisher
 import de.stuebingerb.kgraphql.schema.Schema
 import de.stuebingerb.kgraphql.schema.SchemaException
@@ -261,19 +262,23 @@ class SchemaBuilder {
         return TypeID(name)
     }
 
-    inline fun <reified T : Any> unionType(noinline block: UnionTypeDSL.() -> Unit = {}): TypeID {
-        if (!T::class.isSealed) {
-            throw SchemaException("Can't generate a union type out of a non-sealed class '${T::class.simpleName}'")
+    fun unionType(kClass: KClass<*>, block: UnionTypeDSL.() -> Unit): TypeID {
+        if (!kClass.isSealed) {
+            throw SchemaException("Can't generate a union type out of a non-sealed class '${kClass.simpleName}'")
         }
-
-        return unionType(T::class.simpleName!!) {
+        val union = UnionTypeDSL().apply {
             block()
-            T::class.sealedSubclasses.forEach {
+            kClass.sealedSubclasses.forEach {
                 type(it, subTypeBlock) // <-- Adds to schema definition
                 type(it) // <-- Adds to possible union type
             }
         }
+        model.addUnion(TypeDef.Union(kClass.defaultKQLTypeName(), union.possibleTypes, union.description))
+        return TypeID(kClass.defaultKQLTypeName())
     }
+
+    inline fun <reified T : Any> unionType(noinline block: UnionTypeDSL.() -> Unit = {}): TypeID =
+        unionType(T::class, block)
 
     //================================================================================
     // INPUT

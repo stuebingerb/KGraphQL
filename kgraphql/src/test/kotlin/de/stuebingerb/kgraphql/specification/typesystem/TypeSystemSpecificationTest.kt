@@ -4,6 +4,9 @@ import de.stuebingerb.kgraphql.KGraphQL.Companion.schema
 import de.stuebingerb.kgraphql.Specification
 import de.stuebingerb.kgraphql.expect
 import de.stuebingerb.kgraphql.schema.SchemaException
+import de.stuebingerb.kgraphql.specification.typesystem.InputObjectsSpecificationTest.InputSealed
+import de.stuebingerb.kgraphql.specification.typesystem.InputObjectsSpecificationTest.InputSealedSub1
+import de.stuebingerb.kgraphql.specification.typesystem.InputObjectsSpecificationTest.InputSealedSub2
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -227,6 +230,18 @@ class TypeSystemSpecificationTest {
                 inputType<TypeInput>()
             }
         }
+        expect<SchemaException>("Cannot add union type with duplicated name 'Type'") {
+            schema {
+                query("test") {
+                    resolver { input: TypeInput -> Type(input.name) }
+                }
+                type<Type>()
+                unionType(name = "Type") {
+                    type<InputSealedSub1>()
+                    type<InputSealedSub2>()
+                }
+            }
+        }
         expect<SchemaException>("Unable to handle 'query(\"test\")': Cannot add input type with duplicated name 'TypeInput'") {
             schema {
                 type<Type> {
@@ -242,6 +257,22 @@ class TypeSystemSpecificationTest {
                 query("test") {
                     resolver { input: TypeInput -> input }
                 }
+            }
+        }
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Cannot add object type with duplicated name 'TypeInput'") {
+            schema {
+                query("test") {
+                    resolver { input: TypeInput -> input }
+                }
+                inputType<TypeInput>()
+            }
+        }
+        expect<SchemaException>("Unable to handle 'query(\"test\")': Cannot add union type with duplicated name 'InputSealed'") {
+            schema {
+                query("test") {
+                    resolver { input: InputSealed -> input }
+                }
+                inputType<InputSealed>()
             }
         }
     }

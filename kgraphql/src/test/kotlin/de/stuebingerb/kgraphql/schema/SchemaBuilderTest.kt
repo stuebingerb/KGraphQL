@@ -207,6 +207,110 @@ class SchemaBuilderTest {
     }
 
     @Test
+    fun `schema should allow two unions with the same members but different name`() {
+        val schema = defaultSchema {
+            query("types") {
+                resolver { -> "dummy" }
+            }
+            unionType("Type1") {
+                type<Actor>()
+                type<Scenario>()
+            }
+            unionType("Type2") {
+                type<Actor>()
+                type<Scenario>()
+            }
+        }
+        SchemaPrinter().print(schema) shouldBe """
+            type Actor {
+              age: Int!
+              name: String!
+            }
+
+            type Id {
+              literal: String!
+              numeric: Int!
+            }
+
+            type Query {
+              types: String!
+            }
+
+            type Scenario {
+              author: String!
+              content: String!
+              id: Id!
+            }
+
+            union Type1 = Actor | Scenario
+
+            union Type2 = Actor | Scenario
+
+        """.trimIndent()
+    }
+
+    sealed interface SealedInterface {
+        data class BBB(val i: Int) : SealedInterface
+        sealed class CCC(val s: String) : SealedInterface
+        data class DDD(val d: Double) : CCC("DDD"), SealedInterface
+    }
+
+    @Test
+    fun `overlapping union sub types should not result in duplicate types`() {
+        val schema = defaultSchema {
+            query("types") {
+                resolver { -> "dummy" }
+            }
+            // DDD is subclass of CCC *and* SealedInterface but should only be present once in the schema
+            unionType<SealedInterface>()
+        }
+        SchemaPrinter().print(schema) shouldBe """
+            type BBB {
+              i: Int!
+            }
+            
+            type DDD implements CCC {
+              d: Float!
+              s: String!
+            }
+            
+            type Query {
+              types: String!
+            }
+            
+            interface CCC {
+              s: String!
+            }
+            
+            union SealedInterface = BBB | DDD
+
+        """.trimIndent()
+    }
+
+    sealed class ParentSealedClass(val s: String)
+    sealed class EmptySealedClass(val i: Int) : ParentSealedClass("42")
+
+    @Test
+    fun `sealed classes without sub types should result in proper validation errors`() {
+        expect<SchemaException>("The union type 'EmptySealedClass' has no possible types defined, requires at least one") {
+            defaultSchema {
+                query("types") {
+                    resolver { -> "dummy" }
+                }
+                unionType<EmptySealedClass>()
+            }
+        }
+        expect<SchemaException>("Unable to handle union type 'ParentSealedClass': The union type 'EmptySealedClass' has no possible types defined, requires at least one") {
+            defaultSchema {
+                query("types") {
+                    resolver { -> "dummy" }
+                }
+                unionType<ParentSealedClass>()
+            }
+        }
+    }
+
+    @Test
     fun `circular dependency extension property`() {
         val testedSchema = defaultSchema {
             query("actor") {
