@@ -7,6 +7,7 @@ import de.stuebingerb.kgraphql.expect
 import de.stuebingerb.kgraphql.expectExecutionError
 import de.stuebingerb.kgraphql.expectRequestError
 import de.stuebingerb.kgraphql.schema.SchemaException
+import de.stuebingerb.kgraphql.schema.SchemaPrinter
 import de.stuebingerb.kgraphql.schema.scalar.ID
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -192,6 +193,10 @@ class InputObjectTest {
             query("example") {
                 resolver { input: ExampleOneOfInputObject -> input.toString() }
             }
+
+            query("sealed") {
+                resolver { input: List<PostElement> -> input.toString() }
+            }
         }
 
         schema.executeBlocking(
@@ -216,6 +221,16 @@ class InputObjectTest {
 
         schema.executeBlocking(
             """
+            query {
+              sealed(input: [{paragraph: {text: "paragraph"}}, {blockquote: {text: "quote", attribution: "attribution"}}])
+            }
+            """.trimIndent()
+        ) shouldBe """
+            {"data":{"sealed":"[Paragraph(text=paragraph), BlockQuote(text=quote, attribution=attribution, attributionUrl=null)]"}}
+        """.trimIndent()
+
+        schema.executeBlocking(
+            """
             query(${'$'}var: ExampleOneOfInputObject!) {
                 example(input: ${'$'}var)
             }
@@ -225,11 +240,32 @@ class InputObjectTest {
             {"data":{"example":"ExampleOneOfInputObject(a=abc, b=null)"}}
         """.trimIndent()
 
+        schema.executeBlocking(
+            """
+            query(${'$'}var: [PostElementInput!]!) {
+              sealed(input: ${'$'}var)
+            }
+            """.trimIndent(),
+            variables = """{ "var": [{ "paragraph": { "text": "paragraph" } }, { "blockquote": { "text": "quote", "attribution": "attribution" } }] }"""
+        ) shouldBe """
+            {"data":{"sealed":"[Paragraph(text=paragraph), BlockQuote(text=quote, attribution=attribution, attributionUrl=null)]"}}
+        """.trimIndent()
+
         expectRequestError<ValidationException>("Value for member field 'a' must be non-null") {
             schema.executeBlocking(
                 """
             query {
               example(input: {a: null}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Value for member field 'paragraph' must be non-null") {
+            schema.executeBlocking(
+                """
+            query {
+              sealed(input: [{paragraph: null}])
             }
             """.trimIndent()
             )
@@ -246,6 +282,18 @@ class InputObjectTest {
             )
         }
 
+        expectExecutionError<InvalidInputValueException>("Value for member field 'paragraph' must be non-null") {
+            schema.executeBlocking(
+                """
+            query(${'$'}var: [PostElementInput!]!) {
+              sealed(input: ${'$'}var)
+            }
+            """.trimIndent(),
+                variables = """{ "var": [{ "paragraph": null }] }"""
+            )
+        }
+
+        // TODO: should be "Error: Value for member field 'a' must be specified" but likely depends on variable rework
         expectExecutionError<InvalidInputValueException>("Value for member field 'a' must be non-null") {
             schema.executeBlocking(
                 """
@@ -256,11 +304,31 @@ class InputObjectTest {
             )
         }
 
+        expectExecutionError<InvalidInputValueException>("Value for member field 'paragraph' must be non-null") {
+            schema.executeBlocking(
+                """
+            query(${'$'}var: ParagraphInput!) {
+              sealed(input: [{paragraph: ${'$'}var}])
+            }
+            """.trimIndent()
+            )
+        }
+
         expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
             schema.executeBlocking(
                 """
             query {
               example(input: {a: "abc", b: 123}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'PostElementInput' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query {
+              sealed(input: [{paragraph: {text: "paragraph"}, blockquote: {text: "quote", attribution: "attribution"}}, {blockquote: {text: "quote", attribution: "attribution"}}])
             }
             """.trimIndent()
             )
@@ -287,6 +355,17 @@ class InputObjectTest {
             )
         }
 
+        expectExecutionError<InvalidInputValueException>("OneOf input object 'PostElementInput' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query(${'$'}var: [PostElementInput!]!) {
+              sealed(input: ${'$'}var)
+            }
+            """.trimIndent(),
+                variables = """{ "var": [{ "paragraph": { "text": "paragraph" }, "blockquote": { "text": "quote", "attribution": "attribution" } }] }"""
+            )
+        }
+
         expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
             schema.executeBlocking(
                 """
@@ -297,11 +376,31 @@ class InputObjectTest {
             )
         }
 
+        expectRequestError<ValidationException>("OneOf input object 'PostElementInput' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query {
+              sealed(input: [{paragraph: {text: "paragraph"}, blockquote: null}])
+            }
+            """.trimIndent()
+            )
+        }
+
         expectRequestError<ValidationException>("OneOf input object 'ExampleOneOfInputObject' must have exactly one field set, but 2 were provided") {
             schema.executeBlocking(
                 """
             query(${'$'}b: Int!) {
               example(input: {a: "abc", b: ${'$'}b}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'PostElementInput' must have exactly one field set, but 2 were provided") {
+            schema.executeBlocking(
+                """
+            query(${'$'}var: BlockQuoteInput!) {
+              sealed(input: [{paragraph: {text: "paragraph"}, blockquote: ${'$'}var}])
             }
             """.trimIndent()
             )
@@ -322,6 +421,16 @@ class InputObjectTest {
                 """
             query {
               example(input: {}) 
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("OneOf input object 'PostElementInput' must have exactly one field set, but 0 were provided") {
+            schema.executeBlocking(
+                """
+            query {
+              sealed(input: {}) 
             }
             """.trimIndent()
             )
@@ -534,6 +643,10 @@ class InputObjectTest {
             query("example") {
                 resolver { input: NestedInputObject -> input.toString() }
             }
+
+            query("sealed") {
+                resolver { input: List<PostElement> -> input.toString() }
+            }
         }
 
         expectRequestError<ValidationException>("Property 'nestedObject' on 'NestedInputObjectInput' does not exist") {
@@ -541,6 +654,16 @@ class InputObjectTest {
                 """
             query {
               example(input: {a: "abc", nestedObject: {a: "abc"}})
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectRequestError<ValidationException>("Property 'invalid' on 'PostElementInput' does not exist") {
+            schema.executeBlocking(
+                """
+            query {
+              sealed(input: [{invalid: {text: "paragraph"}}])
             }
             """.trimIndent()
             )
@@ -581,6 +704,16 @@ class InputObjectTest {
                 """
             query {
               example(input: {a: "abc", nestedNestedObjects: [[{invalid: "example"}]]})
+            }
+            """.trimIndent()
+            )
+        }
+
+        expectExecutionError<InvalidInputValueException>("Property 'invalid' on 'PostElementInput' does not exist") {
+            schema.executeBlocking(
+                """
+            query(${'$'}var: PostElementInput! = {invalid: "paragraph"}) {
+              sealed(input: [${'$'}var])
             }
             """.trimIndent()
             )
@@ -800,7 +933,6 @@ class InputObjectTest {
                 useDefaultPrettyPrinter = true
             }
 
-            unionType<PostElement>()
             inputType<PostElementInput> {
                 isOneOf = true
             }
@@ -818,6 +950,197 @@ class InputObjectTest {
                 }
             }
         }
+
+        SchemaPrinter().print(schema) shouldBe """
+            type BlockQuote {
+              attribution: String
+              attributionUrl: String
+              text: String!
+            }
+            
+            type Gallery {
+              attribution: String
+              caption: String
+              imageUrls: [String!]!
+            }
+            
+            type Mutation {
+              createPost(elements: [PostElementInput!]!): Post!
+            }
+            
+            type Paragraph {
+              text: String!
+            }
+            
+            type Post {
+              elements: [PostElement!]!
+              id: ID!
+            }
+            
+            type Query {
+              post(id: ID!): Post
+            }
+            
+            union PostElement = BlockQuote | Gallery | Paragraph
+
+            input BlockQuoteInput {
+              attribution: String
+              attributionUrl: String
+              text: String!
+            }
+
+            input GalleryInput {
+              attribution: String
+              caption: String
+              imageUrls: [String!]!
+            }
+
+            input ParagraphInput {
+              text: String!
+            }
+
+            input PostElementInput @oneOf {
+              blockquote: BlockQuoteInput
+              gallery: GalleryInput
+              paragraph: ParagraphInput
+            }
+            
+        """.trimIndent()
+
+        schema.executeBlocking("""
+            mutation {
+                createPost(elements: [
+                    { paragraph: { text: "First Paragraph" } },
+                    { blockquote: { text: "This is a great post!", attribution: "Me", attributionUrl: "https://example.com" } }
+                    { paragraph: { text: "Second Paragraph" } },
+                    { gallery: { imageUrls: ["https://example.com/image1.jpg", "https://example.com/image2.jpg"], caption: "My Gallery", attribution: "Me Again" } }
+                ]) { id }
+            }
+        """.trimIndent()) shouldBe """
+            {
+              "data" : {
+                "createPost" : {
+                  "id" : "1"
+                }
+              }
+            }
+        """.trimIndent()
+
+        schema.executeBlocking("""
+            query {
+                post(id: "1") {
+                    id
+                    elements {
+                        __typename
+                        ... on Paragraph { text }
+                        ... on BlockQuote { text attribution attributionUrl }
+                        ... on Gallery { imageUrls caption attribution }
+                    }
+                }
+            }
+        """.trimIndent()) shouldBe """
+            {
+              "data" : {
+                "post" : {
+                  "id" : "1",
+                  "elements" : [ {
+                    "__typename" : "Paragraph",
+                    "text" : "First Paragraph"
+                  }, {
+                    "__typename" : "BlockQuote",
+                    "text" : "This is a great post!",
+                    "attribution" : "Me",
+                    "attributionUrl" : "https://example.com"
+                  }, {
+                    "__typename" : "Paragraph",
+                    "text" : "Second Paragraph"
+                  }, {
+                    "__typename" : "Gallery",
+                    "imageUrls" : [ "https://example.com/image1.jpg", "https://example.com/image2.jpg" ],
+                    "caption" : "My Gallery",
+                    "attribution" : "Me Again"
+                  } ]
+                }
+              }
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `input polymorphism with oneOf input objects out of sealed interface`() {
+        val posts = mutableListOf<Post>()
+        val schema = KGraphQL.schema {
+            configure {
+                useDefaultPrettyPrinter = true
+            }
+
+            query("post") {
+                resolver { id: ID -> posts.find { it.id == id } }
+            }
+            mutation("createPost") {
+                resolver { elements: List<PostElement> ->
+                    val post = Post(id = ID((posts.size + 1).toString()), elements = elements)
+                    posts.add(post)
+                    post
+                }
+            }
+        }
+
+        SchemaPrinter().print(schema) shouldBe """
+            type BlockQuote {
+              attribution: String
+              attributionUrl: String
+              text: String!
+            }
+            
+            type Gallery {
+              attribution: String
+              caption: String
+              imageUrls: [String!]!
+            }
+            
+            type Mutation {
+              createPost(elements: [PostElementInput!]!): Post!
+            }
+            
+            type Paragraph {
+              text: String!
+            }
+            
+            type Post {
+              elements: [PostElement!]!
+              id: ID!
+            }
+            
+            type Query {
+              post(id: ID!): Post
+            }
+            
+            union PostElement = BlockQuote | Gallery | Paragraph
+
+            input BlockQuoteInput {
+              attribution: String
+              attributionUrl: String
+              text: String!
+            }
+
+            input GalleryInput {
+              attribution: String
+              caption: String
+              imageUrls: [String!]!
+            }
+
+            input ParagraphInput {
+              text: String!
+            }
+
+            input PostElementInput @oneOf {
+              blockquote: BlockQuoteInput
+              gallery: GalleryInput
+              paragraph: ParagraphInput
+            }
+            
+        """.trimIndent()
 
         schema.executeBlocking("""
             mutation {

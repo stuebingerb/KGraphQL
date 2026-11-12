@@ -101,3 +101,12 @@ internal fun assertValidObjectType(kClass: KClass<*>) = when {
     kClass.isSubclassOf(Enum::class) -> throw SchemaException("Cannot handle enum class '${kClass.qualifiedName}' as object type")
     else -> Unit
 }
+
+internal fun assertValidInputObjectType(kClass: KClass<*>) = when {
+    kClass.isSubclassOf(Function::class) -> throw SchemaException("Cannot handle function class '${kClass.qualifiedName}' as input type")
+    kClass.isSubclassOf(Enum::class) -> throw SchemaException("Cannot handle enum class '${kClass.qualifiedName}' as input type")
+    // Sealed interfaces are actually allowed, and will result in a oneOf input type
+    kClass.java.isInterface && !kClass.isSealed -> throw SchemaException("Interface '${kClass.simpleName}' is not allowed as input type")
+    kClass.isAbstract -> throw SchemaException("Abstract class '${kClass.simpleName}' is not allowed as input type")
+    else -> Unit
+}

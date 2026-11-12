@@ -36,7 +36,8 @@ interface TypeDef {
         override val kClass: KClass<T>,
         val kotlinProperties: Map<KProperty1<T, *>, PropertyDef.Kotlin<T, *>> = emptyMap(),
         description: String? = null,
-        val isOneOf: Boolean
+        val isOneOf: Boolean,
+        val oneOfProperties: Map<KClass<out T>, PropertyDef.OneOfProperty<T, *>> = emptyMap()
     ) : BaseKQLType(name, description), Kotlin<T>
 
     class Scalar<T : Any>(

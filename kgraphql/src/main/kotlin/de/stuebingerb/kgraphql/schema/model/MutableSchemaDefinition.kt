@@ -76,7 +76,7 @@ open class MutableSchemaDefinition {
     protected fun validateUnions() {
         unions.forEach { union ->
             if (union.members.isEmpty()) {
-                throw SchemaException("The union type '${union.name}' has no possible types defined, requires at least one. Please refer to https://stuebingerb.github.io/KGraphQL/Reference/Type%20System/unions/")
+                throw SchemaException("The union type '${union.name}' has no possible types defined, requires at least one")
             }
             union.members.forEach { member ->
                 validateUnionMember(union, member, objects)
@@ -84,6 +84,8 @@ open class MutableSchemaDefinition {
         }
     }
 
+    // https://spec.graphql.org/September2025/#sec-Unions.Type-Validation
+    // "The member types of a Union type extension must all be Object base types; Scalar, Interface and Union types must not be member types of a Union"
     private fun validateUnionMember(
         union: TypeDef.Union,
         member: KClass<*>,

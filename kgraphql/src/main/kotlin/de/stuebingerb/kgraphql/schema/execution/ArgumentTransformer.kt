@@ -121,92 +121,40 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
 
             value is ObjectValueNode -> {
                 val inputType = type.unwrapped()
-                // SchemaCompilation ensures that input types have a primaryConstructor
-                val constructor = checkNotNull(inputType.kClass?.primaryConstructor)
-                val constructorParametersByName = constructor.parameters.associateBy { it.name }
-                val inputFieldsByName = inputType.inputFields.orEmpty().associateBy { it.name }
+                if (inputType.isOneOf == true && inputType.kClass?.isSealed == true) {
+                    if (value.fields.size != 1) {
+                        throw InvalidInputValueException(
+                            "OneOf input object '${inputType.name}' must have exactly one field set, but ${value.fields.size} were provided",
+                            executionNode
+                        )
+                    }
 
-                val providedValuesByKParameter = value.fields.associate { valueField ->
-                    val fieldName = valueField.name.value
-                    val inputField = inputFieldsByName[fieldName]
+                    // Transform to actual sealed class type
+                    val providedField = value.fields.single()
+                    val providedType = (inputType.inputFields.orEmpty()
+                        .firstOrNull { it.name == providedField.name.value } as? InputValue<*>)?.type
                         ?: throw InvalidInputValueException(
-                            "Property '$fieldName' on '${inputType.name}' does not exist",
+                            "Property '${providedField.name.value}' on '${inputType.name}' does not exist",
                             executionNode
                         )
-
-                    val paramType = inputField.type as? Type
-                        ?: throw ExecutionError(
-                            "Something went wrong while searching for the constructor parameter type '$fieldName'",
-                            executionNode
-                        )
-
-                    val parameterName = (inputField as? InputValue<*>)?.parameterName ?: fieldName
-                    constructorParametersByName[parameterName] to transformValue(
-                        paramType,
-                        valueField.value,
+                    val transformed = transformValue(
+                        providedType,
+                        providedField.value,
                         variables,
                         true,
                         locationDefaultValue,
                         executionNode
                     )
-                }
-
-                // OneOf input types must have *exactly* one field set, and that field must be non-null, cf. https://spec.graphql.org/September2025/#sel-GAHhBZLFDBAACDAjsY
-                if (inputType.isOneOf == true) {
-                    if (providedValuesByKParameter.size != 1) {
+                    if (transformed == null) {
                         throw InvalidInputValueException(
-                            "OneOf input object '${inputType.name}' must have exactly one field set, but ${providedValuesByKParameter.size} were provided",
+                            "Value for member field '${providedField.name.value}' must be non-null",
                             executionNode
                         )
                     }
-                    val (parameter, value) = providedValuesByKParameter.entries.first()
-                    if (value == null) {
-                        val inputField =
-                            inputType.inputFields?.firstOrNull { (it as? InputValue<*>)?.parameterName == parameter?.name }
-                        throw InvalidInputValueException(
-                            "Value for member field '${inputField?.name ?: parameter?.name}' must be non-null",
-                            executionNode
-                        )
-                    }
+                    transformed
+                } else {
+                    transformInputObject(value, type, variables, locationDefaultValue, executionNode)
                 }
-
-                // Constructor parameters that are neither provided explicitly nor have a Kotlin default value
-                val missingNonOptionalInputs = mutableListOf<String>()
-                val valueMap = constructorParametersByName.mapNotNull { (name, parameter) ->
-                    if (providedValuesByKParameter.containsKey(parameter)) {
-                        // Value was provided: use provided value
-                        val provided = providedValuesByKParameter[parameter]
-                        val value =
-                            if (parameter.type.arguments.isNotEmpty()) {
-                                genericTypeResolver.box(provided, parameter.type)
-                            } else {
-                                provided
-                            }
-
-                        parameter to value
-                    } else if (parameter.isOptional) {
-                        // Value was not provided but parameter is optional: skip it (and use default from Kotlin)
-                        null
-                    } else if (parameter.type.isMarkedNullable) {
-                        // Value was not provided and parameter is nullable: use null
-                        parameter to null
-                    } else {
-                        // Value was not provided and parameter is required: error
-                        val inputField =
-                            inputType.inputFields?.firstOrNull { (it as? InputValue<*>)?.parameterName == name }
-                        missingNonOptionalInputs.add(inputField?.name ?: name ?: "Parameter #${parameter.index}")
-                        null
-                    }
-                }.toMap()
-
-                if (missingNonOptionalInputs.isNotEmpty()) {
-                    throw InvalidInputValueException(
-                        "Missing non-optional input fields: ${missingNonOptionalInputs.joinToString()}",
-                        executionNode
-                    )
-                }
-
-                constructor.callBy(valueMap)
             }
 
             value is ValueNode.NullValueNode -> {
@@ -239,6 +187,102 @@ open class ArgumentTransformer(val genericTypeResolver: GenericTypeResolver) {
 
             else -> transformString(value, type.unwrapped(), executionNode)
         }
+    }
+
+    private fun transformInputObject(
+        value: ObjectValueNode,
+        type: Type,
+        variables: Variables,
+        locationDefaultValue: Any?,
+        executionNode: Execution
+    ): Any {
+        val inputType = type.unwrapped()
+        // SchemaCompilation ensures that input types have a primaryConstructor
+        val constructor = checkNotNull(inputType.kClass?.primaryConstructor)
+        val constructorParametersByName = constructor.parameters.associateBy { it.name }
+        val inputFieldsByName = inputType.inputFields.orEmpty().associateBy { it.name }
+
+        val providedValuesByKParameter = value.fields.associate { valueField ->
+            val fieldName = valueField.name.value
+            val inputField = inputFieldsByName[fieldName]
+                ?: throw InvalidInputValueException(
+                    "Property '$fieldName' on '${inputType.name}' does not exist",
+                    executionNode
+                )
+
+            val paramType = inputField.type as? Type
+                ?: throw ExecutionError(
+                    "Something went wrong while searching for the constructor parameter type '$fieldName'",
+                    executionNode
+                )
+
+            val parameterName = (inputField as? InputValue<*>)?.parameterName ?: fieldName
+            constructorParametersByName[parameterName] to transformValue(
+                paramType,
+                valueField.value,
+                variables,
+                true,
+                locationDefaultValue,
+                executionNode
+            )
+        }
+
+        // OneOf input types must have *exactly* one field set, and that field must be non-null, cf. https://spec.graphql.org/September2025/#sel-GAHhBZLFDBAACDAjsY
+        if (inputType.isOneOf == true) {
+            if (providedValuesByKParameter.size != 1) {
+                throw InvalidInputValueException(
+                    "OneOf input object '${inputType.name}' must have exactly one field set, but ${providedValuesByKParameter.size} were provided",
+                    executionNode
+                )
+            }
+            val (parameter, value) = providedValuesByKParameter.entries.single()
+            if (value == null) {
+                val inputField =
+                    inputType.inputFields?.firstOrNull { (it as? InputValue<*>)?.parameterName == parameter?.name }
+                throw InvalidInputValueException(
+                    "Value for member field '${inputField?.name ?: parameter?.name}' must be non-null",
+                    executionNode
+                )
+            }
+        }
+
+        // Constructor parameters that are neither provided explicitly nor have a Kotlin default value
+        val missingNonOptionalInputs = mutableListOf<String>()
+        val valueMap = constructorParametersByName.mapNotNull { (name, parameter) ->
+            if (providedValuesByKParameter.containsKey(parameter)) {
+                // Value was provided: use provided value
+                val provided = providedValuesByKParameter[parameter]
+                val value =
+                    if (parameter.type.arguments.isNotEmpty()) {
+                        genericTypeResolver.box(provided, parameter.type)
+                    } else {
+                        provided
+                    }
+
+                parameter to value
+            } else if (parameter.isOptional) {
+                // Value was not provided but parameter is optional: skip it (and use default from Kotlin)
+                null
+            } else if (parameter.type.isMarkedNullable) {
+                // Value was not provided and parameter is nullable: use null
+                parameter to null
+            } else {
+                // Value was not provided and parameter is required: error
+                val inputField =
+                    inputType.inputFields?.firstOrNull { (it as? InputValue<*>)?.parameterName == name }
+                missingNonOptionalInputs.add(inputField?.name ?: name ?: "Parameter #${parameter.index}")
+                null
+            }
+        }.toMap()
+
+        if (missingNonOptionalInputs.isNotEmpty()) {
+            throw InvalidInputValueException(
+                "Missing non-optional input fields: ${missingNonOptionalInputs.joinToString()}",
+                executionNode
+            )
+        }
+
+        return constructor.callBy(valueMap)
     }
 
     private fun transformToCollection(

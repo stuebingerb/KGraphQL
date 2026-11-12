@@ -485,6 +485,15 @@ public abstract class de/stuebingerb/kgraphql/schema/dsl/LimitedAccessItemDSL : 
 	public fun <init> ()V
 }
 
+public final class de/stuebingerb/kgraphql/schema/dsl/OneOfPropertyDSL : de/stuebingerb/kgraphql/schema/dsl/DepreciableItemDSL {
+	public fun <init> (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;)V
+	public final fun getIgnore ()Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun setIgnore (Z)V
+	public final fun setName (Ljava/lang/String;)V
+	public final fun toKQLProperty ()Lde/stuebingerb/kgraphql/schema/model/PropertyDef$OneOfProperty;
+}
+
 public final class de/stuebingerb/kgraphql/schema/dsl/PropertyDSL : de/stuebingerb/kgraphql/schema/dsl/LimitedAccessItemDSL, de/stuebingerb/kgraphql/schema/dsl/ResolverDSL$Target {
 	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public final fun accessRule (Lkotlin/jvm/functions/Function2;)V
@@ -537,6 +546,7 @@ public final class de/stuebingerb/kgraphql/schema/dsl/SchemaBuilder {
 	public final fun subscription (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
 	public final fun type (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;)V
 	public final fun unionType (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lde/stuebingerb/kgraphql/schema/dsl/TypeID;
+	public final fun unionType (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;)Lde/stuebingerb/kgraphql/schema/dsl/TypeID;
 }
 
 public abstract interface annotation class de/stuebingerb/kgraphql/schema/dsl/SchemaBuilderMarker : java/lang/annotation/Annotation {
@@ -672,6 +682,7 @@ public final class de/stuebingerb/kgraphql/schema/dsl/types/EnumValueDSL : de/st
 
 public final class de/stuebingerb/kgraphql/schema/dsl/types/InputTypeDSL : de/stuebingerb/kgraphql/schema/dsl/ItemDSL {
 	public fun <init> (Lkotlin/reflect/KClass;)V
+	public final fun configure (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;)V
 	public final fun configure (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function1;)V
 	public final fun getKClass ()Lkotlin/reflect/KClass;
 	public final fun getName ()Ljava/lang/String;
@@ -1313,6 +1324,17 @@ public class de/stuebingerb/kgraphql/schema/model/PropertyDef$Kotlin : de/stuebi
 	public final fun isIgnored ()Z
 }
 
+public class de/stuebingerb/kgraphql/schema/model/PropertyDef$OneOfProperty : de/stuebingerb/kgraphql/schema/model/PropertyDef {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Lkotlin/jvm/functions/Function2;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Lkotlin/jvm/functions/Function2;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAccessRule ()Lkotlin/jvm/functions/Function2;
+	public fun getDeprecationReason ()Ljava/lang/String;
+	public fun getDescription ()Ljava/lang/String;
+	public fun getName ()Ljava/lang/String;
+	public fun isDeprecated ()Z
+	public final fun isIgnored ()Z
+}
+
 public final class de/stuebingerb/kgraphql/schema/model/PropertyDef$Union : de/stuebingerb/kgraphql/schema/model/PropertyDef$Function, de/stuebingerb/kgraphql/schema/model/PropertyDef {
 	public fun <init> (Ljava/lang/String;Lde/stuebingerb/kgraphql/schema/model/FunctionWrapper;Lde/stuebingerb/kgraphql/schema/model/TypeDef$Union;Ljava/lang/String;ZZLjava/lang/String;Lkotlin/jvm/functions/Function2;Ljava/util/List;)V
 	public synthetic fun <init> (Ljava/lang/String;Lde/stuebingerb/kgraphql/schema/model/FunctionWrapper;Lde/stuebingerb/kgraphql/schema/model/TypeDef$Union;Ljava/lang/String;ZZLjava/lang/String;Lkotlin/jvm/functions/Function2;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -1391,10 +1413,11 @@ public final class de/stuebingerb/kgraphql/schema/model/TypeDef$Enumeration : de
 }
 
 public final class de/stuebingerb/kgraphql/schema/model/TypeDef$Input : de/stuebingerb/kgraphql/schema/model/TypeDef$BaseKQLType, de/stuebingerb/kgraphql/schema/model/TypeDef$Kotlin {
-	public fun <init> (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/lang/String;Z)V
-	public synthetic fun <init> (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/lang/String;ZLjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/lang/String;ZLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getKClass ()Lkotlin/reflect/KClass;
 	public final fun getKotlinProperties ()Ljava/util/Map;
+	public final fun getOneOfProperties ()Ljava/util/Map;
 	public final fun isOneOf ()Z
 }
 
@@ -2112,7 +2135,7 @@ public class de/stuebingerb/kgraphql/schema/structure/SchemaCompilation {
 	protected final fun getScalars ()Ljava/util/Map;
 	public final fun getSchemaDescription ()Ljava/lang/String;
 	protected final fun getSchemaProxy ()Lde/stuebingerb/kgraphql/schema/introspection/SchemaProxy;
-	protected final fun getUnions ()Ljava/util/List;
+	protected final fun getUnions ()Ljava/util/Map;
 	protected final fun handleBaseTypes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected final fun handleMutations (Ljava/util/List;)Lde/stuebingerb/kgraphql/schema/structure/Type;
 	protected final fun handlePartialDirective (Lde/stuebingerb/kgraphql/schema/directive/Directive$Partial;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

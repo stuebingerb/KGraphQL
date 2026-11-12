@@ -5,6 +5,7 @@ package de.stuebingerb.kgraphql.schema.structure
 import de.stuebingerb.kgraphql.Context
 import de.stuebingerb.kgraphql.configuration.SchemaConfiguration
 import de.stuebingerb.kgraphql.defaultKQLTypeName
+import de.stuebingerb.kgraphql.defaultOneOfPropertyName
 import de.stuebingerb.kgraphql.getCollectionElementType
 import de.stuebingerb.kgraphql.isCollectionType
 import de.stuebingerb.kgraphql.request.isIntrospectionType
@@ -32,6 +33,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
 import kotlin.reflect.KVisibility
+import kotlin.reflect.full.createType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
@@ -49,7 +51,7 @@ open class SchemaCompilation(
 
     protected val inputTypeProxies = mutableMapOf<KClass<*>, TypeProxy>()
 
-    protected val unions = mutableListOf<Type.Union>()
+    protected val unions = mutableMapOf<Pair<String, Set<KClass<*>>>, Type.Union>()
 
     protected val enums by lazy {
         definition.enums.associateTo(mutableMapOf()) { enum -> enum.kClass to enum.toEnumType() }
@@ -84,7 +86,7 @@ open class SchemaCompilation(
                 + inputTypeProxies.values
                 + enums.values
                 + scalars.values
-                + unions.distinctBy(Type.Union::name)
+                + unions.values
                 + queryType
                 + listOfNotNull(mutationType, subscriptionType),
             directives = definition.directives.map { handlePartialDirective(it) },
@@ -242,7 +244,7 @@ open class SchemaCompilation(
             .let { handlePossiblyWrappedType(it, typeCategory) }
 
         kType.jvmErasure.isSealed && typeCategory == TypeCategory.QUERY -> TypeDef.Union(
-            name = kType.jvmErasure.simpleName!!,
+            name = kType.jvmErasure.defaultKQLTypeName(),
             members = kType.jvmErasure.sealedSubclasses.toSet(),
             description = null
         ).let { applyNullability(kType.isMarkedNullable, handleUnionType(it)) }
@@ -323,7 +325,7 @@ open class SchemaCompilation(
 
         if (!objectDef.isIntrospectionType()) {
             validateName(objectDef.name)
-            if ((enums.values + scalars.values + inputTypeProxies.values + unions).any { it.name == objectDef.name }) {
+            if ((enums.values + scalars.values + inputTypeProxies.values + unions.values).any { it.name == objectDef.name }) {
                 throw SchemaException("Cannot add object type with duplicated name '${objectDef.name}'")
             }
             if (queryTypeProxies.any { it.key != kClass && it.value.name == objectDef.name }) {
@@ -420,18 +422,7 @@ open class SchemaCompilation(
     }
 
     private suspend fun handleInputType(kClass: KClass<*>): Type {
-        assertValidObjectType(kClass)
-
-        if (kClass.java.isInterface) {
-            throw SchemaException("Interface '${kClass.simpleName}' is not allowed as input type")
-        } else if (kClass.isSealed) {
-            throw SchemaException("Sealed class '${kClass.simpleName}' is not allowed as input type")
-        } else if (kClass.isAbstract) {
-            throw SchemaException("Abstract class '${kClass.simpleName}' is not allowed as input type")
-        }
-
-        val primaryConstructor = kClass.primaryConstructor
-            ?: throw SchemaException("Java class '${kClass.simpleName}' as input type is not supported")
+        assertValidInputObjectType(kClass)
 
         val inputObjectDef =
             definition.inputObjects.find { it.kClass == kClass } ?: TypeDef.Input(kClass.defaultKQLTypeName().let {
@@ -440,10 +431,10 @@ open class SchemaCompilation(
                 } else {
                     "${it}Input"
                 }
-            }, kClass, isOneOf = false)
+            }, kClass, isOneOf = kClass.isSealed)
 
         validateName(inputObjectDef.name)
-        if ((enums.values + scalars.values + queryTypeProxies.values + unions).any { it.name == inputObjectDef.name }) {
+        if ((enums.values + scalars.values + queryTypeProxies.values + unions.values).any { it.name == inputObjectDef.name }) {
             throw SchemaException("Cannot add input type with duplicated name '${inputObjectDef.name}'")
         }
         if (inputTypeProxies.any { it.key != kClass && it.value.name == inputObjectDef.name }) {
@@ -452,33 +443,65 @@ open class SchemaCompilation(
 
         val objectType = Type.Input(inputObjectDef)
         val typeProxy = TypeProxy(objectType)
-        if (typeProxy.checkEqualName(
-                inputTypeProxies.values,
-                queryTypeProxies.values,
-                scalars.values,
-                unions,
-                enums.values
-            )
-        ) {
-            throw SchemaException("Cannot add input type with duplicated name '${typeProxy.name}'")
-        }
         inputTypeProxies[kClass] = typeProxy
 
-        val memberPropertiesByName = kClass.memberProperties.associateBy { it.name }
+        val fieldNames = mutableSetOf<String>()
         val fields = if (kClass.findAnnotation<NotIntrospected>() == null) {
-            // Input types are created using their primary constructor. Therefore, it makes sense to (only) use the
-            // parameters of this constructor for the fields (cf. https://github.com/stuebingerb/KGraphQL/issues/235).
-            // Member properties are sorted by name (https://youtrack.jetbrains.com/issue/KT-41042), and SDL is
-            // sorting by name, so we'll also sort constructor parameters to be consistent.
-            primaryConstructor.parameters.sortedBy { it.name }.map { parameter ->
-                // kProperty is used to configure deprecation and description in the DSL, so we use it
-                // if available
-                val kProperty = memberPropertiesByName[parameter.name]
-                handleKotlinInputProperty(
-                    parameter = parameter,
-                    kProperty = kProperty,
-                    kqlProperty = kProperty?.let { inputObjectDef.kotlinProperties[it] }
-                )
+            if (kClass.isSealed) {
+                // OneOf input types have one field per allowed sub type
+                val sealedSubclasses = kClass.sealedSubclasses.toSet()
+                if (sealedSubclasses.isEmpty()) {
+                    val type = if (kClass.java.isInterface) {
+                        "interface"
+                    } else {
+                        "class"
+                    }
+                    throw SchemaException("The sealed $type '${kClass.simpleName}' does not have known subclasses")
+                }
+                sealedSubclasses.sortedBy { it.simpleName }.mapNotNull { clazz ->
+                    val kProperty = inputObjectDef.oneOfProperties[clazz]
+
+                    if (kProperty?.isIgnored == true) {
+                        return@mapNotNull null
+                    }
+
+                    // All properties must be nullable
+                    val type = handlePossiblyWrappedType(clazz.createType(nullable = true), TypeCategory.INPUT)
+                    val parameterName = kProperty?.name ?: clazz.defaultOneOfPropertyName()
+                    if (parameterName in fieldNames) {
+                        throw SchemaException("Cannot add oneOf field with duplicated name '${parameterName}'")
+                    }
+                    fieldNames.add(parameterName)
+                    InputValue(
+                        InputValueDef(
+                            kClass = clazz,
+                            name = parameterName,
+                            description = kProperty?.description,
+                            isDeprecated = kProperty?.isDeprecated ?: false,
+                            deprecationReason = kProperty?.deprecationReason,
+                            parameterName = parameterName
+                        ),
+                        type
+                    )
+                }
+            } else {
+                val primaryConstructor = kClass.primaryConstructor
+                    ?: throw SchemaException("Java class '${kClass.simpleName}' as input type is not supported")
+                val memberPropertiesByName = kClass.memberProperties.associateBy { it.name }
+                // Input types are created using their primary constructor. Therefore, it makes sense to (only) use the
+                // parameters of this constructor for the fields (cf. https://github.com/stuebingerb/KGraphQL/issues/235).
+                // Member properties are sorted by name (https://youtrack.jetbrains.com/issue/KT-41042), and SDL is
+                // sorting by name, so we'll also sort constructor parameters to be consistent.
+                primaryConstructor.parameters.sortedBy { it.name }.map { parameter ->
+                    // kProperty is used to configure deprecation and description in the DSL, so we use it
+                    // if available
+                    val kProperty = memberPropertiesByName[parameter.name]
+                    handleKotlinInputProperty(
+                        parameter = parameter,
+                        kProperty = kProperty,
+                        kqlProperty = kProperty?.let { inputObjectDef.kotlinProperties[it] }
+                    )
+                }
             }
         } else {
             listOf()
@@ -522,10 +545,25 @@ open class SchemaCompilation(
         }
     }
 
-    private suspend fun handleUnionType(union: TypeDef.Union): Type.Union {
-        val possibleTypes = union.members.map {
-            handleRawType(it, TypeCategory.QUERY)
+    private suspend fun collectPossibleSubTypes(kClass: KClass<*>): List<Type> =
+        if (kClass.isSealed) {
+            kClass.sealedSubclasses.flatMap { collectPossibleSubTypes(it) }.takeIf { it.isNotEmpty() }
+                ?: throw SchemaException("The union type '${kClass.simpleName}' has no possible types defined, requires at least one")
+        } else {
+            listOf(handleRawType(kClass, TypeCategory.QUERY))
         }
+
+    private suspend fun handleUnionType(union: TypeDef.Union): Type.Union {
+        unions[union.name to union.members]?.let { return it }
+
+        validateName(union.name)
+        if ((enums.values + scalars.values + inputTypeProxies.values + unions.values).any { it.name == union.name }) {
+            throw SchemaException("Cannot add union type with duplicated name '${union.name}'")
+        }
+
+        val possibleTypes = union.members.flatMap {
+            collectPossibleSubTypes(it)
+        }.distinctBy { it.name }
 
         val invalidPossibleTypes = possibleTypes.filterNot { it.kind == TypeKind.OBJECT }
         if (invalidPossibleTypes.isNotEmpty()) {
@@ -537,7 +575,7 @@ open class SchemaCompilation(
         }, true))
 
         val unionType = Type.Union(union, __typenameField, possibleTypes)
-        unions.add(unionType)
+        unions[union.name to union.members] = unionType
         return unionType
     }
 
@@ -594,10 +632,4 @@ open class SchemaCompilation(
         BuiltInScalars.STRING.typeDef.toScalarType(),
         emptyList()
     )
-
-    // https://spec.graphql.org/October2021/#sec-Names
-    // "Names in GraphQL are case-sensitive. That is to say name, Name, and NAME all refer to different names."
-    private fun Type.checkEqualName(vararg collections: Collection<Type>): Boolean {
-        return collections.fold(false) { acc, list -> acc || list.any { it.name == name } }
-    }
 }
