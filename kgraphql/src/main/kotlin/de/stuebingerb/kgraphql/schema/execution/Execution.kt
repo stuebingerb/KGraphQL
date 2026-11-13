@@ -30,7 +30,11 @@ sealed class Execution {
         val key = selectionNode.name.value
         val aliasOrKey = selectionNode.aliasOrName.value
 
-        override val fullPath = parent?.fullPath.orEmpty() + aliasOrKey + listOfNotNull(arrayIndex)
+        override val fullPath = buildList {
+            parent?.let { addAll(it.fullPath) }
+            add(aliasOrKey)
+            arrayIndex?.let { add(it) }
+        }
 
         internal fun withIndex(index: Int): Node = Node(
             selectionNode,

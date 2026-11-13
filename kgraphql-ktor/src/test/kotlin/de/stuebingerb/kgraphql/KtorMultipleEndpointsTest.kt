@@ -72,7 +72,7 @@ class KtorMultipleEndpointsTest : KtorTest() {
         }
         @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         val playgroundHtml =
-            KtorGraphQLConfiguration::class.java.classLoader.getResource("playground.html")
+            GraphQL::class.java.classLoader.getResource("playground.html")
                 .readText()
 
         val response = client.get("/graphql")

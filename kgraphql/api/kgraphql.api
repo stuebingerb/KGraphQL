@@ -965,12 +965,6 @@ public final class de/stuebingerb/kgraphql/schema/introspection/__Type$DefaultIm
 	public static fun unwrapped (Lde/stuebingerb/kgraphql/schema/introspection/__Type;)Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 }
 
-public final class de/stuebingerb/kgraphql/schema/model/Add : de/stuebingerb/kgraphql/schema/model/DataActor {
-	public fun <init> (Ljava/lang/Object;Lkotlinx/coroutines/CompletableDeferred;)V
-	public final fun getKey ()Ljava/lang/Object;
-	public final fun getResult ()Lkotlinx/coroutines/CompletableDeferred;
-}
-
 public abstract class de/stuebingerb/kgraphql/schema/model/BaseOperationDef : de/stuebingerb/kgraphql/schema/model/Definition, de/stuebingerb/kgraphql/schema/model/FunctionWrapper, de/stuebingerb/kgraphql/schema/model/OperationDef {
 	public fun <init> (Ljava/lang/String;Lde/stuebingerb/kgraphql/schema/model/FunctionWrapper;Ljava/util/List;Lkotlin/jvm/functions/Function2;Lkotlin/reflect/KType;)V
 	public fun arity ()I
@@ -988,41 +982,9 @@ public abstract class de/stuebingerb/kgraphql/schema/model/BaseOperationDef : de
 	public fun valueParameters ()Ljava/util/List;
 }
 
-public abstract class de/stuebingerb/kgraphql/schema/model/DataActor {
-}
-
-public final class de/stuebingerb/kgraphql/schema/model/DataLoader {
-	public fun <init> (Lkotlin/jvm/functions/Function2;)V
-	public final fun begin (ILkotlinx/coroutines/CoroutineScope;)Lde/stuebingerb/kgraphql/schema/model/DataLoader$DataScope;
-}
-
-public final class de/stuebingerb/kgraphql/schema/model/DataLoader$DataScope : kotlinx/coroutines/CoroutineScope {
-	public fun <init> (Lde/stuebingerb/kgraphql/schema/model/DataLoader;ILkotlinx/coroutines/CoroutineScope;)V
-	public fun getCoroutineContext ()Lkotlin/coroutines/CoroutineContext;
-	public final fun load (Ljava/lang/Object;Lkotlinx/coroutines/CompletableDeferred;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public final class de/stuebingerb/kgraphql/schema/model/DataLoaderKt {
-	public static final fun dataActor (Lkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/channels/SendChannel;
-	public static final fun log (Ljava/lang/String;)V
-}
-
 public abstract class de/stuebingerb/kgraphql/schema/model/Definition {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun getName ()Ljava/lang/String;
-}
-
-public final class de/stuebingerb/kgraphql/schema/model/Deprecation {
-	public fun <init> (Ljava/lang/Object;Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/Object;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/Object;Ljava/lang/String;)Lde/stuebingerb/kgraphql/schema/model/Deprecation;
-	public static synthetic fun copy$default (Lde/stuebingerb/kgraphql/schema/model/Deprecation;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lde/stuebingerb/kgraphql/schema/model/Deprecation;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getReason ()Ljava/lang/String;
-	public final fun getTarget ()Ljava/lang/Object;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class de/stuebingerb/kgraphql/schema/model/Depreciable {
@@ -1224,11 +1186,6 @@ public final class de/stuebingerb/kgraphql/schema/model/FunctionWrapper$Companio
 public final class de/stuebingerb/kgraphql/schema/model/FunctionWrapper$DefaultImpls {
 	public static fun hasReturnType (Lde/stuebingerb/kgraphql/schema/model/FunctionWrapper;)Z
 	public static fun valueParameters (Lde/stuebingerb/kgraphql/schema/model/FunctionWrapper;)Ljava/util/List;
-}
-
-public final class de/stuebingerb/kgraphql/schema/model/Increment : de/stuebingerb/kgraphql/schema/model/DataActor {
-	public fun <init> (I)V
-	public final fun getCount ()I
 }
 
 public final class de/stuebingerb/kgraphql/schema/model/InputValueDef : de/stuebingerb/kgraphql/schema/model/Depreciable, de/stuebingerb/kgraphql/schema/model/DescribedDef {
@@ -2166,7 +2123,6 @@ public final class de/stuebingerb/kgraphql/schema/structure/SchemaModel : de/stu
 	public fun getMutationType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
 	public synthetic fun getQueryType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public fun getQueryType ()Lde/stuebingerb/kgraphql/schema/structure/Type;
-	public final fun getQueryTypesByName ()Ljava/util/Map;
 	public final fun getRemoteTypesBySchema ()Ljava/util/Map;
 	public synthetic fun getSubscriptionType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public fun getSubscriptionType ()Lde/stuebingerb/kgraphql/schema/structure/Type;

@@ -52,7 +52,7 @@ data class Location(
             var line = 1
             var column = position + 1
 
-            lineRegexp.findAll(source.body).toList().map {
+            lineRegexp.findAll(source.body).forEach {
                 if (it.range.first < position) {
                     line += 1
                     column = position + 1 - (it.range.first + it.value.length)

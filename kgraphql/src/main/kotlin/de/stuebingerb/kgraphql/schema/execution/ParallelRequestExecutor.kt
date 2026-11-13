@@ -50,7 +50,7 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
                             execution.children.inspect()
                             if (execution.field is Field.DataLoader<*, *, *>) {
                                 loaders[execution.field] =
-                                    execution.field.loader.constructNew(coroutineContext.job) as DataLoader<Any?, *>
+                                    execution.field.loader.constructNew(this@coroutineScope.coroutineContext.job) as DataLoader<Any?, *>
                             }
                         }
                     }
@@ -476,11 +476,10 @@ internal class ParallelRequestExecutor(val schema: DefaultSchema) : RequestExecu
         return when {
             hasReceiver -> CompletableDeferred(invoke(receiver, *transformedArgs.toTypedArray()))
             isSubscription -> {
-                fun Execution.getSubscriptionArgs(): List<String> = when {
-                    this is Execution.Node && children.isEmpty() -> listOf(aliasOrKey)
-                    this is Execution.Node -> children.flatMap { it.getSubscriptionArgs() }
-                    this is Execution.Fragment -> elements.flatMap { it.getSubscriptionArgs() }
-                    else -> error("Unexpected type of node: $this")
+                fun Execution.getSubscriptionArgs(): List<String> = when (this) {
+                    is Execution.Node if children.isEmpty() -> listOf(aliasOrKey)
+                    is Execution.Node -> children.flatMap { it.getSubscriptionArgs() }
+                    is Execution.Fragment -> elements.flatMap { it.getSubscriptionArgs() }
                 }
 
                 CompletableDeferred(invoke(transformedArgs, executionNode.getSubscriptionArgs(), objectWriter))
