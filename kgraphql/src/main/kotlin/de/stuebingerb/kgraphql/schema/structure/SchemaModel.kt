@@ -17,9 +17,6 @@ data class SchemaModel(
 
     val allTypesByName = allTypes.associateBy { it.name }
 
-    // (only) used for resolving fragment conditions, which cannot be specified on any input type
-    val queryTypesByName = allTypes.filterNot { it.isInputType() }.associateBy { it.name }
-
     override val types: List<Type> = toTypeList()
 
     private fun toTypeList(): List<Type> = allTypes

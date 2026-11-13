@@ -80,13 +80,16 @@ open class SchemaCompilation(
             query = queryType,
             mutation = mutationType,
             subscription = subscriptionType,
-            allTypes = queryTypeProxies.values
-                + inputTypeProxies.values
-                + enums.values
-                + scalars.values
-                + unions.values
-                + queryType
-                + listOfNotNull(mutationType, subscriptionType),
+            allTypes = buildList {
+                addAll(queryTypeProxies.values)
+                addAll(inputTypeProxies.values)
+                addAll(enums.values)
+                addAll(scalars.values)
+                addAll(unions.values)
+                add(queryType)
+                mutationType?.let { add(it) }
+                subscriptionType?.let { add(it) }
+            },
             directives = definition.directives.map { handlePartialDirective(it) },
             remoteTypesBySchema = emptyMap(),
             description = schemaDescription
@@ -167,7 +170,12 @@ open class SchemaCompilation(
         return Type.OperationObject(
             name = "Query",
             description = "Query object",
-            fields = declaredFields + __typenameField + introspectionSchemaQuery() + introspectionTypeQuery()
+            fields = buildList {
+                addAll(declaredFields)
+                add(__typenameField)
+                add(introspectionSchemaQuery())
+                add(introspectionTypeQuery())
+            }
         )
     }
 
@@ -316,6 +324,10 @@ open class SchemaCompilation(
         )
     }
 
+    private fun String.checkForEqualName(vararg types: Collection<Type>): Boolean {
+        return types.any { list -> list.any { it.name == this } }
+    }
+
     private suspend fun handleObjectType(kClass: KClass<*>): Type {
         assertValidObjectType(kClass)
         val objectDefs = definition.objects.filter { it.kClass.isSuperclassOf(kClass) }
@@ -323,7 +335,7 @@ open class SchemaCompilation(
 
         if (!objectDef.isIntrospectionType()) {
             validateName(objectDef.name)
-            if ((enums.values + scalars.values + inputTypeProxies.values + unions.values).any { it.name == objectDef.name }) {
+            if (objectDef.name.checkForEqualName(enums.values, scalars.values, inputTypeProxies.values, unions.values)) {
                 throw SchemaException("Cannot add object type with duplicated name '${objectDef.name}'")
             }
             if (queryTypeProxies.any { it.key != kClass && it.value.name == objectDef.name }) {
@@ -440,7 +452,7 @@ open class SchemaCompilation(
             }, kClass, isOneOf = kClass.isSealed)
 
         validateName(inputObjectDef.name)
-        if ((enums.values + scalars.values + queryTypeProxies.values + unions.values).any { it.name == inputObjectDef.name }) {
+        if (inputObjectDef.name.checkForEqualName(enums.values, scalars.values, queryTypeProxies.values, unions.values)) {
             throw SchemaException("Cannot add input type with duplicated name '${inputObjectDef.name}'")
         }
         if (inputTypeProxies.any { it.key != kClass && it.value.name == inputObjectDef.name }) {
@@ -494,7 +506,7 @@ open class SchemaCompilation(
             // parameters of this constructor for the fields (cf. https://github.com/stuebingerb/KGraphQL/issues/235).
             // Member properties are sorted by name (https://youtrack.jetbrains.com/issue/KT-41042), and SDL is
             // sorting by name, so we'll also sort constructor parameters to be consistent.
-            primaryConstructor.parameters.sortedBy { it.name }.map { parameter ->
+            primaryConstructor.parameters.sortedBy { it.name }.forEach { parameter ->
                 // kProperty is used to configure deprecation and description in the DSL, so we use it
                 // if available
                 val kProperty = memberPropertiesByName[parameter.name]
@@ -554,7 +566,8 @@ open class SchemaCompilation(
         unions[union.name to union.members]?.let { return it }
 
         validateName(union.name)
-        if ((enums.values + scalars.values + inputTypeProxies.values + unions.values).any { it.name == union.name }) {
+
+        if (union.name.checkForEqualName(enums.values, scalars.values, inputTypeProxies.values, unions.values)) {
             throw SchemaException("Cannot add union type with duplicated name '${union.name}'")
         }
 

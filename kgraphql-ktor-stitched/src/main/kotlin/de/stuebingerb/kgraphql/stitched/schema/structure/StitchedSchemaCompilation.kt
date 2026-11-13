@@ -32,10 +32,13 @@ class StitchedSchemaCompilation(
 
         introspectTypes()
 
-        val typesByName =
-            (queryTypeProxies.values + enums.values + scalars.values + inputTypeProxies.values + unions.values).associateByTo(
-                mutableMapOf()
-            ) { it.name }
+        val typesByName = mutableMapOf<String?, Type>().apply {
+            queryTypeProxies.values.forEach { put(it.name, it) }
+            enums.values.forEach { put(it.name, it) }
+            scalars.values.forEach { put(it.name, it) }
+            inputTypeProxies.values.forEach { put(it.name, it) }
+            unions.values.forEach { put(it.name, it) }
+        }
         (remoteSchemaCompilation.remoteQueryTypeProxies + remoteSchemaCompilation.remoteInputTypeProxies).forEach {
             if (typesByName[it.key] == null) {
                 typesByName[it.key] = it.value

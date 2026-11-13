@@ -6,16 +6,19 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import nidomiro.kdataloader.ExecutionResult
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 
 class DataLoaderTest {
 
@@ -90,7 +93,7 @@ class DataLoaderTest {
                 dataProperty<Int, List<Person>>("colleagues") {
                     prepare { it.id }
                     loader { keys ->
-                        delay(10)
+                        delay(10.milliseconds)
                         println("== Running [colleagues] loader with keys: $keys ==")
                         keys.map { ExecutionResult.Success(colleagues[it] ?: listOf()) }
                     }
@@ -142,9 +145,11 @@ class DataLoaderTest {
 
                 property("simpleChild") {
                     resolver {
-                        delay((1..5L).random())
-                        Thread.sleep((1..5L).random())
-                        delay((1..5L).random())
+                        delay((1..5L).random().milliseconds)
+                        withContext(Dispatchers.IO) {
+                            Thread.sleep((1..5L).random())
+                        }
+                        delay((1..5L).random().milliseconds)
                         ABC("NewChild!")
                     }
                 }
@@ -153,7 +158,7 @@ class DataLoaderTest {
                     prepare { it.personId }
                     loader { personIds ->
                         personIds.map {
-                            delay(1)
+                            delay(1.milliseconds)
                             ExecutionResult.Success(
                                 if (it == null || it < 1) {
                                     null
@@ -167,7 +172,7 @@ class DataLoaderTest {
 
                 property("personOld") {
                     resolver {
-                        delay(1)
+                        delay(1.milliseconds)
                         if (it.personId == null || it.personId < 1) {
                             null
                         } else {
@@ -187,7 +192,7 @@ class DataLoaderTest {
                                 "Testing 3" -> "Jógvan" to "Høgni"
                                 else -> "${key}Nest-0" to "${key}Nest-1"
                             }
-                            delay(1)
+                            delay(1.milliseconds)
                             ExecutionResult.Success(
                                 (1..7).map {
                                     if (it % 2 == 0) {

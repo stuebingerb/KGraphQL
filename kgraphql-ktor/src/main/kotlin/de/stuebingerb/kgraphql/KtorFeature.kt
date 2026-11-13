@@ -63,7 +63,7 @@ class GraphQL(val schema: Schema) {
     class FeatureInstance(featureKey: String = "KGraphQL") : Plugin<Application, Configuration, GraphQL> {
         companion object {
             private val playgroundHtml: ByteArray? by lazy {
-                KtorGraphQLConfiguration::class.java.classLoader.getResource("playground.html")?.readBytes()
+                GraphQL::class.java.classLoader.getResource("playground.html")?.readBytes()
             }
         }
 

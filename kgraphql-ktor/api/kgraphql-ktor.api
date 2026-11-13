@@ -66,9 +66,3 @@ public final class de/stuebingerb/kgraphql/GraphqlRequest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class de/stuebingerb/kgraphql/KtorGraphQLConfiguration : de/stuebingerb/kgraphql/configuration/PluginConfiguration {
-	public fun <init> (ZLjava/lang/String;)V
-	public final fun getEndpoint ()Ljava/lang/String;
-	public final fun getPlayground ()Z
-}
-

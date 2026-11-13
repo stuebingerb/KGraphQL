@@ -26,10 +26,10 @@ internal fun dedentBlockStringValue(rawString: String): String {
     }
 
     // Remove leading and trailing blank lines.
-    while (lines.size > 0 && isBlank(lines[0])) {
+    while (lines.isNotEmpty() && isBlank(lines[0])) {
         lines = lines.drop(1).toMutableList()
     }
-    while (lines.size > 0 && isBlank(lines[lines.size - 1])) {
+    while (lines.isNotEmpty() && isBlank(lines[lines.size - 1])) {
         lines = lines.dropLast(1).toMutableList()
     }
 

@@ -14,6 +14,7 @@ import de.stuebingerb.kgraphql.schema.introspection.__InputValue
 import de.stuebingerb.kgraphql.schema.introspection.__Schema
 import de.stuebingerb.kgraphql.schema.introspection.__Type
 import de.stuebingerb.kgraphql.schema.structure.validateName
+import kotlin.enums.enumEntries
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -36,12 +37,12 @@ open class MutableSchemaDefinition {
         TypeDef.Enumeration(
             "__" + TypeKind::class.defaultKQLTypeName(),
             TypeKind::class,
-            enumValues<TypeKind>().map { EnumValueDef(it) }
+            enumEntries<TypeKind>().map { EnumValueDef(it) }
         ),
         TypeDef.Enumeration(
             "__" + DirectiveLocation::class.defaultKQLTypeName(),
             DirectiveLocation::class,
-            enumValues<DirectiveLocation>().map { EnumValueDef(it) }
+            enumEntries<DirectiveLocation>().map { EnumValueDef(it) }
         )
     )
     protected val unions: ArrayList<TypeDef.Union> = arrayListOf()

@@ -2,7 +2,6 @@ package de.stuebingerb.kgraphql
 
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 
 // MARK: Using this is a temporary solution as JCenter is closed down.
@@ -37,14 +36,6 @@ class Kraph(
         Variable(name, typeName, buildJsonObject(block))
     )
 
-    fun variable(name: String, typeName: String, value: String) = variables.add(
-        Variable(name, typeName, JsonPrimitive(value))
-    )
-
-    fun variable(name: String, typeName: String, value: Int) = variables.add(
-        Variable(name, typeName, JsonPrimitive(value))
-    )
-
     private fun print(): String = buildString {
         append("$type ")
         if (variables.isNotEmpty() && root) {
@@ -52,7 +43,7 @@ class Kraph(
         }
         if (fields.isNotEmpty()) {
             appendLine("{")
-            fields.map { appendLine(it.print()) }
+            fields.forEach { appendLine(it.print()) }
             appendLine("}")
         } else {
             appendLine()
@@ -66,7 +57,7 @@ class Kraph(
         if (variables.isNotEmpty()) {
             append(",")
             append("\"variables\": {")
-            variables.map {
+            variables.forEach {
                 append("\"${it.name}\": ${it.value}")
             }
             append("}")
