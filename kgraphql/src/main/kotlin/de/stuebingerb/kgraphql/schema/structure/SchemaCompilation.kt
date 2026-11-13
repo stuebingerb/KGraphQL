@@ -14,7 +14,6 @@ import de.stuebingerb.kgraphql.schema.SchemaException
 import de.stuebingerb.kgraphql.schema.builtin.BuiltInScalars
 import de.stuebingerb.kgraphql.schema.directive.Directive
 import de.stuebingerb.kgraphql.schema.execution.Execution
-import de.stuebingerb.kgraphql.schema.introspection.NotIntrospected
 import de.stuebingerb.kgraphql.schema.introspection.SchemaProxy
 import de.stuebingerb.kgraphql.schema.introspection.TypeKind
 import de.stuebingerb.kgraphql.schema.introspection.__Schema
@@ -34,7 +33,6 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.createType
-import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.memberProperties
@@ -356,7 +354,8 @@ open class SchemaCompilation(
             acc + def.transformations.mapKeys { (property) -> property.name }
         }
 
-        val kotlinFields = kClass.memberProperties
+        val declaredFields = mutableListOf<Field>()
+        kClass.memberProperties
             .filter { field -> field.visibility == KVisibility.PUBLIC }
             .filterNot { field -> objectDefs.any { it.isIgnored(field.name) } }
             .map { property ->
@@ -365,6 +364,8 @@ open class SchemaCompilation(
                     kqlProperty = allKotlinProperties[property.name],
                     transformation = allTransformations[property.name]
                 )
+            }.forEach {
+                declaredFields.addField(it)
             }
 
         val extensionFields = objectDefs
@@ -386,31 +387,19 @@ open class SchemaCompilation(
         val __typenameField = typenameField(FunctionWrapper.on(typenameResolver, true))
 
         // https://spec.graphql.org/October2021/#sec-Objects.Type-Validation
-        val declaredFields = kotlinFields.toMutableList<Field>()
         extensionFields.forEach {
-            if (declaredFields.any { field -> field.name == it.name }) {
-                throw SchemaException("Cannot add extension field with duplicated name '${it.name}'")
-            }
-            declaredFields.add(it)
+            declaredFields.addField(it, "extension")
         }
         unionFields.forEach {
-            if (declaredFields.any { field -> field.name == it.name }) {
-                throw SchemaException("Cannot add union field with duplicated name '${it.name}'")
-            }
-            declaredFields.add(it)
+            declaredFields.addField(it, "union")
         }
         dataloadExtensionFields.forEach {
-            if (declaredFields.any { field -> field.name == it.name }) {
-                throw SchemaException("Cannot add dataloaded field with duplicated name '${it.name}'")
-            }
-            declaredFields.add(it)
+            declaredFields.addField(it, "dataloaded")
         }
 
         if (declaredFields.isEmpty()) {
             throw SchemaException("An object type must define one or more fields. Found none on type '${objectDef.name}'")
         }
-
-        declaredFields.forEach { validateName(it.name) }
 
         val allFields = declaredFields + __typenameField
         typeProxy.proxied = if (kind == TypeKind.OBJECT) {
@@ -419,6 +408,23 @@ open class SchemaCompilation(
             Type.Interface(objectDef, allFields)
         }
         return typeProxy
+    }
+
+    private fun MutableList<Field>.addField(field: Field, fieldType: String? = null) {
+        validateName(field.name)
+        if (any { it.name == field.name }) {
+            val fieldTypeString = fieldType?.let { "$it " } ?: ""
+            throw SchemaException("Cannot add ${fieldTypeString}field with duplicated name '${field.name}'")
+        }
+        add(field)
+    }
+
+    private fun MutableList<InputValue<*>>.addInputValue(value: InputValue<*>) {
+        validateName(value.name)
+        if (any { it.name == value.name }) {
+            throw SchemaException("Cannot add field with duplicated name '${value.name}'")
+        }
+        add(value)
     }
 
     private suspend fun handleInputType(kClass: KClass<*>): Type {
@@ -445,66 +451,60 @@ open class SchemaCompilation(
         val typeProxy = TypeProxy(objectType)
         inputTypeProxies[kClass] = typeProxy
 
-        val fieldNames = mutableSetOf<String>()
-        val fields = if (kClass.findAnnotation<NotIntrospected>() == null) {
-            if (kClass.isSealed) {
-                // OneOf input types have one field per allowed sub type
-                val sealedSubclasses = kClass.sealedSubclasses.toSet()
-                if (sealedSubclasses.isEmpty()) {
-                    val type = if (kClass.java.isInterface) {
-                        "interface"
-                    } else {
-                        "class"
-                    }
-                    throw SchemaException("The sealed $type '${kClass.simpleName}' does not have known subclasses")
+        val fields = mutableListOf<InputValue<*>>()
+        if (kClass.isSealed) {
+            // OneOf input types have one field per allowed sub type
+            val sealedSubclasses = kClass.sealedSubclasses.toSet()
+            if (sealedSubclasses.isEmpty()) {
+                val type = if (kClass.java.isInterface) {
+                    "interface"
+                } else {
+                    "class"
                 }
-                sealedSubclasses.sortedBy { it.simpleName }.mapNotNull { clazz ->
-                    val kProperty = inputObjectDef.oneOfProperties[clazz]
+                throw SchemaException("The sealed $type '${kClass.simpleName}' does not have known subclasses")
+            }
+            sealedSubclasses.sortedBy { it.simpleName }.mapNotNull { clazz ->
+                val kProperty = inputObjectDef.oneOfProperties[clazz]
 
-                    if (kProperty?.isIgnored == true) {
-                        return@mapNotNull null
-                    }
+                if (kProperty?.isIgnored == true) {
+                    return@mapNotNull null
+                }
 
-                    // All properties must be nullable
-                    val type = handlePossiblyWrappedType(clazz.createType(nullable = true), TypeCategory.INPUT)
-                    val parameterName = kProperty?.name ?: clazz.defaultOneOfPropertyName()
-                    if (parameterName in fieldNames) {
-                        throw SchemaException("Cannot add oneOf field with duplicated name '${parameterName}'")
-                    }
-                    fieldNames.add(parameterName)
-                    InputValue(
-                        InputValueDef(
-                            kClass = clazz,
-                            name = parameterName,
-                            description = kProperty?.description,
-                            isDeprecated = kProperty?.isDeprecated ?: false,
-                            deprecationReason = kProperty?.deprecationReason,
-                            parameterName = parameterName
-                        ),
-                        type
-                    )
-                }
-            } else {
-                val primaryConstructor = kClass.primaryConstructor
-                    ?: throw SchemaException("Java class '${kClass.simpleName}' as input type is not supported")
-                val memberPropertiesByName = kClass.memberProperties.associateBy { it.name }
-                // Input types are created using their primary constructor. Therefore, it makes sense to (only) use the
-                // parameters of this constructor for the fields (cf. https://github.com/stuebingerb/KGraphQL/issues/235).
-                // Member properties are sorted by name (https://youtrack.jetbrains.com/issue/KT-41042), and SDL is
-                // sorting by name, so we'll also sort constructor parameters to be consistent.
-                primaryConstructor.parameters.sortedBy { it.name }.map { parameter ->
-                    // kProperty is used to configure deprecation and description in the DSL, so we use it
-                    // if available
-                    val kProperty = memberPropertiesByName[parameter.name]
-                    handleKotlinInputProperty(
-                        parameter = parameter,
-                        kProperty = kProperty,
-                        kqlProperty = kProperty?.let { inputObjectDef.kotlinProperties[it] }
-                    )
-                }
+                // All properties must be nullable
+                val type = handlePossiblyWrappedType(clazz.createType(nullable = true), TypeCategory.INPUT)
+                val parameterName = kProperty?.name ?: clazz.defaultOneOfPropertyName()
+                val inputValue = InputValue(
+                    InputValueDef(
+                        kClass = clazz,
+                        name = parameterName,
+                        description = kProperty?.description,
+                        isDeprecated = kProperty?.isDeprecated ?: false,
+                        deprecationReason = kProperty?.deprecationReason,
+                        parameterName = parameterName
+                    ),
+                    type
+                )
+                fields.addInputValue(inputValue)
             }
         } else {
-            listOf()
+            val primaryConstructor = kClass.primaryConstructor
+                ?: throw SchemaException("Java class '${kClass.simpleName}' as input type is not supported")
+            val memberPropertiesByName = kClass.memberProperties.associateBy { it.name }
+            // Input types are created using their primary constructor. Therefore, it makes sense to (only) use the
+            // parameters of this constructor for the fields (cf. https://github.com/stuebingerb/KGraphQL/issues/235).
+            // Member properties are sorted by name (https://youtrack.jetbrains.com/issue/KT-41042), and SDL is
+            // sorting by name, so we'll also sort constructor parameters to be consistent.
+            primaryConstructor.parameters.sortedBy { it.name }.map { parameter ->
+                // kProperty is used to configure deprecation and description in the DSL, so we use it
+                // if available
+                val kProperty = memberPropertiesByName[parameter.name]
+                val inputValue = handleKotlinInputProperty(
+                    parameter = parameter,
+                    kProperty = kProperty,
+                    kqlProperty = kProperty?.let { inputObjectDef.kotlinProperties[it] }
+                )
+                fields.addInputValue(inputValue)
+            }
         }
 
         if (fields.isEmpty()) {
@@ -515,9 +515,6 @@ open class SchemaCompilation(
             // OneOf input types require that exactly one field is set, which means that all others must be nullable
             throw SchemaException("OneOf input types must only have nullable fields. Fields ${notNullableFields.map { it.name }} are non-nullable on type '${inputObjectDef.name}'")
         }
-
-        fields.forEach { validateName(it.name) }
-
         typeProxy.proxied = Type.Input(inputObjectDef, fields)
         return typeProxy
     }

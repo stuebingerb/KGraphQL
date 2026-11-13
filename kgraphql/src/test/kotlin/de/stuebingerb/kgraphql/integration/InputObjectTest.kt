@@ -165,9 +165,11 @@ class InputObjectTest {
 
     @Test
     fun `property name must not start with __ when configured`() {
-        expect<SchemaException>("Unable to handle input type 'Person': Illegal name '__name'. Names starting with '__' are reserved for introspection system") {
+        expect<SchemaException>("Unable to handle input type 'PersonInput': Illegal name '__name'. Names starting with '__' are reserved for introspection system") {
             KGraphQL.schema {
                 inputType<Person> {
+                    name = "PersonInput"
+
                     property(Person::name) {
                         name = "__name"
                     }
@@ -1198,6 +1200,53 @@ class InputObjectTest {
                 }
               }
             }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `property names must be unique when configured`() {
+        data class MyInputObject(val foo: String?, val bar: String?)
+        expect<SchemaException>("Unable to handle input type 'MyInputObject': Cannot add field with duplicated name 'foo'") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { input: MyInputObject -> input.foo }
+                }
+                inputType<MyInputObject> {
+                    MyInputObject::foo.configure {
+                        deprecate("Deprecated old input value")
+                    }
+                    MyInputObject::bar.configure {
+                        name = "foo"
+                    }
+                }
+            }
+        }
+
+        val schema = KGraphQL.schema {
+            query("test") {
+                resolver { input: MyInputObject -> input.foo }
+            }
+            inputType<MyInputObject> {
+                // Although highly confusing, this should work
+                MyInputObject::foo.configure {
+                    name = "bar"
+                }
+                MyInputObject::bar.configure {
+                    name = "foo"
+                }
+            }
+        }
+
+        SchemaPrinter().print(schema) shouldBe """
+            type Query {
+              test(input: MyInputObject!): String
+            }
+            
+            input MyInputObject {
+              bar: String
+              foo: String
+            }
+            
         """.trimIndent()
     }
 }

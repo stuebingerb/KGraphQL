@@ -3,6 +3,7 @@ package de.stuebingerb.kgraphql.integration
 import de.stuebingerb.kgraphql.KGraphQL
 import de.stuebingerb.kgraphql.expect
 import de.stuebingerb.kgraphql.schema.SchemaException
+import de.stuebingerb.kgraphql.schema.SchemaPrinter
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -97,5 +98,52 @@ class ObjectTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `property names must be unique when configured`() {
+        data class MyObject(val foo: String?, val bar: String?)
+        expect<SchemaException>("Unable to handle object type 'MyObject': Cannot add field with duplicated name 'foo'") {
+            KGraphQL.schema {
+                query("test") {
+                    resolver { foo: String, bar: String -> MyObject(foo, bar) }
+                }
+                type<MyObject> {
+                    MyObject::foo.configure {
+                        deprecate("Deprecated old input value")
+                    }
+                    MyObject::bar.configure {
+                        name = "foo"
+                    }
+                }
+            }
+        }
+
+        val schema = KGraphQL.schema {
+            query("test") {
+                resolver { foo: String, bar: String -> MyObject(foo, bar) }
+            }
+            type<MyObject> {
+                // Although highly confusing, this should work
+                MyObject::foo.configure {
+                    name = "bar"
+                }
+                MyObject::bar.configure {
+                    name = "foo"
+                }
+            }
+        }
+
+        SchemaPrinter().print(schema) shouldBe """
+            type MyObject {
+              bar: String
+              foo: String
+            }
+            
+            type Query {
+              test(bar: String!, foo: String!): MyObject!
+            }
+            
+        """.trimIndent()
     }
 }

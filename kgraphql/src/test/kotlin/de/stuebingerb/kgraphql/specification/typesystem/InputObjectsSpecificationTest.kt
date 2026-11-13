@@ -804,7 +804,7 @@ class InputObjectsSpecificationTest {
 
     @Test
     fun `oneOf input objects out of sealed classes must have unique field names`() {
-        expect<SchemaException>("Unable to handle input type 'InvalidInputSealed': Cannot add oneOf field with duplicated name 'inputSealedSub1'") {
+        expect<SchemaException>("Unable to handle input type 'InvalidInputSealed': Cannot add field with duplicated name 'inputSealedSub1'") {
             KGraphQL.schema {
                 query("test") {
                     resolver { input: InputSealed? -> input }
