@@ -237,6 +237,41 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `unused fragments should not use data from previous requests`() {
+        // First query uses the fragment
+        testedSchema.executeBlocking(
+            """
+            {
+                film {
+                    ...film_title
+                }
+            }
+            
+            fragment film_title on Film {
+                title
+            }
+        """
+        )
+
+        // Second one does not and should fail (must not re-use `usedFragments` from before)
+        expectRequestError<ValidationException>("Found unused fragments: [film_title]") {
+            testedSchema.executeBlocking(
+                """
+            {
+                film {
+                    title
+                }
+            }
+            
+            fragment film_title on Film {
+                title
+            }
+        """
+            )
+        }
+    }
+
+    @Test
     fun `fragments on enum types should be denied`() {
         testedSchema.executeBlocking("""
             {

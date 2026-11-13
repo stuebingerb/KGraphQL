@@ -30,18 +30,16 @@ import de.stuebingerb.kgraphql.schema.model.ast.toArguments
 import java.util.Stack
 
 internal class RequestInterpreter(private val schemaModel: SchemaModel) {
-
-    private val directivesByName = schemaModel.directives.associateBy { it.name }
-    private val usedFragments: MutableSet<String> = mutableSetOf()
-
     private inner class InterpreterContext(
         // Fragments defined for the current operation
         val fragments: Map<String, Pair<Type, SelectionSetNode>>,
         // Variables declared for the current operation
-        val declaredVariables: List<VariableDefinitionNode>?
+        val declaredVariables: List<VariableDefinitionNode>?,
+        val directivesByName: Map<String, Directive> = schemaModel.directives.associateBy { it.name }
     ) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
+        private val usedFragments: MutableSet<String> = mutableSetOf()
 
         fun get(node: FragmentSpreadNode): Execution.Fragment? {
             if (fragmentsStack.contains(node.name.value)) {
@@ -55,9 +53,15 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
             val elements = selectionSet.selections.map { conditionType.handleSelectionFieldOrFragment(it, this) }
             fragmentsStack.pop()
 
-            return Execution.Fragment(node, condition, elements, node.directives?.lookup(), null)
+            return Execution.Fragment(node, condition, elements, node.directives?.lookup(this), null)
                 .also { usedFragments.add(node.name.value) }
         }
+
+        fun unusedFragments() = fragments.keys.filter { it !in usedFragments }
+
+        fun findDirective(invocation: DirectiveNode): Directive =
+            directivesByName[invocation.name.value.removePrefix("@")]
+                ?: throw ValidationException("Directive '${invocation.name.value}' does not exist", invocation)
     }
 
     fun createExecutionPlan(
@@ -100,7 +104,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
             root = root,
             declaredVariables = operation.variableDefinitions
         ).also {
-            val unusedFragments = ctx.fragments.keys.filter { fragment -> fragment !in usedFragments }
+            val unusedFragments = ctx.unusedFragments()
             if (unusedFragments.isNotEmpty()) {
                 throw ValidationException("Found unused fragments: $unusedFragments")
             }
@@ -153,7 +157,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
             Execution.Fragment(
                 selectionNode = fragment,
                 condition = TypeCondition(type),
-                directives = fragment.directives?.lookup(),
+                directives = fragment.directives?.lookup(ctx),
                 elements = fragment.selectionSet.selections.map { type.handleSelectionFieldOrFragment(it, ctx) },
                 parent = null
             )
@@ -183,7 +187,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
                     field = field,
                     children = handleReturnType(ctx, field.returnType, node),
                     arguments = node.arguments?.toArguments(),
-                    directives = node.directives?.lookup(),
+                    directives = node.directives?.lookup(ctx),
                     // TODO: can we remove variables from Execution.Node? variables are only used with Execution.Remote
                     variables = null,
                     arrayIndex = null,
@@ -230,7 +234,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
             field = field,
             children = handleReturnType(ctx, field.returnType, node),
             arguments = nodeArgs,
-            directives = node.directives?.lookup(),
+            directives = node.directives?.lookup(ctx),
             variables = ctx.declaredVariables?.filter { it.variable.name.value in usedVariableNames },
             namedFragments = node.selectionSet?.selections?.namedFragments()
                 ?.filter { it.condition.onType.name in typesFromSameSchema }
@@ -277,7 +281,8 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
             // https://spec.graphql.org/September2025/#sec-Fragment-Spread-Is-Possible
             val possibleTypeNamesFromEnclosingType = getPossibleTypes(enclosingType).map { it.name }
             val possibleTypeNamesFromThisType = getPossibleTypes(this).map { it.name }
-            val applicableTypeNames = possibleTypeNamesFromEnclosingType.intersect(possibleTypeNamesFromThisType.toSet())
+            val applicableTypeNames =
+                possibleTypeNamesFromEnclosingType.intersect(possibleTypeNamesFromThisType.toSet())
             if (applicableTypeNames.isEmpty()) {
                 throw ValidationException(
                     message = "Invalid type '$typeName' in type condition on $fragmentName of type '${enclosingType.name}'; must be one of '$possibleTypeNamesFromEnclosingType'",
@@ -288,12 +293,8 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
         return this
     }
 
-    private fun List<DirectiveNode>.lookup() = associate { findDirective(it) to it.arguments?.toArguments() }
-
-    private fun findDirective(invocation: DirectiveNode): Directive {
-        return directivesByName[invocation.name.value.removePrefix("@")]
-            ?: throw ValidationException("Directive '${invocation.name.value}' does not exist", invocation)
-    }
+    private fun List<DirectiveNode>.lookup(ctx: InterpreterContext) =
+        associate { ctx.findDirective(it) to it.arguments?.toArguments() }
 
     private fun DocumentNode.getOperation(
         variables: VariablesJson,
