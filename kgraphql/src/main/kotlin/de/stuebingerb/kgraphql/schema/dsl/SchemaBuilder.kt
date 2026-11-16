@@ -269,8 +269,8 @@ class SchemaBuilder {
         val union = UnionTypeDSL().apply {
             block()
             kClass.sealedSubclasses.forEach {
-                type(it, subTypeBlock) // <-- Adds to schema definition
-                type(it) // <-- Adds to possible union type
+                // Add to possible types of `union`
+                type(it)
             }
         }
         model.addUnion(TypeDef.Union(kClass.defaultKQLTypeName(), union.possibleTypes, union.description))

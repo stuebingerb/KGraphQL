@@ -773,8 +773,6 @@ public class de/stuebingerb/kgraphql/schema/dsl/types/TypeDSL : de/stuebingerb/k
 
 public final class de/stuebingerb/kgraphql/schema/dsl/types/UnionTypeDSL : de/stuebingerb/kgraphql/schema/dsl/ItemDSL {
 	public fun <init> ()V
-	public final fun getSubTypeBlock ()Lkotlin/jvm/functions/Function1;
-	public final fun setSubTypeBlock (Lkotlin/jvm/functions/Function1;)V
 	public final fun type (Lkotlin/reflect/KClass;)V
 }
 
