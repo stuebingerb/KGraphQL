@@ -65,4 +65,41 @@ class InterfacesSpecificationTest {
             {"data":{"simpleList":[{"__typename":"Simple","exe":"EXE","stuff":"CMD"},{"__typename":"Simple2","exe":"EXE","other":"other"}]}}
         """.trimIndent()
     }
+
+    interface A {
+        val prop1: String
+    }
+
+    interface B : A {
+        override val prop1: String
+        val prop2: String
+    }
+
+    // https://github.com/aPureBase/KGraphQL/issues/132
+    @Test
+    fun `interfaces within interfaces should have correct values in introspection`() {
+        val schema = KGraphQL.schema {
+            type<A>()
+            type<B>()
+            query("dummy") { resolver { -> "dummy" } }
+        }
+
+        val map = deserialize(schema.executeBlocking("""
+            query {
+              __schema {
+                types {
+                  name
+                  kind
+                  interfaces {
+                    name
+                  }
+                }
+              }
+            }
+        """.trimIndent()))
+        val types = map.extract<List<Map<String, Any>>>("data/__schema/types")
+        types.first { it["name"] == "B" }.let {
+            it["interfaces"] shouldBe listOf(mapOf("name" to "A"))
+        }
+    }
 }
