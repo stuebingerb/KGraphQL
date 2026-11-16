@@ -1244,4 +1244,41 @@ class SchemaBuilderTest {
             }
         }
     }
+
+    sealed interface CatOrDog
+    class Cat(val name: String) : CatOrDog
+    class Dog(val name: String) : CatOrDog
+
+    @Test
+    fun `schema should allow configuration for union types`() {
+        val schema = schema {
+            query("dummy") {
+                resolver { -> "dummy" }
+            }
+            unionType<CatOrDog> {
+                type<Dog> {
+                    property("bark") {
+                        resolver { dog: Dog -> "Woof!" }
+                    }
+                }
+            }
+        }
+        SchemaPrinter().print(schema) shouldBe """
+            type Cat {
+              name: String!
+            }
+            
+            type Dog {
+              bark: String!
+              name: String!
+            }
+            
+            type Query {
+              dummy: String!
+            }
+            
+            union CatOrDog = Cat | Dog
+
+        """.trimIndent()
+    }
 }

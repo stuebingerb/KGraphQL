@@ -368,8 +368,11 @@ class UnionsSpecificationTest : BaseSchemaTest() {
     fun `union types with custom name def resolver`() {
         defaultSchema {
             unionType<WithFields> {
-                subTypeBlock = {
-                    name = "Prefix$name"
+                type<WithFields.Value1> {
+                    name = "PrefixValue1"
+                }
+                type<WithFields.Value2> {
+                    name = "PrefixValue2"
                 }
             }
 
