@@ -1,9 +1,6 @@
 package de.stuebingerb.kgraphql.schema.structure
 
 import de.stuebingerb.kgraphql.ValidationException
-import de.stuebingerb.kgraphql.request.VariablesJson
-import de.stuebingerb.kgraphql.schema.DefaultSchema.Companion.OPERATION_NAME_PARAM
-import de.stuebingerb.kgraphql.schema.builtin.BuiltInScalars
 import de.stuebingerb.kgraphql.schema.directive.Directive
 import de.stuebingerb.kgraphql.schema.execution.Execution
 import de.stuebingerb.kgraphql.schema.execution.ExecutionMode
@@ -31,7 +28,7 @@ import java.util.Stack
 
 internal class RequestInterpreter(private val schemaModel: SchemaModel) {
     private inner class InterpreterContext(
-        // Fragments defined for the current operation
+        // Fragments defined for the request document
         val fragments: Map<String, Pair<Type, SelectionSetNode>>,
         // Variables declared for the current operation
         val declaredVariables: List<VariableDefinitionNode>?,
@@ -39,7 +36,7 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
     ) {
         // prevent stack overflow
         private val fragmentsStack = Stack<String>()
-        private val usedFragments: MutableSet<String> = mutableSetOf()
+        val usedFragments: MutableSet<String> = mutableSetOf()
 
         fun get(node: FragmentSpreadNode): Execution.Fragment? {
             if (fragmentsStack.contains(node.name.value)) {
@@ -57,30 +54,13 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
                 .also { usedFragments.add(node.name.value) }
         }
 
-        fun unusedFragments() = fragments.keys.filter { it !in usedFragments }
-
         fun findDirective(invocation: DirectiveNode): Directive =
             directivesByName[invocation.name.value.removePrefix("@")]
                 ?: throw ValidationException("Directive '${invocation.name.value}' does not exist", invocation)
     }
 
-    fun createExecutionPlan(
-        document: DocumentNode,
-        requestedOperationName: String?,
-        variables: VariablesJson
-    ): ExecutionPlan {
+    fun createExecutionPlans(document: DocumentNode): Map<OperationDefinitionNode, ExecutionPlan> {
         val executables = document.definitions.filterIsInstance<ExecutableDefinitionNode>()
-
-        val operation = document.getOperation(variables, requestedOperationName)
-
-        val (root, executionMode) = when (operation.operation) {
-            OperationTypeNode.QUERY -> schemaModel.queryType to ExecutionMode.Normal
-            OperationTypeNode.MUTATION -> (schemaModel.mutationType
-                ?: throw ValidationException("Mutations are not supported on this schema")) to ExecutionMode.Serial
-
-            OperationTypeNode.SUBSCRIPTION -> (schemaModel.subscriptionType
-                ?: throw ValidationException("Subscriptions are not supported on this schema")) to ExecutionMode.Normal
-        }
 
         val fragmentDefinitionNodes = executables.filterIsInstance<FragmentDefinitionNode>()
         val fragmentDefinitions = fragmentDefinitionNodes.associate { fragmentDef ->
@@ -94,17 +74,28 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
             name to (type to fragmentDef.selectionSet)
         }
 
-        val ctx = InterpreterContext(fragmentDefinitions, operation.variableDefinitions)
+        val operations = executables.filterIsInstance<OperationDefinitionNode>()
+        val usedFragments: MutableSet<String> = mutableSetOf()
+        return operations.associateWith { operation ->
+            val (root, executionMode) = when (operation.operation) {
+                OperationTypeNode.QUERY -> schemaModel.queryType to ExecutionMode.Normal
+                OperationTypeNode.MUTATION -> (schemaModel.mutationType
+                    ?: throw ValidationException("Mutations are not supported on this schema")) to ExecutionMode.Serial
 
-        return ExecutionPlan(
-            executionMode = executionMode,
-            operations = operation.selectionSet.selections.map {
-                root.handleSelectionFieldOrFragment(it, ctx)
-            },
-            root = root,
-            declaredVariables = operation.variableDefinitions
-        ).also {
-            val unusedFragments = ctx.unusedFragments()
+                OperationTypeNode.SUBSCRIPTION -> (schemaModel.subscriptionType
+                    ?: throw ValidationException("Subscriptions are not supported on this schema")) to ExecutionMode.Normal
+            }
+            val ctx = InterpreterContext(fragmentDefinitions, operation.variableDefinitions)
+            ExecutionPlan(
+                executionMode = executionMode,
+                operations = operation.selectionSet.selections.map {
+                    root.handleSelectionFieldOrFragment(it, ctx)
+                },
+                root = root,
+                declaredVariables = operation.variableDefinitions
+            ).also { usedFragments.addAll(ctx.usedFragments) }
+        }.also {
+            val unusedFragments = fragmentDefinitions.keys.filter { it !in usedFragments }
             if (unusedFragments.isNotEmpty()) {
                 throw ValidationException("Found unused fragments: $unusedFragments")
             }
@@ -295,29 +286,4 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
 
     private fun List<DirectiveNode>.lookup(ctx: InterpreterContext) =
         associate { ctx.findDirective(it) to it.arguments?.toArguments() }
-
-    private fun DocumentNode.getOperation(
-        variables: VariablesJson,
-        requestedOperationName: String?
-    ): OperationDefinitionNode = definitions.filterIsInstance<OperationDefinitionNode>().let { operations ->
-        when (operations.size) {
-            0 -> throw ValidationException("Must provide any operation")
-            1 -> operations.first()
-            else -> {
-                val operationNamesFound = operations.mapNotNull { it.name?.value }.also {
-                    if (it.size != operations.size) {
-                        throw ValidationException("Anonymous operation must be the only defined operation")
-                    }
-                }.joinToString(prefix = "[", postfix = "]")
-
-                val operationName = requestedOperationName ?: variables.get(
-                    BuiltInScalars.STRING.typeDef.toScalarType(),
-                    OPERATION_NAME_PARAM
-                )?.let { it as? ValueNode.StringValueNode }?.value
-
-                operations.firstOrNull { it.name?.value == operationName }
-                    ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found: $operationName")
-            }
-        }
-    }
 }
