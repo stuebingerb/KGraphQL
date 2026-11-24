@@ -10,10 +10,14 @@ import de.stuebingerb.kgraphql.request.DocumentParser
 import de.stuebingerb.kgraphql.request.Introspection
 import de.stuebingerb.kgraphql.request.RequestParser
 import de.stuebingerb.kgraphql.request.VariablesJson
+import de.stuebingerb.kgraphql.schema.builtin.BuiltInScalars
+import de.stuebingerb.kgraphql.schema.execution.ExecutionPlan
 import de.stuebingerb.kgraphql.schema.execution.ParallelRequestExecutor
 import de.stuebingerb.kgraphql.schema.execution.RequestExecutor
 import de.stuebingerb.kgraphql.schema.introspection.__Schema
+import de.stuebingerb.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
 import de.stuebingerb.kgraphql.schema.model.ast.NameNode
+import de.stuebingerb.kgraphql.schema.model.ast.ValueNode
 import de.stuebingerb.kgraphql.schema.structure.RequestInterpreter
 import de.stuebingerb.kgraphql.schema.structure.SchemaModel
 import kotlinx.coroutines.coroutineScope
@@ -56,14 +60,37 @@ class DefaultSchema(
             }
 
             val document = requestParser.parseDocument(request)
-
+            val executionPlanByOperation = requestInterpreter.createExecutionPlans(document)
             requestExecutor.suspendExecute(
-                plan = requestInterpreter.createExecutionPlan(document, operationName, parsedVariables),
+                plan = executionPlanByOperation.requestedOperation(parsedVariables, operationName),
                 variables = parsedVariables,
                 context = context
             )
         } catch (e: RequestError) {
             e.serialize()
+        }
+    }
+
+    private fun Map<OperationDefinitionNode, ExecutionPlan>.requestedOperation(
+        variables: VariablesJson,
+        requestedOperationName: String?
+    ): ExecutionPlan = when (size) {
+        0 -> throw ValidationException("Must provide any operation")
+        1 -> values.first()
+        else -> {
+            val operationNamesFound = keys.mapNotNull { it.name?.value }.also {
+                if (it.size != size) {
+                    throw ValidationException("Anonymous operation must be the only defined operation")
+                }
+            }.joinToString(prefix = "[", postfix = "]")
+
+            val operationName = requestedOperationName ?: variables.get(
+                BuiltInScalars.STRING.typeDef.toScalarType(),
+                OPERATION_NAME_PARAM
+            )?.let { it as? ValueNode.StringValueNode }?.value
+
+            entries.firstOrNull { it.key.name?.value == operationName }?.value
+                ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found: $operationName")
         }
     }
 

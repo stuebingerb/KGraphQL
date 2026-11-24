@@ -237,7 +237,7 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `unused fragments should not use data from previous requests`() {
+    fun `unused fragments validation should not use data from previous requests`() {
         // First query uses the fragment
         testedSchema.executeBlocking(
             """
@@ -251,7 +251,15 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                 title
             }
         """
-        )
+        ) shouldBe """
+            {
+              "data" : {
+                "film" : {
+                  "title" : "Prestige"
+                }
+              }
+            }
+        """.trimIndent()
 
         // Second one does not and should fail (must not re-use `usedFragments` from before)
         expectRequestError<ValidationException>("Found unused fragments: [film_title]") {
@@ -272,8 +280,95 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
+    fun `unused fragments validation should consider all operations`() {
+        // First query is fine because operation B uses the fragment
+        testedSchema.executeBlocking(
+            request = """
+                query A {
+                    film {
+                        title
+                    }
+                }
+                
+                query B {
+                    film {
+                        ...film_title
+                    }
+                }
+                
+                fragment film_title on Film {
+                    title
+                }
+            """,
+            operationName = "A"
+        ) shouldBe """
+            {
+              "data" : {
+                "film" : {
+                  "title" : "Prestige"
+                }
+              }
+            }
+        """.trimIndent()
+
+        testedSchema.executeBlocking(
+            request = """
+                query A {
+                    film {
+                        title
+                    }
+                }
+                
+                query B {
+                    film {
+                        ...film_title
+                    }
+                }
+                
+                fragment film_title on Film {
+                    title
+                }
+            """,
+            operationName = "B"
+        ) shouldBe """
+            {
+              "data" : {
+                "film" : {
+                  "title" : "Prestige"
+                }
+              }
+            }
+        """.trimIndent()
+
+        // Second one should fail because now film_title is indeed unused
+        expectRequestError<ValidationException>("Found unused fragments: [film_title]") {
+            testedSchema.executeBlocking(
+                request ="""
+                    query A {
+                        film {
+                            title
+                        }
+                    }
+                    
+                    query B {
+                        film {
+                            year
+                        }
+                    }
+                    
+                    fragment film_title on Film {
+                        title
+                    }
+                """,
+                operationName = "A"
+            )
+        }
+    }
+
+    @Test
     fun `fragments on enum types should be denied`() {
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ... on FilmType {
@@ -281,11 +376,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'FilmType' is ENUM on inline fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ...EnumFragment
@@ -295,11 +392,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
             fragment EnumFragment on FilmType {
                 __typename
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'FilmType' is ENUM on fragment 'EnumFragment'","locations":[{"line":7,"column":1}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     type {
@@ -309,11 +408,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'FilmType' is ENUM on inline fragment","locations":[{"line":4,"column":13}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     type {
@@ -323,11 +424,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'FilmType' is ENUM on inline fragment","locations":[{"line":4,"column":13}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ... on FilmType @include(if: true) {
@@ -335,14 +438,16 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'FilmType' is ENUM on inline fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
     }
 
     @Test
     fun `fragments on scalar types should be denied`() {
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ... on Int {
@@ -350,11 +455,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'Int' is SCALAR on inline fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ...IntFragment
@@ -364,11 +471,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
             fragment IntFragment on Int {
                 __typename
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'Int' is SCALAR on fragment 'IntFragment'","locations":[{"line":7,"column":1}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     year {
@@ -378,11 +487,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'Int' is SCALAR on inline fragment","locations":[{"line":4,"column":13}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     year {
@@ -392,11 +503,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'Int' is SCALAR on inline fragment","locations":[{"line":4,"column":13}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ... on Int @include(if: true) {
@@ -404,7 +517,8 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'Int' is SCALAR on inline fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
     }
@@ -441,7 +555,8 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'ActorExplicitInput' is INPUT_OBJECT on fragment 'ActorFragment'","locations":[{"line":7,"column":1}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ... on ActorExplicitInput @include(if: true) {
@@ -449,14 +564,16 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Fragments can only be specified on object types, interfaces, and unions but 'ActorExplicitInput' is INPUT_OBJECT on inline fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
     }
 
     @Test
     fun `fragments on unknown types should be denied`() {
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ... on MissingType {
@@ -464,11 +581,13 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     }
                 }
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Unknown type 'MissingType' in type condition on inline fragment","locations":[{"line":3,"column":9}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
 
-        testedSchema.executeBlocking("""
+        testedSchema.executeBlocking(
+            """
             {
                 film {
                     ...invalid
@@ -478,7 +597,8 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
             fragment invalid on UnknownType {
                 __typename
             }
-        """.trimIndent()) shouldBe """
+        """.trimIndent()
+        ) shouldBe """
             {"errors":[{"message":"Unknown type 'UnknownType' in type condition on fragment 'invalid'","locations":[{"line":7,"column":1}],"extensions":{"type":"GRAPHQL_VALIDATION_FAILED"}}]}
         """.trimIndent()
     }
@@ -824,7 +944,7 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
 
         expectRequestError<ValidationException>("Invalid type 'Fish' in type condition on inline fragment of type 'Mammal'; must be one of '[Bear, Dolphin]'") {
             schema.executeBlocking(
-            """
+                """
                 {
                     animals {
                         ... on Mammal {
@@ -1185,13 +1305,15 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                 )
             )
 
-        schema.executeBlocking("""
+        schema.executeBlocking(
+            """
             subscription {
                 unsubscriptionActor(subscription: "my-subscription") {
                     name
                 }
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
 
     @Test
