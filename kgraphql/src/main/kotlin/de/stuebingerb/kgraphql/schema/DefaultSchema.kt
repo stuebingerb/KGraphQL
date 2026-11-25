@@ -71,26 +71,20 @@ class DefaultSchema(
         }
     }
 
+    // https://spec.graphql.org/September2026/#GetOperation()
     private fun Map<OperationDefinitionNode, ExecutionPlan>.requestedOperation(
         variables: VariablesJson,
         requestedOperationName: String?
-    ): ExecutionPlan = when (size) {
-        0 -> throw ValidationException("Must provide any operation")
-        1 -> values.first()
-        else -> {
-            val operationNamesFound = keys.mapNotNull { it.name?.value }.also {
-                if (it.size != size) {
-                    throw ValidationException("Anonymous operation must be the only defined operation")
-                }
-            }.joinToString(prefix = "[", postfix = "]")
-
-            val operationName = requestedOperationName ?: variables.get(
-                BuiltInScalars.STRING.typeDef.toScalarType(),
-                OPERATION_NAME_PARAM
-            )?.let { it as? ValueNode.StringValueNode }?.value
-
-            entries.firstOrNull { it.key.name?.value == operationName }?.value
-                ?: throw ValidationException("Must provide an operation name from: $operationNamesFound, found: $operationName")
+    ): ExecutionPlan {
+        val operationName = requestedOperationName ?: variables.get(
+            BuiltInScalars.STRING.typeDef.toScalarType(),
+            OPERATION_NAME_PARAM
+        )?.let { it as? ValueNode.StringValueNode }?.value
+        return when (operationName) {
+            null if size == 1 -> values.first()
+            null -> throw ValidationException("Must provide an operation name from: ${keys.mapNotNull { it.name?.value }}")
+            else -> entries.firstOrNull { it.key.name?.value == operationName }?.value
+                ?: throw ValidationException("Must provide an operation name from: ${keys.mapNotNull { it.name?.value }}, found: $operationName")
         }
     }
 

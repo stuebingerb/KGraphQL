@@ -102,7 +102,7 @@ internal class Parser {
                 "query", "mutation", "subscription" -> parseOperationDefinition()
                 "fragment" -> parseFragmentDefinition()
                 "schema", "scalar", "type", "interface", "union", "enum", "input", "directive" -> parseTypeSystemDefinition()
-                "extend" -> throw NotImplementedError("Extend is not supported")
+                "extend" -> throw syntaxError(lexer.source, lexer.token.start, "Extend is not supported")
                 else -> throw unexpected()
             }
 

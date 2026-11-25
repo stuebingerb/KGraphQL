@@ -60,7 +60,22 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
     }
 
     fun createExecutionPlans(document: DocumentNode): Map<OperationDefinitionNode, ExecutionPlan> {
+        // Spec 5.1.1 Executable Definitions
+        document.definitions.firstOrNull { it !is ExecutableDefinitionNode }?.let {
+            throw ValidationException("Document must only contain executable definitions", it)
+        }
         val executables = document.definitions.filterIsInstance<ExecutableDefinitionNode>()
+        val operations = executables.filterIsInstance<OperationDefinitionNode>()
+
+        // Spec 5.2.2.1 Operation Name Uniqueness
+        val operationsByName = operations.groupBy { it.name?.value }
+        operationsByName.entries.firstOrNull { (name, operations) -> name != null && operations.size > 1 }?.let { (name, operations) ->
+            throw ValidationException("Operation '$name' is not unique in document", operations.first())
+        }
+        // Spec 5.2.3.1 Lone Anonymous Operation
+        if (operationsByName.containsKey(null) && operations.size > 1) {
+            throw ValidationException("Anonymous operation must be the only defined operation", operationsByName.getValue(null).first())
+        }
 
         val fragmentDefinitionNodes = executables.filterIsInstance<FragmentDefinitionNode>()
         val fragmentDefinitions = fragmentDefinitionNodes.associate { fragmentDef ->
@@ -74,9 +89,9 @@ internal class RequestInterpreter(private val schemaModel: SchemaModel) {
             name to (type to fragmentDef.selectionSet)
         }
 
-        val operations = executables.filterIsInstance<OperationDefinitionNode>()
         val usedFragments: MutableSet<String> = mutableSetOf()
         return operations.associateWith { operation ->
+            // Spec 5.2.1.1 Operation Type Existence
             val (root, executionMode) = when (operation.operation) {
                 OperationTypeNode.QUERY -> schemaModel.queryType to ExecutionMode.Normal
                 OperationTypeNode.MUTATION -> (schemaModel.mutationType
