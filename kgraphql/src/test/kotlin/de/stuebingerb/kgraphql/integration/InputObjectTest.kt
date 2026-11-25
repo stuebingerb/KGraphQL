@@ -739,7 +739,7 @@ class InputObjectTest {
         schema.executeBlocking(
             """
             query {
-              example(inputs: [{a: "abc"}]) 
+              example(inputs: [{a: "abc"}])
             }
             """.trimIndent()
         ) shouldBe """
@@ -749,7 +749,7 @@ class InputObjectTest {
         schema.executeBlocking(
             """
             query {
-              example(inputs: [{b: 123}]) 
+              example(inputs: [{b: 123}])
             }
             """.trimIndent()
         ) shouldBe """
@@ -771,7 +771,7 @@ class InputObjectTest {
             schema.executeBlocking(
                 """
             query {
-              example(inputs: [{a: null}]) 
+              example(inputs: [{a: null}])
             }
             """.trimIndent()
             )
@@ -802,7 +802,7 @@ class InputObjectTest {
             schema.executeBlocking(
                 """
             query {
-              example(inputs: [{a: "abc", b: 123}]) 
+              example(inputs: [{a: "abc", b: 123}])
             }
             """.trimIndent()
             )
@@ -812,7 +812,7 @@ class InputObjectTest {
             schema.executeBlocking(
                 """
             query {
-              example(inputs: [{a: 456, b: "xyz"}]) 
+              example(inputs: [{a: 456, b: "xyz"}])
             }
             """.trimIndent()
             )
@@ -833,7 +833,7 @@ class InputObjectTest {
             schema.executeBlocking(
                 """
             query {
-              example(inputs: [{a: "abc", b: null}]) 
+              example(inputs: [{a: "abc", b: null}])
             }
             """.trimIndent()
             )
@@ -843,7 +843,7 @@ class InputObjectTest {
             schema.executeBlocking(
                 """
             query(${'$'}b: Int!) {
-              example(inputs: [{a: "abc", b: ${'$'}b}]) 
+              example(inputs: [{a: "abc", b: ${'$'}b}])
             }
             """.trimIndent()
             )
@@ -853,7 +853,7 @@ class InputObjectTest {
             schema.executeBlocking(
                 """
             query(${'$'}a: String!, ${'$'}b: Int!) {
-              example(inputs: [{a: ${'$'}a, b: ${'$'}b}]) 
+              example(inputs: [{a: ${'$'}a, b: ${'$'}b}])
             }
             """.trimIndent()
             )
@@ -863,7 +863,7 @@ class InputObjectTest {
             schema.executeBlocking(
                 """
             query {
-              example(inputs: [{}]) 
+              example(inputs: [{}])
             }
             """.trimIndent()
             )

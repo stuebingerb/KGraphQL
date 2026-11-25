@@ -114,6 +114,8 @@ open class SchemaCompilation(
     private fun introspectPossibleTypes(kClass: KClass<*>, typeProxy: TypeProxy) {
         val proxied = typeProxy.proxied
         if (proxied is Type.Interface<*>) {
+            // https://spec.graphql.org/September2026/#sel-IAJXTTHLBBnCBtC2pf
+            // "possibleTypes returns the list of types that implement this interface. They must be object types."
             val possibleTypes = queryTypeProxies.filter { (otherKClass, otherTypeProxy) ->
                 otherTypeProxy.kind == TypeKind.OBJECT && otherKClass != kClass && otherKClass.isSubclassOf(kClass)
             }.values.toList()

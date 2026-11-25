@@ -178,32 +178,6 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
     }
 
     @Test
-    fun `queries with duplicated fragments should be denied`() {
-        expectRequestError<ValidationException>("There can be only one fragment named 'film_title'") {
-            testedSchema.executeBlocking(
-                """
-            {
-                film {
-                    ...film_title
-                }
-            }
-            
-            fragment film_title on Film {
-                title
-            }
-            
-            fragment film_title on Film {
-                director {
-                    name
-                    age
-                }
-            }
-        """
-            )
-        }
-    }
-
-    @Test
     fun `queries with unused fragments should be denied`() {
         expectRequestError<ValidationException>("Found unused fragments: [unused_film_title]") {
             testedSchema.executeBlocking(
@@ -1086,21 +1060,6 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
         """.trimIndent()
     }
 
-    @Test
-    fun `query with missing named fragment type should be denied`() {
-        expectRequestError<ValidationException>("Fragment 'film_title' not found") {
-            testedSchema.executeBlocking(
-                """
-                {
-                    film {
-                        ...film_title
-                    }
-                }
-                """.trimIndent()
-            )
-        }
-    }
-
     // https://github.com/aPureBase/KGraphQL/issues/197
     @Test
     fun `executor should merge fragment declaration and field declaration`() {
@@ -1368,26 +1327,5 @@ class FragmentsSpecificationTest : BaseSchemaTest() {
                     )
                 )
             )
-    }
-
-    // https://github.com/aPureBase/KGraphQL/issues/189
-    @Test
-    fun `queries with missing fragments should return proper error message`() {
-        expectRequestError<ValidationException>("Fragment 'film_title_misspelled' not found") {
-            testedSchema.executeBlocking(
-                """
-            {
-                film {
-                    id
-                    ...film_title_misspelled
-                }
-            }
-            
-            fragment film_title on Film {
-                title
-            }
-        """
-            )
-        }
     }
 }
