@@ -27,14 +27,21 @@ class QueryDocumentSpecificationTest {
     @Test
     fun `anonymous operation must be the only defined operation`() {
         expectRequestError<ValidationException>("Anonymous operation must be the only defined operation") {
-            schema.executeBlocking("query {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}")
+            schema.executeBlocking("{fizz} {fizz}")
         }
     }
 
     @Test
-    fun `must provide operation name when multiple named operations`() {
-        expectRequestError<ValidationException>("Must provide an operation name from: [FIZZ, BUZZ], found: null") {
+    fun `must provide operation name with multiple named operations`() {
+        expectRequestError<ValidationException>("Must provide an operation name from: [FIZZ, BUZZ]") {
             schema.executeBlocking("query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}")
+        }
+    }
+
+    @Test
+    fun `must provide existing operation name with a single named operation`() {
+        expectRequestError<ValidationException>("Must provide an operation name from: [FIZZ], found: foo") {
+            schema.executeBlocking("query FIZZ {fizz}", operationName = "foo")
         }
     }
 

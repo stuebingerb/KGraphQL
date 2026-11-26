@@ -681,4 +681,18 @@ class ParserTest {
             }
         }
     }
+
+    @Test
+    fun `unsupported keyword should throw syntax error`() {
+        shouldThrowSyntaxError(
+            """
+            |
+            |      extend type Type
+            |
+        """.trimMargin()
+        ) {
+            message shouldBe "Syntax Error: Extend is not supported"
+            2 to 7
+        }
+    }
 }
