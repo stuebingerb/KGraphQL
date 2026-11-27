@@ -152,7 +152,6 @@ public final class de/stuebingerb/kgraphql/request/VariablesJson$Empty : de/stue
 }
 
 public final class de/stuebingerb/kgraphql/schema/DefaultSchema : de/stuebingerb/kgraphql/schema/Schema, de/stuebingerb/kgraphql/schema/introspection/__Schema {
-	public static final field Companion Lde/stuebingerb/kgraphql/schema/DefaultSchema$Companion;
 	public fun <init> (Lde/stuebingerb/kgraphql/configuration/SchemaConfiguration;Lde/stuebingerb/kgraphql/schema/structure/SchemaModel;)V
 	public fun execute (Ljava/lang/String;Ljava/lang/String;Lde/stuebingerb/kgraphql/Context;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeBlocking (Ljava/lang/String;Ljava/lang/String;Lde/stuebingerb/kgraphql/Context;Ljava/lang/String;)Ljava/lang/String;
@@ -164,10 +163,6 @@ public final class de/stuebingerb/kgraphql/schema/DefaultSchema : de/stuebingerb
 	public fun getSubscriptionType ()Lde/stuebingerb/kgraphql/schema/introspection/__Type;
 	public fun getTypes ()Ljava/util/List;
 	public fun printSchema ()Ljava/lang/String;
-}
-
-public final class de/stuebingerb/kgraphql/schema/DefaultSchema$Companion {
-	public final fun getOPERATION_NAME_PARAM ()Lde/stuebingerb/kgraphql/schema/model/ast/NameNode;
 }
 
 public abstract interface class de/stuebingerb/kgraphql/schema/Publisher {

@@ -10,14 +10,11 @@ import de.stuebingerb.kgraphql.request.DocumentParser
 import de.stuebingerb.kgraphql.request.Introspection
 import de.stuebingerb.kgraphql.request.RequestParser
 import de.stuebingerb.kgraphql.request.VariablesJson
-import de.stuebingerb.kgraphql.schema.builtin.BuiltInScalars
 import de.stuebingerb.kgraphql.schema.execution.ExecutionPlan
 import de.stuebingerb.kgraphql.schema.execution.ParallelRequestExecutor
 import de.stuebingerb.kgraphql.schema.execution.RequestExecutor
 import de.stuebingerb.kgraphql.schema.introspection.__Schema
 import de.stuebingerb.kgraphql.schema.model.ast.DefinitionNode.ExecutableDefinitionNode.OperationDefinitionNode
-import de.stuebingerb.kgraphql.schema.model.ast.NameNode
-import de.stuebingerb.kgraphql.schema.model.ast.ValueNode
 import de.stuebingerb.kgraphql.schema.structure.RequestInterpreter
 import de.stuebingerb.kgraphql.schema.structure.SchemaModel
 import kotlinx.coroutines.coroutineScope
@@ -26,10 +23,6 @@ class DefaultSchema(
     override val configuration: SchemaConfiguration,
     internal val model: SchemaModel
 ) : Schema, __Schema by model {
-
-    companion object {
-        val OPERATION_NAME_PARAM = NameNode("operationName", null)
-    }
 
     private val requestExecutor: RequestExecutor = ParallelRequestExecutor(this)
 
@@ -62,7 +55,7 @@ class DefaultSchema(
             val document = requestParser.parseDocument(request)
             val executionPlanByOperation = requestInterpreter.createExecutionPlans(document)
             requestExecutor.suspendExecute(
-                plan = executionPlanByOperation.requestedOperation(parsedVariables, operationName),
+                plan = executionPlanByOperation.requestedOperation(operationName),
                 variables = parsedVariables,
                 context = context
             )
@@ -72,21 +65,13 @@ class DefaultSchema(
     }
 
     // https://spec.graphql.org/September2026/#GetOperation()
-    private fun Map<OperationDefinitionNode, ExecutionPlan>.requestedOperation(
-        variables: VariablesJson,
-        requestedOperationName: String?
-    ): ExecutionPlan {
-        val operationName = requestedOperationName ?: variables.get(
-            BuiltInScalars.STRING.typeDef.toScalarType(),
-            OPERATION_NAME_PARAM
-        )?.let { it as? ValueNode.StringValueNode }?.value
-        return when (operationName) {
+    private fun Map<OperationDefinitionNode, ExecutionPlan>.requestedOperation(operationName: String?): ExecutionPlan =
+        when (operationName) {
             null if size == 1 -> values.first()
             null -> throw ValidationException("Must provide an operation name from: ${keys.mapNotNull { it.name?.value }}")
             else -> entries.firstOrNull { it.key.name?.value == operationName }?.value
                 ?: throw ValidationException("Must provide an operation name from: ${keys.mapNotNull { it.name?.value }}, found: $operationName")
         }
-    }
 
     override fun printSchema() = SchemaPrinter().print(model)
 }
