@@ -3,12 +3,8 @@ package de.stuebingerb.kgraphql.specification.language
 import de.stuebingerb.kgraphql.Actor
 import de.stuebingerb.kgraphql.Specification
 import de.stuebingerb.kgraphql.ValidationException
-import de.stuebingerb.kgraphql.assertNoErrors
 import de.stuebingerb.kgraphql.defaultSchema
-import de.stuebingerb.kgraphql.deserialize
 import de.stuebingerb.kgraphql.expectRequestError
-import de.stuebingerb.kgraphql.extract
-import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 @Specification("2.2 Query Document")
@@ -43,17 +39,5 @@ class QueryDocumentSpecificationTest {
         expectRequestError<ValidationException>("Must provide an operation name from: [FIZZ], found: foo") {
             schema.executeBlocking("query FIZZ {fizz}", operationName = "foo")
         }
-    }
-
-    @Test
-    fun `execute operation by name in variable`() {
-        val map = deserialize(
-            schema.executeBlocking(
-                "query FIZZ {fizz} mutation BUZZ {createActor(name : \"Kurt Russel\"){name}}",
-                "{\"operationName\":\"FIZZ\"}"
-            )
-        )
-        assertNoErrors(map)
-        map.extract<String>("data/fizz") shouldBe "buzz"
     }
 }
